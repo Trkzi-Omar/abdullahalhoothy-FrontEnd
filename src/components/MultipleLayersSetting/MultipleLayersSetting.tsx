@@ -13,7 +13,6 @@ import { MdArrowDropDown } from 'react-icons/md';
 import { BiExit } from 'react-icons/bi';
 import { IoIosArrowDropdown, IoMdClose } from 'react-icons/io';
 import { RiCloseCircleLine } from 'react-icons/ri';
-import { HttpReq } from '../../services/apiService';
 import urls from '../../urls.json';
 import { useAuth } from '../../context/AuthContext';
 import apiRequest from '../../services/apiRequest';
@@ -127,16 +126,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     };
   }, [setOpenDropdownIndices[1]]);
 
-  // useEffect(() => {
-  //   if (layerIndex !== undefined) {
-  //     setGeoPoints(prev =>
-  //       prev.map((point, idx) =>
-  //         idx === layerIndex ? { ...point, basedon: '' } : point
-  //       )
-  //     )
-  //   }
-  // }, [layerIndex])
-
   function handleDisplayChange() {
     updateLayerDisplay(layerIndex, !isDisplay);
     setIsDisplay(!isDisplay);
@@ -188,14 +177,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   }
 
   async function handleGetGradientColors() {
-    // HttpReq<string[]>(
-    //   urls.fetch_gradient_colors,
-    //   setColors,
-    //   () => {},
-    //   () => {},
-    //   () => {},
-    //   setIsError
-    // );
     try {
       const res = await apiRequest({
         url: urls.fetch_gradient_colors,

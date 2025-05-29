@@ -13,11 +13,12 @@ import { useLayerContext } from '../../context/LayerContext';
 const Home = () => {
   const { isAuthenticated } = useAuth();
   const nav = useNavigate();
+  const isInitialMount = useRef(true);
 
   const [selectedTab] = useState<'LAYER' | 'CATALOG'>('LAYER');
 
   const { openModal } = useUIContext();
-  const [, setHasOpened] = useState(false);
+  const [_, setHasOpened] = useState(false);
 
   const { setSelectedContainerType } = useCatalogContext();
 
@@ -76,28 +77,29 @@ export function HomeContent() {
   const { isAuthenticated } = useAuth();
   const nav = useNavigate();
 
-  const [selectedTab, setSelectedTab] = useState<'LAYER' | 'CATALOG'>('LAYER');
-
   const {
     setSelectedContainerType,
     geoPoints,
     handleStoreUnsavedGeoPoint,
     setMarkers,
     setIsMarkersEnabled,
+    selectedHomeTab,
+    setSelectedHomeTab,
+    setGeoPoints,
   } = useCatalogContext();
 
   const handleTabSwitch = (tab: 'LAYER' | 'CATALOG') => {
-    setSelectedTab(tab);
+    setSelectedHomeTab(tab);
     console.log('handleTabSwitch received:', tab);
     setSelectedContainerType(tab === 'CATALOG' ? 'Catalogue' : 'Layer');
-
+    setGeoPoints([]);
     setIsMarkersEnabled(tab === 'CATALOG');
     setMarkers([]);
   };
 
   useEffect(() => {
-    if (!isAuthenticated && selectedTab === 'CATALOG') nav('/auth');
-  }, [selectedTab]);
+    if (!isAuthenticated && selectedHomeTab === 'CATALOG') nav('/auth');
+  }, [selectedHomeTab]);
 
   return (
     <div className="flex-1 h-full flex flex-col relative overflow-hidden ">
@@ -106,7 +108,7 @@ export function HomeContent() {
         <div
           className={
             'flex justify-center items-center rounded-t-lg w-full h-10 border border-slate-300 transition-all ' +
-            (selectedTab == 'LAYER'
+            (selectedHomeTab == 'LAYER'
               ? ' bg-white border-b-0 text-lg'
               : ' cursor-pointer bg-slate-200 border-b-slate-300 hover:bg-gray-50 text-gray-500 hover:text-black')
           }
@@ -124,7 +126,7 @@ export function HomeContent() {
         <div
           className={
             'flex justify-center items-center rounded-t-lg w-full h-10 border border-slate-300 transition-all ' +
-            (selectedTab == 'CATALOG'
+            (selectedHomeTab == 'CATALOG'
               ? ' bg-white border-b-0 text-lg'
               : ' cursor-pointer bg-slate-200 border-b-slate-300  hover:bg-gray-50 text-gray-500 hover:text-black')
           }
@@ -141,9 +143,8 @@ export function HomeContent() {
 
       {/* Container */}
       <div className="flex-1 flex flex-col  border-slate-300 lg:border border-t-0 bg-white overflow-hidden">
-        {selectedTab === 'LAYER' && <LayerFormLoader />}
-
-        {selectedTab === 'CATALOG' && <CatalogFormLoader />}
+        {selectedHomeTab === 'LAYER' && <LayerFormLoader />}
+        {selectedHomeTab === 'CATALOG' && <CatalogFormLoader />}
       </div>
     </div>
   );
@@ -155,19 +156,16 @@ function HomerDrawer() {
   const { createLayerformStage } = useLayerContext();
   const { isDrawerOpen, isModalOpen, setIsDrawerOpen } = useUIContext();
 
-  // Add a useEffect to manually manage pointer events
   useEffect(() => {
     if (!isDrawerOpen) {
       document.body.style.pointerEvents = 'auto';
     }
 
-    // Cleanup function to restore pointer events
     return () => {
       document.body.style.pointerEvents = 'auto';
     };
   }, [isDrawerOpen]);
 
-  // Debugging focus and click handling
   const handleOpenChange = (isOpen: boolean) => {
     console.log('Drawer open state changed:', isOpen);
     setIsDrawerOpen(isOpen);

@@ -1,4 +1,4 @@
-import { useState, MouseEvent, useEffect } from 'react';
+import { useState, MouseEvent, useEffect, useRef } from 'react';
 import { FaWandMagicSparkles } from 'react-icons/fa6';
 import DataContainer from '../DataContainer/DataContainer';
 import { useCatalogContext } from '../../context/CatalogContext';
@@ -30,7 +30,6 @@ function CatalogMenu() {
     setIsRadiusMode,
     setChosenPallet,
   } = useCatalogContext();
-
   const { setSelectedCity, setSelectedCountry } = useLayerContext();
 
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
@@ -40,13 +39,10 @@ function CatalogMenu() {
     if (savedGeoPoints && JSON.parse(savedGeoPoints).length > 0) {
       setShowRestorePrompt(true);
     }
+    // else {
+    //   setGeoPoints([]);
+    // }
   }, []);
-  useEffect(
-    function () {
-      setGeoPoints([]);
-    },
-    [setGeoPoints]
-  );
 
   useEffect(() => {
     resetFormStage('catalog');
@@ -89,7 +85,9 @@ function CatalogMenu() {
     setLayerColors({});
   }
 
-  const safeGeoPoints = Array.isArray(geoPoints) ? geoPoints : [];
+  const safeGeoPoints = Array.isArray(geoPoints)
+    ? geoPoints.filter(point => !point.isTemporary)
+    : [];
 
   function handleSaveClick() {
     const legends = safeGeoPoints

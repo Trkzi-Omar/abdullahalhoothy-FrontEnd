@@ -218,6 +218,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         prdcer_layer_name: layerName,
         prdcer_lyr_id: data.prdcer_lyr_id,
         bknd_dataset_id: data.bknd_dataset_id,
+        isTemporary: true,
       };
 
       const filteredPoints = prevPoints.filter(p => String(p.layerId) !== String(layerId));

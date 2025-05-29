@@ -188,6 +188,9 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [caseStudyContent, setCaseStudyContent] = useState<Descendant[]>(defaultCaseStudyContent);
   const [measurements, setMeasurements] = useState<MeasurementData[]>([]);
 
+  // Add selectedTab state
+  const [selectedHomeTab, setSelectedHomeTab] = useState<'LAYER' | 'CATALOG'>('LAYER');
+
   async function fetchGeoPoints(
     id: string,
     typeOfCard: string,
@@ -381,7 +384,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
   function resetFormStage(resetTo: 'catalog') {
     setDescription('');
     setName('');
-    setSubscriptionPrice(' ');
+    setSubscriptionPrice('');
     setSaveResponse(null);
     setIsError(null);
     setFormStage(resetTo);
@@ -754,6 +757,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
         addMeasurement,
         setMeasurements,
         deleteMeasurement,
+        selectedHomeTab,
+        setSelectedHomeTab,
       }}
     >
       {children}

@@ -4,6 +4,7 @@ import React, {
   useState,
   ReactNode,
   useLayoutEffect,
+  useRef,
   useEffect,
 } from 'react';
 import Modal from '../components/Modal/Modal';
@@ -123,6 +124,15 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
     return () => window.removeEventListener('resize', updateState);
   }, [location.pathname]); // Track location changes
+  // Clean up modal state when location changes
+  const isInitialMount = useRef(true);
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    closeModal();
+  }, [location.pathname]);
 
   return (
     <UIContext.Provider

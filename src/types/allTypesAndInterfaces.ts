@@ -116,6 +116,8 @@ export interface CatalogContextType {
   name: string;
   caseStudyContent?: Descendant[];
   selectedContainerType: 'Catalogue' | 'Layer' | 'Home';
+  selectedHomeTab: 'LAYER' | 'CATALOG';
+  setSelectedHomeTab: React.Dispatch<React.SetStateAction<'LAYER' | 'CATALOG'>>;
   setFormStage: React.Dispatch<React.SetStateAction<'catalog' | 'catalogDetails' | 'save'>>;
   setSaveMethod: React.Dispatch<React.SetStateAction<string>>;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;

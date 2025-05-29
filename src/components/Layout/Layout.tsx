@@ -1,11 +1,11 @@
-import React, { useLayoutEffect, useState } from 'react';
+import React from 'react';
 import SideBar from '../SideBar/SideBar';
 import { Route, Routes } from 'react-router';
 import NotFound from '../../pages/NotFound/NotFound';
 import Dataview from '../../pages/Dataview/Dataview';
 import Auth from '../../pages/Auth/Auth';
 import MapContainer from '../../pages/MapContainer/MapContainer';
-import Home, { HomeContent } from '../../pages/Home/Home';
+import Home from '../../pages/Home/Home';
 import Profile from '../../pages/Profile/Profile';
 import ProfileLayout from '../../pages/Profile/ProfileLayout';
 import OrganizationLayout from '../../pages/Organization/OrganizationLayout';
@@ -22,28 +22,36 @@ import MobileNavbar from '../MobileNavbar/MobileNavbar';
 import Wallet from '../../pages/Wallet/Wallet';
 import AddFunds from '../../pages/AddFunds/AddFunds';
 import SignUp from '../../pages/Auth/SignUp';
+import { useLocation } from 'react-router-dom';
 
 const Layout = () => {
-  return (
-    <div className="flex flex-col ">
-      <MobileNavbar />
+  const location = useLocation();
+  const showMap = location.pathname === '/' || location.pathname === '/tabularView';
 
+  return (
+    <div className="flex flex-col">
+      <MobileNavbar />
       <div className="flex-1 flex lg:flex-row flex-col w-screen relative overflow-hidden overflow-y-auto">
         <SideBar />
 
+        {/* Main content routes */}
         <Routes>
           <Route path="*" element={<NotFound />} />
           <Route path={'/tabularView'} element={<></>} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/sign-up" element={<SignUp />} />
+
           <Route path="/" element={<Home />} />
+
           <Route path={'/profile/*'} element={<Profile />} />
           <Route path={'/organization/*'} element={<Organization />} />
           <Route path={'/billing/*'} element={<Billing />} />
+          {/* <Route path="/" element={<Home />} /> */}
         </Routes>
 
         <Routes>
-          <Route path={'/'} element={<MapContainer />} />
+          {/* <Route path={'/'} element={<MapContainer />} /> */}
+
           <Route path="/tabularView" element={<Dataview />} />
 
           <Route path={'/profile'} element={<ProfileLayout />}>
@@ -63,6 +71,13 @@ const Layout = () => {
             <Route path="price" element={<CommingSoon data={'Price'} />} />
           </Route>
         </Routes>
+
+        {/* Conditionally render MapContainer */}
+        {showMap && (
+          <div className="flex-1 relative">
+            <MapContainer />
+          </div>
+        )}
       </div>
     </div>
   );

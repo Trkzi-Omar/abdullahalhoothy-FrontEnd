@@ -10,25 +10,12 @@ self.onmessage = async event => {
 
   try {
     // Process each polygon feature
+
     const processedFeatures = featureCollection.features.map(
       (feature: Feature<Polygon | MultiPolygon>, index: number) => {
         try {
+          const density = feature.properties?.density || 0;
 
-          const density =
-            feature?.properties?.density || featureCollection.basedon?.length > 0
-              ? (() => {
-                  const value =
-                    feature.properties?.[
-                      abbreviateBasedOn(
-                        featureCollection.basedon || featureCollection?.metadata?.layer_type
-                      )
-                    ];
-                  const numValue = typeof value === 'string' ? parseFloat(value) : value;
-                  return typeof numValue === 'number' && !isNaN(numValue) ? numValue : 0;
-                })()
-              : 1;
-
-          // Calculate center of the polygon
           const center = turf.center(feature);
           const centerCoords = center.geometry.coordinates;
 

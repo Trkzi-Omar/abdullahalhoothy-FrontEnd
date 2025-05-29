@@ -60,7 +60,7 @@ const getGridPaint = (
     'case',
     ['==', ['get', 'density'], 0],
     0,
-    ['step', ['get', 'density'], 0.1, p25, 0.25, p50, 0.5, p75, 0.75],
+    ['step', ['get', 'density'], 1, p25 / 2, 0.1, p25, 0.25, p50, 0.5, p75, 0.75],
   ],
   'fill-outline-color': ['case', ['==', ['get', 'density'], 0], 'rgba(0,0,0,0)', 'rgba(0,0,0,128)'],
 });
@@ -344,12 +344,6 @@ export function useMapLayers() {
                       generateId: true,
                     });
 
-                    // Calculate density values for styling
-                    const allDensityValues = processedData.features.map(
-                      f => f.properties?.density || 0
-                    );
-                    const maxDensity = Math.max(...allDensityValues, 1);
-
                     // Add fill layer for polygons
                     map.addLayer({
                       id: gridLayerId,
@@ -367,8 +361,8 @@ export function useMapLayers() {
                           ['get', 'density'],
                           0,
                           0.1,
-                          maxDensity,
-                          0.8,
+                          100,
+                          0.9,
                         ],
                         'fill-outline-color': '#000',
                       },

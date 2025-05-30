@@ -60,7 +60,7 @@ const getGridPaint = (
     'case',
     ['==', ['get', 'density'], 0],
     0,
-    ['step', ['get', 'density'], 1, p25 / 2, 0.1, p25, 0.25, p50, 0.5, p75, 0.75],
+    ['step', ['get', 'density'], 0, p25 / 2, 0.1, p25, 0.25, p50, 0.5, p75, 0.75],
   ],
   'fill-outline-color': ['case', ['==', ['get', 'density'], 0], 'rgba(0,0,0,0)', 'rgba(0,0,0,128)'],
 });

@@ -1,10 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import mapboxgl, { LngLat } from 'mapbox-gl';
+import mapboxgl from 'mapbox-gl';
 import apiRequest from '../services/apiRequest';
 import urls from '../urls.json';
 import { useMapContext } from '../context/MapContext';
 import { toast } from 'sonner';
 import { useCatalogContext } from '../context/CatalogContext';
+import { useUIContext } from '../context/UIContext';
+import { MeasurementForm } from '../components/MeasurementForm/MeasurementForm';
+import React from 'react';
 
 export interface MeasurementState {
   isMeasuring: boolean;
@@ -34,6 +37,7 @@ export interface MeasurementActions {
 export const useMeasurement = (): MeasurementState & MeasurementActions => {
   const { mapRef, shouldInitializeFeatures } = useMapContext();
   const { markers, addMeasurement } = useCatalogContext();
+  const { openModal, closeModal } = useUIContext();
   const [isMeasuring, setIsMeasuring] = useState<boolean>(false);
   const [measureSourcePoint, setMeasureSourcePoint] = useState<mapboxgl.LngLat | null>(null);
   const [measureDestinationPoint, setMeasureDestinationPoint] = useState<mapboxgl.LngLat | null>(
@@ -122,19 +126,24 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
   );
 
   const exitMeasureMode = useCallback(() => {
+    console.log('exitMeasureMode called');
     setIsMeasuring(false);
     setMeasureSourcePoint(null);
     setMeasureDestinationPoint(null);
     setMeasurementResult(null);
 
+    console.log('Removing measure markers:', measureMarkersRef.current);
     measureMarkersRef.current.forEach(marker => marker.remove());
     setMeasureMarkers([]);
+    console.log('Measure markers after removal:', measureMarkersRef.current);
 
     document.querySelectorAll('.loading-popup').forEach(el => el.remove());
 
     if (measurementPopup) {
+      console.log('Removing measurement popup:', measurementPopup);
       measurementPopup.remove();
       setMeasurementPopup(null);
+      console.log('Measurement popup after removal:', measurementPopup);
     }
 
     clearMeasurementLayers();
@@ -289,7 +298,34 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
     [mapRef, measurementPopup]
   );
 
-  const showApiMeasurementResult = useCallback(
+  const handleSaveMeasurement = useCallback(
+    (point1: mapboxgl.LngLat, point2: mapboxgl.LngLat, apiResult: any) => {
+      const handleSubmit = (name: string, description: string) => {
+        addMeasurement(
+          name,
+          description,
+          [point1.lng, point1.lat],
+          [point2.lng, point2.lat],
+          apiResult.data?.drive_polygon,
+          apiResult.data?.distance_in_km,
+          apiResult.data?.drive_time_in_min
+        );
+        toast.success('Measurement saved successfully');
+        closeModal();
+      };
+
+      openModal(
+        React.createElement(MeasurementForm, {
+          onSubmit: handleSubmit,
+          onCancel: closeModal,
+        }),
+        { isSmaller: true, hasAutoSize: true }
+      );
+    },
+    [openModal, closeModal, addMeasurement]
+  );
+
+  const showRouteResult = useCallback(
     (point1: mapboxgl.LngLat, point2: mapboxgl.LngLat, apiResult: any) => {
       if (!mapRef.current) return null;
 
@@ -298,26 +334,6 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
         (point1.lat + point2.lat) / 2
       );
 
-      let formattedDistance = 'N/A';
-      let formattedDuration = 'N/A';
-
-      const distance = apiResult.data?.distance_in_km;
-      const duration = apiResult.data?.drive_time_in_min;
-
-      if (distance) {
-        formattedDistance = `${typeof distance === 'number' ? distance.toFixed(2) : distance} km`;
-      }
-
-      if (duration) {
-        const durationInMinutes = Math.round(
-          typeof duration === 'number' ? duration : parseFloat(duration)
-        );
-        formattedDuration =
-          durationInMinutes < 60
-            ? `${durationInMinutes} min`
-            : `${Math.floor(durationInMinutes / 60)} hr ${durationInMinutes % 60} min`;
-      }
-
       if (measurementPopup) {
         measurementPopup.remove();
       }
@@ -325,38 +341,30 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
       const popup = new mapboxgl.Popup({
         closeButton: true,
         closeOnClick: false,
-        className: 'measure-popup result-popup',
-        maxWidth: '300px',
-        offset: 20,
+        className: 'measure-popup',
       })
         .setLngLat(midpoint)
         .setHTML(
           `
           <div class="p-3 bg-white rounded-lg shadow-md">
-            <h3 class="font-bold text-sm mb-2">Route Information</h3>
             <div class="text-sm">
-              <div class="flex justify-between mb-1">
-                <b>Distance:</b>
-                <span class="font-medium">${formattedDistance}</span>
-              </div>
-              <div class="flex justify-between mb-3">
-                <b>Duration:</b>
-                <span class="font-medium">${formattedDuration}</span>
-              </div>
-              <div class="mt-3 flex justify-end gap-2">
-                <button
-                  class="save-measurement px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs"
-                  onclick="this.dispatchEvent(new CustomEvent('save-measurement', {bubbles: true}))"
-                >
-                  Save Measurement
-                </button>
-                <button
-                  class="exit-measure-mode-hook px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs"
-                  onclick="this.dispatchEvent(new CustomEvent('exit-measurement', {bubbles: true}))"
-                >
-                  Done
-                </button>
-              </div>
+              <strong>Distance:</strong> ${apiResult.data?.distance_in_km.toFixed(2)} km
+              <br />
+              <strong>Drive Time:</strong> ${apiResult.data?.drive_time_in_min.toFixed(0)} min
+            </div>
+            <div class="mt-3 flex justify-end space-x-2">
+              <button
+                class="save-measurement-hook px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs"
+                onclick="this.dispatchEvent(new CustomEvent('save-measurement', {bubbles: true}))"
+              >
+                Save
+              </button>
+              <button
+                class="exit-measure-mode-hook px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs"
+                onclick="this.dispatchEvent(new CustomEvent('exit-measurement', {bubbles: true}))"
+              >
+                Done
+              </button>
             </div>
           </div>
         `
@@ -367,20 +375,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
 
       // Add event listener for saving measurement
       popupElement.addEventListener('save-measurement', () => {
-        const name = prompt('Enter a name for this measurement:');
-        if (name) {
-          const description = prompt('Enter a description (optional):');
-          addMeasurement(
-            name,
-            description || '',
-            [point1.lng, point1.lat],
-            [point2.lng, point2.lat],
-            apiResult.data?.drive_polygon,
-            apiResult.data?.distance_in_km,
-            apiResult.data?.drive_time_in_min
-          );
-          toast.success('Measurement saved successfully');
-        }
+        handleSaveMeasurement(point1, point2, apiResult);
       });
 
       popup.on('close', () => {
@@ -393,7 +388,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
 
       return popup;
     },
-    [mapRef, measurementPopup, exitMeasureMode, addMeasurement]
+    [mapRef, measurementPopup, exitMeasureMode, handleSaveMeasurement]
   );
 
   const showMeasurementResult = useCallback(
@@ -573,7 +568,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
 
           setMeasurementResult(measurementData);
 
-          showApiMeasurementResult(measureSourcePoint, e.lngLat, apiData);
+          showRouteResult(measureSourcePoint, e.lngLat, apiData);
 
           if (apiData.data?.drive_polygon) {
             try {
@@ -644,7 +639,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
       measureDestinationPoint,
       measurementPopup,
       showLoadingIndicator,
-      showApiMeasurementResult,
+      showRouteResult,
       showMeasurementResult,
       displayRouteOnMap,
       decodePolyline,

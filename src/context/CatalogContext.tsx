@@ -10,7 +10,7 @@ import {
 } from '../types';
 import urls from '../urls.json';
 import userIdData from '../currentUserId.json';
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import apiRequest from '../services/apiRequest';
 import html2canvas from 'html2canvas';

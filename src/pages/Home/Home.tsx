@@ -9,6 +9,7 @@ import { useUIContext } from '../../context/UIContext';
 import { useCatalogContext } from '../../context/CatalogContext';
 import BottomDrawer from '../../components/BottomDrawer/BottomDrawer';
 import { useLayerContext } from '../../context/LayerContext';
+import { useMeasurement } from '../../hooks/useMeasurement';
 
 const Home = () => {
   const { isAuthenticated } = useAuth();
@@ -83,16 +84,23 @@ export function HomeContent() {
     geoPoints,
     handleStoreUnsavedGeoPoint,
     setMarkers,
+    setMeasurements,
     setIsMarkersEnabled,
   } = useCatalogContext();
+  const { exitMeasureMode, clearMeasurementLayers } = useMeasurement();
 
   const handleTabSwitch = (tab: 'LAYER' | 'CATALOG') => {
-    setSelectedTab(tab);
-    console.log('handleTabSwitch received:', tab);
-    setSelectedContainerType(tab === 'CATALOG' ? 'Catalogue' : 'Layer');
+    console.log('handleTabSwitch called with tab:', tab);
+    exitMeasureMode();
+    clearMeasurementLayers();
 
+    setSelectedTab(tab);
+    setSelectedContainerType(tab === 'CATALOG' ? 'Catalogue' : 'Layer');
     setIsMarkersEnabled(tab === 'CATALOG');
+
     setMarkers([]);
+    setMeasurements([]);
+    console.log('handleTabSwitch finished');
   };
 
   useEffect(() => {
@@ -111,7 +119,6 @@ export function HomeContent() {
               : ' cursor-pointer bg-slate-200 border-b-slate-300 hover:bg-gray-50 text-gray-500 hover:text-black')
           }
           onClick={() => {
-            handleStoreUnsavedGeoPoint(geoPoints);
             handleTabSwitch('LAYER');
           }}
         >

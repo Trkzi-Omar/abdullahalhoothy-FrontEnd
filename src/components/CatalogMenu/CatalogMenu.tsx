@@ -39,9 +39,6 @@ function CatalogMenu() {
     if (savedGeoPoints && JSON.parse(savedGeoPoints).length > 0) {
       setShowRestorePrompt(true);
     }
-    // else {
-    //   setGeoPoints([]);
-    // }
   }, []);
 
   useEffect(() => {

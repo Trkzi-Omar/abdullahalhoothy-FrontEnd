@@ -187,8 +187,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [isMarkersEnabled, setIsMarkersEnabled] = useState<boolean>(false);
   const [caseStudyContent, setCaseStudyContent] = useState<Descendant[]>(defaultCaseStudyContent);
   const [measurements, setMeasurements] = useState<MeasurementData[]>([]);
-
-  // Add selectedTab state
   const [selectedHomeTab, setSelectedHomeTab] = useState<'LAYER' | 'CATALOG'>('LAYER');
 
   async function fetchGeoPoints(

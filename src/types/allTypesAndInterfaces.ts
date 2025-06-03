@@ -789,6 +789,15 @@ export interface NavigationSetupProps {
 
 export interface BasedOnLayerDropdownProps {
   layerIndex: number;
+  nameInputs: string[];
+  setNameInputs: (names: string[]) => void;
+  setPropertyThreshold?: any;
+  selectedOption?: string;
+  onColorChange?: (color: string) => void;
+  coverageType?: string;
+  setCoverageType?: (type: string) => void;
+  coverageValue?: string;
+  setCoverageValue?: (value: string) => void;
 }
 
 export interface BasedOnDropdownProps {

@@ -4,18 +4,6 @@ import { BasedOnLayerDropdownProps } from '../../types/allTypesAndInterfaces';
 import { formatSubcategoryName } from '../../utils/helperFunctions';
 import { HexColorPicker } from 'react-colorful';
 
-interface ExtendedBasedOnLayerDropdownProps extends BasedOnLayerDropdownProps {
-  nameInputs: string[];
-  setNameInputs: (names: string[]) => void;
-  setPropertyThreshold?: any;
-  selectedOption?: string;
-  onColorChange?: (color: string) => void;
-  coverageType?: string;
-  setCoverageType?: (type: string) => void;
-  coverageValue?: string;
-  setCoverageValue?: (value: string) => void;
-}
-
 export default function BasedOnLayerDropdown({
   layerIndex,
   nameInputs,
@@ -27,7 +15,7 @@ export default function BasedOnLayerDropdown({
   setCoverageType,
   coverageValue,
   setCoverageValue,
-}: ExtendedBasedOnLayerDropdownProps) {
+}: BasedOnLayerDropdownProps) {
   const { basedOnLayerId, setBasedOnLayerId, geoPoints, basedOnProperty, setBasedOnProperty } =
     useCatalogContext();
   const availableLayers = geoPoints.map(layer => ({

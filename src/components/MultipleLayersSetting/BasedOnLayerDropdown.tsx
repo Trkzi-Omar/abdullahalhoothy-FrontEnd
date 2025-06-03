@@ -4,6 +4,18 @@ import { BasedOnLayerDropdownProps } from '../../types/allTypesAndInterfaces';
 import { formatSubcategoryName } from '../../utils/helperFunctions';
 import { HexColorPicker } from 'react-colorful';
 
+interface ExtendedBasedOnLayerDropdownProps extends BasedOnLayerDropdownProps {
+  nameInputs: string[];
+  setNameInputs: (names: string[]) => void;
+  setPropertyThreshold?: any;
+  selectedOption?: string;
+  onColorChange?: (color: string) => void;
+  coverageType?: string;
+  setCoverageType?: (type: string) => void;
+  coverageValue?: string;
+  setCoverageValue?: (value: string) => void;
+}
+
 export default function BasedOnLayerDropdown({
   layerIndex,
   nameInputs,
@@ -11,13 +23,11 @@ export default function BasedOnLayerDropdown({
   selectedOption,
   onColorChange,
   setPropertyThreshold,
-}: BasedOnLayerDropdownProps & {
-  nameInputs: string[];
-  setNameInputs: (names: string[]) => void;
-  setPropertyThreshold?: any;
-  selectedOption?: string;
-  onColorChange?: (color: string) => void;
-}) {
+  coverageType,
+  setCoverageType,
+  coverageValue,
+  setCoverageValue,
+}: ExtendedBasedOnLayerDropdownProps) {
   const { basedOnLayerId, setBasedOnLayerId, geoPoints, basedOnProperty, setBasedOnProperty } =
     useCatalogContext();
   const availableLayers = geoPoints.map(layer => ({
@@ -45,9 +55,15 @@ export default function BasedOnLayerDropdown({
   ];
 
   const [isOpen, setIsOpen] = useState(false);
+  const [localCoverageType, setLocalCoverageType] = useState('radius');
+  const [localCoverageValue, setLocalCoverageValue] = useState(''); // Changed to empty string
+  const [enableSecondSentence, setEnableSecondSentence] = useState(false);
+  const [propertyValue, setPropertyValue] = useState('');
 
   const pickerRef = useRef<HTMLDivElement>(null);
 
+  // Get current layer name
+  const currentLayerName = geoPoints[layerIndex]?.prdcer_layer_name || `Layer ${layerIndex + 1}`;
 
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
@@ -65,6 +81,7 @@ export default function BasedOnLayerDropdown({
     event.stopPropagation();
     setBasedOnProperty(event.target.value);
     setNameInputs(['']);
+    setPropertyValue('');
   };
 
   const metrics = useMemo(() => {
@@ -107,6 +124,59 @@ export default function BasedOnLayerDropdown({
     }
   };
 
+  const handleSelectThresholdChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newThreshold = e.target.value;
+    setThreshold(newThreshold);
+
+    if (setPropertyThreshold) {
+      setPropertyThreshold(newThreshold);
+    }
+  };
+
+  const handleCoverageTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newType = e.target.value;
+    if (setCoverageType) {
+      setCoverageType(newType);
+    } else {
+      setLocalCoverageType(newType);
+    }
+  };
+
+  const handleCoverageValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    if (setCoverageValue) {
+      setCoverageValue(newValue);
+    } else {
+      setLocalCoverageValue(newValue);
+    }
+  };
+
+  const handlePropertyValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPropertyValue(e.target.value);
+  };
+
+  const handlePropertyValueSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPropertyValue(e.target.value);
+  };
+
+  // Handle enabling/disabling the second sentence
+  const handleSecondSentenceToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const enabled = e.target.checked;
+    setEnableSecondSentence(enabled);
+    if (!enabled) {
+      // Clear the additional filter properties when disabled
+      setBasedOnProperty('');
+      setPropertyValue('');
+      if (setPropertyThreshold) {
+        setPropertyThreshold('');
+      }
+    }
+  };
+
+  // Use provided coverage values or fall back to local state - but don't fall back to defaults
+  const currentCoverageType = coverageType !== undefined ? coverageType : localCoverageType;
+  const currentCoverageValue = coverageValue !== undefined ? coverageValue : localCoverageValue;
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === ',' || e.key === 'Enter') {
       e.preventDefault();
@@ -124,12 +194,10 @@ export default function BasedOnLayerDropdown({
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (!pickerRef.current) {
-
         return;
       }
 
-
-      if (!pickerRef.current.contains(event.target)) {
+      if (!pickerRef.current.contains(event.target as Node)) {
         console.log('Closing picker...');
         setIsOpen(false);
       }
@@ -141,6 +209,137 @@ export default function BasedOnLayerDropdown({
     };
   }, []);
 
+  // Render for FILTER option - sentence-like interface
+  if (selectedOption === 'filter') {
+    return (
+      <div className="ms-2.5 flex flex-col space-y-4">
+        {/* First Sentence - Always available for filtering */}
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-gray-700">Keep only</span>
+            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded font-medium">
+              {currentLayerName}
+            </span>
+            <span className="text-gray-700">that are within</span>
+            <input
+              type="number"
+              value={currentCoverageValue}
+              onChange={handleCoverageValueChange}
+              placeholder=""
+              className="w-20 px-2 py-1 border border-gray-300 rounded text-center text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+            <select
+              value={currentCoverageType}
+              onChange={handleCoverageTypeChange}
+              className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="radius">kilometers</option>
+              <option value="drive_time">minutes drive</option>
+            </select>
+            <span className="text-gray-700">from</span>
+            <select
+              value={basedOnLayerId || ''}
+              onChange={handleSelectChange}
+              className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[120px]"
+            >
+              <option value="">select layer</option>
+              {availableLayers.map(layer => {
+                const isSelf = layer.id === geoPoints[layerIndex]?.prdcer_lyr_id;
+                return (
+                  <option key={layer.id} value={layer.id}>
+                    {(layer.name.length > 15
+                      ? `${layer.name.substring(0, 15)}...`
+                      : layer.name
+                    ).concat(isSelf ? ' (Self)' : '')}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        </div>
+
+        {/* Toggle for second sentence */}
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="enableSecondFilter"
+            checked={enableSecondSentence}
+            onChange={handleSecondSentenceToggle}
+            className="mr-2"
+          />
+          <label htmlFor="enableSecondFilter" className="text-sm text-gray-700">
+            Add additional filter condition
+          </label>
+        </div>
+
+        {/* Second Sentence (Optional) - Only show when enabled */}
+        {enableSecondSentence && (
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="text-gray-700">And where</span>
+              <select
+                value={basedOnProperty || ''}
+                onChange={handleMetricChange}
+                disabled={!basedOnLayerId}
+                className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-200 disabled:text-gray-500 min-w-[120px]"
+              >
+                <option value="">select property (optional)</option>
+                {metrics.map(metric => (
+                  <option key={metric} value={metric}>
+                    {formatSubcategoryName(metric)}
+                  </option>
+                ))}
+              </select>
+              
+              {/* Only show the value input if a property is selected */}
+              {basedOnProperty && (
+                <>
+                  <span className="text-gray-700">is</span>
+                  {basedOnProperty === 'popularity_score_category' ? (
+                    <select
+                      value={propertyValue}
+                      onChange={handlePropertyValueSelectChange}
+                      className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[100px]"
+                    >
+                      <option value="">any value</option>
+                      <option value="High">High</option>
+                      <option value="Very High">Very High</option>
+                      <option value="Low">Low</option>
+                      <option value="Very Low">Very Low</option>
+                    </select>
+                  ) : basedOnProperty === 'primaryType' ? (
+                    <select
+                      value={propertyValue}
+                      onChange={handlePropertyValueSelectChange}
+                      className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[120px]"
+                    >
+                      <option value="">any type</option>
+                      {availableTypes.map((type, index) => (
+                        <option key={index} value={type}>
+                          {type.replace(/_/g, ' ').replace(/\b\w/g, (char: any) => char.toUpperCase())}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={propertyValue}
+                      onChange={handlePropertyValueChange}
+                      placeholder={`any ${basedOnProperty.replace(/_/g, ' ')}`}
+                      className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[100px]"
+                    />
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Original render for RECOLOR option
   return (
     <>
       <div className="ms-2.5 flex flex-col">
@@ -191,8 +390,6 @@ export default function BasedOnLayerDropdown({
           </option>
           {metrics.map(metric => {
             return (
-              // <option key={metric} value={metric}>
-
               <option
                 key={metric}
                 value={metric}
@@ -204,7 +401,6 @@ export default function BasedOnLayerDropdown({
         </select>
 
         {basedOnProperty === 'name' && (
-
           <>
             <div className="flex flex-col mt-2">
               <label className="text-[11px] text-[#555] whitespace-nowrap text-sm">
@@ -252,9 +448,7 @@ export default function BasedOnLayerDropdown({
                 />
               </div>
               {isOpen && (
-
                 <div className="absolute mt-2 bg-white p-2 border border-gray-300 shadow-md rounded-md z-50">
-
                   <HexColorPicker color={selectedColor} onChange={handleColorChange} />
                 </div>
               )}
@@ -263,7 +457,6 @@ export default function BasedOnLayerDropdown({
         )}
 
         {basedOnProperty && filterableProperties.includes(basedOnProperty) && (
-          //&& selectedOption === 'filter'
           <>
             <div className="flex flex-col mt-2">
               <label className="text-[11px] text-[#555] whitespace-nowrap text-sm">
@@ -293,7 +486,7 @@ export default function BasedOnLayerDropdown({
                 {basedOnProperty === 'popularity_score_category' ? (
                   <select
                     value={threshold}
-                    onChange={handleInputThresholdChange}
+                    onChange={handleSelectThresholdChange}
                     className="bg-gray-50 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[120px] outline-none p-1 rounded-md"
                   >
                     <option value="">Select Category</option>
@@ -303,10 +496,9 @@ export default function BasedOnLayerDropdown({
                     <option value="Very Low">Very Low</option>
                   </select>
                 ) : basedOnProperty === 'primaryType' ? (
-                  // Select dropdown for primaryType from availableTypes
                   <select
                     value={threshold}
-                    onChange={handleInputThresholdChange}
+                    onChange={handleSelectThresholdChange}
                     className="bg-gray-50 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[120px] outline-none p-1 rounded-md"
                   >
                     <option value="">Select Primary Type</option>
@@ -326,7 +518,6 @@ export default function BasedOnLayerDropdown({
                     className="bg-gray-50 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[120px] outline-none"
                     placeholder={`Enter ${basedOnProperty
                       .replace(/_/g, ' ')
-
                       .replace(/\b\w/g, (char: any) =>
                         char.toUpperCase()
                       )}${basedOnProperty === 'rating' ? ' up to 5' : ''}`}
@@ -334,33 +525,28 @@ export default function BasedOnLayerDropdown({
                 )}
               </div>
             </div>
-            {basedOnProperty && basedOnProperty !== 'name' && selectedOption !== 'recolor'  && (
 
-            <div className="mt-3 relative " ref={pickerRef}>
-
-              <label className="text-[11px] text-[#555] whitespace-nowrap text-sm flex flex-col">
-                Pick a Color
-              </label>
-              <div>
-                <button
-                  className="w-full h-10 rounded-md border border-gray-300"
-                  style={{ backgroundColor: selectedColor }}
-                  onClick={() => setIsOpen(!isOpen)}
-                />
-              </div>
-              {isOpen && (
-
-                <div className="absolute mt-2 bg-white p-2 border border-gray-300 shadow-md rounded-md z-50">
-
-                  <HexColorPicker color={selectedColor} onChange={handleColorChange} />
+            {basedOnProperty && basedOnProperty !== 'name' && selectedOption !== 'recolor' && (
+              <div className="mt-3 relative " ref={pickerRef}>
+                <label className="text-[11px] text-[#555] whitespace-nowrap text-sm flex flex-col">
+                  Pick a Color
+                </label>
+                <div>
+                  <button
+                    className="w-full h-10 rounded-md border border-gray-300"
+                    style={{ backgroundColor: selectedColor }}
+                    onClick={() => setIsOpen(!isOpen)}
+                  />
                 </div>
-              )}
-            </div>
-
+                {isOpen && (
+                  <div className="absolute mt-2 bg-white p-2 border border-gray-300 shadow-md rounded-md z-50">
+                    <HexColorPicker color={selectedColor} onChange={handleColorChange} />
+                  </div>
+                )}
+              </div>
             )}
           </>
         )}
-
       </div>
     </>
   );

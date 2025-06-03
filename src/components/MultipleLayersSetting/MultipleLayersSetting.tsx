@@ -87,8 +87,12 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const { authResponse } = useAuth();
   const [selectedOption, setSelectedOption] = useState('recolor');
   const [isError, setIsError] = useState<Error | null>(null);
-  const [radiusInput, setRadiusInput] = useState<number | string>(layer.radius_meters || 1000);
+  const [radiusInput, setRadiusInput] = useState<number | string>(layer.radius_meters || '');
   const [nameInputs, setNameInputs] = useState<string[]>([]);
+  
+  // Coverage state management - start with empty values
+  const [coverageType, setCoverageType] = useState<string>('radius');
+  const [coverageValue, setCoverageValue] = useState<string>(''); // Changed to empty string
 
   const dropdownIndex = layerIndex ?? -1;
   const isOpen = openDropdownIndices[1] === dropdownIndex;
@@ -109,8 +113,13 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   useEffect(function () {
     handleGetGradientColors();
     setSelectedBasedon(layer.basedon || initialBasedon);
-    setRadiusInput(layer.radius_meters || initialRadius);
+    // Only set initial values if they exist, otherwise keep empty
+    if (layer.radius_meters) {
+      setRadiusInput(layer.radius_meters);
+      setCoverageValue(String(layer.radius_meters));
+    }
   }, []);
+  
   useEffect(
     function () {
       setIsZoneLayer(layer.is_zone_lyr);
@@ -180,7 +189,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     }
   }
 
-  function toggleDropdown(event: MouseEvent) {
+  function toggleDropdown(event: React.MouseEvent<HTMLDivElement>) {
     event.stopPropagation();
 
     if (isOpen) {
@@ -233,14 +242,16 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
       setReqGradientColorBasedOnZone({
         prdcer_lyr_id,
-        user_id: authResponse?.localId,
+        user_id: authResponse?.localId || '',
         color_grid_choice: colors[chosenPallet || 0],
         change_lyr_id,
+        change_lyr_name: geoPoints[layerIndex]?.prdcer_layer_name || `Layer ${layerIndex}`,
         based_on_lyr_id: prdcer_lyr_id,
+        based_on_lyr_name: geoPoints[layerIndex]?.prdcer_layer_name || `Layer ${layerIndex}`,
         threshold: getFormattedThreshold(thresholdValue, basedOnProperty),
         coverage_value: newRadius,
         coverage_property: selectedBasedon,
-        color_based_on: basedOnProperty,
+        color_based_on: basedOnProperty || '',
       });
     }
   }
@@ -256,16 +267,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
   function handleRadiusInputChange(newRadius: number | string) {
     setRadiusInput(newRadius);
-
-    /*setGeoPoints(prev => {
-      const updated = [...prev];
-      updated[layerIndex] = {
-        ...updated[layerIndex],
-        radius_meters: newRadius,
-        offset_value: newRadius
-      };
-      return updated;
-    });*/
+    setCoverageValue(String(newRadius));
 
     setReqGradientColorBasedOnZone((prev: any) => ({
       ...prev,
@@ -306,8 +308,16 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const handleThresholdChange = (value: string) => {
     setThresholdValue(value);
   };
+
   const handleApplyFilter = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!coverageValue || !basedOnLayerId) {
+      toast.error('Please fill in all required fields (distance and layer)');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -315,33 +325,36 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       const baseLayer = geoPoints.find(layer => layer.prdcer_lyr_id === basedOnLayerId);
       const selectedColors = colors[chosenPallet || 0];
 
-      if (!currentLayer || !baseLayer || !basedOnProperty || !selectedColors || !selectedBasedon) {
+      if (!currentLayer || !baseLayer || !selectedColors) {
         console.error('Missing required fields');
+        toast.error('Missing required fields for filtering');
         return;
       }
+      
       const filterRequest = {
+        prdcer_lyr_id: currentLayer.prdcer_lyr_id,
+        user_id: authResponse?.localId || '',
         color_grid_choice: selectedColors,
         change_lyr_id: currentLayer.prdcer_lyr_id,
         change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
+        change_lyr_current_color: currentLayer.points_color || '#000000', // Send current color
         based_on_lyr_id: baseLayer.prdcer_lyr_id,
         based_on_lyr_name: baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`,
-        // coverage_property: selectedBasedon,
-        coverage_property: '',
-
-        coverage_value: radiusInput,
-        color_based_on: basedOnProperty,
+        coverage_property: coverageType,
+        coverage_value: parseInt(coverageValue) || 0,
+        color_based_on: basedOnProperty || '',
         list_names: nameInputs.filter(name => name.trim() !== ''),
         threshold: getFormattedThreshold(thresholdValue, basedOnProperty),
         change_lyr_new_color: selectedColor,
       };
 
+      console.log('Filter Request:', filterRequest);
+
       const filterResponse = await handleFilteredZone(filterRequest);
 
       if (!filterResponse || filterResponse.length === 0) {
         toast.error('No features found based on the given criteria.');
-      }
-      if (!filterResponse) {
-        throw new Error('Filter data failed.');
+        return;
       }
 
       setGeoPoints(prevGeoPoints =>
@@ -355,7 +368,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
             return {
               ...layer,
-
               features: mergedFeatures,
               points_color: matchedFilterData[0].points_color || layer.points_color,
             };
@@ -365,13 +377,12 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         })
       );
     } catch (error: any) {
+      console.error('Filter error:', error);
       toast.error('Server error (500). Please try again later.');
     } finally {
       setIsLoading(false);
     }
   };
-
-  // ------------omar code -------
 
   const handleApplyRecolor = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -384,32 +395,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       const selectedColors = colors[chosenPallet || 0];
 
       if (!currentLayer || !baseLayer || !basedOnProperty || !selectedColors || !selectedBasedon) {
+        toast.error('Missing required fields for recoloring');
         return;
       }
-
-      // Prepare request
-      const recolorRequest = {
-        prdcer_lyr_id: currentLayer.prdcer_lyr_id,
-        user_id: authResponse?.localId || '',
-        color_grid_choice: selectedColors,
-        change_lyr_id: currentLayer.prdcer_lyr_id,
-        change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
-        based_on_lyr_id: baseLayer.prdcer_lyr_id,
-        based_on_lyr_name: baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`,
-        coverage_property: selectedBasedon,
-        coverage_value: radiusInput,
-        color_based_on: basedOnProperty,
-        list_names: nameInputs.filter(name => name.trim() !== ''),
-        threshold: getFormattedThreshold(thresholdValue, basedOnProperty),
-        change_lyr_new_color: selectedColor,
-      };
-
-      // Call Filter API (returns matched/unmatched both)
-      // const filterResponse = await handleNameBasedColorZone(recolorRequest);
-
-      // if (!filterResponse || filterResponse.length === 0) {
-      //   throw new Error('Filter API failed or empty response.');
-      // }
 
       // Prepare Gradient API request
       const gradientRequest = {
@@ -418,6 +406,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         color_grid_choice: selectedColors,
         change_lyr_id: currentLayer.prdcer_lyr_id,
         change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
+        change_lyr_current_color: currentLayer.points_color || '#000000', // Send current color
         based_on_lyr_id: baseLayer.prdcer_lyr_id,
         based_on_lyr_name: baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`,
         coverage_property: selectedBasedon,
@@ -472,6 +461,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     } catch (error) {
       console.error('Error applying dynamic color:', error);
       setIsError(error instanceof Error ? error : new Error('Failed to apply dynamic color'));
+      toast.error('Failed to apply recoloring');
     } finally {
       setIsLoading(false);
     }
@@ -480,10 +470,21 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const handleMetricChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value;
     setSelectedBasedon(value);
+    setCoverageType(value);
 
     setGeoPoints(prev =>
       prev.map((point, idx) => (idx === layerIndex ? { ...point, basedon: value } : point))
     );
+  };
+
+  // Handler for coverage type changes from BasedOnLayerDropdown
+  const handleCoverageTypeChange = (type: string) => {
+    setCoverageType(type);
+  };
+
+  // Handler for coverage value changes from BasedOnLayerDropdown
+  const handleCoverageValueChange = (value: string) => {
+    setCoverageValue(value);
   };
 
   useEffect(() => {
@@ -595,7 +596,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 <div
                   onClick={e => {
                     setIsAdvanced(!isAdvanced);
-
                     toggleDropdown(e);
                   }}
                   className="text-lg cursor-pointer"
@@ -721,9 +721,11 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
               selectedOption={selectedOption}
               setPropertyThreshold={handleThresholdChange}
               onColorChange={handleNameColorChange}
+              coverageType={coverageType}
+              setCoverageType={handleCoverageTypeChange}
+              coverageValue={coverageValue}
+              setCoverageValue={handleCoverageValueChange}
             />
-
-            {/* <BasedOnDropdown layerIndex={layerIndex} /> */}
 
             {selectedOption === 'recolor' && (
               <>
@@ -745,9 +747,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                         name="radius"
                         className="block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-s-lg border 
                               border-e-0 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                        defaultValue={radiusInput}
+                        value={radiusInput}
                         onChange={e => handleRadiusInputChange(e.target.value)}
-                        placeholder="Enter distance"
+                        placeholder=""
                         required
                       />
                     </div>
@@ -772,7 +774,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
             <div>
               {selectedOption === 'recolor' ? (
                 <button
-                  // onClick={e => handleApplyDynamicColor(e)}
                   onClick={e => handleApplyRecolor(e)}
                   disabled={isLoading}
                   className="w-full h-7 text-sm bg-[#115740] text-white font-semibold rounded-md hover:bg-[#123f30] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"

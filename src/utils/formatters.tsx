@@ -5,7 +5,7 @@
  * @returns Formatted string
  */
 export function formatLargeNumber(num: number, precision: number = 2): string {
-  if (!Number.isFinite(num)) return '0';
+  console.log('formatting large number', num);
   if (Math.abs(num) <= 999) return num.toString();
 
   const suffixes = ['', 'k', 'm', 'b', 't'];

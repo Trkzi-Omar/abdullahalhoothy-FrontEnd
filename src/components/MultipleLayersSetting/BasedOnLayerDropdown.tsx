@@ -4,26 +4,28 @@ import { BasedOnLayerDropdownProps } from '../../types/allTypesAndInterfaces';
 import { formatSubcategoryName } from '../../utils/helperFunctions';
 import { HexColorPicker } from 'react-colorful';
 
-export default function BasedOnLayerDropdown({
-  layerIndex,
-  nameInputs,
-  setNameInputs,
-  selectedOption,
-  onColorChange,
-  setPropertyThreshold,
-  coverageType,
-  setCoverageType,
-  coverageValue,
-  setCoverageValue,
-}: BasedOnLayerDropdownProps) {
-  const { basedOnLayerId, setBasedOnLayerId, geoPoints, basedOnProperty, setBasedOnProperty } =
-    useCatalogContext();
+export default function BasedOnLayerDropdown({ layerIndex }: BasedOnLayerDropdownProps) {
+  const {
+    basedOnLayerId,
+    setBasedOnLayerId,
+    geoPoints,
+    basedOnProperty,
+    setBasedOnProperty,
+    nameInputs,
+    setNameInputs,
+    selectedOption,
+    onColorChange,
+    setPropertyThreshold,
+    coverageType,
+    setCoverageType,
+    coverageValue,
+    setCoverageValue,
+  } = useCatalogContext();
   const availableLayers = geoPoints.map(layer => ({
     id: layer.prdcer_lyr_id,
     name: layer.prdcer_layer_name || `Layer ${layer.layerId}`,
   }));
   const [selectedColor, setSelectedColor] = useState('#000000');
-  const [showColorPicker, setShowColorPicker] = useState(false);
   const filterableProperties = [
     'id',
     'phone',
@@ -44,13 +46,12 @@ export default function BasedOnLayerDropdown({
 
   const [isOpen, setIsOpen] = useState(false);
   const [localCoverageType, setLocalCoverageType] = useState('radius');
-  const [localCoverageValue, setLocalCoverageValue] = useState(''); // Changed to empty string
+  const [localCoverageValue, setLocalCoverageValue] = useState('');
   const [enableSecondSentence, setEnableSecondSentence] = useState(false);
   const [propertyValue, setPropertyValue] = useState('');
 
   const pickerRef = useRef<HTMLDivElement>(null);
 
-  // Get current layer name
   const currentLayerName = geoPoints[layerIndex]?.prdcer_layer_name || `Layer ${layerIndex + 1}`;
 
   const handleColorChange = (color: string) => {
@@ -81,20 +82,6 @@ export default function BasedOnLayerDropdown({
 
     return Array.from(new Set(filteredMetrics));
   }, [geoPoints, basedOnLayerId]);
-
-  const handleNameChange = (index: number, value: string) => {
-    const updatedNames = [...nameInputs];
-    updatedNames[index] = value;
-    setNameInputs(updatedNames);
-  };
-
-  const handleAddNameField = () => {
-    setNameInputs([...nameInputs, '']);
-  };
-
-  const handleRemoveNameField = (index: number) => {
-    setNameInputs(nameInputs.filter((_, i) => i !== index));
-  };
 
   const [inputValue, setInputValue] = useState('');
   const [threshold, setThreshold] = useState('');
@@ -147,7 +134,6 @@ export default function BasedOnLayerDropdown({
     setPropertyValue(e.target.value);
   };
 
-  // Handle enabling/disabling the second sentence
   const handleSecondSentenceToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const enabled = e.target.checked;
     setEnableSecondSentence(enabled);
@@ -279,7 +265,7 @@ export default function BasedOnLayerDropdown({
                   </option>
                 ))}
               </select>
-              
+
               {/* Only show the value input if a property is selected */}
               {basedOnProperty && (
                 <>
@@ -305,7 +291,9 @@ export default function BasedOnLayerDropdown({
                       <option value="">any type</option>
                       {availableTypes.map((type, index) => (
                         <option key={index} value={type}>
-                          {type.replace(/_/g, ' ').replace(/\b\w/g, (char: any) => char.toUpperCase())}
+                          {type
+                            .replace(/_/g, ' ')
+                            .replace(/\b\w/g, (char: any) => char.toUpperCase())}
                         </option>
                       ))}
                     </select>
@@ -378,10 +366,7 @@ export default function BasedOnLayerDropdown({
           </option>
           {metrics.map(metric => {
             return (
-              <option
-                key={metric}
-                value={metric}
-              >
+              <option key={metric} value={metric}>
                 {formatSubcategoryName(metric)}
               </option>
             );

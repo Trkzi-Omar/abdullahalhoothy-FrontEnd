@@ -193,6 +193,15 @@ export function CatalogProvider(props: { children: ReactNode }) {
     null
   );
   const currentSessionIdRef = useRef<string | null>(null);
+  const [nameInputs, setNameInputs] = useState<string[]>([]);
+  const [selectedOption, setSelectedOption] = useState<string>('recolor');
+  const [propertyThreshold, setPropertyThreshold] = useState<string>('');
+  const [coverageType, setCoverageType] = useState<string>('radius');
+  const [coverageValue, setCoverageValue] = useState<string>('');
+
+  const onColorChange = (color: string) => {
+    console.log('Color changed:', color);
+  };
 
   async function fetchGeoPoints(
     id: string,
@@ -993,7 +1002,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
         deleteMeasurement,
         selectedHomeTab,
         setSelectedHomeTab,
-        // Add measurement session management
         currentMeasurementSessionId,
         startMeasurementSession,
         endMeasurementSession,
@@ -1003,6 +1011,17 @@ export function CatalogProvider(props: { children: ReactNode }) {
         getCurrentSessionId,
         markSessionMarkersForDeletion,
         cleanupMarkedMarkers,
+        nameInputs,
+        setNameInputs,
+        selectedOption,
+        setSelectedOption,
+        onColorChange,
+        propertyThreshold,
+        setPropertyThreshold,
+        coverageType,
+        setCoverageType,
+        coverageValue,
+        setCoverageValue,
       }}
     >
       {children}

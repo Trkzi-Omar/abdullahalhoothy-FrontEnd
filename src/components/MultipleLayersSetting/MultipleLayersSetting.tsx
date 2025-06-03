@@ -73,26 +73,30 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     isLoading,
     handleFilteredZone,
     handleNameBasedColorZone,
+    nameInputs,
+    setNameInputs,
+    selectedOption,
+    setSelectedOption,
+    coverageType,
+    setCoverageType,
+    coverageValue,
+    setCoverageValue,
+    propertyThreshold,
+    setPropertyThreshold,
   } = useCatalogContext();
   const layer = geoPoints[layerIndex];
 
   const { prdcer_layer_name, layer_legend, is_zone_lyr, display, is_heatmap, is_grid, city_name } =
     layer;
-  const [isZoneLayer, setIsZoneLayer] = useState(is_zone_lyr);
+  const [, setIsZoneLayer] = useState(is_zone_lyr);
   const [isDisplay, setIsDisplay] = useState(display);
   const [isHeatmap, setIsHeatmap] = useState(is_heatmap);
   const [isGrid, setIsGrid] = useState(is_grid);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
   const { authResponse } = useAuth();
-  const [selectedOption, setSelectedOption] = useState('recolor');
-  const [isError, setIsError] = useState<Error | null>(null);
+  const [, setIsError] = useState<Error | null>(null);
   const [radiusInput, setRadiusInput] = useState<number | string>(layer.radius_meters || '');
-  const [nameInputs, setNameInputs] = useState<string[]>([]);
-  
-  // Coverage state management - start with empty values
-  const [coverageType, setCoverageType] = useState<string>('radius');
-  const [coverageValue, setCoverageValue] = useState<string>(''); // Changed to empty string
 
   const dropdownIndex = layerIndex ?? -1;
   const isOpen = openDropdownIndices[1] === dropdownIndex;
@@ -119,7 +123,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       setCoverageValue(String(layer.radius_meters));
     }
   }, []);
-  
+
   useEffect(
     function () {
       setIsZoneLayer(layer.is_zone_lyr);
@@ -248,7 +252,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         change_lyr_name: geoPoints[layerIndex]?.prdcer_layer_name || `Layer ${layerIndex}`,
         based_on_lyr_id: prdcer_lyr_id,
         based_on_lyr_name: geoPoints[layerIndex]?.prdcer_layer_name || `Layer ${layerIndex}`,
-        threshold: getFormattedThreshold(thresholdValue, basedOnProperty),
+        threshold: getFormattedThreshold(propertyThreshold, basedOnProperty),
         coverage_value: newRadius,
         coverage_property: selectedBasedon,
         color_based_on: basedOnProperty || '',
@@ -303,15 +307,13 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setSelectedColor(color);
   };
 
-  const [thresholdValue, setThresholdValue] = useState('');
-
   const handleThresholdChange = (value: string) => {
-    setThresholdValue(value);
+    setPropertyThreshold(value);
   };
 
   const handleApplyFilter = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    
+
     // Validate required fields
     if (!coverageValue || !basedOnLayerId) {
       toast.error('Please fill in all required fields (distance and layer)');
@@ -330,7 +332,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         toast.error('Missing required fields for filtering');
         return;
       }
-      
+
       const filterRequest = {
         prdcer_lyr_id: currentLayer.prdcer_lyr_id,
         user_id: authResponse?.localId || '',
@@ -344,7 +346,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         coverage_value: parseInt(coverageValue) || 0,
         color_based_on: basedOnProperty || '',
         list_names: nameInputs.filter(name => name.trim() !== ''),
-        threshold: getFormattedThreshold(thresholdValue, basedOnProperty),
+        threshold: getFormattedThreshold(propertyThreshold, basedOnProperty),
         change_lyr_new_color: selectedColor,
       };
 
@@ -410,7 +412,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         based_on_lyr_id: baseLayer.prdcer_lyr_id,
         based_on_lyr_name: baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`,
         coverage_property: selectedBasedon,
-        threshold: getFormattedThreshold(thresholdValue, basedOnProperty),
+        threshold: getFormattedThreshold(propertyThreshold, basedOnProperty),
         coverage_value: radiusInput,
         color_based_on: basedOnProperty,
         list_names: nameInputs,
@@ -714,18 +716,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
             <p className="text-sm mt-2 mb-0 font-medium">based on metric</p>
 
-            <BasedOnLayerDropdown
-              layerIndex={layerIndex}
-              nameInputs={nameInputs}
-              setNameInputs={setNameInputs}
-              selectedOption={selectedOption}
-              setPropertyThreshold={handleThresholdChange}
-              onColorChange={handleNameColorChange}
-              coverageType={coverageType}
-              setCoverageType={handleCoverageTypeChange}
-              coverageValue={coverageValue}
-              setCoverageValue={handleCoverageValueChange}
-            />
+            <BasedOnLayerDropdown layerIndex={layerIndex} />
 
             {selectedOption === 'recolor' && (
               <>

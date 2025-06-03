@@ -7,10 +7,11 @@ import {
   VisualizationMode,
   MarkerData,
   MeasurementData,
+  MarkerType,
 } from '../types';
 import urls from '../urls.json';
 import userIdData from '../currentUserId.json';
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import apiRequest from '../services/apiRequest';
 import html2canvas from 'html2canvas';
@@ -188,6 +189,10 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [caseStudyContent, setCaseStudyContent] = useState<Descendant[]>(defaultCaseStudyContent);
   const [measurements, setMeasurements] = useState<MeasurementData[]>([]);
   const [selectedHomeTab, setSelectedHomeTab] = useState<'LAYER' | 'CATALOG'>('LAYER');
+  const [currentMeasurementSessionId, setCurrentMeasurementSessionId] = useState<string | null>(
+    null
+  );
+  const currentSessionIdRef = useRef<string | null>(null);
 
   async function fetchGeoPoints(
     id: string,
@@ -616,19 +621,42 @@ export function CatalogProvider(props: { children: ReactNode }) {
     }
   }
 
-  function addMarker(name: string, description: string, coordinates: [number, number]) {
+  function addMarker(
+    name: string,
+    description: string,
+    coordinates: [number, number],
+    colorHEX: string,
+    markerType: MarkerType = 'saved',
+    measurementId?: string
+  ) {
+    console.log('addMarker called with:', {
+      name,
+      markerType,
+      measurementId,
+      currentSessionId: currentSessionIdRef.current,
+    });
+
+    const finalMeasurementId =
+      markerType === 'measurement-draft' && !measurementId
+        ? currentSessionIdRef.current || undefined
+        : measurementId;
+
+    console.log('Final measurementId assigned:', finalMeasurementId);
+
     const newMarker: MarkerData = {
       id: uuidv4(),
       name,
       description,
       coordinates,
       timestamp: Date.now(),
+      markerType,
+      measurementId: finalMeasurementId,
+      colorHEX,
+      isTemporary: markerType === 'measurement-draft',
     };
 
-    setMarkers(prevMarkers => {
-      const updatedMarkers = [...prevMarkers, newMarker];
-      return updatedMarkers;
-    });
+    console.log('Created marker:', newMarker);
+    setMarkers(prevMarkers => [...prevMarkers, newMarker]);
   }
 
   function deleteMarker(id: string) {
@@ -645,10 +673,12 @@ export function CatalogProvider(props: { children: ReactNode }) {
     destinationPoint: [number, number],
     route: any,
     distance: number,
-    duration: number
-  ) {
+    duration: number,
+    measurementId?: string
+  ): string {
+    const id = measurementId || uuidv4();
     const newMeasurement: MeasurementData = {
-      id: uuidv4(),
+      id,
       name,
       description,
       sourcePoint,
@@ -660,12 +690,218 @@ export function CatalogProvider(props: { children: ReactNode }) {
     };
 
     setMeasurements(prevMeasurements => [...prevMeasurements, newMeasurement]);
+    return id;
   }
 
   function deleteMeasurement(id: string) {
+    // Remove the measurement from state
     setMeasurements(prevMeasurements =>
       prevMeasurements.filter(measurement => measurement.id !== id)
     );
+
+    // Close any popups related to this measurement
+    document.querySelectorAll('.measurement-popup').forEach(popup => {
+      const popupInstance = (popup as any)._mapboxgl_popup;
+      if (popupInstance && popupInstance.remove) {
+        popupInstance.remove();
+      } else {
+        popup.remove();
+      }
+    });
+
+    // Remove ALL markers associated with this measurement (both draft and saved)
+    setMarkers(prevMarkers => {
+      console.log('Deleting measurement:', id);
+      console.log('Markers before filtering:', prevMarkers);
+
+      const filteredMarkers = prevMarkers.filter(marker => {
+        const shouldKeep = marker.measurementId !== id;
+
+        console.log(`Marker ${marker.id} (${marker.name}):`, {
+          markerType: marker.markerType,
+          measurementId: marker.measurementId,
+          targetMeasurementId: id,
+          shouldKeep,
+        });
+
+        return shouldKeep;
+      });
+
+      console.log('Markers after filtering:', filteredMarkers);
+      console.log('Markers removed:', prevMarkers.length - filteredMarkers.length);
+
+      return filteredMarkers;
+    });
+
+    // Remove the route layer from the map if it exists
+    const mapElement = document.querySelector('#map-container');
+    const map = mapElement ? (mapElement as any)._map : null;
+    if (map) {
+      if (map.getSource(`measure-route-${id}`)) {
+        map.removeLayer(`measure-route-line-${id}`);
+        map.removeSource(`measure-route-${id}`);
+      }
+    }
+  }
+
+  function startMeasurementSession(): string {
+    const sessionId = uuidv4();
+    setCurrentMeasurementSessionId(sessionId);
+    currentSessionIdRef.current = sessionId;
+    console.log('Started measurement session:', sessionId);
+    return sessionId;
+  }
+
+  function endMeasurementSession() {
+    console.log('Ending measurement session:', currentSessionIdRef.current);
+    setCurrentMeasurementSessionId(null);
+    currentSessionIdRef.current = null;
+  }
+
+  function clearSessionMarkers(sessionId?: string) {
+    const targetSessionId = sessionId || currentSessionIdRef.current;
+    if (!targetSessionId) {
+      console.log('No session ID provided for clearing markers');
+      return;
+    }
+
+    console.log('Clearing markers for session:', targetSessionId);
+    setMarkers(prevMarkers => {
+      console.log('Current markers before filtering:', prevMarkers);
+
+      const filteredMarkers = prevMarkers.filter(marker => {
+        const shouldKeep =
+          marker.markerType !== 'measurement-draft' || marker.measurementId !== targetSessionId;
+
+        console.log(`Marker ${marker.id} (${marker.name}):`, {
+          markerType: marker.markerType,
+          measurementId: marker.measurementId,
+          targetSessionId,
+          shouldKeep,
+        });
+
+        return shouldKeep;
+      });
+
+      console.log('Filtered markers after filtering:', filteredMarkers);
+      console.log('Markers removed:', prevMarkers.length - filteredMarkers.length);
+
+      return filteredMarkers;
+    });
+  }
+
+  function clearAllDraftMarkers() {
+    console.log('Clearing all draft markers');
+    setMarkers(prevMarkers => {
+      console.log('Current markers before filtering:', prevMarkers);
+
+      const filteredMarkers = prevMarkers.filter(marker => {
+        const shouldKeep = marker.markerType !== 'measurement-draft';
+
+        console.log(`Marker ${marker.id} (${marker.name}):`, {
+          markerType: marker.markerType,
+          measurementId: marker.measurementId,
+          shouldKeep,
+        });
+
+        return shouldKeep;
+      });
+
+      console.log('Filtered markers after filtering:', filteredMarkers);
+      console.log('Markers removed:', prevMarkers.length - filteredMarkers.length);
+
+      return filteredMarkers;
+    });
+  }
+
+  function clearOtherSessionMarkers() {
+    const currentSessionId = currentSessionIdRef.current;
+    console.log('Clearing markers from other sessions, keeping current session:', currentSessionId);
+
+    setMarkers(prevMarkers => {
+      console.log('Current markers before filtering:', prevMarkers);
+
+      const filteredMarkers = prevMarkers.filter(marker => {
+        // Keep all non-draft markers
+        if (marker.markerType !== 'measurement-draft') {
+          return true;
+        }
+
+        // Keep draft markers from current session
+        const shouldKeep = marker.measurementId === currentSessionId;
+
+        console.log(`Marker ${marker.id} (${marker.name}):`, {
+          markerType: marker.markerType,
+          measurementId: marker.measurementId,
+          currentSessionId,
+          shouldKeep,
+        });
+
+        return shouldKeep;
+      });
+
+      console.log('Filtered markers after filtering:', filteredMarkers);
+      console.log('Markers removed:', prevMarkers.length - filteredMarkers.length);
+
+      return filteredMarkers;
+    });
+  }
+
+  function markSessionMarkersForDeletion(sessionId?: string) {
+    const targetSessionId = sessionId || currentSessionIdRef.current;
+    if (!targetSessionId) {
+      console.log('No session ID provided for marking markers for deletion');
+      return;
+    }
+
+    console.log('Marking markers for deletion for session:', targetSessionId);
+    setMarkers(prevMarkers => {
+      console.log('Current markers before marking for deletion:', prevMarkers);
+
+      const updatedMarkers = prevMarkers.map(marker => {
+        if (marker.markerType === 'measurement-draft' && marker.measurementId === targetSessionId) {
+          console.log(`Marking marker ${marker.id} (${marker.name}) for deletion`);
+          return {
+            ...marker,
+            markerType: 'measurement-to-delete' as MarkerType,
+          };
+        }
+        return marker;
+      });
+
+      const markedCount =
+        updatedMarkers.filter(m => m.markerType === 'measurement-to-delete').length -
+        prevMarkers.filter(m => m.markerType === 'measurement-to-delete').length;
+      console.log('Markers marked for deletion:', markedCount);
+
+      return updatedMarkers;
+    });
+  }
+
+  function cleanupMarkedMarkers() {
+    console.log('Cleaning up markers marked for deletion');
+    setMarkers(prevMarkers => {
+      console.log('Current markers before cleanup:', prevMarkers);
+
+      const filteredMarkers = prevMarkers.filter(marker => {
+        const shouldKeep = marker.markerType !== 'measurement-to-delete';
+
+        if (!shouldKeep) {
+          console.log(`Removing marker ${marker.id} (${marker.name}) marked for deletion`);
+        }
+
+        return shouldKeep;
+      });
+
+      console.log('Markers after cleanup:', filteredMarkers);
+      console.log('Markers removed:', prevMarkers.length - filteredMarkers.length);
+
+      return filteredMarkers;
+    });
+  }
+
+  function getCurrentSessionId(): string | null {
+    return currentSessionIdRef.current;
   }
 
   return (
@@ -757,6 +993,16 @@ export function CatalogProvider(props: { children: ReactNode }) {
         deleteMeasurement,
         selectedHomeTab,
         setSelectedHomeTab,
+        // Add measurement session management
+        currentMeasurementSessionId,
+        startMeasurementSession,
+        endMeasurementSession,
+        clearSessionMarkers,
+        clearAllDraftMarkers,
+        clearOtherSessionMarkers,
+        getCurrentSessionId,
+        markSessionMarkersForDeletion,
+        cleanupMarkedMarkers,
       }}
     >
       {children}

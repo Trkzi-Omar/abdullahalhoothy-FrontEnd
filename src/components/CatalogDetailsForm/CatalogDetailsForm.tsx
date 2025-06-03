@@ -1,7 +1,4 @@
-// src/components/CatalogDetailsForm/CatalogDetailsForm.tsx
-
 import { useState, ChangeEvent } from 'react';
-import styles from './CatalogDetailsForm.module.css';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { HiCheck } from 'react-icons/hi';
 
@@ -22,6 +19,7 @@ function CatalogDetailsForm() {
     saveResponse,
     markers,
     setMarkers,
+    setMeasurements,
   } = useCatalogContext();
 
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +37,7 @@ function CatalogDetailsForm() {
     if (validateForm()) {
       handleSaveCatalog();
       setMarkers([]);
+      setMeasurements([]);
     }
   }
 
@@ -48,6 +47,7 @@ function CatalogDetailsForm() {
     setDescription('');
     setSubscriptionPrice('');
     setMarkers([]);
+    setMeasurements([]);
     setFormStage('catalog');
   }
 

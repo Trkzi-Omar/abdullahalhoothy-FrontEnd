@@ -1,54 +1,69 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import mapboxgl, { LngLat } from 'mapbox-gl';
+import mapboxgl from 'mapbox-gl';
 import apiRequest from '../services/apiRequest';
 import urls from '../urls.json';
 import { useMapContext } from '../context/MapContext';
 import { toast } from 'sonner';
 import { useCatalogContext } from '../context/CatalogContext';
+import { useUIContext } from '../context/UIContext';
+import { MeasurementForm } from '../components/MeasurementForm/MeasurementForm';
+import React from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { MarkerType } from '../types';
 
 export interface MeasurementState {
   isMeasuring: boolean;
   measureSourcePoint: mapboxgl.LngLat | null;
   measureDestinationPoint: mapboxgl.LngLat | null;
   measurementResult: any | null;
-  measureMarkers: mapboxgl.Marker[];
   measureLine: any | null;
   previewLine: any | null;
   measurementPopup: mapboxgl.Popup | null;
 }
 
 export interface MeasurementActions {
-  initializeMeasureMode: () => void;
+  initializeMeasureMode: (sourcePointId?: string) => void;
   exitMeasureMode: () => void;
   handleMapClickForMeasurement: (e: mapboxgl.MapMouseEvent) => Promise<void>;
   clearMeasurementLayers: () => void;
-  displayRouteOnMap: (polygonData: any) => void;
+  displayRouteOnMap: (
+    polygonData: any,
+    savedMeasurement?: { name: string; description: string; distance: number; duration: number }
+  ) => void;
   decodePolyline: (encoded: string) => [number, number][];
   setIsMeasuring: (isMeasuring: boolean) => void;
   setMeasureSourcePoint: (point: mapboxgl.LngLat | null) => void;
   setMeasureDestinationPoint: (point: mapboxgl.LngLat | null) => void;
   setMeasurementResult: (result: any | null) => void;
-  setMeasureMarkers: (markers: mapboxgl.Marker[]) => void;
 }
 
 export const useMeasurement = (): MeasurementState & MeasurementActions => {
   const { mapRef, shouldInitializeFeatures } = useMapContext();
-  const { markers, addMeasurement } = useCatalogContext();
+  const {
+    markers,
+    addMarker,
+    setMarkers,
+    addMeasurement,
+    startMeasurementSession,
+    endMeasurementSession,
+    clearSessionMarkers,
+    clearOtherSessionMarkers,
+    getCurrentSessionId,
+    markSessionMarkersForDeletion,
+    cleanupMarkedMarkers,
+  } = useCatalogContext();
+  const { openModal, closeModal } = useUIContext();
   const [isMeasuring, setIsMeasuring] = useState<boolean>(false);
   const [measureSourcePoint, setMeasureSourcePoint] = useState<mapboxgl.LngLat | null>(null);
   const [measureDestinationPoint, setMeasureDestinationPoint] = useState<mapboxgl.LngLat | null>(
     null
   );
   const [measurementResult, setMeasurementResult] = useState<any | null>(null);
-  const [measureMarkers, setMeasureMarkers] = useState<mapboxgl.Marker[]>([]);
-  const measureMarkersRef = useRef<mapboxgl.Marker[]>(measureMarkers);
   const [measureLine, setMeasureLine] = useState<any | null>(null);
   const [previewLine, setPreviewLine] = useState<any | null>(null);
   const [measurementPopup, setMeasurementPopup] = useState<mapboxgl.Popup | null>(null);
 
-  useEffect(() => {
-    measureMarkersRef.current = measureMarkers;
-  }, [measureMarkers]);
+  const isExitingRef = useRef<boolean>(false);
 
   const clearMeasurementLayers = useCallback(() => {
     const map = mapRef.current;
@@ -81,60 +96,91 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
 
   const initializeMeasureMode = useCallback(
     (sourcePointId?: string) => {
+      console.log('initializeMeasureMode called with sourcePointId:', sourcePointId);
       setIsMeasuring(true);
-      // If sourcePointId is a marker ID, get its coordinates
-      // Otherwise, it's already a LngLat object from the map click
-      const sourcePoint = sourcePointId
-        ? (() => {
-            const [lng, lat] =
-              markers.find(marker => marker.id === sourcePointId)?.coordinates || [];
-            return lng && lat ? new mapboxgl.LngLat(lng, lat) : null;
-          })()
-        : null;
-
-      setMeasureSourcePoint(sourcePoint);
-      setMeasureDestinationPoint(null);
-      setMeasurementResult(null);
-
-      measureMarkersRef.current.forEach(marker => marker.remove());
-      setMeasureMarkers([]);
-
-      if (measurementPopup) {
-        measurementPopup.remove();
-        setMeasurementPopup(null);
-      }
-
       clearMeasurementLayers();
+      const newSessionId = startMeasurementSession();
+      console.log('New session started with ID:', newSessionId);
 
-      if (mapRef.current) {
-        mapRef.current.getCanvas().style.cursor = 'crosshair';
-      }
-
-      // If we have a source point, add its marker
-      if (sourcePoint && mapRef.current) {
-        const marker = new mapboxgl.Marker({ color: '#FF0000' })
-          .setLngLat(sourcePoint)
-          .addTo(mapRef.current);
-        setMeasureMarkers(prev => [...prev, marker]);
+      if (sourcePointId) {
+        console.log('Finding source point with ID:', sourcePointId);
+        const sourceMarker = markers.find(m => m.id === sourcePointId);
+        if (sourceMarker) {
+          console.log('Found source marker:', sourceMarker);
+          setMeasureSourcePoint(
+            new mapboxgl.LngLat(sourceMarker.coordinates[0], sourceMarker.coordinates[1])
+          );
+        } else {
+          console.log('Source marker not found');
+        }
       }
     },
-    [mapRef, measurementPopup, clearMeasurementLayers, markers]
+    [clearMeasurementLayers, startMeasurementSession, markers]
   );
 
   const exitMeasureMode = useCallback(() => {
+    console.log('exitMeasureMode called');
+
+    // Guard against multiple executions
+    if (isExitingRef.current) {
+      console.log('exitMeasureMode already in progress, skipping...');
+      return;
+    }
+
+    isExitingRef.current = true;
+
+    // Capture the current session ID before ending the session
+    const currentSessionId = getCurrentSessionId();
+    console.log('Current session ID at exit:', currentSessionId);
+
     setIsMeasuring(false);
     setMeasureSourcePoint(null);
     setMeasureDestinationPoint(null);
     setMeasurementResult(null);
 
-    measureMarkersRef.current.forEach(marker => marker.remove());
-    setMeasureMarkers([]);
+    const map = mapRef.current;
+    if (map) {
+      // Mark markers from current session for deletion using the captured session ID
+      if (currentSessionId) {
+        markSessionMarkersForDeletion(currentSessionId);
+      } else {
+        console.warn('No session ID available for marking markers for deletion');
+      }
+
+      // Remove all measurement routes and their layers
+      if (map.getSource('measure-route')) {
+        map.removeLayer('measure-route-line');
+        map.removeSource('measure-route');
+      }
+
+      // Remove all popups
+      document.querySelectorAll('.mapboxgl-popup').forEach(popup => {
+        const popupInstance = (popup as any)._mapboxgl_popup;
+        if (popupInstance && popupInstance.remove) {
+          popupInstance.remove();
+        } else {
+          popup.remove();
+        }
+      });
+
+      // Remove any remaining measurement-related layers
+      if (map.getSource('measure-line')) {
+        map.removeLayer('measure-line-layer');
+        map.removeSource('measure-line');
+      }
+      if (map.getSource('preview-line')) {
+        map.removeLayer('preview-line-layer');
+        map.removeSource('preview-line');
+      }
+    }
 
     document.querySelectorAll('.loading-popup').forEach(el => el.remove());
 
     if (measurementPopup) {
+      console.log('Removing measurement popup:', measurementPopup);
       measurementPopup.remove();
       setMeasurementPopup(null);
+      console.log('Measurement popup after removal:', measurementPopup);
     }
 
     clearMeasurementLayers();
@@ -142,7 +188,24 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
     if (mapRef.current) {
       mapRef.current.getCanvas().style.cursor = '';
     }
-  }, [mapRef, measurementPopup, clearMeasurementLayers]);
+
+    // End the measurement session AFTER marking markers for deletion
+    endMeasurementSession();
+
+    // Clean up markers that were marked for deletion
+    cleanupMarkedMarkers();
+
+    // Reset the guard
+    isExitingRef.current = false;
+  }, [
+    mapRef,
+    measurementPopup,
+    clearMeasurementLayers,
+    markSessionMarkersForDeletion,
+    endMeasurementSession,
+    cleanupMarkedMarkers,
+    getCurrentSessionId,
+  ]);
 
   const calculateDistance = (point1: mapboxgl.LngLat, point2: mapboxgl.LngLat): number => {
     const R = 6371e3; // Earth's radius in meters
@@ -204,7 +267,10 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
   };
 
   const displayRouteOnMap = useCallback(
-    (polygonData: any) => {
+    (
+      polygonData: any,
+      savedMeasurement?: { name: string; description: string; distance: number; duration: number }
+    ) => {
       const map = mapRef.current;
       if (!map) {
         return;
@@ -236,11 +302,76 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
             'line-width': 4,
           },
         });
+
+        map.on('click', 'measure-route-line', e => {
+          if (savedMeasurement) {
+            const popup = new mapboxgl.Popup({
+              closeButton: true,
+              closeOnClick: false,
+              className: 'measure-popup',
+            })
+              .setLngLat(e.lngLat)
+              .setHTML(
+                `
+                <div class="p-3 bg-white rounded-lg shadow-md">
+                  <div class="text-sm">
+                    <strong>Name:</strong> ${savedMeasurement.name}
+                    <br />
+                    <strong>Description:</strong> ${savedMeasurement.description || 'No description'}
+                    <br />
+                    <strong>Distance:</strong> ${savedMeasurement.distance.toFixed(2)} km
+                    <br />
+                    <strong>Drive Time:</strong> ${savedMeasurement.duration.toFixed(0)} min
+                  </div>
+                  <div class="mt-3 flex justify-end space-x-2">
+                    <button
+                      class="edit-measurement-hook px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </div>
+              `
+              )
+              .addTo(map);
+
+            const popupElement = popup.getElement();
+            const editButton = popupElement.querySelector('.edit-measurement-hook');
+            if (editButton) {
+              editButton.addEventListener('click', () => {
+                popup.remove();
+                openModal(
+                  React.createElement(MeasurementForm, {
+                    onSubmit: (name, description) => {
+                      // Here you would update the measurement in your catalog
+                      // For now, we'll just close the modal
+                      closeModal();
+                    },
+                    onCancel: closeModal,
+                    initialName: savedMeasurement.name,
+                    initialDescription: savedMeasurement.description,
+                  }),
+                  { isSmaller: true, hasAutoSize: true }
+                );
+              });
+            }
+
+            setMeasurementPopup(popup);
+          }
+        });
+
+        map.on('mouseenter', 'measure-route-line', () => {
+          map.getCanvas().style.cursor = 'pointer';
+        });
+
+        map.on('mouseleave', 'measure-route-line', () => {
+          map.getCanvas().style.cursor = '';
+        });
       } catch (error) {
         console.error('Error displaying route:', error);
       }
     },
-    [mapRef]
+    [mapRef, openModal, closeModal]
   );
 
   const showLoadingIndicator = useCallback(
@@ -289,7 +420,93 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
     [mapRef, measurementPopup]
   );
 
-  const showApiMeasurementResult = useCallback(
+  const handleSaveMeasurement = useCallback(
+    (point1: mapboxgl.LngLat, point2: mapboxgl.LngLat, apiResult: any) => {
+      const handleSubmit = (name: string, description: string) => {
+        // Generate measurement ID
+        const measurementId = uuidv4();
+
+        // Save the measurement with the generated ID
+        const savedMeasurementId = addMeasurement(
+          name,
+          description,
+          [point1.lng, point1.lat],
+          [point2.lng, point2.lat],
+          apiResult.data?.drive_polygon,
+          apiResult.data?.distance_in_km,
+          apiResult.data?.drive_time_in_min,
+          measurementId
+        );
+
+        // Update existing draft markers to be saved markers linked to this measurement
+        setMarkers(prevMarkers =>
+          prevMarkers.map(marker => {
+            if (marker.markerType === 'measurement-draft') {
+              return {
+                ...marker,
+                markerType: 'measurement-saved' as MarkerType,
+                measurementId: savedMeasurementId,
+                name:
+                  marker.name === 'Measurement Start'
+                    ? `${name} - Start`
+                    : marker.name === 'Measurement End'
+                      ? `${name} - End`
+                      : marker.name,
+                isTemporary: undefined,
+              };
+            }
+            return marker;
+          })
+        );
+
+        if (apiResult.data?.drive_polygon) {
+          try {
+            let routeData;
+            if (typeof apiResult.data.drive_polygon === 'string') {
+              try {
+                routeData = JSON.parse(apiResult.data.drive_polygon);
+              } catch (parseError) {
+                const coordinates = decodePolyline(apiResult.data.drive_polygon);
+                routeData = {
+                  type: 'Feature',
+                  properties: {},
+                  geometry: {
+                    type: 'LineString',
+                    coordinates: coordinates,
+                  },
+                };
+              }
+            } else {
+              routeData = apiResult.data.drive_polygon;
+            }
+
+            displayRouteOnMap(routeData, {
+              name,
+              description,
+              distance: apiResult.data.distance_in_km,
+              duration: apiResult.data.drive_time_in_min,
+            });
+          } catch (error) {
+            console.error('Error displaying saved route:', error);
+          }
+        }
+
+        toast.success('Measurement saved successfully');
+        closeModal();
+      };
+
+      openModal(
+        React.createElement(MeasurementForm, {
+          onSubmit: handleSubmit,
+          onCancel: closeModal,
+        }),
+        { isSmaller: true, hasAutoSize: true }
+      );
+    },
+    [openModal, closeModal, addMeasurement, displayRouteOnMap, decodePolyline, setMarkers]
+  );
+
+  const showRouteResult = useCallback(
     (point1: mapboxgl.LngLat, point2: mapboxgl.LngLat, apiResult: any) => {
       if (!mapRef.current) return null;
 
@@ -298,26 +515,6 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
         (point1.lat + point2.lat) / 2
       );
 
-      let formattedDistance = 'N/A';
-      let formattedDuration = 'N/A';
-
-      const distance = apiResult.data?.distance_in_km;
-      const duration = apiResult.data?.drive_time_in_min;
-
-      if (distance) {
-        formattedDistance = `${typeof distance === 'number' ? distance.toFixed(2) : distance} km`;
-      }
-
-      if (duration) {
-        const durationInMinutes = Math.round(
-          typeof duration === 'number' ? duration : parseFloat(duration)
-        );
-        formattedDuration =
-          durationInMinutes < 60
-            ? `${durationInMinutes} min`
-            : `${Math.floor(durationInMinutes / 60)} hr ${durationInMinutes % 60} min`;
-      }
-
       if (measurementPopup) {
         measurementPopup.remove();
       }
@@ -325,38 +522,28 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
       const popup = new mapboxgl.Popup({
         closeButton: true,
         closeOnClick: false,
-        className: 'measure-popup result-popup',
-        maxWidth: '300px',
-        offset: 20,
+        className: 'measure-popup',
       })
         .setLngLat(midpoint)
         .setHTML(
           `
           <div class="p-3 bg-white rounded-lg shadow-md">
-            <h3 class="font-bold text-sm mb-2">Route Information</h3>
             <div class="text-sm">
-              <div class="flex justify-between mb-1">
-                <b>Distance:</b>
-                <span class="font-medium">${formattedDistance}</span>
-              </div>
-              <div class="flex justify-between mb-3">
-                <b>Duration:</b>
-                <span class="font-medium">${formattedDuration}</span>
-              </div>
-              <div class="mt-3 flex justify-end gap-2">
-                <button
-                  class="save-measurement px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs"
-                  onclick="this.dispatchEvent(new CustomEvent('save-measurement', {bubbles: true}))"
-                >
-                  Save Measurement
-                </button>
-                <button
-                  class="exit-measure-mode-hook px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs"
-                  onclick="this.dispatchEvent(new CustomEvent('exit-measurement', {bubbles: true}))"
-                >
-                  Done
-                </button>
-              </div>
+              <strong>Distance:</strong> ${apiResult.data?.distance_in_km.toFixed(2)} km
+              <br />
+              <strong>Drive Time:</strong> ${apiResult.data?.drive_time_in_min.toFixed(0)} min
+            </div>
+            <div class="mt-3 flex justify-end space-x-2">
+              <button
+                class="exit-measure-mode-hook px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                class="save-measurement-hook px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs"
+              >
+                Save
+              </button>
             </div>
           </div>
         `
@@ -365,23 +552,22 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
 
       const popupElement = popup.getElement();
 
-      // Add event listener for saving measurement
-      popupElement.addEventListener('save-measurement', () => {
-        const name = prompt('Enter a name for this measurement:');
-        if (name) {
-          const description = prompt('Enter a description (optional):');
-          addMeasurement(
-            name,
-            description || '',
-            [point1.lng, point1.lat],
-            [point2.lng, point2.lat],
-            apiResult.data?.drive_polygon,
-            apiResult.data?.distance_in_km,
-            apiResult.data?.drive_time_in_min
-          );
-          toast.success('Measurement saved successfully');
-        }
-      });
+      const cancelButton = popupElement.querySelector('.exit-measure-mode-hook');
+      if (cancelButton) {
+        cancelButton.addEventListener('click', () => {
+          popup.remove();
+          setMeasurementPopup(null);
+          exitMeasureMode();
+        });
+      }
+
+      // Add event listener for save button
+      const saveButton = popupElement.querySelector('.save-measurement-hook');
+      if (saveButton) {
+        saveButton.addEventListener('click', () => {
+          handleSaveMeasurement(point1, point2, apiResult);
+        });
+      }
 
       popup.on('close', () => {
         exitMeasureMode();
@@ -393,7 +579,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
 
       return popup;
     },
-    [mapRef, measurementPopup, exitMeasureMode, addMeasurement]
+    [mapRef, measurementPopup, exitMeasureMode, handleSaveMeasurement]
   );
 
   const showMeasurementResult = useCallback(
@@ -432,7 +618,6 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
             <div class="mt-3 flex justify-end">
               <button
                 class="exit-measure-mode-hook px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs"
-                onclick="this.dispatchEvent(new CustomEvent('exit-measurement', {bubbles: true}))"
               >
                 Done
               </button>
@@ -443,11 +628,15 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
         .addTo(mapRef.current);
 
       const popupElement = popup.getElement();
-      popupElement.addEventListener('exit-measurement', () => {
-        popup.remove();
-        setMeasurementPopup(null);
-        exitMeasureMode();
-      });
+      const exitButton = popupElement.querySelector('.exit-measure-mode-hook');
+      if (exitButton) {
+        exitButton.addEventListener('click', () => {
+          popup.remove();
+          setMeasurementPopup(null);
+          exitMeasureMode();
+          cleanupMarkedMarkers();
+        });
+      }
 
       popup.on('close', () => {
         exitMeasureMode();
@@ -473,15 +662,47 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
       }
 
       if (!measureSourcePoint) {
+        console.log('Setting source point:', e.lngLat);
         setMeasureSourcePoint(e.lngLat);
-
-        const marker = new mapboxgl.Marker({ color: '#FF0000' }).setLngLat(e.lngLat).addTo(map);
-        setMeasureMarkers(prev => [...prev, marker]);
+        // Add source marker with isTemporary flag
+        const sourceMarker = {
+          id: uuidv4(),
+          name: 'Measurement Start',
+          description: '',
+          coordinates: [e.lngLat.lng, e.lngLat.lat] as [number, number],
+          timestamp: Date.now(),
+          isTemporary: true,
+        };
+        console.log('Adding source marker:', sourceMarker);
+        addMarker(
+          sourceMarker.name,
+          sourceMarker.description,
+          sourceMarker.coordinates,
+          '#254d70',
+          'measurement-draft',
+          getCurrentSessionId() || undefined
+        );
       } else if (!measureDestinationPoint) {
+        console.log('Setting destination point:', e.lngLat);
         setMeasureDestinationPoint(e.lngLat);
-
-        const marker = new mapboxgl.Marker({ color: '#0000FF' }).setLngLat(e.lngLat).addTo(map);
-        setMeasureMarkers(prev => [...prev, marker]);
+        // Add destination marker with isTemporary flag
+        const destMarker = {
+          id: uuidv4(),
+          name: 'Measurement End',
+          description: '',
+          coordinates: [e.lngLat.lng, e.lngLat.lat] as [number, number],
+          timestamp: Date.now(),
+          isTemporary: true,
+        };
+        console.log('Adding destination marker:', destMarker);
+        addMarker(
+          destMarker.name,
+          destMarker.description,
+          destMarker.coordinates,
+          '#075b5e',
+          'measurement-draft',
+          getCurrentSessionId() || undefined
+        );
 
         const lineColor = generateRandomColor();
 
@@ -573,7 +794,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
 
           setMeasurementResult(measurementData);
 
-          showApiMeasurementResult(measureSourcePoint, e.lngLat, apiData);
+          showRouteResult(measureSourcePoint, e.lngLat, apiData);
 
           if (apiData.data?.drive_polygon) {
             try {
@@ -644,12 +865,14 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
       measureDestinationPoint,
       measurementPopup,
       showLoadingIndicator,
-      showApiMeasurementResult,
+      showRouteResult,
       showMeasurementResult,
       displayRouteOnMap,
       decodePolyline,
       calculateDistance,
       generateRandomColor,
+      addMarker,
+      getCurrentSessionId,
     ]
   );
 
@@ -733,11 +956,9 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
     measureSourcePoint,
     measureDestinationPoint,
     measurementResult,
-    measureMarkers,
     measureLine,
     previewLine,
     measurementPopup,
-
     initializeMeasureMode,
     exitMeasureMode,
     handleMapClickForMeasurement,
@@ -748,6 +969,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
     setMeasureSourcePoint,
     setMeasureDestinationPoint,
     setMeasurementResult,
-    setMeasureMarkers,
   };
 };
+
+

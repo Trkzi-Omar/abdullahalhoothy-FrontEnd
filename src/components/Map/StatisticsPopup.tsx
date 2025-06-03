@@ -3,6 +3,7 @@ import { usePolygonsContext } from '../../context/PolygonsContext';
 import * as turf from '@turf/turf';
 import { useUIContext } from '../../context/UIContext';
 import { PolygonFeature } from '../../types/allTypesAndInterfaces';
+import { formatLargeNumber } from '../../utils/formatters';
 
 function calculatePercentageDifference(number: number, benchmark: number) {
   if (!number || !benchmark) return 0;
@@ -238,10 +239,12 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
                             >
                               <div className="text-right py-1 px-1.5 w-1/4">{data.count}</div>
                               <div className="text-right py-1 px-1.5 w-1/4">
-                                {data.sum.toFixed(2)}
+                                {formatLargeNumber(data.sum.toFixed(2))}
                               </div>
                               <div className="text-right py-1 px-1.5 w-1/4">{data.percentage}%</div>
-                              <div className="text-right py-1 px-2 w-1/4">{data.avg}</div>
+                              <div className="text-right py-1 px-2 w-1/4">
+                                {formatLargeNumber(data.avg)}
+                              </div>
                               <div className="text-right min-w-[84px] w-auto h-full">
                                 {benchmark?.value === '' && (
                                   <button

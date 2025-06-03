@@ -1,4 +1,3 @@
-// src/utils/urlUtils.ts
 import { useLocation } from 'react-router-dom';
 
 /**

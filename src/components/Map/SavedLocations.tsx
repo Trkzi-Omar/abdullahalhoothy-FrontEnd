@@ -8,6 +8,7 @@ import MapMenu from './MapMenu';
 import './mapbox-custom.css';
 import { useMeasurement } from '../../hooks/useMeasurement';
 import { MeasurementData } from '../../types';
+import { v4 as uuidv4 } from 'uuid';
 
 const SavedLocations: React.FC = () => {
   const { mapRef, shouldInitializeFeatures } = useMapContext();
@@ -36,7 +37,6 @@ const SavedLocations: React.FC = () => {
     setMeasureSourcePoint,
     setMeasureDestinationPoint,
     setMeasurementResult,
-    setMeasureMarkers,
     decodePolyline,
   } = useMeasurement();
 
@@ -50,28 +50,6 @@ const SavedLocations: React.FC = () => {
   useEffect(() => {
     console.log('markers', markers);
   }, [markers]);
-
-  useEffect(() => {
-    if (!isMarkersEnabled) {
-      if (tempMarker) {
-        tempMarker.remove();
-        setTempMarker(null);
-      }
-      if (isMeasuring) {
-        exitMeasureMode();
-      }
-
-      Object.values(markersRef.current).forEach(marker => {
-        try {
-          marker.remove();
-        } catch (error) {
-          console.error('Error removing marker:', error);
-        }
-      });
-
-      markersRef.current = {};
-    }
-  }, [isMarkersEnabled, tempMarker, setMarkers, isMeasuring, exitMeasureMode]);
 
   const handleCloseModal = useCallback(() => {
     if (tempMarker) {
@@ -163,8 +141,12 @@ const SavedLocations: React.FC = () => {
 
     if (!isMarkersEnabled) return;
 
-    markers.forEach(markerData => {
-      const marker = new mapboxgl.Marker().setLngLat(markerData.coordinates).addTo(map);
+    const visibleMarkers = markers.filter(marker => marker.markerType !== 'measurement-to-delete');
+
+    visibleMarkers.forEach(markerData => {
+      const marker = new mapboxgl.Marker({ color: markerData.colorHEX || undefined })
+        .setLngLat(markerData.coordinates)
+        .addTo(map);
 
       const popup = new mapboxgl.Popup({
         offset: 0,
@@ -336,7 +318,8 @@ const SavedLocations: React.FC = () => {
       setTempMarker(newTempMarker);
 
       const onSave = (name: string, description: string) => {
-        addMarker(name, description, [lngLat.lng, lngLat.lat]);
+        console.log('markers onSave', name, description, [lngLat.lng, lngLat.lat]);
+        addMarker(name, description, [lngLat.lng, lngLat.lat], '#7D00B8', 'measurement-draft');
         if (newTempMarker) {
           newTempMarker.remove();
           setTempMarker(null);
@@ -350,22 +333,39 @@ const SavedLocations: React.FC = () => {
 
   const startMeasureDistance = useCallback(
     (idOrLngLat: string | mapboxgl.LngLat) => {
+      console.log('startMeasureDistance called with:', idOrLngLat);
       closeMenu();
       if (typeof idOrLngLat === 'string') {
-        // If it's a marker ID, pass it directly
-        initializeMeasureMode();
+        console.log('Starting measurement from marker ID:', idOrLngLat);
+        initializeMeasureMode(idOrLngLat);
       } else {
-        // If it's a LngLat from map click, set it as source point
-        setIsMeasuring(true);
+        console.log('Starting measurement from map click:', idOrLngLat);
+        initializeMeasureMode();
+
+        // Set it as source point and add the marker
         setMeasureSourcePoint(idOrLngLat);
         setMeasureDestinationPoint(null);
         setMeasurementResult(null);
 
         if (mapRef.current) {
-          const marker = new mapboxgl.Marker({ color: '#FF0000' })
-            .setLngLat(idOrLngLat)
-            .addTo(mapRef.current);
-          setMeasureMarkers([marker]);
+          console.log('Adding source marker for map click measurement');
+          const srcMarker = {
+            id: uuidv4(),
+            name: 'Measurement Source',
+            description: '',
+            coordinates: [idOrLngLat.lng, idOrLngLat.lat] as [number, number],
+            timestamp: Date.now(),
+            isTemporary: true,
+            colorHEX: '#FF3f33',
+          };
+          addMarker(
+            srcMarker.name,
+            srcMarker.description,
+            srcMarker.coordinates,
+            srcMarker.colorHEX,
+            'measurement-draft'
+          );
+
           mapRef.current.getCanvas().style.cursor = 'crosshair';
         }
       }
@@ -378,7 +378,7 @@ const SavedLocations: React.FC = () => {
       setMeasureSourcePoint,
       setMeasureDestinationPoint,
       setMeasurementResult,
-      setMeasureMarkers,
+      addMarker,
     ]
   );
 
@@ -571,14 +571,6 @@ const SavedLocations: React.FC = () => {
 
     // Add measurement markers and routes
     measurements.forEach((measurement: MeasurementData) => {
-      const sourceMarker = new mapboxgl.Marker({ color: '#FF0000' })
-        .setLngLat(measurement.sourcePoint)
-        .addTo(map);
-
-      const destMarker = new mapboxgl.Marker({ color: '#0000FF' })
-        .setLngLat(measurement.destinationPoint)
-        .addTo(map);
-
       // Add route if it exists
       if (measurement.route) {
         try {
@@ -633,6 +625,64 @@ const SavedLocations: React.FC = () => {
               'line-width': 4,
             },
           });
+
+          map.on('click', `measure-route-line-${measurement.id}`, e => {
+            const popupContent = document.createElement('div');
+            popupContent.className =
+              'measurement-popup-content bg-white rounded-lg shadow-lg p-2 max-w-xs';
+            popupContent.innerHTML = `
+              <h3 class="font-bold text-lg text-gray-800 mb-2">${measurement.name}</h3>
+              <p class="text-gray-600 mb-3">${measurement.description}</p>
+              <div class="text-sm">
+                <div class="flex justify-between mb-1">
+                  <b>Distance:</b>
+                  <span>${measurement.distance.toFixed(2)} km</span>
+                </div>
+                <div class="flex justify-between mb-3">
+                  <b>Duration:</b>
+                  <span>${measurement.duration} min</span>
+                </div>
+              </div>
+              <div class="mt-2 w-full flex justify-end">
+                <button class="delete-measurement text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded" data-id="${measurement.id}">
+                  Delete
+                </button>
+              </div>
+            `;
+
+            const popup = new mapboxgl.Popup({
+              offset: 0,
+              className: 'measurement-popup',
+              closeButton: true,
+              closeOnClick: false,
+            })
+              .setLngLat(e.lngLat)
+              .setDOMContent(popupContent);
+
+            popup.addTo(map);
+
+            const deleteButton = popupContent.querySelector(
+              `.delete-measurement[data-id="${measurement.id}"]`
+            );
+            if (deleteButton) {
+              deleteButton.addEventListener('click', () => {
+                handleDeleteMeasurement(measurement.id);
+                if (map.getSource(`measure-route-${measurement.id}`)) {
+                  map.removeLayer(`measure-route-line-${measurement.id}`);
+                  map.removeSource(`measure-route-${measurement.id}`);
+                }
+                popup.remove();
+              });
+            }
+          });
+
+          map.on('mouseenter', `measure-route-line-${measurement.id}`, () => {
+            map.getCanvas().style.cursor = 'pointer';
+          });
+
+          map.on('mouseleave', `measure-route-line-${measurement.id}`, () => {
+            map.getCanvas().style.cursor = '';
+          });
         } catch (error) {
           console.error('Error displaying route:', error);
         }
@@ -669,9 +719,6 @@ const SavedLocations: React.FC = () => {
         closeOnClick: false,
       }).setDOMContent(popupContent);
 
-      sourceMarker.setPopup(popup);
-      destMarker.setPopup(popup);
-
       // Add click handler for delete button
       popup.on('open', () => {
         const deleteButton = popupContent.querySelector(
@@ -680,8 +727,6 @@ const SavedLocations: React.FC = () => {
         if (deleteButton) {
           deleteButton.addEventListener('click', () => {
             handleDeleteMeasurement(measurement.id);
-            sourceMarker.remove();
-            destMarker.remove();
             // Remove route layer and source
             if (map.getSource(`measure-route-${measurement.id}`)) {
               map.removeLayer(`measure-route-line-${measurement.id}`);

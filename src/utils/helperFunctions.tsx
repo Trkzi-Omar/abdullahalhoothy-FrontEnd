@@ -1,4 +1,3 @@
-// helperFunctions.tsx
 export function formatSubcategoryName(name: string): string {
   return name
     .split('_')

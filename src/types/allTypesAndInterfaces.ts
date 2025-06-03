@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from 'axios';
 import React, { ReactNode } from 'react';
-import { MarkerData } from './marker';
+import { MarkerData, MarkerType, MeasurementData } from './marker';
 import { Insights } from './casStudy';
 import { Descendant } from 'slate';
 
@@ -198,7 +198,14 @@ export interface CatalogContextType {
   ) => Promise<GradientColorBasedOnZone[]>;
   markers: MarkerData[];
   setMarkers: React.Dispatch<React.SetStateAction<MarkerData[]>>;
-  addMarker: (name: string, description: string, coordinates: [number, number]) => void;
+  addMarker: (
+    name: string,
+    description: string,
+    coordinates: [number, number],
+    colorHEX: string,
+    markerType?: MarkerType,
+    measurementId?: string
+  ) => void;
   deleteMarker: (id: string) => void;
   isMarkersEnabled: boolean;
   setIsMarkersEnabled: React.Dispatch<React.SetStateAction<boolean>>;
@@ -210,10 +217,20 @@ export interface CatalogContextType {
     destinationPoint: [number, number],
     route: any,
     distance: number,
-    duration: number
-  ) => void;
+    duration: number,
+    measurementId?: string
+  ) => string;
   setMeasurements: React.Dispatch<React.SetStateAction<MeasurementData[]>>;
   deleteMeasurement: (id: string) => void;
+  currentMeasurementSessionId: string | null;
+  startMeasurementSession: () => string;
+  endMeasurementSession: () => void;
+  clearSessionMarkers: (sessionId?: string) => void;
+  clearAllDraftMarkers: () => void;
+  clearOtherSessionMarkers: () => void;
+  getCurrentSessionId: () => string | null;
+  markSessionMarkersForDeletion: (sessionId?: string) => void;
+  cleanupMarkedMarkers: () => void;
 }
 
 export interface GradientColorBasedOnZone extends MapFeatures {
@@ -523,15 +540,6 @@ export interface User {
   name: string;
 }
 
-export type AuthResponse = AuthSuccessResponse | AuthFailedResponse | object | null;
-
-export interface AuthContextType {
-  authResponse: AuthResponse;
-  setAuthResponse: (response: AuthResponse) => void;
-  isAuthenticated: boolean;
-  logout: () => void;
-  authLoading: boolean;
-}
 export interface CategoryData {
   [category: string]: string[];
 }
@@ -815,14 +823,3 @@ export interface PropertyStats {
   median?: number;
 }
 
-export interface MeasurementData {
-  id: string;
-  name: string;
-  description: string;
-  sourcePoint: [number, number];
-  destinationPoint: [number, number];
-  route: any;
-  distance: number;
-  duration: number;
-  timestamp: number;
-}

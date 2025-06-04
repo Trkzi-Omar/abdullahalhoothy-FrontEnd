@@ -808,7 +808,7 @@ const SavedLocations: React.FC = () => {
         }
       });
     };
-  }, [measurements, shouldInitializeFeatures, mapRef, handleDeleteMeasurement]);
+  }, [measurements]);
 
   return (
     <>

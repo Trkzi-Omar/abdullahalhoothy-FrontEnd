@@ -1,0 +1,52 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "setup-node-and-install",
+            "type": "shell",
+            "command": "powershell",
+            "args": ["-ExecutionPolicy", "Bypass", "-File", ".vscode/setup-node.ps1"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "start-react",
+            "type": "shell",
+            "command": "npm",
+            "args": ["start"],
+            "options": {
+                "env": {
+                    "NODE_ENV": "development",
+                    "REACT_APP_DEBUG": "true",
+                    "GENERATE_SOURCEMAP": "true",
+                    "FAST_REFRESH": "true"
+                }
+            },
+            "group": "build",
+            "dependsOn": "setup-node-and-install",
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "custom",
+                "pattern": {
+                    "regexp": "^$"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".*Local:.*",
+                    "endsPattern": "(ready in|Local:.*http://localhost:3000)"
+                }
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        }
+    ]
+}

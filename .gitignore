@@ -51,9 +51,8 @@ speed-measure-plugin.json
 *.sublime-workspace
 .jsbeautifyrc
 
-# IDE - VSCode
-.vscode/*
-
+.vscode/chrome-debug-user-data
+.vscode/chrome-debug-user-data/*
 
 # misc
 /.angular/cache

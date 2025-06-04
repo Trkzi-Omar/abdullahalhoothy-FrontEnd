@@ -83,6 +83,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setCoverageValue,
     propertyThreshold,
     setPropertyThreshold,
+    comparisonType,
   } = useCatalogContext();
   const layer = geoPoints[layerIndex];
 
@@ -97,6 +98,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const { authResponse } = useAuth();
   const [, setIsError] = useState<Error | null>(null);
   const [radiusInput, setRadiusInput] = useState<number | string>(layer.radius_meters || '');
+
+  // Add state for the recolor color selection
+  const [recolorSelectedColor, setRecolorSelectedColor] = useState<string>('#ff0000');
 
   const dropdownIndex = layerIndex ?? -1;
   const isOpen = openDropdownIndices[1] === dropdownIndex;
@@ -301,10 +305,10 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       updateLayerColor(layerIndex, color);
     }
   };
-  const [selectedColor, setSelectedColor] = useState<string>('#000000');
 
-  const handleNameColorChange = (color: string) => {
-    setSelectedColor(color);
+  // Callback to handle recolor color changes from BasedOnLayerDropdown
+  const handleRecolorColorChange = (color: string) => {
+    setRecolorSelectedColor(color);
   };
 
   const handleThresholdChange = (value: string) => {
@@ -347,7 +351,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         color_based_on: basedOnProperty || '',
         list_names: nameInputs.filter(name => name.trim() !== ''),
         threshold: getFormattedThreshold(propertyThreshold, basedOnProperty),
-        change_lyr_new_color: selectedColor,
+        change_lyr_new_color: recolorSelectedColor, // Use the selected color
+        comparison_type: comparisonType, // Add comparison_type to the request
       };
 
       console.log('Filter Request:', filterRequest);
@@ -388,6 +393,13 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
   const handleApplyRecolor = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+
+    // Validate required fields for recolor
+    if (!coverageValue || !basedOnLayerId) {
+      toast.error('Please fill in all required fields (distance and layer)');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -396,7 +408,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       const currentLayerId = currentLayer.prdcer_lyr_id;
       const selectedColors = colors[chosenPallet || 0];
 
-      if (!currentLayer || !baseLayer || !basedOnProperty || !selectedColors || !selectedBasedon) {
+      if (!currentLayer || !baseLayer || !selectedColors) {
         toast.error('Missing required fields for recoloring');
         return;
       }
@@ -411,12 +423,16 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         change_lyr_current_color: currentLayer.points_color || '#000000', // Send current color
         based_on_lyr_id: baseLayer.prdcer_lyr_id,
         based_on_lyr_name: baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`,
-        coverage_property: selectedBasedon,
+        coverage_property: coverageType,
         threshold: getFormattedThreshold(propertyThreshold, basedOnProperty),
-        coverage_value: radiusInput,
-        color_based_on: basedOnProperty,
-        list_names: nameInputs,
+        coverage_value: parseInt(coverageValue) || 0,
+        color_based_on: basedOnProperty || '',
+        list_names: nameInputs.filter(name => name.trim() !== ''),
+        change_lyr_new_color: recolorSelectedColor, // Use the selected recolor color
+        comparison_type: comparisonType, // Add comparison_type to the request
       };
+
+      console.log('Recolor Request:', gradientRequest);
 
       setReqGradientColorBasedOnZone(gradientRequest);
 
@@ -716,52 +732,11 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
             <p className="text-sm mt-2 mb-0 font-medium">based on metric</p>
 
-            <BasedOnLayerDropdown layerIndex={layerIndex} />
+            <BasedOnLayerDropdown 
+              layerIndex={layerIndex} 
+              onRecolorColorChange={handleRecolorColorChange}
+            />
 
-            {selectedOption === 'recolor' && (
-              <>
-                <div className="ms-2.5 space-y-2">
-                  <label
-                    className="block text-xs font-medium text-gray-600"
-                    htmlFor="distance-input"
-                  >
-                    Distance
-                  </label>
-                  <div className="flex">
-                    <div className="relative w-full">
-                      <input
-                        id="distance-input"
-                        type="text"
-                        min={1}
-                        max={100000}
-                        step={1}
-                        name="radius"
-                        className="block p-2.5 w-full z-20 text-sm text-gray-900 bg-gray-50 rounded-s-lg border 
-                              border-e-0 border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                        value={radiusInput}
-                        onChange={e => handleRadiusInputChange(e.target.value)}
-                        placeholder=""
-                        required
-                      />
-                    </div>
-                    <select
-                      className="flex-shrink-0 z-10 inline-flex items-center py-2 px-1 text-sm font-medium text-center 
-                            text-gray-900 bg-gray-100 border border-s-0 border-gray-300 rounded-e-lg hover:bg-gray-200 
-                            focus:ring-4 focus:outline-none focus:ring-gray-300"
-                      value={selectedBasedon}
-                      onChange={handleMetricChange}
-                    >
-                      <option value="radius">Radius (m)</option>
-                      <option value="drive_time">Drive Time (min)</option>
-                    </select>
-                  </div>
-                </div>
-
-                {basedOnProperty && selectedOption === 'recolor' && basedOnProperty !== 'name' && (
-                  <DropdownColorSelect layerIndex={layerIndex} />
-                )}
-              </>
-            )}
             <div>
               {selectedOption === 'recolor' ? (
                 <button
@@ -824,13 +799,13 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                             className="opacity-75"
                             fill="currentColor"
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          />
-                        </svg>
-                        Applying...
-                      </span>
-                    ) : (
-                      'Filter'
-                    )}
+                        />
+                      </svg>
+                      Applying...
+                    </span>
+                  ) : (
+                    'Filter'
+                  )}
                   </button>
                 </>
               )}

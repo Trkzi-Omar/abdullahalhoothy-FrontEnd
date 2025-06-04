@@ -198,6 +198,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [propertyThreshold, setPropertyThreshold] = useState<string>('');
   const [coverageType, setCoverageType] = useState<string>('radius');
   const [coverageValue, setCoverageValue] = useState<string>('');
+  const [comparisonType, setComparisonType] = useState<'more' | 'less'>('less');
 
   const onColorChange = (color: string) => {
     console.log('Color changed:', color);
@@ -529,7 +530,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
 
     try {
       const res = await apiRequest({
-        url: urls.gradient_color_based_on_zone,
+        url: urls.recolor_based,
         method: 'post',
         body: dataToUse,
         isAuthRequest: true,
@@ -613,7 +614,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
 
     try {
       const res = await apiRequest({
-        url: urls.gradient_color_based_on_zone,
+        url: urls.recolor_based,
         method: 'post',
         body: dataToUse,
         isAuthRequest: true,
@@ -1022,6 +1023,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setCoverageType,
         coverageValue,
         setCoverageValue,
+        comparisonType,
+        setComparisonType,
       }}
     >
       {children}

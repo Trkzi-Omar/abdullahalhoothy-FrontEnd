@@ -24,7 +24,7 @@
   "cost_calculator": "cost_calculator",
   "street_view_link": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=",
   "fetch_gradient_colors": "fetch_gradient_colors",
-  "gradient_color_based_on_zone": "gradient_color_based_on_zone",
+  "recolor_based": "recolor_based",
   "change_password": "change-password",
   "change_email": "change_email",
   "get_payment_methods": "get_payment_methods",
@@ -42,7 +42,7 @@
   "delete_layer": "/delete_layer",
   "filter_based_zone": "/filter_based_on",
   "process_llm_query": "/process_llm_query",
-  "gradient_color_based_on_zone_llm": "gradient_color_based_on_zone_llm",
+  "recolor_based_llm": "recolor_based_llm",
   "fetch_population_by_viewport": "/fetch_population_by_viewport",
   "distance_drive_time_polygon": "/distance_drive_time_polygon"
 }

@@ -122,13 +122,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       let reqBody = {};
 
       if (topic === topics.RECOLOR) {
-        url = urls.gradient_color_based_on_zone_llm;
+        url = urls.recolor_based_llm;
         reqBody = { user_id: authResponse?.localId, prompt: content.trim(), layers: geoPoints };
       } else if (topic === topics.DATASET) {
         url = urls.process_llm_query;
         reqBody = { query: content.trim(), user_id: authResponse?.localId };
       } else {
-        url = urls.gradient_color_based_on_zone_llm;
+        url = urls.recolor_based_llm;
         reqBody = { user_id: authResponse?.localId, prompt: content.trim(), layers: geoPoints };
       }
 

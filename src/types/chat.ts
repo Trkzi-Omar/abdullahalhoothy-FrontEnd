@@ -52,7 +52,7 @@ export enum topics {
 
 export enum llms {
   FETCH = 'process_llm_query',
-  RECOLOR = 'gradient_color_based_on_zone_llm',
+  RECOLOR = 'recolor_based_llm',
 }
 
 export interface GradientColorResponse {

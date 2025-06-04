@@ -242,6 +242,8 @@ export interface CatalogContextType {
   setCoverageType: (type: string) => void;
   coverageValue: string;
   setCoverageValue: (value: string) => void;
+  comparisonType: 'more' | 'less';
+  setComparisonType: (type: 'more' | 'less') => void;
 }
 
 export interface GradientColorBasedOnZone extends MapFeatures {

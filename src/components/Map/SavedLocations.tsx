@@ -593,6 +593,10 @@ const SavedLocations: React.FC = () => {
     const map = mapRef.current;
     if (!map || !shouldInitializeFeatures) return;
 
+    const eventHandlers: { [key: string]: (e: mapboxgl.MapMouseEvent) => void } = {};
+    const mouseEnterHandlers: { [key: string]: () => void } = {};
+    const mouseLeaveHandlers: { [key: string]: () => void } = {};
+
     // Add measurement markers and routes
     measurements.forEach((measurement: MeasurementData) => {
       // Add route if it exists
@@ -624,22 +628,34 @@ const SavedLocations: React.FC = () => {
             routeData = measurement.route;
           }
 
-          // Remove existing source and layer if they exist
-          if (map.getSource(`measure-route-${measurement.id}`)) {
-            map.removeLayer(`measure-route-line-${measurement.id}`);
-            map.removeSource(`measure-route-${measurement.id}`);
+          const layerId = `measure-route-line-${measurement.id}`;
+          const sourceId = `measure-route-${measurement.id}`;
+
+          if (map.getSource(sourceId)) {
+            if (eventHandlers[layerId]) {
+              map.off('click', layerId, eventHandlers[layerId]);
+            }
+            if (mouseEnterHandlers[layerId]) {
+              map.off('mouseenter', layerId, mouseEnterHandlers[layerId]);
+            }
+            if (mouseLeaveHandlers[layerId]) {
+              map.off('mouseleave', layerId, mouseLeaveHandlers[layerId]);
+            }
+
+            map.removeLayer(layerId);
+            map.removeSource(sourceId);
           }
 
           // Add the route source and layer
-          map.addSource(`measure-route-${measurement.id}`, {
+          map.addSource(sourceId, {
             type: 'geojson',
             data: routeData,
           });
 
           map.addLayer({
-            id: `measure-route-line-${measurement.id}`,
+            id: layerId,
             type: 'line',
-            source: `measure-route-${measurement.id}`,
+            source: sourceId,
             layout: {
               'line-join': 'round',
               'line-cap': 'round',
@@ -650,7 +666,7 @@ const SavedLocations: React.FC = () => {
             },
           });
 
-          map.on('click', `measure-route-line-${measurement.id}`, e => {
+          const clickHandler = (e: mapboxgl.MapMouseEvent) => {
             const popupContent = document.createElement('div');
             popupContent.className =
               'measurement-popup-content bg-white rounded-lg shadow-lg p-2 max-w-xs';
@@ -691,22 +707,29 @@ const SavedLocations: React.FC = () => {
             if (deleteButton) {
               deleteButton.addEventListener('click', () => {
                 handleDeleteMeasurement(measurement.id);
-                if (map.getSource(`measure-route-${measurement.id}`)) {
-                  map.removeLayer(`measure-route-line-${measurement.id}`);
-                  map.removeSource(`measure-route-${measurement.id}`);
+                if (map.getSource(sourceId)) {
+                  map.removeLayer(layerId);
+                  map.removeSource(sourceId);
                 }
                 popup.remove();
               });
             }
-          });
+          };
 
-          map.on('mouseenter', `measure-route-line-${measurement.id}`, () => {
+          const mouseEnterHandler = () => {
             map.getCanvas().style.cursor = 'pointer';
-          });
+          };
 
-          map.on('mouseleave', `measure-route-line-${measurement.id}`, () => {
+          const mouseLeaveHandler = () => {
             map.getCanvas().style.cursor = '';
-          });
+          };
+
+          eventHandlers[layerId] = clickHandler;
+          mouseEnterHandlers[layerId] = mouseEnterHandler;
+          mouseLeaveHandlers[layerId] = mouseLeaveHandler;
+
+          map.on('mouseenter', layerId, mouseEnterHandler);
+          map.on('mouseleave', layerId, mouseLeaveHandler);
         } catch (error) {
           console.error('Error displaying route:', error);
         }
@@ -764,9 +787,24 @@ const SavedLocations: React.FC = () => {
     // Cleanup function
     return () => {
       measurements.forEach((measurement: MeasurementData) => {
-        if (map.getSource(`measure-route-${measurement.id}`)) {
-          map.removeLayer(`measure-route-line-${measurement.id}`);
-          map.removeSource(`measure-route-${measurement.id}`);
+        const layerId = `measure-route-line-${measurement.id}`;
+        const sourceId = `measure-route-${measurement.id}`;
+
+        // Remove event listeners
+        if (eventHandlers[layerId]) {
+          map.off('click', layerId, eventHandlers[layerId]);
+        }
+        if (mouseEnterHandlers[layerId]) {
+          map.off('mouseenter', layerId, mouseEnterHandlers[layerId]);
+        }
+        if (mouseLeaveHandlers[layerId]) {
+          map.off('mouseleave', layerId, mouseLeaveHandlers[layerId]);
+        }
+
+        // Remove layers and sources
+        if (map.getSource(sourceId)) {
+          map.removeLayer(layerId);
+          map.removeSource(sourceId);
         }
       });
     };

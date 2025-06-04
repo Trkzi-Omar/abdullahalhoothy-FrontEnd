@@ -10,6 +10,8 @@ import { useMeasurement } from '../../hooks/useMeasurement';
 import { MeasurementData } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
 
+const defaultMarkerColor = '#7D00B8';
+
 const SavedLocations: React.FC = () => {
   const { mapRef, shouldInitializeFeatures } = useMapContext();
   const { openModal, closeModal, isModalOpen } = useUIContext();
@@ -68,9 +70,10 @@ const SavedLocations: React.FC = () => {
 
   const createMarkerModal = useCallback(
     (
-      onSave: (name: string, description: string) => void,
+      onSave: (name: string, description: string, color: string) => void,
       initialName?: string,
-      initialDescription?: string
+      initialDescription?: string,
+      initialColor?: string
     ) => (
       <div className="p-0 w-44">
         <h2 className="text-xl font-bold mb-2">Marker</h2>
@@ -81,9 +84,10 @@ const SavedLocations: React.FC = () => {
             const formData = new FormData(event.currentTarget);
             const name = formData.get('name') as string;
             const description = formData.get('description') as string;
+            const color = formData.get('color') as string;
 
             if (name) {
-              onSave(name, description);
+              onSave(name, description, color);
               handleCloseModal();
             }
           }}
@@ -101,6 +105,19 @@ const SavedLocations: React.FC = () => {
               aria-required="true"
               placeholder="Enter a name"
               defaultValue={initialName}
+            />
+          </div>
+
+          <div className="mb-2">
+            <label htmlFor="color" className="block mb-2 font-medium">
+              Color
+            </label>
+            <input
+              id="color"
+              name="color"
+              type="color"
+              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              defaultValue={initialColor || defaultMarkerColor}
             />
           </div>
 
@@ -168,7 +185,6 @@ const SavedLocations: React.FC = () => {
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </button>
-
              <button aria-label="Measure from this location" class="measure-location text-xs bg-gem-gradient hover:bg-gem-gradient-hover transition-colors duration-200 text-white px-2 py-1 rounded-md shadow-sm flex items-center justify-center" data-id="${markerData.id}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 256 256" stroke="currentColor">
                   <rect x="26.2" y="82.7" width="203.6" height="90.51" rx="8" transform="translate(-53 128) rotate(-45)" stroke-linecap="round" stroke-linejoin="round" stroke-width="12"/>
@@ -275,20 +291,28 @@ const SavedLocations: React.FC = () => {
       const markerToEdit = markers.find(marker => marker.id === id);
       if (!markerToEdit) return;
 
-      const onSave = (name: string, description: string) => {
+      const onSave = (name: string, description: string, color: string) => {
         const updatedMarkers = markers.map(marker => {
           if (marker.id === id) {
-            return { ...marker, name, description };
+            return { ...marker, name, description, colorHEX: color };
           }
           return marker;
         });
         setMarkers(updatedMarkers);
       };
 
-      openModal(createMarkerModal(onSave, markerToEdit.name, markerToEdit.description), {
-        isSmaller: true,
-        hasAutoSize: true,
-      });
+      openModal(
+        createMarkerModal(
+          onSave,
+          markerToEdit.name,
+          markerToEdit.description,
+          markerToEdit.colorHEX
+        ),
+        {
+          isSmaller: true,
+          hasAutoSize: true,
+        }
+      );
     },
     [isMarkersEnabled, markers, openModal, createMarkerModal, setMarkers]
   );
@@ -317,9 +341,9 @@ const SavedLocations: React.FC = () => {
 
       setTempMarker(newTempMarker);
 
-      const onSave = (name: string, description: string) => {
+      const onSave = (name: string, description: string, color: string) => {
         console.log('markers onSave', name, description, [lngLat.lng, lngLat.lat]);
-        addMarker(name, description, [lngLat.lng, lngLat.lat], '#7D00B8', 'measurement-draft');
+        addMarker(name, description, [lngLat.lng, lngLat.lat], color, 'measurement-draft');
         if (newTempMarker) {
           newTempMarker.remove();
           setTempMarker(null);

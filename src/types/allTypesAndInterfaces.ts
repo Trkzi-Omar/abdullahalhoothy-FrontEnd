@@ -253,8 +253,8 @@ export interface CatalogContextType {
   setComparisonType: (type: 'more' | 'less') => void;
   polygons: PolygonFeature[];
   setPolygons: React.Dispatch<React.SetStateAction<PolygonFeature[]>>;
-  sections: Section[];
-  setSections: React.Dispatch<React.SetStateAction<Section[]>>;
+  sections: Section[] | PolygonData[];
+  setSections: React.Dispatch<React.SetStateAction<Section[] | PolygonData[]>>;
   benchmarks: Benchmark[];
   setBenchmarks: React.Dispatch<React.SetStateAction<Benchmark[]>>;
   isBenchmarkControlOpen: boolean;

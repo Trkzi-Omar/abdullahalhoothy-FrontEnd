@@ -13,6 +13,8 @@ import {
   PolygonFeature,
   Benchmark,
   Section,
+  GeoPoint,
+  PolygonData,
 } from '../types';
 import urls from '../urls.json';
 import userIdData from '../currentUserId.json';

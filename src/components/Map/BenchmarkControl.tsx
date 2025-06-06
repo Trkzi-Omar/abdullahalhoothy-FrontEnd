@@ -16,7 +16,7 @@ const BenchmarkControl = () => {
         setControlHeight(height);
       } else {
         // Retry after a short delay if the element is not found
-        setTimeout(checkControlHeight, 100); // Retry every 100ms until the element is found
+        setTimeout(checkControlHeight, 100);
       }
     };
 
@@ -24,7 +24,7 @@ const BenchmarkControl = () => {
   }, []);
 
   const benchmarkStyle = {
-    top: `${controlHeight + 10}px`, // 10px margin for some spacing
+    top: `${controlHeight + 10}px`,
   };
 
   if (polygons.length === 0) return null;

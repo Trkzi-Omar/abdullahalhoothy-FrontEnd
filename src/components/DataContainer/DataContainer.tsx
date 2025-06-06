@@ -5,8 +5,7 @@ import { Catalog, UserLayer, CardItem } from '../../types/allTypesAndInterfaces'
 import { useCatalogContext } from '../../context/CatalogContext';
 import UserLayerCard from '../UserLayerCard/UserLayerCard';
 import { isValidColor } from '../../utils/helperFunctions';
-import { useAuth } from '../../context/AuthContext'; // Add this import
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { useUIContext } from '../../context/UIContext';
 import apiRequest from '../../services/apiRequest';
 import { useLayerContext } from '../../context/LayerContext';
@@ -19,6 +18,11 @@ function DataContainer() {
     handleAddClick,
     setGeoPoints,
     setCaseStudyContent,
+    setPolygons,
+    setSections,
+    setBenchmarks,
+    setIsBenchmarkControlOpen,
+    setCurrentStyle,
   } = useCatalogContext();
   const { setSelectedCity, setSelectedCountry } = useLayerContext();
   const { isAuthenticated, authResponse, logout } = useAuth();
@@ -217,6 +221,11 @@ function DataContainer() {
             setMarkers(item.display_elements.markers || []);
             setMeasurements(item.display_elements.measurements || []);
             setCaseStudyContent(item.display_elements.case_study || []);
+            setPolygons(item.display_elements.polygonData.polygons || []);
+            setSections(item.display_elements.polygonData.sections || []);
+            setBenchmarks(item.display_elements.polygonData.benchmarks || []);
+            setIsBenchmarkControlOpen(item.display_elements.polygonData.isBenchmarkControlOpen);
+            setCurrentStyle(item.display_elements.polygonData.currentStyle);
           }}
           can_access={item.can_access ?? false}
           typeOfCard={typeOfCard}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { usePolygonsContext } from '../../context/PolygonsContext';
+import { useCatalogContext } from '../../context/CatalogContext';
 import * as turf from '@turf/turf';
 import { useUIContext } from '../../context/UIContext';
 
@@ -13,7 +13,7 @@ function calculatePercentageDifference(number, benchmark) {
 }
 
 function CloseButton({ polygon }) {
-  const { polygons, setPolygons } = usePolygonsContext();
+  const { polygons, setPolygons } = useCatalogContext();
   const closePopup = () => {
     const updatedPolygons = polygons.map(p => {
       if (p.id === polygon.id) {
@@ -59,7 +59,7 @@ export default function StatisticsPopup({ polygon }) {
 
 function DesktopStatisticsPopup({ polygon }) {
   const { sections, benchmarks, isBenchmarkControlOpen, setIsBenchmarkControlOpen } =
-    usePolygonsContext();
+    useCatalogContext();
   const [popupPosition, setPopupPosition] = useState({
     x: polygon.pixelPosition ? polygon.pixelPosition.x : 0,
     y: polygon.pixelPosition ? polygon.pixelPosition.y : 0,
@@ -281,7 +281,7 @@ function DesktopStatisticsPopup({ polygon }) {
 
 const MobileStatisticsPopup = ({ polygon }) => {
   const { sections, benchmarks, setBenchmarks, isBenchmarkControlOpen, setIsBenchmarkControlOpen } =
-    usePolygonsContext();
+    useCatalogContext();
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {

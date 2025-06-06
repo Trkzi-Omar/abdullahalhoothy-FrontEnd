@@ -2,7 +2,6 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import './MapContainer.css';
 
-import PolygonsProvider from '../../context/PolygonsContext';
 import { useMapInitialization } from '../../hooks/map/useMapInitialization';
 import { useMapBounds } from '../../hooks/map/useMapBounds';
 import { useMapControls } from '../../hooks/map/useMapControls';
@@ -16,9 +15,7 @@ import { AreaIntelligeneControl } from '../../components/Map/AreaIntelligenceCon
 import SavedLocations from '../../components/Map/SavedLocations';
 import { useMapContext } from '../../context/MapContext';
 import { CaseStudyPanel } from '../../components/CaseStudy/CaseStudyPanel';
-import { CaseStudyProvider } from '../../components/CaseStudy/CaseStudyPanel';
-import { CaseStudyToggle } from '../../components/CaseStudy/CaseStudyToggle';
-
+import { CatalogProvider } from '../../context/CatalogContext';
 function Container() {
   const { shouldInitializeFeatures, mapContainerRef } = useMapContext();
 
@@ -52,8 +49,8 @@ function Container() {
 
 export default function MapContainer() {
   return (
-    <PolygonsProvider>
+    <CatalogProvider>
       <Container />
-    </PolygonsProvider>
+    </CatalogProvider>
   );
 }

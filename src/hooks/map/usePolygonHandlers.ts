@@ -1,12 +1,11 @@
 import { useEffect } from 'react';
-import mapboxgl from 'mapbox-gl';
 import * as turf from '@turf/turf';
-import { usePolygonsContext } from '../../context/PolygonsContext';
+import { useCatalogContext } from '../../context/CatalogContext';
 import { useMapContext } from '../../context/MapContext';
 export function usePolygonHandlers() {
   const { mapRef, shouldInitializeFeatures } = useMapContext();
   const map = mapRef.current;
-  const { polygons, setPolygons } = usePolygonsContext();
+  const { polygons, setPolygons } = useCatalogContext();
 
   useEffect(() => {
     if (!shouldInitializeFeatures || !map) return;

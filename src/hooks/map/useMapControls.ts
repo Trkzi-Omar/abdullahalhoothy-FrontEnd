@@ -3,17 +3,14 @@ import mapboxgl from 'mapbox-gl';
 import { StylesControl } from '../../components/Map/StylesControl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { CircleControl } from '../../components/Map/CircleControl';
-import { AreaIntelligeneControl } from '../../components/Map/AreaIntelligenceControl';
 import { useUIContext } from '../../context/UIContext';
-import { usePolygonsContext } from '../../context/PolygonsContext';
+import { useCatalogContext } from '../../context/CatalogContext';
 import { useMapContext } from '../../context/MapContext';
-import { useLayerContext } from '../../context/LayerContext';
 
 export function useMapControls() {
   const { mapRef, drawRef, shouldInitializeFeatures } = useMapContext();
   const { isMobile } = useUIContext();
-  const { currentStyle, setCurrentStyle } = usePolygonsContext();
-  const { switchPopulationLayer, selectedCity, selectedCountry } = useLayerContext();
+  const { currentStyle, setCurrentStyle } = useCatalogContext();
   const controlsAdded = useRef(false);
 
   useEffect(() => {

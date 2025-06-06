@@ -1,9 +1,9 @@
 import { useLayoutEffect, useState } from 'react';
-import { usePolygonsContext } from '../../context/PolygonsContext';
+import { useCatalogContext } from '../../context/CatalogContext';
 
 const BenchmarkControl = () => {
   const { benchmarks, setBenchmarks, polygons, isBenchmarkControlOpen, setIsBenchmarkControlOpen } =
-    usePolygonsContext();
+    useCatalogContext();
 
   const [controlHeight, setControlHeight] = useState(0);
 

@@ -99,6 +99,13 @@ export interface CardItem {
       name: string;
       timestamp: number;
       coordinates: [number, number];
+      polygonData?: {
+        polygons: PolygonFeature[];
+        sections: Section[];
+        benchmarks: Benchmark[];
+        isBenchmarkControlOpen: boolean;
+        currentStyle: string;
+      };
     }[];
   };
   lyrs?: { layer_id: string; points_color: string }[];
@@ -244,6 +251,16 @@ export interface CatalogContextType {
   setCoverageValue: (value: string) => void;
   comparisonType: 'more' | 'less';
   setComparisonType: (type: 'more' | 'less') => void;
+  polygons: PolygonFeature[];
+  setPolygons: React.Dispatch<React.SetStateAction<PolygonFeature[]>>;
+  sections: Section[];
+  setSections: React.Dispatch<React.SetStateAction<Section[]>>;
+  benchmarks: Benchmark[];
+  setBenchmarks: React.Dispatch<React.SetStateAction<Benchmark[]>>;
+  isBenchmarkControlOpen: boolean;
+  setIsBenchmarkControlOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  currentStyle: string;
+  setCurrentStyle: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export interface GradientColorBasedOnZone extends MapFeatures {

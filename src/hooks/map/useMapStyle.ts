@@ -1,13 +1,11 @@
 import { useEffect } from 'react';
-import mapboxgl from 'mapbox-gl';
 import { useCatalogContext } from '../../context/CatalogContext';
-import { usePolygonsContext } from '../../context/PolygonsContext';
 import { useMapContext } from '../../context/MapContext';
 export function useMapStyle() {
   const { mapRef, shouldInitializeFeatures } = useMapContext();
   const map = mapRef.current;
   const { setGeoPoints } = useCatalogContext();
-  const { currentStyle } = usePolygonsContext();
+  const { currentStyle } = useCatalogContext();
 
   useEffect(() => {
     if (!shouldInitializeFeatures || !map) return;

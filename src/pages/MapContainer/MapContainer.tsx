@@ -15,7 +15,6 @@ import { AreaIntelligeneControl } from '../../components/Map/AreaIntelligenceCon
 import SavedLocations from '../../components/Map/SavedLocations';
 import { useMapContext } from '../../context/MapContext';
 import { CaseStudyPanel } from '../../components/CaseStudy/CaseStudyPanel';
-import { CatalogProvider } from '../../context/CatalogContext';
 function Container() {
   const { shouldInitializeFeatures, mapContainerRef } = useMapContext();
 
@@ -48,9 +47,5 @@ function Container() {
 }
 
 export default function MapContainer() {
-  return (
-    <CatalogProvider>
-      <Container />
-    </CatalogProvider>
-  );
+  return <Container />;
 }

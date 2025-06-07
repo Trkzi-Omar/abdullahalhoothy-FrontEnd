@@ -25,8 +25,8 @@ function CatalogDetailsForm() {
   const [error, setError] = useState<string | null>(null);
 
   function validateForm() {
-    if (!name || !description) {
-      setError('All fields are required.');
+    if (!name) {
+      setError('Name is required.');
       return false;
     }
     setError(null);
@@ -45,7 +45,7 @@ function CatalogDetailsForm() {
     resetState();
     setName('');
     setDescription('');
-    setSubscriptionPrice('');
+    setSubscriptionPrice('0');
     setMarkers([]);
     setMeasurements([]);
     setFormStage('catalog');
@@ -92,14 +92,14 @@ function CatalogDetailsForm() {
             type="text"
             id="subprice"
             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-            value={subscriptionPrice}
+            value={subscriptionPrice || '0'}
             onChange={handleChange}
           />
         </div>
 
         <div className="mb-5 flex flex-col w-full">
           <label className="block mb-2 text-md font-medium text-black" htmlFor="name">
-            Name
+            Name *
           </label>
           <input
             type="text"

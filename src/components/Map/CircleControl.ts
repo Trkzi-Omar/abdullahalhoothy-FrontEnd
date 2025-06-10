@@ -1,4 +1,4 @@
-import mapboxgl, { LngLat, MapMouseEvent } from 'mapbox-gl';
+import { LngLat, MapMouseEvent } from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import * as turf from '@turf/turf';
 

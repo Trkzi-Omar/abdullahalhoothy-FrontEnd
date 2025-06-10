@@ -44,6 +44,13 @@ export interface Catalog {
     }[];
     measurements: MeasurementData[];
     case_study: Descendant[];
+    polygonData?: {
+      polygons: PolygonFeature[];
+      sections: Section[];
+      benchmarks: Benchmark[];
+      isBenchmarkControlOpen: boolean;
+      currentStyle: string;
+    };
   };
 }
 
@@ -99,14 +106,16 @@ export interface CardItem {
       name: string;
       timestamp: number;
       coordinates: [number, number];
-      polygonData?: {
-        polygons: PolygonFeature[];
-        sections: Section[];
-        benchmarks: Benchmark[];
-        isBenchmarkControlOpen: boolean;
-        currentStyle: string;
-      };
     }[];
+    measurements: MeasurementData[];
+    case_study: Descendant[];
+    polygonData?: {
+      polygons: PolygonFeature[];
+      sections: Section[];
+      benchmarks: Benchmark[];
+      isBenchmarkControlOpen: boolean;
+      currentStyle: string;
+    };
   };
   lyrs?: { layer_id: string; points_color: string }[];
   city_name?: string;

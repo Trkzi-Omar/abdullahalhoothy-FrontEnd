@@ -686,7 +686,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
 
   function updateLayerHeatmap(layerIndex: number, isHeatmap: boolean) {
     setGeoPoints(function (prevGeoPoints) {
-      var updatedGeoPoints = prevGeoPoints.slice();
+      const updatedGeoPoints = prevGeoPoints.slice();
       updatedGeoPoints[layerIndex].is_heatmap = isHeatmap;
       return updatedGeoPoints;
     });

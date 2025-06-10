@@ -2,10 +2,37 @@ import { useEffect } from 'react';
 import * as turf from '@turf/turf';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useMapContext } from '../../context/MapContext';
+
 export function usePolygonHandlers() {
-  const { mapRef, shouldInitializeFeatures } = useMapContext();
+  const { mapRef, shouldInitializeFeatures, drawRef } = useMapContext();
   const map = mapRef.current;
   const { polygons, setPolygons } = useCatalogContext();
+
+  // Sync polygons state with draw control when polygons are loaded
+  useEffect(() => {
+    if (!shouldInitializeFeatures || !map || !drawRef.current) return;
+
+    const draw = drawRef.current;
+    const currentDrawFeatures = draw.getAll().features;
+
+    if (polygons.length > 0 && currentDrawFeatures.length === 0) {
+      polygons.forEach(polygon => {
+        try {
+          const feature = {
+            type: 'Feature' as const,
+            geometry: polygon.geometry as any,
+            properties: polygon.properties || {},
+            id: polygon.id,
+          };
+          draw.add(feature);
+        } catch (error) {
+          console.error('Error adding polygon to draw control:', error);
+        }
+      });
+    } else if (polygons.length === 0 && currentDrawFeatures.length > 0) {
+      draw.deleteAll();
+    }
+  }, [polygons, shouldInitializeFeatures, map, drawRef]);
 
   useEffect(() => {
     if (!shouldInitializeFeatures || !map) return;
@@ -19,17 +46,18 @@ export function usePolygonHandlers() {
 
       const clickedPolygon = polygons.find(polygon => {
         try {
-          let turfPolygon;
           if (polygon.geometry.type === 'Polygon') {
-            turfPolygon = turf.polygon(polygon.geometry.coordinates);
+            const turfPolygon = turf.polygon(polygon.geometry.coordinates as number[][][]);
+            return turf.booleanPointInPolygon(point, turfPolygon);
           } else if (polygon.geometry.type === 'MultiPolygon') {
-            turfPolygon = turf.multiPolygon(polygon.geometry.coordinates);
+            const turfMultiPolygon = turf.multiPolygon(
+              polygon.geometry.coordinates as number[][][][]
+            );
+            return turf.booleanPointInPolygon(point, turfMultiPolygon);
           } else {
             console.error('Unsupported geometry type:', polygon.geometry.type);
             return false;
           }
-
-          return turf.booleanPointInPolygon(point, turfPolygon);
         } catch (error) {
           console.error('Error processing polygon:', error);
           return false;
@@ -57,6 +85,8 @@ export function usePolygonHandlers() {
      * Draw handler for polygons, creates a new polygon
      */
     const handleDrawCreate = (e: any) => {
+      if (!e.features || !e.features[0]) return;
+
       const geojson = e.features[0];
       // Get center point of polygon
       let center;
@@ -73,15 +103,23 @@ export function usePolygonHandlers() {
       // Set the shape property for regular polygons
       if (!geojson.properties) geojson.properties = {};
       geojson.properties.shape = geojson.properties.shape ? geojson.properties.shape : 'polygon';
-      geojson.isStatisticsPopupOpen = true;
-      geojson.pixelPosition = pixelPosition;
-      setPolygons(prev => [...prev, geojson]);
+
+      // Create PolygonFeature with required properties
+      const polygonFeature = {
+        ...geojson,
+        isStatisticsPopupOpen: true,
+        pixelPosition: pixelPosition,
+      };
+
+      setPolygons(prev => [...prev, polygonFeature]);
     };
 
     /**
      * Update handler for polygons
      */
-    const handleDrawUpdate = (e: mapboxgl.MapMouseEvent) => {
+    const handleDrawUpdate = (e: any) => {
+      if (!e.features || !e.features[0]) return;
+
       const geojson = e.features[0];
       const updatedPolygonsId = e.features[0].id;
 
@@ -97,18 +135,24 @@ export function usePolygonHandlers() {
       // Convert center to pixel coordinates
       const pixelPosition = center ? map.project(center as [number, number]) : null;
 
-      geojson.isStatisticsPopupOpen = true;
-      geojson.pixelPosition = pixelPosition;
+      // Create updated PolygonFeature with required properties
+      const updatedPolygonFeature = {
+        ...geojson,
+        isStatisticsPopupOpen: true,
+        pixelPosition: pixelPosition,
+      };
 
       setPolygons(prev =>
-        prev.map(polygon => (polygon.id === updatedPolygonsId ? geojson : polygon))
+        prev.map(polygon => (polygon.id === updatedPolygonsId ? updatedPolygonFeature : polygon))
       );
     };
 
     /**
      * Delete handler for polygons, deletes a polygon
      */
-    const handleDrawDelete = (e: mapboxgl.MapMouseEvent) => {
+    const handleDrawDelete = (e: any) => {
+      if (!e.features || !e.features[0]) return;
+
       const deletedPolygonsId = e.features[0].id;
       setPolygons(prev => prev.filter(polygon => polygon.id !== deletedPolygonsId));
     };

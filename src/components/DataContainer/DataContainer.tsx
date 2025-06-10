@@ -221,11 +221,13 @@ function DataContainer() {
             setMarkers(item.display_elements.markers || []);
             setMeasurements(item.display_elements.measurements || []);
             setCaseStudyContent(item.display_elements.case_study || []);
-            setPolygons(item.display_elements.polygonData.polygons || []);
-            setSections(item.display_elements.polygonData.sections || []);
-            setBenchmarks(item.display_elements.polygonData.benchmarks || []);
-            setIsBenchmarkControlOpen(item.display_elements.polygonData.isBenchmarkControlOpen);
-            setCurrentStyle(item.display_elements.polygonData.currentStyle);
+            setPolygons(item.display_elements.polygonData?.polygons || []);
+            setSections(item.display_elements.polygonData?.sections || []);
+            setBenchmarks(item.display_elements.polygonData?.benchmarks || []);
+            setIsBenchmarkControlOpen(
+              item.display_elements.polygonData?.isBenchmarkControlOpen ?? false
+            );
+            setCurrentStyle(item.display_elements.polygonData?.currentStyle || '');
           }}
           can_access={item.can_access ?? false}
           typeOfCard={typeOfCard}

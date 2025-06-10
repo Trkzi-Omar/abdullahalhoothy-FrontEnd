@@ -118,16 +118,6 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
     section => section.polygon && section.polygon.id === polygon.id
   );
 
-  console.log(
-    'DEBUG EMPTY SECTIONS',
-    'polygonSections',
-    polygonSections,
-    'sections',
-    sections,
-    'polygon',
-    polygon
-  );
-
   if (!polygonSections) return null;
 
   return (

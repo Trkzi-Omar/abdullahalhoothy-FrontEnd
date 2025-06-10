@@ -221,7 +221,12 @@ function DataContainer() {
             setMarkers(item.display_elements.markers || []);
             setMeasurements(item.display_elements.measurements || []);
             setCaseStudyContent(item.display_elements.case_study || []);
-            setPolygons(item.display_elements.polygonData?.polygons || []);
+   
+            setPolygons([
+              ...(item.display_elements.polygonData?.polygons || []),
+              ...(item.display_elements.polygonData?.sections.map(section => section.polygon) ||
+                []),
+            ]);
             setSections(item.display_elements.polygonData?.sections || []);
             setBenchmarks(item.display_elements.polygonData?.benchmarks || []);
             setIsBenchmarkControlOpen(

@@ -564,6 +564,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         formData.append('image', thumbnailBlob, 'thumbnail.jpg');
       }
 
+
       const requestBody = {
         message: 'Save catalog request',
         request_info: {},
@@ -607,7 +608,9 @@ export function CatalogProvider(props: { children: ReactNode }) {
               timestamp: measurement.timestamp,
             })),
             polygonData: {
-              polygons,
+              polygons: polygons.filter(
+                polygon => !sections.some(section => section.polygon === polygon)
+              ),
               sections,
               benchmarks,
               isBenchmarkControlOpen,

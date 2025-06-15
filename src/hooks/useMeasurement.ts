@@ -289,8 +289,10 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
           data: polygonData,
         });
 
+        const layerId = 'measure-route-line';
+
         map.addLayer({
-          id: 'measure-route-line',
+          id: layerId,
           type: 'line',
           source: 'measure-route',
           layout: {
@@ -303,7 +305,78 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
           },
         });
 
-        map.on('click', 'measure-route-line', e => {
+        const debugMapClick = (e: any) => {
+          console.log('🗺️ General map click:', e.lngLat);
+          const features = map.queryRenderedFeatures(e.point);
+          console.log(
+            'Features at click point:',
+            features.map(f => f.layer?.id || 'unknown')
+          );
+
+          const measureRouteFeature = features.find(f =>
+            f.layer?.id?.startsWith('measure-route-line')
+          );
+
+          if (measureRouteFeature) {
+            if (savedMeasurement) {
+              const popup = new mapboxgl.Popup({
+                closeButton: true,
+                closeOnClick: false,
+                className: 'measure-popup',
+              })
+                .setLngLat(e.lngLat)
+                .setHTML(
+                  `
+                  <div class="p-3 bg-white rounded-lg shadow-md">
+                    <div class="text-sm">
+                      <strong>Name:</strong> ${savedMeasurement.name}
+                      <br />
+                      <strong>Description:</strong> ${savedMeasurement.description || '-'}
+                      <br />
+                      <strong>Distance:</strong> ${savedMeasurement.distance.toFixed(2)} km
+                      <br />
+                      <strong>Drive Time:</strong> ${savedMeasurement.duration.toFixed(0)} min
+                    </div>
+                    <div class="mt-3 flex justify-end space-x-2">
+                      <button
+                        class="edit-measurement-hook px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  </div>
+                `
+                )
+                .addTo(map);
+
+              const popupElement = popup.getElement();
+              if (!popupElement) return;
+              const editButton = popupElement.querySelector('.edit-measurement-hook');
+              if (editButton) {
+                editButton.addEventListener('click', () => {
+                  popup.remove();
+                  openModal(
+                    React.createElement(MeasurementForm, {
+                      onSubmit: (name, description) => {
+                        closeModal();
+                      },
+                      onCancel: closeModal,
+                      initialName: savedMeasurement.name,
+                      initialDescription: savedMeasurement.description,
+                    }),
+                    { isSmaller: true, hasAutoSize: true }
+                  );
+                });
+              }
+
+              setMeasurementPopup(popup);
+            }
+          }
+        };
+        map.on('click', debugMapClick);
+
+        map.on('click', layerId, e => {
+          console.log('🎯 ROUTE LINE CLICKED!', { layerId, savedMeasurement, event: e });
           if (savedMeasurement) {
             const popup = new mapboxgl.Popup({
               closeButton: true,
@@ -317,7 +390,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                   <div class="text-sm">
                     <strong>Name:</strong> ${savedMeasurement.name}
                     <br />
-                    <strong>Description:</strong> ${savedMeasurement.description || 'No description'}
+                    <strong>Description:</strong> ${savedMeasurement.description || '-'}
                     <br />
                     <strong>Distance:</strong> ${savedMeasurement.distance.toFixed(2)} km
                     <br />
@@ -336,6 +409,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
               .addTo(map);
 
             const popupElement = popup.getElement();
+            if (!popupElement) return;
             const editButton = popupElement.querySelector('.edit-measurement-hook');
             if (editButton) {
               editButton.addEventListener('click', () => {
@@ -360,11 +434,11 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
           }
         });
 
-        map.on('mouseenter', 'measure-route-line', () => {
+        map.on('mouseenter', layerId, () => {
           map.getCanvas().style.cursor = 'pointer';
         });
 
-        map.on('mouseleave', 'measure-route-line', () => {
+        map.on('mouseleave', layerId, () => {
           map.getCanvas().style.cursor = '';
         });
       } catch (error) {

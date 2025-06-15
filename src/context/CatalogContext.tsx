@@ -608,9 +608,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
               timestamp: measurement.timestamp,
             })),
             polygonData: {
-              polygons: polygons.filter(
-                polygon => !sections.some(section => section.polygon === polygon)
-              ),
               sections,
               benchmarks,
               isBenchmarkControlOpen,

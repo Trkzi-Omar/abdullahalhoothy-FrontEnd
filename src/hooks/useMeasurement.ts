@@ -439,25 +439,47 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
         );
 
         // Update existing draft markers to be saved markers linked to this measurement
-        setMarkers(prevMarkers =>
-          prevMarkers.map(marker => {
+        setMarkers(prevMarkers => {
+          console.log(
+            'Converting draft markers to saved. Before:',
+            prevMarkers.filter(m => m.markerType === 'measurement-draft')
+          );
+
+          const updatedMarkers = prevMarkers.map(marker => {
             if (marker.markerType === 'measurement-draft') {
-              return {
-                ...marker,
+              const savedMarker = {
+                id: marker.id,
+                coordinates: marker.coordinates,
+                timestamp: marker.timestamp,
+                colorHEX: marker.colorHEX,
+                description: marker.description,
                 markerType: 'measurement-saved' as MarkerType,
-                measurementId: savedMeasurementId,
+                measurementId: savedMeasurementId, // Only the measurement record ID
                 name:
                   marker.name === 'Measurement Start'
                     ? `${name} - Start`
                     : marker.name === 'Measurement End'
                       ? `${name} - End`
                       : marker.name,
-                isTemporary: undefined,
               };
+
+              console.log('Converted marker:', {
+                from: marker,
+                to: savedMarker,
+              });
+
+              return savedMarker;
             }
             return marker;
-          })
-        );
+          });
+
+          console.log(
+            'After conversion:',
+            updatedMarkers.filter(m => m.markerType === 'measurement-saved')
+          );
+
+          return updatedMarkers;
+        });
 
         if (apiResult.data?.drive_polygon) {
           try {
@@ -493,17 +515,42 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
 
         toast.success('Measurement saved successfully');
         closeModal();
+
+        setIsMeasuring(false);
+        setMeasureSourcePoint(null);
+        setMeasureDestinationPoint(null);
+        setMeasurementResult(null);
+        clearMeasurementLayers();
+
+        endMeasurementSession();
+
+        if (mapRef.current) {
+          mapRef.current.getCanvas().style.cursor = '';
+        }
       };
 
       openModal(
         React.createElement(MeasurementForm, {
           onSubmit: handleSubmit,
-          onCancel: closeModal,
+          onCancel: () => {
+            closeModal();
+            exitMeasureMode();
+          },
         }),
         { isSmaller: true, hasAutoSize: true }
       );
     },
-    [openModal, closeModal, addMeasurement, displayRouteOnMap, decodePolyline, setMarkers]
+    [
+      openModal,
+      closeModal,
+      addMeasurement,
+      displayRouteOnMap,
+      decodePolyline,
+      setMarkers,
+      clearMeasurementLayers,
+      endMeasurementSession,
+      mapRef,
+    ]
   );
 
   const showRouteResult = useCallback(
@@ -561,17 +608,23 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
         });
       }
 
+      const closeHandler = () => {
+        exitMeasureMode();
+      };
+
       // Add event listener for save button
       const saveButton = popupElement.querySelector('.save-measurement-hook');
       if (saveButton) {
         saveButton.addEventListener('click', () => {
+          console.log('Save button clicked - preventing exitMeasureMode on popup close');
+          popup.off('close', closeHandler);
+          popup.remove();
+          setMeasurementPopup(null);
           handleSaveMeasurement(point1, point2, apiResult);
         });
       }
 
-      popup.on('close', () => {
-        exitMeasureMode();
-      });
+      popup.on('close', closeHandler);
 
       setMeasurementPopup(popup);
 

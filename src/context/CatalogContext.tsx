@@ -210,203 +210,211 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [benchmarks, setBenchmarks] = useState<Benchmark[]>([]);
   const [isBenchmarkControlOpen, setIsBenchmarkControlOpen] = useState(false);
   const [currentStyle, setCurrentStyle] = useState('mapbox://styles/mapbox/streets-v11');
+  const [sections, setSections] = useState<Section[] | PolygonData[]>([]);
 
-  const sections = useMemo(() => {
-    if (!Array.isArray(polygons) || !Array.isArray(geoPoints)) {
-      return [] as Section[];
-    }
+  useEffect(() => {
+    const calculateSections = () => {
+      if (!Array.isArray(polygons) || !Array.isArray(geoPoints)) {
+        return [] as Section[];
+      }
 
-    const excludedProperties = new Set(excludedPropertiesJson?.excludedProperties || []);
+      const excludedProperties = new Set(excludedPropertiesJson?.excludedProperties || []);
 
-    const getPolygonShape = (coordinates: any[], type: string) => {
-      if (type === 'MultiPolygon') {
-        return coordinates.map(circle => {
-          const ring = circle[0];
+      const getPolygonShape = (coordinates: any[], type: string) => {
+        if (type === 'MultiPolygon') {
+          return coordinates.map(circle => {
+            const ring = circle[0];
+            if (
+              ring.length < 4 ||
+              !turf.booleanEqual(turf.point(ring[0]), turf.point(ring[ring.length - 1]))
+            ) {
+              ring.push(ring[0]); // Ensure closed ring
+            }
+            return turf.polygon(circle);
+          });
+        } else if (type === 'Polygon') {
+          const ring = coordinates[0];
           if (
             ring.length < 4 ||
             !turf.booleanEqual(turf.point(ring[0]), turf.point(ring[ring.length - 1]))
           ) {
             ring.push(ring[0]); // Ensure closed ring
           }
-          return turf.polygon(circle);
-        });
-      } else if (type === 'Polygon') {
-        const ring = coordinates[0];
-        if (
-          ring.length < 4 ||
-          !turf.booleanEqual(turf.point(ring[0]), turf.point(ring[ring.length - 1]))
-        ) {
-          ring.push(ring[0]); // Ensure closed ring
+          return [turf.polygon([ring])];
         }
-        return [turf.polygon([ring])];
-      }
-      return [];
-    };
-
-    const processedPolygons: PolygonData[] = polygons.map(polygon => {
-      if (!polygon.geometry?.coordinates) {
-        return { polygon, sections: [], areas: [] };
-      }
-
-      const polygonData: PolygonData = {
-        polygon,
-        sections: [],
-        areas: polygon.properties.shape === 'circle' ? ['1KM', '3KM', '5KM'] : ['Unknown'],
+        return [];
       };
 
-      const polygonShapes = getPolygonShape(polygon.geometry.coordinates, polygon.geometry.type);
-      const sectionsMap = new Map();
-      const previouslyMatchedPoints = new Set();
+      const processedPolygons: PolygonData[] = polygons.map(polygon => {
+        if (!polygon.geometry?.coordinates) {
+          return { polygon, sections: [], areas: [] };
+        }
 
-      geoPoints.forEach((geoPoint: MapFeatures) => {
-        polygonShapes.forEach((polygonShape, index) => {
-          const areaName = polygonData.areas[index];
-          const matchingFeatures =
-            geoPoint.features?.filter((feature: any) => {
-              if (!feature.geometry?.coordinates || !Array.isArray(feature.geometry.coordinates)) {
-                console.error('Invalid coordinates found:', feature.geometry?.coordinates);
-                return false;
-              }
+        const polygonData: PolygonData = {
+          polygon,
+          sections: [],
+          areas: polygon.properties.shape === 'circle' ? ['1KM', '3KM', '5KM'] : ['Unknown'],
+        };
 
-              const featureCoords = JSON.stringify(feature.geometry.coordinates);
-              if (previouslyMatchedPoints.has(featureCoords)) return false;
+        const polygonShapes = getPolygonShape(polygon.geometry.coordinates, polygon.geometry.type);
+        const sectionsMap = new Map();
+        const previouslyMatchedPoints = new Set();
 
-              try {
-                // Handling different geometry types
-                let point;
-                if (feature.geometry.type === 'Point') {
-                  // Standard point format [lng, lat]
-                  point = turf.point(feature.geometry.coordinates);
-                } else if (feature.geometry.type === 'Polygon') {
-                  // For polygons, we are using the first coordinate of the first ring
-                  if (
-                    Array.isArray(feature.geometry.coordinates[0]) &&
-                    Array.isArray(feature.geometry.coordinates[0][0])
-                  ) {
-                    point = turf.point(feature.geometry.coordinates[0][0]);
-                  } else {
-                    console.error(
-                      'Invalid polygon coordinates structure:',
-                      feature.geometry.coordinates
-                    );
-                    return false;
-                  }
-                } else {
-                  // Extracting coordinates based on the structure
-                  let coords;
-                  if (Array.isArray(feature.geometry.coordinates[0])) {
-                    if (Array.isArray(feature.geometry.coordinates[0][0])) {
-                      // Nested array like [[[x,y],[x,y]]]
-                      coords = feature.geometry.coordinates[0][0];
+        geoPoints.forEach((geoPoint: MapFeatures) => {
+          polygonShapes.forEach((polygonShape, index) => {
+            const areaName = polygonData.areas[index];
+            const matchingFeatures =
+              geoPoint.features?.filter((feature: any) => {
+                if (
+                  !feature.geometry?.coordinates ||
+                  !Array.isArray(feature.geometry.coordinates)
+                ) {
+                  console.error('Invalid coordinates found:', feature.geometry?.coordinates);
+                  return false;
+                }
+
+                const featureCoords = JSON.stringify(feature.geometry.coordinates);
+                if (previouslyMatchedPoints.has(featureCoords)) return false;
+
+                try {
+                  // Handling different geometry types
+                  let point;
+                  if (feature.geometry.type === 'Point') {
+                    // Standard point format [lng, lat]
+                    point = turf.point(feature.geometry.coordinates);
+                  } else if (feature.geometry.type === 'Polygon') {
+                    // For polygons, we are using the first coordinate of the first ring
+                    if (
+                      Array.isArray(feature.geometry.coordinates[0]) &&
+                      Array.isArray(feature.geometry.coordinates[0][0])
+                    ) {
+                      point = turf.point(feature.geometry.coordinates[0][0]);
                     } else {
-                      // Array like [[x,y]]
-                      coords = feature.geometry.coordinates[0];
+                      console.error(
+                        'Invalid polygon coordinates structure:',
+                        feature.geometry.coordinates
+                      );
+                      return false;
                     }
                   } else {
-                    // Simple array like [x,y]
-                    coords = feature.geometry.coordinates;
+                    // Extracting coordinates based on the structure
+                    let coords;
+                    if (Array.isArray(feature.geometry.coordinates[0])) {
+                      if (Array.isArray(feature.geometry.coordinates[0][0])) {
+                        // Nested array like [[[x,y],[x,y]]]
+                        coords = feature.geometry.coordinates[0][0];
+                      } else {
+                        // Array like [[x,y]]
+                        coords = feature.geometry.coordinates[0];
+                      }
+                    } else {
+                      // Simple array like [x,y]
+                      coords = feature.geometry.coordinates;
+                    }
+
+                    if (!Array.isArray(coords) || coords.length < 2) {
+                      console.error('Could not extract valid coordinates:', coords);
+                      return false;
+                    }
+
+                    point = turf.point(coords);
                   }
 
-                  if (!Array.isArray(coords) || coords.length < 2) {
-                    console.error('Could not extract valid coordinates:', coords);
-                    return false;
+                  const isInPolygon = turf.booleanPointInPolygon(point, polygonShape);
+
+                  if (isInPolygon) {
+                    previouslyMatchedPoints.add(featureCoords);
+                    return true;
                   }
-
-                  point = turf.point(coords);
+                  return false;
+                } catch (error: any) {
+                  console.error('Error processing feature:', error?.message || 'Unknown error');
+                  console.error('Problematic coordinates:', feature.geometry?.coordinates);
+                  console.error('Feature type:', feature.geometry?.type);
+                  return false;
                 }
+              }) || [];
+            console.log(
+              'DEBUG EMPTY SECTIONS',
+              `Found ${matchingFeatures.length} matching features for area ${areaName}`
+            );
 
-                const isInPolygon = turf.booleanPointInPolygon(point, polygonShape);
-
-                if (isInPolygon) {
-                  previouslyMatchedPoints.add(featureCoords);
-                  return true;
-                }
-                return false;
-              } catch (error: any) {
-                console.error('Error processing feature:', error?.message || 'Unknown error');
-                console.error('Problematic coordinates:', feature.geometry?.coordinates);
-                console.error('Feature type:', feature.geometry?.type);
-                return false;
-              }
-            }) || [];
-          console.log(
-            'DEBUG EMPTY SECTIONS',
-            `Found ${matchingFeatures.length} matching features for area ${areaName}`
-          );
-
-          matchingFeatures.forEach((feature: any) => {
-            console.log('DEBUG PROPERTIES', 'Processing feature:', feature);
-            console.log('DEBUG PROPERTIES', 'Feature properties:', feature.properties);
-            Object.entries(feature.properties || {}).forEach(([key, val]) => {
-              console.log(
-                'DEBUG PROPERTIES',
-                `Property ${key}: ${val}, excluded:`,
-                excludedProperties.has(key)
-              );
-              if (!excludedProperties.has(key)) {
-                const numVal = Number(val);
+            matchingFeatures.forEach((feature: any) => {
+              console.log('DEBUG PROPERTIES', 'Processing feature:', feature);
+              console.log('DEBUG PROPERTIES', 'Feature properties:', feature.properties);
+              Object.entries(feature.properties || {}).forEach(([key, val]) => {
                 console.log(
                   'DEBUG PROPERTIES',
-                  `Numeric value: ${numVal}, isNaN:`,
-                  isNaN(numVal),
-                  'val !== "":',
-                  val !== ''
+                  `Property ${key}: ${val}, excluded:`,
+                  excludedProperties.has(key)
                 );
-                if (!isNaN(numVal)) {
-                  console.log('DEBUG PROPERTIES', 'Adding to sectionsMap:', key, numVal);
-                  if (!sectionsMap.has(key)) {
-                    sectionsMap.set(key, new Map());
+                if (!excludedProperties.has(key)) {
+                  const numVal = Number(val);
+                  console.log(
+                    'DEBUG PROPERTIES',
+                    `Numeric value: ${numVal}, isNaN:`,
+                    isNaN(numVal),
+                    'val !== "":',
+                    val !== ''
+                  );
+                  if (!isNaN(numVal)) {
+                    console.log('DEBUG PROPERTIES', 'Adding to sectionsMap:', key, numVal);
+                    if (!sectionsMap.has(key)) {
+                      sectionsMap.set(key, new Map());
+                    }
+                    const layerMap = sectionsMap.get(key);
+                    const layerName =
+                      geoPoint.prdcer_layer_name || geoPoint.layer_legend || 'Unknown Layer';
+                    if (!layerMap.has(layerName)) {
+                      layerMap.set(layerName, new Map());
+                    }
+                    const areaMap = layerMap.get(layerName);
+                    if (!areaMap.has(areaName)) {
+                      areaMap.set(areaName, { sum: 0, count: 0 });
+                    }
+                    const areaData = areaMap.get(areaName);
+                    areaData.sum += numVal;
+                    areaData.count += 1;
                   }
-                  const layerMap = sectionsMap.get(key);
-                  const layerName =
-                    geoPoint.prdcer_layer_name || geoPoint.layer_legend || 'Unknown Layer';
-                  if (!layerMap.has(layerName)) {
-                    layerMap.set(layerName, new Map());
-                  }
-                  const areaMap = layerMap.get(layerName);
-                  if (!areaMap.has(areaName)) {
-                    areaMap.set(areaName, { sum: 0, count: 0 });
-                  }
-                  const areaData = areaMap.get(areaName);
-                  areaData.sum += numVal;
-                  areaData.count += 1;
                 }
-              }
+              });
             });
           });
         });
+
+        console.log('DEBUG EMPTY SECTIONS', 'sectionsMap', sectionsMap);
+
+        polygonData.sections = Array.from(sectionsMap, ([title, layerMap]) => ({
+          title,
+          points: Array.from(layerMap, ([layer_name, areaMap]) => ({
+            layer_name,
+            data: polygonData.areas.map(area => {
+              const areaData = areaMap.get(area) || { sum: 0, count: 0 };
+              return {
+                count: areaData.count,
+                sum: areaData.sum,
+                percentage: parseFloat(
+                  (
+                    (areaData.count /
+                      (geoPoints.find((gp: MapFeatures) => gp.prdcer_layer_name === layer_name)
+                        ?.features?.length || 1)) *
+                    100
+                  ).toFixed(1)
+                ),
+                avg: areaData.count ? (areaData.sum / areaData.count).toFixed(2) : '-',
+                area,
+              };
+            }),
+          })),
+        }));
+
+        return polygonData;
       });
 
-      console.log('DEBUG EMPTY SECTIONS', 'sectionsMap', sectionsMap);
+      return processedPolygons;
+    };
 
-      polygonData.sections = Array.from(sectionsMap, ([title, layerMap]) => ({
-        title,
-        points: Array.from(layerMap, ([layer_name, areaMap]) => ({
-          layer_name,
-          data: polygonData.areas.map(area => {
-            const areaData = areaMap.get(area) || { sum: 0, count: 0 };
-            return {
-              count: areaData.count,
-              sum: areaData.sum,
-              percentage: parseFloat(
-                (
-                  (areaData.count /
-                    (geoPoints.find((gp: MapFeatures) => gp.prdcer_layer_name === layer_name)
-                      ?.features?.length || 1)) *
-                  100
-                ).toFixed(1)
-              ),
-              avg: areaData.count ? (areaData.sum / areaData.count).toFixed(2) : '-',
-              area,
-            };
-          }),
-        })),
-      }));
-
-      return polygonData;
-    });
-
-    return processedPolygons;
+    setSections(calculateSections());
   }, [polygons, geoPoints]);
 
   useEffect(() => {
@@ -515,12 +523,35 @@ export function CatalogProvider(props: { children: ReactNode }) {
     }
   }
 
-  function handleAddClick(
+  async function handleAddClick(
     id: string,
     typeOfCard: string,
     callBack?: (city: string, country: string) => void
   ) {
     fetchGeoPoints(id, typeOfCard, callBack);
+
+    try {
+      const body = { user_id: authResponse?.localId, ctlg_id: id };
+
+      const res = await apiRequest({
+        url: urls.fetch_single_catalog,
+        method: 'post',
+        isAuthRequest: true,
+        body: body,
+      });
+
+      const catalogData = res.data.data;
+      setMarkers(catalogData.display_elements?.annotations?.pins || []);
+      setMeasurements(catalogData.display_elements?.annotations?.routes || []);
+      setCaseStudyContent(catalogData.display_elements?.content?.case_study || []);
+      setPolygons(catalogData.display_elements?.statisticsPopupData?.polygons || []);
+      setBenchmarks(catalogData.display_elements?.statisticsPopupData?.benchmarks || []);
+      setIsBenchmarkControlOpen(
+        catalogData.display_elements?.statisticsPopupData?.isBenchmarkControlOpen ?? false
+      );
+    } catch (error) {
+      console.error('Error fetching single catalog:', error);
+    }
   }
 
   function handleStoreUnsavedGeoPoint(geoPoints: any) {
@@ -564,7 +595,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
         formData.append('image', thumbnailBlob, 'thumbnail.jpg');
       }
 
-
       const requestBody = {
         message: 'Save catalog request',
         request_info: {},
@@ -579,41 +609,29 @@ export function CatalogProvider(props: { children: ReactNode }) {
           })),
           user_id: authResponse.localId,
           display_elements: {
-            details: geoPoints.map(layer => ({
-              layer_id: layer.layerId,
-              display: layer.display,
-              points_color: layer.points_color,
-              is_heatmap: layer.is_heatmap,
-              is_grid: layer.is_grid,
-              is_enabled: layer.is_enabled || true,
-              opacity: layer.opacity || 1,
-            })),
-            markers: markers.map(marker => ({
-              id: marker.id,
-              name: marker.name,
-              description: marker.description,
-              coordinates: marker.coordinates,
-              timestamp: marker.timestamp,
-            })),
-            case_study: caseStudyContent,
-            measurements: measurements.map(measurement => ({
-              id: measurement.id,
-              name: measurement.name,
-              description: measurement.description,
-              sourcePoint: measurement.sourcePoint,
-              destinationPoint: measurement.destinationPoint,
-              route: measurement.route,
-              distance: measurement.distance,
-              duration: measurement.duration,
-              timestamp: measurement.timestamp,
-            })),
-            polygonData: {
-              sections,
+            statisticsPopupData: {
+              polygons,
               benchmarks,
               isBenchmarkControlOpen,
               currentStyle,
             },
+            annotations: {
+              pins: markers,
+              routes: measurements,
+            },
+            content: {
+              case_study: caseStudyContent,
+            },
           },
+          details: geoPoints.map(layer => ({
+            layer_id: layer.layerId,
+            display: layer.display,
+            points_color: layer.points_color,
+            is_heatmap: layer.is_heatmap,
+            is_grid: layer.is_grid,
+            is_enabled: layer.is_enabled || true,
+            opacity: layer.opacity || 1,
+          })),
         },
       };
 
@@ -633,6 +651,13 @@ export function CatalogProvider(props: { children: ReactNode }) {
       setSaveResponseMsg(res.data.message);
       setSaveReqId(res.data.id);
       setFormStage('catalog');
+      setIsBenchmarkControlOpen(false);
+      setPolygons([]);
+      setSections([]);
+      setBenchmarks([]);
+      setMarkers([]);
+      setMeasurements([]);
+      setCaseStudyContent([]);
       resetState();
     } catch (error) {
       setIsError(error instanceof Error ? error : new Error('Failed to save catalog'));

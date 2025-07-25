@@ -162,9 +162,7 @@ function DataContainer() {
       } finally {
         setWsResLoading(false);
       }
-    }
-
-    if (selectedContainerType !== 'Home') {
+    } else {
       handleAddClick(selectedItem.id, selectedItem.typeOfCard, (country: string, city: string) => {
         setSelectedCountry(country);
         setSelectedCity(city);
@@ -218,16 +216,6 @@ function DataContainer() {
               typeOfCard: typeOfCard,
               ...(typeOfCard === 'userCatalog' && { lyrs: item.lyrs }),
             });
-            setMarkers(item.display_elements.markers || []);
-            setMeasurements(item.display_elements.measurements || []);
-            setCaseStudyContent(item.display_elements.case_study || []);
-
-            setSections(item.display_elements.polygonData?.sections || []);
-            setBenchmarks(item.display_elements.polygonData?.benchmarks || []);
-            setIsBenchmarkControlOpen(
-              item.display_elements.polygonData?.isBenchmarkControlOpen ?? false
-            );
-            setCurrentStyle(item.display_elements.polygonData?.currentStyle || '');
           }}
           can_access={item.can_access ?? false}
           typeOfCard={typeOfCard}

@@ -82,7 +82,7 @@ function CatalogMenu() {
     setLayerColors({});
   }
 
-  const safeGeoPoints = Array.isArray(geoPoints)
+    const safeGeoPoints = Array.isArray(geoPoints)
     ? geoPoints.filter(point => !point.isTemporary)
     : [];
 

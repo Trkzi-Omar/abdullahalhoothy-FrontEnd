@@ -343,7 +343,7 @@ const SavedLocations: React.FC = () => {
 
       const onSave = (name: string, description: string, color: string) => {
         console.log('markers onSave', name, description, [lngLat.lng, lngLat.lat]);
-        addMarker(name, description, [lngLat.lng, lngLat.lat], color, 'measurement-draft');
+        addMarker(name, description, [lngLat.lng, lngLat.lat], color, 'saved');
         if (newTempMarker) {
           newTempMarker.remove();
           setTempMarker(null);
@@ -366,16 +366,14 @@ const SavedLocations: React.FC = () => {
         console.log('Starting measurement from map click:', idOrLngLat);
         initializeMeasureMode();
 
-        // Set it as source point and add the marker
         setMeasureSourcePoint(idOrLngLat);
         setMeasureDestinationPoint(null);
         setMeasurementResult(null);
 
         if (mapRef.current) {
-          console.log('Adding source marker for map click measurement');
           const srcMarker = {
             id: uuidv4(),
-            name: 'Measurement Source',
+            name: 'Measurement Start',
             description: '',
             coordinates: [idOrLngLat.lng, idOrLngLat.lat] as [number, number],
             timestamp: Date.now(),
@@ -543,7 +541,6 @@ const SavedLocations: React.FC = () => {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !shouldInitializeFeatures) {
-      console.log('[SavedLocations EFFECT] Map not ready or features not init.');
       return;
     }
 
@@ -552,16 +549,10 @@ const SavedLocations: React.FC = () => {
     };
 
     if (isMeasuring) {
-      console.log(
-        '[SavedLocations EFFECT] ADDING click listener for measurement (isMeasuring is true).'
-      );
       map.on('click', eventHandler);
-    } else {
-      console.log('[SavedLocations EFFECT] NOT adding listener (isMeasuring is false).');
     }
 
     return () => {
-      console.log('[SavedLocations EFFECT CLEANUP] REMOVING click listener for measurement.');
       map.off('click', eventHandler);
     };
   }, [isMeasuring, mapRef, shouldInitializeFeatures]);

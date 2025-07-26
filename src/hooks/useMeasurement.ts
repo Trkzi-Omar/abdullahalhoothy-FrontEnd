@@ -28,7 +28,13 @@ export interface MeasurementActions {
   clearMeasurementLayers: () => void;
   displayRouteOnMap: (
     polygonData: any,
-    savedMeasurement?: { name: string; description: string; distance: number; duration: number }
+    savedMeasurement?: {
+      id: string;
+      name: string;
+      description: string;
+      distance: number;
+      duration: number;
+    }
   ) => void;
   decodePolyline: (encoded: string) => [number, number][];
   setIsMeasuring: (isMeasuring: boolean) => void;
@@ -44,10 +50,9 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
     addMarker,
     setMarkers,
     addMeasurement,
+    deleteMeasurement,
     startMeasurementSession,
     endMeasurementSession,
-    clearSessionMarkers,
-    clearOtherSessionMarkers,
     getCurrentSessionId,
     markSessionMarkersForDeletion,
     cleanupMarkedMarkers,
@@ -269,7 +274,13 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
   const displayRouteOnMap = useCallback(
     (
       polygonData: any,
-      savedMeasurement?: { name: string; description: string; distance: number; duration: number }
+      savedMeasurement?: {
+        id: string;
+        name: string;
+        description: string;
+        distance: number;
+        duration: number;
+      }
     ) => {
       const map = mapRef.current;
       if (!map) {
@@ -339,6 +350,11 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                     </div>
                     <div class="mt-3 flex justify-end space-x-2">
                       <button
+                        class="delete-measurement-hook px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
+                      >
+                        Delete
+                      </button>
+                       <button
                         class="edit-measurement-hook px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs"
                       >
                         Edit
@@ -366,6 +382,16 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                     }),
                     { isSmaller: true, hasAutoSize: true }
                   );
+                });
+              }
+
+              const deleteButton = popupElement.querySelector('.delete-measurement-hook');
+              if (deleteButton) {
+                deleteButton.addEventListener('click', () => {
+                  popup.remove();
+                  closeModal();
+                  exitMeasureMode();
+                  deleteMeasurement(savedMeasurement.id);
                 });
               }
 
@@ -398,6 +424,11 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                   </div>
                   <div class="mt-3 flex justify-end space-x-2">
                     <button
+                      class="delete-measurement-hook px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
+                    >
+                      Delete
+                    </button>
+                    <button
                       class="edit-measurement-hook px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs"
                     >
                       Edit
@@ -427,6 +458,16 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                   }),
                   { isSmaller: true, hasAutoSize: true }
                 );
+              });
+            }
+
+            const deleteButton = popupElement.querySelector('.delete-measurement-hook');
+            if (deleteButton) {
+              deleteButton.addEventListener('click', () => {
+                popup.remove();
+                closeModal();
+                exitMeasureMode();
+                deleteMeasurement(savedMeasurement.id);
               });
             }
 
@@ -530,7 +571,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                 markerType: 'measurement-saved' as MarkerType,
                 measurementId: savedMeasurementId, // Only the measurement record ID
                 name:
-                  marker.name === 'Measurement Start'
+                  marker.name === 'Measurement Source'
                     ? `${name} - Start`
                     : marker.name === 'Measurement End'
                       ? `${name} - End`
@@ -577,6 +618,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
             }
 
             displayRouteOnMap(routeData, {
+              id: savedMeasurementId,
               name,
               description,
               distance: apiResult.data.distance_in_km,
@@ -608,6 +650,10 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
           onSubmit: handleSubmit,
           onCancel: () => {
             closeModal();
+            //delete the measurement draft markers
+            setMarkers(prevMarkers =>
+              prevMarkers.filter(marker => marker.markerType !== 'measurement-draft')
+            );
             exitMeasureMode();
           },
         }),
@@ -672,6 +718,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
         .addTo(mapRef.current);
 
       const popupElement = popup.getElement();
+      if (!popupElement) return;
 
       const cancelButton = popupElement.querySelector('.exit-measure-mode-hook');
       if (cancelButton) {
@@ -755,6 +802,8 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
         .addTo(mapRef.current);
 
       const popupElement = popup.getElement();
+      if (!popupElement) return;
+
       const exitButton = popupElement.querySelector('.exit-measure-mode-hook');
       if (exitButton) {
         exitButton.addEventListener('click', () => {

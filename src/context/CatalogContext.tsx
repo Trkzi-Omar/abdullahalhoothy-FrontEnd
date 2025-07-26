@@ -334,31 +334,12 @@ export function CatalogProvider(props: { children: ReactNode }) {
                   return false;
                 }
               }) || [];
-            console.log(
-              'DEBUG EMPTY SECTIONS',
-              `Found ${matchingFeatures.length} matching features for area ${areaName}`
-            );
 
             matchingFeatures.forEach((feature: any) => {
-              console.log('DEBUG PROPERTIES', 'Processing feature:', feature);
-              console.log('DEBUG PROPERTIES', 'Feature properties:', feature.properties);
               Object.entries(feature.properties || {}).forEach(([key, val]) => {
-                console.log(
-                  'DEBUG PROPERTIES',
-                  `Property ${key}: ${val}, excluded:`,
-                  excludedProperties.has(key)
-                );
                 if (!excludedProperties.has(key)) {
                   const numVal = Number(val);
-                  console.log(
-                    'DEBUG PROPERTIES',
-                    `Numeric value: ${numVal}, isNaN:`,
-                    isNaN(numVal),
-                    'val !== "":',
-                    val !== ''
-                  );
                   if (!isNaN(numVal)) {
-                    console.log('DEBUG PROPERTIES', 'Adding to sectionsMap:', key, numVal);
                     if (!sectionsMap.has(key)) {
                       sectionsMap.set(key, new Map());
                     }
@@ -381,8 +362,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
             });
           });
         });
-
-        console.log('DEBUG EMPTY SECTIONS', 'sectionsMap', sectionsMap);
 
         polygonData.sections = Array.from(sectionsMap, ([title, layerMap]) => ({
           title,
@@ -543,7 +522,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
       const catalogData = res.data.data;
       setMarkers(catalogData.display_elements?.annotations?.pins || []);
       setMeasurements(catalogData.display_elements?.annotations?.routes || []);
-      setCaseStudyContent(catalogData.display_elements?.content?.case_study || []);
+      setCaseStudyContent(catalogData.display_elements?.case_study || []);
       setPolygons(catalogData.display_elements?.statisticsPopupData?.polygons || []);
       setBenchmarks(catalogData.display_elements?.statisticsPopupData?.benchmarks || []);
       setIsBenchmarkControlOpen(
@@ -619,9 +598,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
               pins: markers,
               routes: measurements,
             },
-            content: {
-              case_study: caseStudyContent,
-            },
+            case_study: caseStudyContent,
           },
           details: geoPoints.map(layer => ({
             layer_id: layer.layerId,

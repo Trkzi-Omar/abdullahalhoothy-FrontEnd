@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FaBoxOpen, FaLayerGroup } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import LayerFormLoader from '../../components/LayerFormLoader/LayerFormLoader';
@@ -14,7 +14,6 @@ import { useMeasurement } from '../../hooks/useMeasurement';
 const Home = () => {
   const { isAuthenticated } = useAuth();
   const nav = useNavigate();
-  const isInitialMount = useRef(true);
 
   const [selectedTab] = useState<'LAYER' | 'CATALOG'>('LAYER');
 
@@ -35,7 +34,7 @@ const Home = () => {
     if (!isAuthenticated && selectedTab === 'CATALOG') nav('/auth');
   }, [selectedTab]);
 
-  const { isMobile, setIsDrawerOpen, isDrawerOpen } = useUIContext();
+  const { isMobile, setIsDrawerOpen } = useUIContext();
   return (
     <>
       {!isMobile && (
@@ -80,11 +79,8 @@ export function HomeContent() {
 
   const {
     setSelectedContainerType,
-    geoPoints,
-    handleStoreUnsavedGeoPoint,
     setMarkers,
     setMeasurements,
-    setIsMarkersEnabled,
     selectedHomeTab,
     setSelectedHomeTab,
     setGeoPoints,
@@ -98,7 +94,6 @@ export function HomeContent() {
     console.log('handleTabSwitch received:', tab);
     setSelectedContainerType(tab === 'CATALOG' ? 'Catalogue' : 'Layer');
     setGeoPoints([]);
-    setIsMarkersEnabled(tab === 'CATALOG');
     setMarkers([]);
     setMeasurements([]);
   };
@@ -170,14 +165,6 @@ function HomerDrawer() {
       document.body.style.pointerEvents = 'auto';
     };
   }, [isDrawerOpen]);
-
-  const handleOpenChange = (isOpen: boolean) => {
-    console.log('Drawer open state changed:', isOpen);
-    setIsDrawerOpen(isOpen);
-    if (isOpen) {
-      document.body.style.pointerEvents = 'auto';
-    }
-  };
 
   useEffect(() => {
     if (createLayerformStage === 'secondStep') {

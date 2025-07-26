@@ -12,7 +12,6 @@ export interface MeasurementData {
 
 export type MarkerType =
   | 'saved' // User-created permanent markers
-  | 'catalog' // Markers loaded from catalogs
   | 'measurement-draft' // Draft markers during measurement (start/end points)
   | 'measurement-saved' // Markers that are part of saved measurements
   | 'measurement-to-delete'; // Temporary markers during measurement (intermediate points)

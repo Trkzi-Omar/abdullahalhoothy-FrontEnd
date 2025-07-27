@@ -273,6 +273,11 @@ export interface CatalogContextType {
   isDraftSaving: boolean;
   setIsDraftSaving: React.Dispatch<React.SetStateAction<boolean>>;
   clearDraft: () => void;
+  fetchGeoPoints: (
+    id: string,
+    typeOfCard: string,
+    callBack?: (country: string, city: string) => void
+  ) => Promise<void>;
 }
 
 export interface GradientColorBasedOnZone extends MapFeatures {
@@ -356,7 +361,7 @@ export interface LayerContextType {
   setSaveMethod: React.Dispatch<React.SetStateAction<string>>;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   incrementFormStage(): void;
-  handleSaveLayer(): void;
+  handleSaveLayer(layerData: LayerCustomization | { layers: LayerCustomization[] }): Promise<void>;
   resetFormStage(): void;
   selectedColor: Color | null;
   setSelectedColor: React.Dispatch<React.SetStateAction<Color | null>>;
@@ -429,6 +434,8 @@ export interface LayerContextType {
   switchIncomeLayer: () => Promise<void>;
   refetchIncomeLayer: () => Promise<void>;
   currentViewportInsights: Insights | null;
+  layerDataMap: LayerDataMap;
+  setLayerDataMap: React.Dispatch<React.SetStateAction<LayerDataMap>>;
 }
 
 export interface ReqFetchDataset {
@@ -688,7 +695,7 @@ export type ProviderProps = {
   children: React.ReactNode;
 };
 
-export type GeoPoint = {
+export type GeoPointData = {
   features: Feature[];
   avgRating?: number;
   totalUserRatings?: number;

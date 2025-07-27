@@ -1355,6 +1355,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         isDraftSaving,
         setIsDraftSaving,
         clearDraft,
+        fetchGeoPoints,
       }}
     >
       {children}

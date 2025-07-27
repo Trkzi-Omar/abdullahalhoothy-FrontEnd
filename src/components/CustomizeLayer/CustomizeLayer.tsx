@@ -1,17 +1,14 @@
-import React, { useState, ChangeEvent, useEffect } from 'react';
-import styles from './CustomizeLayer.module.css';
-import ColorSelect from '../ColorSelect/ColorSelect';
+import { useState, useEffect } from 'react';
 import { useLayerContext } from '../../context/LayerContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router';
-import SavedIconFeedback from '../SavedIconFeedback/SavedIconFeedback';
 import { LayerCustomization } from '../../types/allTypesAndInterfaces';
 import LayerCustomizationItem from '../LayerCustomizationItem/LayerCustomizationItem';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { HiCheck, HiExclamation } from 'react-icons/hi';
 import { getDefaultLayerColor } from '../../utils/helperFunctions';
 
-function autoFillLegendFormat(data) {
+function autoFillLegendFormat(data: any) {
   if (!data.selectedCountry || !data.selectedCity) return '';
 
   const actionAbbreviation = data.action.split(' ')[0];
@@ -20,15 +17,15 @@ function autoFillLegendFormat(data) {
 
   const countryAbbreviation = data.selectedCountry
     .split(' ')
-    .map(word => word[0])
+    .map((word: string) => word[0])
     .join('')
     .toUpperCase();
 
-  const included = data.includedTypes.map(type => type.replace('_', ' ')).join(' + ');
+  const included = data.includedTypes.map((type: string) => type.replace('_', ' ')).join(' + ');
 
   const excluded =
     data.excludedTypes.length > 0
-      ? ' + not ' + data.excludedTypes.map(type => type.replace('_', ' ')).join(' + not ')
+      ? ' + not ' + data.excludedTypes.map((type: string) => type.replace('_', ' ')).join(' + not ')
       : '';
   // Handle special cases for action
   if (actionAbbreviation === 'full') {
@@ -49,9 +46,10 @@ function CustomizeLayer() {
     reqFetchDataset,
     handleSaveLayer,
     updateLayerState,
+    layerDataMap,
   } = useLayerContext();
 
-  const { removeLayer } = useCatalogContext();
+  const { removeLayer, setSelectedHomeTab, fetchGeoPoints } = useCatalogContext();
 
   const [layerCustomizations, setLayerCustomizations] = useState<LayerCustomization[]>([]);
   const [errors, setErrors] = useState<{ [layerId: number]: string }>({});
@@ -83,6 +81,26 @@ function CustomizeLayer() {
       setLayerCustomizations(initialCustomizations);
     }
   }, [reqFetchDataset]);
+
+  useEffect(() => {
+    if (allSaved && layerCustomizations.length > 0) {
+      setSelectedHomeTab('CATALOG');
+
+      layerCustomizations.forEach(layer => {
+        const savedLayerData = layerDataMap[layer.layerId];
+        if (savedLayerData?.prdcer_lyr_id) {
+          fetchGeoPoints(savedLayerData.prdcer_lyr_id, 'layer');
+        }
+      });
+    }
+  }, [allSaved, layerCustomizations, layerDataMap, setSelectedHomeTab, fetchGeoPoints]);
+
+  useEffect(() => {
+    if (layerCustomizations.length > 0) {
+      const allLayersSaved = layerCustomizations.every(layer => savedLayers.has(layer.layerId));
+      setAllSaved(allLayersSaved);
+    }
+  }, [savedLayers, layerCustomizations]);
 
   const handleLayerChange = (layerId: number, field: keyof LayerCustomization, value: string) => {
     setLayerCustomizations(prev => {
@@ -153,7 +171,6 @@ function CustomizeLayer() {
         await handleSaveLayer({ layers: layerCustomizations });
 
         setSavedLayers(new Set(layerIds));
-        setAllSaved(true);
       } catch (error) {
         setGlobalSaveError('Failed to save layers. Please try again.');
         setErrors(prev => ({
@@ -223,6 +240,12 @@ function CustomizeLayer() {
           </div>
         )}
         <div className="flex justify-end space-x-3">
+          <button
+            onClick={handleDiscardAll}
+            className={`px-4 py-2 border rounded-md shadow-sm text-sm font-medium border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500`}
+          >
+            Go Back
+          </button>
           <button
             onClick={handleDiscardAll}
             disabled={allSaved}

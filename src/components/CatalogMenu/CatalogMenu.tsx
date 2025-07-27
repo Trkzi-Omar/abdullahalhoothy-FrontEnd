@@ -24,20 +24,41 @@ function CatalogMenu() {
     geoPoints,
     setGeoPoints,
     resetFormStage,
-    setLayerColors,
-    setIsAdvancedMode,
-    setGradientColorBasedOnZone,
-    setIsRadiusMode,
-    setChosenPallet,
+    setMarkers,
+    setMeasurements,
+    setCaseStudyContent,
+    setPolygons,
+    setBenchmarks,
+    setIsBenchmarkControlOpen,
   } = useCatalogContext();
   const { setSelectedCity, setSelectedCountry } = useLayerContext();
 
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
 
   useEffect(() => {
-    const savedGeoPoints = localStorage.getItem('unsavedGeoPoints');
-    if (savedGeoPoints && JSON.parse(savedGeoPoints).length > 0) {
-      setShowRestorePrompt(true);
+    const savedDraft = localStorage.getItem('unsavedCatalogDraft');
+    if (savedDraft) {
+      try {
+        const parsedDraft = JSON.parse(savedDraft);
+        if (
+          parsedDraft &&
+          (parsedDraft.geoPoints?.length > 0 ||
+            parsedDraft.markers?.length > 0 ||
+            parsedDraft.measurements?.length > 0)
+        ) {
+          console.log('Found saved draft with:', {
+            geoPoints: parsedDraft.geoPoints?.length || 0,
+            markers: parsedDraft.markers?.length || 0,
+            measurements: parsedDraft.measurements?.length || 0,
+            polygons: parsedDraft.polygons?.length || 0,
+            benchmarks: parsedDraft.benchmarks?.length || 0,
+          });
+          setShowRestorePrompt(true);
+        }
+      } catch (error) {
+        console.error('Error parsing saved draft:', error);
+        localStorage.removeItem('unsavedCatalogDraft');
+      }
     }
   }, []);
 
@@ -47,16 +68,65 @@ function CatalogMenu() {
   }, []);
 
   function handleRestoreClick() {
-    const savedGeoPoints = localStorage.getItem('unsavedGeoPoints');
-    if (savedGeoPoints) {
-      setGeoPoints(prevGeoPoints => [...prevGeoPoints, ...JSON.parse(savedGeoPoints)]);
-      setSelectedCity(JSON.parse(savedGeoPoints)[0].city_name);
-      setSelectedCountry(
-        JSON.parse(savedGeoPoints)[0].country_name || defaultMapConfig.fallBackCountry
-      );
+    const savedDraft = localStorage.getItem('unsavedCatalogDraft');
+    if (savedDraft) {
+      try {
+        const parsedDraft = JSON.parse(savedDraft);
+        if (parsedDraft) {
+          if (parsedDraft.geoPoints && parsedDraft.geoPoints.length > 0) {
+            setGeoPoints(prevGeoPoints => [...prevGeoPoints, ...parsedDraft.geoPoints]);
+
+            const firstPoint = parsedDraft.geoPoints[0];
+            if (firstPoint && firstPoint.city_name) {
+              setSelectedCity(firstPoint.city_name);
+            }
+            if (firstPoint && firstPoint.country_name) {
+              setSelectedCountry(firstPoint.country_name);
+            } else if (firstPoint) {
+              setSelectedCountry(defaultMapConfig.fallBackCountry);
+            }
+          }
+
+          if (parsedDraft.markers && parsedDraft.markers.length > 0) {
+            setMarkers(parsedDraft.markers);
+          }
+
+          if (parsedDraft.measurements && parsedDraft.measurements.length > 0) {
+            setMeasurements(parsedDraft.measurements);
+          }
+
+          if (parsedDraft.caseStudyContent) {
+            setCaseStudyContent(parsedDraft.caseStudyContent);
+          }
+
+          if (parsedDraft.polygons && parsedDraft.polygons.length > 0) {
+            setPolygons(parsedDraft.polygons);
+          }
+
+          if (parsedDraft.benchmarks && parsedDraft.benchmarks.length > 0) {
+            setBenchmarks(parsedDraft.benchmarks);
+          }
+
+          if (parsedDraft.isBenchmarkControlOpen !== undefined) {
+            setIsBenchmarkControlOpen(parsedDraft.isBenchmarkControlOpen);
+          }
+
+          console.log('Draft restored successfully with:', {
+            geoPoints: parsedDraft.geoPoints?.length || 0,
+            markers: parsedDraft.markers?.length || 0,
+            measurements: parsedDraft.measurements?.length || 0,
+            polygons: parsedDraft.polygons?.length || 0,
+            benchmarks: parsedDraft.benchmarks?.length || 0,
+          });
+        }
+      } catch (error) {
+        console.error('Error restoring draft:', error);
+        localStorage.removeItem('unsavedCatalogDraft');
+      }
     }
-    localStorage.removeItem('unsavedGeoPoints');
+
     setShowRestorePrompt(false);
+    localStorage.removeItem('unsavedCatalogDraft');
   }
 
   function openCatalogModal(contentType: 'Catalogue' | 'Layer') {
@@ -73,16 +143,14 @@ function CatalogMenu() {
   }
 
   function handleDiscardClick(event: MouseEvent) {
-    setIsAdvancedMode({});
-    setGradientColorBasedOnZone([] as GradientColorBasedOnZone[]);
-    setIsRadiusMode(false);
-
+    event.preventDefault();
+    event.stopPropagation();
+    localStorage.removeItem('unsavedCatalogDraft');
+    setShowRestorePrompt(false);
     resetState();
-    setChosenPallet(null);
-    setLayerColors({});
   }
 
-    const safeGeoPoints = Array.isArray(geoPoints)
+  const safeGeoPoints = Array.isArray(geoPoints)
     ? geoPoints.filter(point => !point.isTemporary)
     : [];
 
@@ -155,6 +223,7 @@ function CatalogMenu() {
                   } else {
                     resetState();
                   }
+                  localStorage.removeItem('unsavedCatalogDraft');
                   setShowRestorePrompt(false);
                 }}
                 className="w-full h-full bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg

@@ -192,7 +192,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [basedOnLayerId, setBasedOnLayerId] = useState<string | null>(null);
   const [basedOnProperty, setBasedOnProperty] = useState<string | null>(null);
   const [markers, setMarkers] = useState<MarkerData[]>([]);
-  const [isMarkersEnabled, setIsMarkersEnabled] = useState<boolean>(false);
+  const [isMarkersEnabled, setIsMarkersEnabled] = useState<boolean>(true);
   const [caseStudyContent, setCaseStudyContent] = useState<Descendant[]>(defaultCaseStudyContent);
   const [measurements, setMeasurements] = useState<MeasurementData[]>([]);
   const [selectedHomeTab, setSelectedHomeTab] = useState<'LAYER' | 'CATALOG'>('LAYER');
@@ -211,6 +211,49 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [isBenchmarkControlOpen, setIsBenchmarkControlOpen] = useState(false);
   const [currentStyle, setCurrentStyle] = useState('mapbox://styles/mapbox/streets-v11');
   const [sections, setSections] = useState<Section[] | PolygonData[]>([]);
+  const [isDraftSaving, setIsDraftSaving] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (geoPoints.length > 0) {
+        console.log('Saving draft before unload - geoPoints count:', geoPoints.length);
+        handleStoreUnsavedGeoPoint(geoPoints);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && geoPoints.length > 0) {
+        console.log('Saving draft on visibility change - geoPoints count:', geoPoints.length);
+        handleStoreUnsavedGeoPoint(geoPoints);
+      }
+    };
+
+    const handlePageHide = () => {
+      if (geoPoints.length > 0) {
+        console.log('Saving draft on page hide - geoPoints count:', geoPoints.length);
+        handleStoreUnsavedGeoPoint(geoPoints);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handlePageHide);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handlePageHide);
+    };
+  }, [geoPoints]);
+
+  useEffect(() => {
+    if (geoPoints.length === 0) return;
+
+    const timeoutId = setTimeout(() => {
+      handleStoreUnsavedGeoPoint(geoPoints);
+    }, 2000);
+    return () => clearTimeout(timeoutId);
+  }, [geoPoints]);
 
   useEffect(() => {
     const calculateSections = () => {
@@ -534,14 +577,33 @@ export function CatalogProvider(props: { children: ReactNode }) {
   }
 
   function handleStoreUnsavedGeoPoint(geoPoints: any) {
-    // Retrieve existing items from local storage
-    const existingGeoPoints = JSON.parse(localStorage.getItem('unsavedGeoPoints') || '[]');
+    setIsDraftSaving(true);
 
-    const updatedGeoPoints = [...existingGeoPoints, ...geoPoints].filter(
-      layer => !isIntelligentLayer(layer)
-    );
+    try {
+      const draftData = {
+        geoPoints: geoPoints.filter((layer: any) => !isIntelligentLayer(layer)),
+        markers: markers,
+        measurements: measurements,
+        caseStudyContent: caseStudyContent,
+        polygons: polygons,
+        benchmarks: benchmarks,
+        isBenchmarkControlOpen: isBenchmarkControlOpen,
+        timestamp: Date.now(),
+      };
 
-    localStorage.setItem('unsavedGeoPoints', JSON.stringify(updatedGeoPoints));
+      localStorage.setItem('unsavedCatalogDraft', JSON.stringify(draftData));
+      console.log('Draft saved successfully with:', {
+        geoPoints: draftData.geoPoints.length,
+        markers: draftData.markers.length,
+        measurements: draftData.measurements.length,
+        polygons: draftData.polygons.length,
+        benchmarks: draftData.benchmarks.length,
+      });
+    } catch (error) {
+      console.error('Error saving draft:', error);
+    } finally {
+      setTimeout(() => setIsDraftSaving(false), 1000);
+    }
   }
 
   async function generateThumbnail(): Promise<string> {
@@ -629,6 +691,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
       setSaveReqId(res.data.id);
       setFormStage('catalog');
       setIsBenchmarkControlOpen(false);
+      clearDraft();
       setPolygons([]);
       setSections([]);
       setBenchmarks([]);
@@ -1163,6 +1226,11 @@ export function CatalogProvider(props: { children: ReactNode }) {
     return currentSessionIdRef.current;
   }
 
+  function clearDraft() {
+    localStorage.removeItem('unsavedCatalogDraft');
+    console.log('Catalog draft cleared.');
+  }
+
   return (
     <CatalogContext.Provider
       value={{
@@ -1284,6 +1352,9 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setIsBenchmarkControlOpen,
         currentStyle,
         setCurrentStyle,
+        isDraftSaving,
+        setIsDraftSaving,
+        clearDraft,
       }}
     >
       {children}

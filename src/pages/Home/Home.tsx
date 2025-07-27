@@ -84,10 +84,18 @@ export function HomeContent() {
     selectedHomeTab,
     setSelectedHomeTab,
     setGeoPoints,
+    geoPoints,
+    handleStoreUnsavedGeoPoint,
+    setPolygons,
   } = useCatalogContext();
   const { exitMeasureMode, clearMeasurementLayers } = useMeasurement();
 
   const handleTabSwitch = (tab: 'LAYER' | 'CATALOG') => {
+    if (selectedHomeTab === 'CATALOG' && tab === 'LAYER' && geoPoints.length > 0) {
+      handleStoreUnsavedGeoPoint(geoPoints);
+    }
+
+    setPolygons([]);
     exitMeasureMode();
     clearMeasurementLayers();
     setSelectedHomeTab(tab);

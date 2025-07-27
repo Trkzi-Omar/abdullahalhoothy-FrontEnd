@@ -270,6 +270,9 @@ export interface CatalogContextType {
   setIsBenchmarkControlOpen: React.Dispatch<React.SetStateAction<boolean>>;
   currentStyle: string;
   setCurrentStyle: React.Dispatch<React.SetStateAction<string>>;
+  isDraftSaving: boolean;
+  setIsDraftSaving: React.Dispatch<React.SetStateAction<boolean>>;
+  clearDraft: () => void;
 }
 
 export interface GradientColorBasedOnZone extends MapFeatures {

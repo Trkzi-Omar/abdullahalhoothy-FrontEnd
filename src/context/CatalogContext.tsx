@@ -247,15 +247,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
   }, [geoPoints]);
 
   useEffect(() => {
-    if (geoPoints.length === 0) return;
-
-    const timeoutId = setTimeout(() => {
-      handleStoreUnsavedGeoPoint(geoPoints);
-    }, 2000);
-    return () => clearTimeout(timeoutId);
-  }, [geoPoints]);
-
-  useEffect(() => {
     const calculateSections = () => {
       if (!Array.isArray(polygons) || !Array.isArray(geoPoints)) {
         return [] as Section[];
@@ -577,6 +568,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
   }
 
   function handleStoreUnsavedGeoPoint(geoPoints: any) {
+    if (selectedHomeTab !== 'CATALOG' || geoPoints.length === 0) return;
+
     setIsDraftSaving(true);
 
     try {

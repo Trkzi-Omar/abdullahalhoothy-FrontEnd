@@ -99,22 +99,33 @@ function LayerCustomizationItem({
             <div className="flex justify-end space-x-3 pt-2">
               <button
                 onClick={() => onDiscard(layer.layerId)}
-                className="px-3 py-2 border border-gray-300 rounded-md text-sm 
-                         font-medium text-gray-700 bg-white hover:bg-gray-50 
-                         focus:outline-none focus:ring-2 focus:ring-offset-2 
-                         focus:ring-green-500"
+                disabled={isSaved}
+                className={`px-3 py-2 border rounded-md text-sm font-medium
+                  ${
+                    isSaved
+                      ? 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'
+                      : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
+                  }`}
               >
                 Discard
               </button>
               <button
                 onClick={() => onSave(layer.layerId)}
-                disabled={isSaving}
+                disabled={isSaving || isSaved}
                 className={`px-3 py-2 border border-transparent rounded-md text-sm 
-                         font-medium text-white ${isSaved ? 'bg-green-700' : error ? 'bg-red-600' : 'bg-green-600'} 
-                         hover:${error ? 'bg-red-700' : 'bg-green-700'} 
-                         focus:outline-none focus:ring-2 focus:ring-offset-2 
-                         focus:ring-green-500 
-                         flex items-center justify-center gap-2`}
+                  font-medium text-white 
+                  ${
+                    isSaved
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : isSaving
+                        ? 'bg-gray-500 cursor-not-allowed'
+                        : error
+                          ? 'bg-red-600 hover:bg-red-700'
+                          : 'bg-green-600 hover:bg-green-700'
+                  }
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 
+                  focus:ring-green-500 
+                  flex items-center justify-center gap-2`}
               >
                 {isSaving ? (
                   <span className="flex items-center gap-2">

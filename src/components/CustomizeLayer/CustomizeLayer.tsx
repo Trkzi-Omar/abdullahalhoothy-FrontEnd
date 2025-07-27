@@ -16,7 +16,7 @@ function autoFillLegendFormat(data) {
 
   const actionAbbreviation = data.action.split(' ')[0];
 
-  const cityAbbreviartion = data.selectedCity.slice(0, 3).toUpperCase();
+  const cityAbbreviation = data.selectedCity.slice(0, 3).toUpperCase();
 
   const countryAbbreviation = data.selectedCountry
     .split(' ')
@@ -32,9 +32,9 @@ function autoFillLegendFormat(data) {
       : '';
   // Handle special cases for action
   if (actionAbbreviation === 'full') {
-    return `${actionAbbreviation}-${countryAbbreviation}-${cityAbbreviartion}-${included}${excluded}`;
+    return `${actionAbbreviation}-${countryAbbreviation}-${cityAbbreviation}-${included}${excluded}`;
   } else {
-    return `${countryAbbreviation}-${cityAbbreviartion}-${included}${excluded}`;
+    return `${countryAbbreviation}-${cityAbbreviation}-${included}${excluded}`;
   }
 }
 
@@ -225,19 +225,30 @@ function CustomizeLayer() {
         <div className="flex justify-end space-x-3">
           <button
             onClick={handleDiscardAll}
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm 
-              font-medium text-gray-700 bg-white hover:bg-gray-50 
-              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            disabled={allSaved}
+            className={`px-4 py-2 border rounded-md shadow-sm text-sm font-medium
+              ${
+                allSaved
+                  ? 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'
+                  : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
+              }`}
           >
             Discard All
           </button>
           <button
             onClick={handleSaveAllLayers}
-            disabled={isSavingAll}
+            disabled={isSavingAll || allSaved}
             className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm 
               font-medium text-white 
-              ${allSaved ? 'bg-green-700' : globalSaveError ? 'bg-red-600' : 'bg-green-600'} 
-              ${!isSavingAll && 'hover:' + (globalSaveError ? 'bg-red-700' : 'bg-green-700')}
+              ${
+                allSaved
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : isSavingAll
+                    ? 'bg-gray-500 cursor-not-allowed'
+                    : globalSaveError
+                      ? 'bg-red-600 hover:bg-red-700'
+                      : 'bg-green-600 hover:bg-green-700'
+              }
               focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500
               flex items-center justify-center gap-2 min-w-[100px]`}
           >

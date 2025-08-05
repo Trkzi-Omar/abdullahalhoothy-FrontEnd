@@ -18,28 +18,12 @@ export const AreaIntelligeneControl: React.FC = () => {
   const [isPopulationRefetching, setIsPopulationRefetching] = useState(false);
   const [isIncomeRefetching, setIsIncomeRefetching] = useState(false);
 
-  const hasCity = true;
-
-  const [isPopulationEnabled, setIsPopulationEnabled] = useState(false);
-  const [isPopulationIncluded, setIsPopulationIncluded] = useState(false);
 
   const close = () => setIsOpen(false);
 
   useEffect(() => {
     close();
   }, [selectedContainerType]);
-
-  useEffect(() => {
-    if (!hasCity) close();
-  }, [hasCity]);
-
-  useEffect(() => {
-    setIsPopulationEnabled(!includeIncome && hasCity);
-  }, [includeIncome, hasCity]);
-
-  useEffect(() => {
-    setIsPopulationIncluded(includePopulation && hasCity);
-  }, [includePopulation, hasCity]);
 
   const handlePopulationRefetch = async () => {
     setIsPopulationRefetching(true);
@@ -62,22 +46,22 @@ export const AreaIntelligeneControl: React.FC = () => {
   return (
     <div className="relative">
       <button
-        onClick={() => hasCity && setIsOpen(!isOpen)}
+        onClick={() => setIsOpen(!isOpen)}
         className={`
           flex items-center justify-center
           w-[47px] h-[47px] rounded-md p-2
           bg-gem-gradient border text-gray-200 border-gem/20 
           shadow-sm transition-all duration-200
-          ${!hasCity ? 'opacity-60 cursor-not-allowed' : 'hover:bg-gray-100'}
+          hover:bg-gray-100
           ${includeIncome || includePopulation ? 'bg-gem-green text-white hover:bg-[#0d4432]' : ''}
         `}
-        title={hasCity ? 'Area Intelligence' : 'Please select a city first'}
+        title={'Area Intelligence'}
       >
         <div className="flex items-center justify-center w-full h-full">
           <LiaMapMarkedAltSolid
             size={22}
             className={`
-              ${!hasCity ? 'text-gray-400' : 'text-current'}
+              text-current
               ${includePopulation || includeIncome ? 'text-white' : ''}
             `}
           />
@@ -87,32 +71,22 @@ export const AreaIntelligeneControl: React.FC = () => {
       {isOpen && (
         <div className="absolute left-0 mt-2 min-w-[22rem] z-50">
           <div
-            aria-disabled={!hasCity}
             className={`
               relative flex flex-col p-4 rounded-lg border 
               transition-all duration-200 ease-in-out
-              ${
-                !hasCity
-                  ? 'text-gray- 500 bg-gem/20 border-gray-200'
-                  : 'text-gray-100 bg-gem-gradient border-gem-green/20'
-              } 
+              text-gray-100 bg-gem-gradient border-gem-green/20
               aria-disabled:opacity-80 aria-disabled:cursor-not-allowed
             `}
-            title={!hasCity ? 'Please select a city and country' : 'Activate area intelligence'}
+            title={'Activate area intelligence'}
           >
             <div className="font-semibold text-white">Area Intelligence</div>
 
             <label
               htmlFor="population-toggle-map"
-              aria-disabled={!isPopulationEnabled}
               className={`
                 flex items-center justify-between 
                 border-t border-gem/20 mt-2 pt-2
-                ${
-                  !isPopulationEnabled
-                    ? 'bg-white/70 p-3 rounded-md cursor-not-allowed'
-                    : 'bg-white/95 p-3 rounded-md cursor-pointer '
-                }
+                bg-white/95 p-3 rounded-md cursor-pointer
               `}
             >
               <div className="flex items-center gap-2">
@@ -182,25 +156,20 @@ export const AreaIntelligeneControl: React.FC = () => {
                   <input
                     id="population-toggle-map"
                     type="checkbox"
-                    checked={isPopulationIncluded}
-                    disabled={!isPopulationEnabled}
+                    checked={includePopulation}
                     onChange={() => {
-                      if (isPopulationEnabled) {
-                        switchPopulationLayer();
-                      }
+                      switchPopulationLayer();
                     }}
                     className="sr-only peer"
                   />
                   <div
                     className={`
-                      ${!isPopulationEnabled ? 'cursor-not-allowed' : 'cursor-pointer'}
+                      cursor-pointer
                       w-14 h-7 bg-gray-200 
                       peer-focus:outline-none peer-focus:ring-4 
                       peer-focus:ring-gem-green/20 
                       rounded-full peer
-                      ${isPopulationEnabled ? 'peer-checked:bg-gem-green/100' : 'peer-checked:bg-gem-green/70'}
-                      peer-disabled:cursor-not-allowed
-                      peer-disabled:after:bg-gray-100
+                      peer-checked:bg-gem-green
                       after:content-['']
                       after:absolute 
                       after:top-[2px] 
@@ -222,7 +191,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                   onClick={handlePopulationRefetch}
                   className="text-gem-green hover:text-gem-green/80 p-1"
                   title="Refresh population data"
-                  disabled={!isPopulationEnabled || isPopulationRefetching}
+                  disabled={isPopulationRefetching}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -244,15 +213,10 @@ export const AreaIntelligeneControl: React.FC = () => {
 
             <label
               htmlFor="income-toggle-map"
-              aria-disabled={!hasCity}
               className={`
                 flex items-center justify-between 
                 border-t border-gem/20 mt-2 pt-2
-                ${
-                  !hasCity
-                    ? 'bg-white/90 p-3 rounded-md cursor-not-allowed'
-                    : 'bg-white/95 p-3 rounded-md cursor-pointer'
-                }
+                bg-white/95 p-3 rounded-md cursor-pointer
               `}
             >
               <div className="flex items-center gap-2">
@@ -271,7 +235,6 @@ export const AreaIntelligeneControl: React.FC = () => {
                     id="income-toggle-map"
                     type="checkbox"
                     checked={includeIncome}
-                    disabled={!hasCity}
                     onChange={() => {
                       switchIncomeLayer();
                     }}
@@ -279,14 +242,12 @@ export const AreaIntelligeneControl: React.FC = () => {
                   />
                   <div
                     className={`
-                      ${!hasCity ? 'cursor-not-allowed' : 'cursor-pointer'}
+                      cursor-pointer
                       w-14 h-7 bg-gray-200 
                       peer-focus:outline-none peer-focus:ring-4 
                       peer-focus:ring-gem-green/20 
                       rounded-full peer
                       peer-checked:bg-gem-green
-                      peer-disabled:cursor-not-allowed
-                      peer-disabled:after:bg-gray-100
                       after:content-['']
                       after:absolute 
                       after:top-[2px] 
@@ -308,7 +269,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                   onClick={handleIncomeRefetch}
                   className="text-gem-green hover:text-gem-green/80 p-1"
                   title="Refresh income data"
-                  disabled={!hasCity || isIncomeRefetching}
+                  disabled={isIncomeRefetching}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

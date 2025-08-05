@@ -131,10 +131,6 @@ export function LayerProvider(props: { children: ReactNode }) {
   const [includePopulation, setIncludePopulation] = useState(false);
   const [includeIncome, setIncludeIncome] = useState(false);
 
-  useEffect(() => {
-    if (includeIncome) handlePopulationLayer(false);
-  }, [includeIncome]);
-
   function incrementFormStage() {
     if (createLayerformStage === 'initial') {
       setCreateLayerformStage('secondStep');
@@ -817,6 +813,7 @@ export function LayerProvider(props: { children: ReactNode }) {
   }, [selectedContainerType]);
 
   async function switchPopulationLayer() {
+    if (!includePopulation && includeIncome) handleIncomeLayer(false);
     const shouldInclude = !includePopulation;
     handlePopulationLayer(shouldInclude);
   }
@@ -856,88 +853,106 @@ export function LayerProvider(props: { children: ReactNode }) {
       }, 5000);
     });
 
-  async function handlePopulationLayer(shouldInclude: boolean, isRefetch: boolean = false) {
-    const map = mapRef.current;
+  const _handlePopulationLayer = useCallback(
+    async (shouldInclude: boolean, isRefetch: boolean = false) => {
+      const map = mapRef.current;
 
-    if (!shouldInitializeFeatures || !map) {
-      console.warn('Map not initialized');
-      return;
-    }
-    try {
-      await waitForMapReady();
-
-      // Check authentication
-      if (!authResponse?.localId || !authResponse?.idToken) {
-        const message = 'Authentication required. Please log in to use this feature.';
-        console.error(message);
-        setIsError(new Error(message));
-        setShowLoaderTopup(false);
+      if (!shouldInitializeFeatures || !map) {
+        console.warn('Map not initialized');
         return;
       }
+      try {
+        await waitForMapReady();
 
-      setIncludePopulation(shouldInclude);
-
-      if (shouldInclude) {
-        setShowLoaderTopup(true);
-        try {
-          const shouldFake = FAKE_IS_ENABLED;
-
-          const features = await fetchPopulationByViewport(true);
-
-          setGeoPoints(prevPoints => {
-            const populationLayer = {
-              layerId: 1001, // Special ID for population layer
-              type: 'FeatureCollection',
-              features: features,
-              display: true,
-              points_color: colorOptions[0].hex,
-              layer_legend: `Population Layer (${features?.length})`,
-              is_grid: true,
-              is_intelligent: true,
-              is_fake: shouldFake,
-              is_refetch: isRefetch,
-              basedon: 'population',
-              visualization_mode: 'grid',
-            };
-
-            const filteredPoints = prevPoints.filter(
-              point => point.layerId !== populationLayer.layerId
-            );
-            return [...filteredPoints, populationLayer];
-          });
-
-          // Update layer data map
-          setLayerDataMap(prev => ({
-            ...prev,
-            1001: features,
-          }));
-        } catch (error) {
-          const message =
-            error instanceof Error ? error.message : 'Failed to fetch population data';
-          console.error('Population layer error:', error);
+        // Check authentication
+        if (!authResponse?.localId || !authResponse?.idToken) {
+          const message = 'Authentication required. Please log in to use this feature.';
+          console.error(message);
           setIsError(new Error(message));
-        } finally {
           setShowLoaderTopup(false);
+          return;
         }
-      } else {
-        // Remove population layer
-        setGeoPoints(prev =>
-          prev.filter(point => !(point.is_intelligent && point.basedon === 'population'))
-        );
 
-        // Clean up layer data map
-        setLayerDataMap(prev => {
-          const newMap = { ...prev };
-          delete newMap[1001];
-          return newMap;
-        });
+        setIncludePopulation(shouldInclude);
+
+        if (shouldInclude) {
+          setShowLoaderTopup(true);
+          try {
+            const shouldFake = FAKE_IS_ENABLED;
+
+            const features = await fetchPopulationByViewport(true);
+
+            setGeoPoints(prevPoints => {
+              const populationLayer = {
+                layerId: 1001, // Special ID for population layer
+                type: 'FeatureCollection',
+                features: features,
+                display: true,
+                points_color: colorOptions[0].hex,
+                layer_legend: `Population Layer (${features?.length})`,
+                is_grid: true,
+                is_intelligent: true,
+                is_fake: shouldFake,
+                is_refetch: isRefetch,
+                basedon: 'population',
+                visualization_mode: 'grid',
+              };
+
+              const filteredPoints = prevPoints.filter(
+                point => point.layerId !== populationLayer.layerId
+              );
+              return [...filteredPoints, populationLayer];
+            });
+
+            // Update layer data map
+            setLayerDataMap(prev => ({
+              ...prev,
+              1001: features,
+            }));
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : 'Failed to fetch population data';
+            console.error('Population layer error:', error);
+            setIsError(new Error(message));
+          } finally {
+            setShowLoaderTopup(false);
+          }
+        } else {
+          // Remove population layer
+          setGeoPoints(prev =>
+            prev.filter(point => !(point.is_intelligent && point.basedon === 'population'))
+          );
+
+          // Clean up layer data map
+          setLayerDataMap(prev => {
+            const newMap = { ...prev };
+            delete newMap[1001];
+            return newMap;
+          });
+        }
+      } catch (error) {
+        console.error('Error updating population layer:', error);
+        setIsError(new Error('Failed to update population layer'));
+        setShowLoaderTopup(false);
       }
-    } catch (error) {
-      console.error('Error updating population layer:', error);
-      setIsError(new Error('Failed to update population layer'));
-      setShowLoaderTopup(false);
-    }
-  }
+    },
+    [
+      mapRef,
+      shouldInitializeFeatures,
+      authResponse,
+      fetchPopulationByViewport,
+      setGeoPoints,
+      setLayerDataMap,
+      setIsError,
+      setShowLoaderTopup,
+      setIncludePopulation,
+    ]
+  );
+
+  const handlePopulationLayer = useMemo(
+    () => _.debounce(_handlePopulationLayer, 300),
+    [_handlePopulationLayer]
+  );
 
   useEffect(() => {
     console.debug('includePopulation', includePopulation, 'includeIncome', includeIncome);
@@ -1047,6 +1062,7 @@ export function LayerProvider(props: { children: ReactNode }) {
   );
 
   async function switchIncomeLayer() {
+    if (!includeIncome && includePopulation) handlePopulationLayer(false);
     const shouldInclude = !includeIncome;
     handleIncomeLayer(shouldInclude);
   }
@@ -1173,6 +1189,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       featureCount: features.length,
     };
   }
+
 
   return (
     <LayerContext.Provider

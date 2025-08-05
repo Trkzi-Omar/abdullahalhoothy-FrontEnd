@@ -131,6 +131,10 @@ export function LayerProvider(props: { children: ReactNode }) {
   const [includePopulation, setIncludePopulation] = useState(false);
   const [includeIncome, setIncludeIncome] = useState(false);
 
+  useEffect(() => {
+    if (includeIncome) handlePopulationLayer(false);
+  }, [includeIncome]);
+
   function incrementFormStage() {
     if (createLayerformStage === 'initial') {
       setCreateLayerformStage('secondStep');

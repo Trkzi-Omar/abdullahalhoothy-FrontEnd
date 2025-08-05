@@ -38,8 +38,8 @@ export const AreaIntelligeneControl: React.FC = () => {
   }, [includeIncome, hasCity]);
 
   useEffect(() => {
-    setIsPopulationIncluded((includeIncome || includePopulation) && hasCity);
-  }, [includeIncome, includePopulation, hasCity]);
+    setIsPopulationIncluded(includePopulation && hasCity);
+  }, [includePopulation, hasCity]);
 
   const handlePopulationRefetch = async () => {
     setIsPopulationRefetching(true);

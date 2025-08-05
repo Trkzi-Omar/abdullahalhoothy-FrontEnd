@@ -33,16 +33,31 @@ export function useMapInitialization() {
       if (point.display && point.features) {
         point.features.forEach(feature => {
           const coords = feature.geometry.coordinates as [number, number];
-          sumLng += coords[0];
-          sumLat += coords[1];
-          pointCount++;
+          if (
+            coords &&
+            Array.isArray(coords) &&
+            coords.length === 2 &&
+            typeof coords[0] === 'number' &&
+            typeof coords[1] === 'number' &&
+            !isNaN(coords[0]) &&
+            !isNaN(coords[1])
+          ) {
+            sumLng += coords[0];
+            sumLat += coords[1];
+            pointCount++;
+          } else {
+            console.warn('Invalid coordinates found:', coords);
+          }
         });
       }
     });
 
     const hasPoints = pointCount > 0;
-    const centerLng = hasPoints ? sumLng / pointCount : mapConfig.center[0];
-    const centerLat = hasPoints ? sumLat / pointCount : mapConfig.center[1];
+    const sumLatPerPoint = sumLat / pointCount;
+    const sumLngPerPoint = sumLng / pointCount;
+    const centerLng = hasPoints && !isNaN(sumLngPerPoint) ? sumLngPerPoint : mapConfig.center[0];
+    const centerLat = hasPoints && !isNaN(sumLatPerPoint) ? sumLatPerPoint : mapConfig.center[1];
+
 
     // Initialize map
     mapRef.current = new mapboxgl.Map({

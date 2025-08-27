@@ -22,7 +22,7 @@ import MobileNavbar from '../MobileNavbar/MobileNavbar';
 import Wallet from '../../pages/Wallet/Wallet';
 import AddFunds from '../../pages/AddFunds/AddFunds';
 import SignUp from '../../pages/Auth/SignUp';
-import CampaignPage from '../../pages/Campaign/campaign';
+import CampaignPage from '../../pages/Campaign/Campaign';
 import PlansPage from '../../pages/Plans/Plans';
 const Layout = () => {
   const location = useLocation();

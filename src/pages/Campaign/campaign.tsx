@@ -21,7 +21,7 @@ export default function CampaignPage() {
   const [hoveredBg, setHoveredBg] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/campaign-details')
+    fetch('http://37.27.195.216:8000/campaign-details')
       .then(res => res.json())
       .then((data: Report[]) => setReports(data))
       .catch(err => console.error('Failed to fetch reports:', err));

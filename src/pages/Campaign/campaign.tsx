@@ -113,13 +113,15 @@ export default function CampaignPage() {
                 onClick={() => handleFreeClick(selectedReport.options.free_redirect)}
                 className="cursor-pointer flex items-center gap-4 p-4 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors"
               >
-                <p className="text-white font-medium">Free Report</p>
+                <p className="text-white font-medium">
+                  Show me Example report and Interactive Map (Free)
+                </p>
               </div>
               <div
                 onClick={handleCustomClick}
                 className="cursor-pointer flex items-center gap-4 p-4 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors"
               >
-                <p className="text-white font-medium">Custom Report</p>
+                <p className="text-white font-medium">I want my Report Custom </p>
               </div>
             </>
           )}

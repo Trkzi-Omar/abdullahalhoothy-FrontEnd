@@ -4,11 +4,11 @@ import { useNavigate } from 'react-router-dom';
 const PlansPage: React.FC = () => {
   const [plans, setPlans] = useState<any>(null);
   const [userCount, setUserCount] = useState<number>(1);
-  const [reportCount, setReportCount] = useState<number>(10);
+  const [reportCount, setReportCount] = useState<number>(1);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/plan-details')
+    fetch('http://37.27.195.216:8000/plan-details')
       .then(res => res.json())
       .then(data => {
         setPlans(data);

@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useState } from 'react';
 import SideBar from '../SideBar/SideBar';
-import { Route, Routes } from 'react-router';
+import { Route, Routes, useLocation } from 'react-router';
 import NotFound from '../../pages/NotFound/NotFound';
 import Dataview from '../../pages/Dataview/Dataview';
 import Auth from '../../pages/Auth/Auth';
@@ -22,14 +22,21 @@ import MobileNavbar from '../MobileNavbar/MobileNavbar';
 import Wallet from '../../pages/Wallet/Wallet';
 import AddFunds from '../../pages/AddFunds/AddFunds';
 import SignUp from '../../pages/Auth/SignUp';
-
+import CampaignPage from '../../pages/Campaign/campaign';
+import PlansPage from '../../pages/Plans/Plans';
 const Layout = () => {
+  const location = useLocation();
+
+  // Hide sidebar & navbar only on /campaign or /plans
+  const hideLayout =
+    location.pathname.startsWith('/campaign') || location.pathname.startsWith('/plans');
+
   return (
     <div className="flex flex-col ">
-      <MobileNavbar />
+      {!hideLayout && <MobileNavbar />}
 
       <div className="flex-1 flex lg:flex-row flex-col w-screen relative overflow-hidden overflow-y-auto">
-        <SideBar />
+        {!hideLayout && <SideBar />}
 
         <Routes>
           <Route path="*" element={<NotFound />} />
@@ -40,6 +47,8 @@ const Layout = () => {
           <Route path={'/profile/*'} element={<Profile />} />
           <Route path={'/organization/*'} element={<Organization />} />
           <Route path={'/billing/*'} element={<Billing />} />
+          <Route path="/campaign" element={<CampaignPage />} />
+          <Route path="/plans" element={<PlansPage />} />
         </Routes>
 
         <Routes>

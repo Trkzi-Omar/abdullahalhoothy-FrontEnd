@@ -121,7 +121,7 @@ export default function CampaignPage() {
                 onClick={handleCustomClick}
                 className="cursor-pointer flex items-center gap-4 p-4 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors"
               >
-                <p className="text-white font-medium">I want my Report Custom </p>
+                <p className="text-white font-medium">I want my Custom Report</p>
               </div>
             </>
           )}

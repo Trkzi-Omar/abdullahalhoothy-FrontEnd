@@ -68,7 +68,7 @@ const PlansPage: React.FC = () => {
   }) => {
     const handleClick = () => {
       if (href) {
-        window.location.href = href;
+        navigate(href);
       } else if (onClick) {
         onClick();
       }

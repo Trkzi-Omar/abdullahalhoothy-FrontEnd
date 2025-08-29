@@ -45,5 +45,7 @@
   "recolor_based_llm": "recolor_based_llm",
   "fetch_population_by_viewport": "/fetch_population_by_viewport",
   "distance_drive_time_polygon": "/distance_drive_time_polygon",
-  "fetch_single_catalog": "/fetch_single_catalog"
+  "fetch_single_catalog": "/fetch_single_catalog",
+  "fetch_plans": "/plan-details",
+  "fetch_campaings": "/campaign-details"
 }

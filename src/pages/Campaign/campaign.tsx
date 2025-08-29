@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import urls from '../../urls.json';
 
 type Report = {
   id: number;
@@ -22,7 +23,7 @@ export default function CampaignPage() {
   const [hoveredBg, setHoveredBg] = useState<string | null>(null);
   const navigate = useNavigate();
   useEffect(() => {
-    fetch('http://37.27.195.216:8000/campaign-details')
+    fetch(`${urls.REACT_APP_API_URL + urls.fetch_plans}`)
       .then(res => res.json())
       .then((data: Report[]) => setReports(data))
       .catch(err => console.error('Failed to fetch reports:', err));

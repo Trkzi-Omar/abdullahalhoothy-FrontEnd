@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import urls from '../../urls.json';
 interface PayAsYouGo {
   title: string;
   features: string[];
@@ -62,7 +62,7 @@ const PlansPage: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('http://37.27.195.216:8000/plan-details')
+    fetch(`${urls.REACT_APP_API_URL + urls.fetch_plans}`)
       .then(res => res.json())
       .then(data => {
         setPlans(data);

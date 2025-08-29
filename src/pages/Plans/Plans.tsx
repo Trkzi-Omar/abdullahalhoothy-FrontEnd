@@ -1,8 +1,62 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+interface PayAsYouGo {
+  title: string;
+  features: string[];
+  price_per_report: number;
+}
+
+interface SliderConfig {
+  min: number;
+  max: number;
+  step: number;
+  base_price_per_user?: number;
+  discount_per_user?: number;
+  base_price_per_report?: number;
+  discount_per_report?: number;
+}
+
+interface Packages {
+  title: string;
+  sliders: {
+    users: {
+      min: number;
+      max: number;
+      step: number;
+      base_price_per_user: number;
+      discount_per_user: number;
+    };
+    reports: {
+      min: number;
+      max: number;
+      step: number;
+      base_price_per_report: number;
+      discount_per_report: number;
+    };
+  };
+  initial_discount: number;
+}
+
+interface Enterprise {
+  title: string;
+  redirect_url: string;
+}
+
+interface Signup {
+  title: string;
+  redirect_url: string;
+}
+
+interface PlansInterface {
+  pay_as_you_go: PayAsYouGo;
+  packages: Packages;
+  enterprise: Enterprise;
+  signup: Signup;
+}
+
 const PlansPage: React.FC = () => {
-  const [plans, setPlans] = useState<any>(null);
+  const [plans, setPlans] = useState<PlansInterface | null>(null);
   const [userCount, setUserCount] = useState<number>(1);
   const [reportCount, setReportCount] = useState<number>(1);
   const navigate = useNavigate();

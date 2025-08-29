@@ -23,7 +23,7 @@ export default function CampaignPage() {
   const [hoveredBg, setHoveredBg] = useState<string | null>(null);
   const navigate = useNavigate();
   useEffect(() => {
-    fetch(`${urls.REACT_APP_API_URL + urls.fetch_plans}`)
+    fetch(`${urls.REACT_APP_API_URL + urls.fetch_campaings}`)
       .then(res => res.json())
       .then((data: Report[]) => setReports(data))
       .catch(err => console.error('Failed to fetch reports:', err));

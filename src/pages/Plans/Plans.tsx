@@ -29,8 +29,8 @@ const PlansPage: React.FC = () => {
   }
 
   const totalDiscount =
-    plans.packages.initial_discount + userCount * plans.packages.sliders.users.discount_per_user;
-
+    (plans?.packages?.initial_discount ?? 0) +
+    userCount * (plans?.packages?.sliders?.users?.discount_per_user ?? 0);
   const userPrice =
     userCount * plans.packages.sliders.users.base_price_per_user * (1 - totalDiscount);
   const reportPrice =

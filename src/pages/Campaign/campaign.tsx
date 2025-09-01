@@ -99,11 +99,10 @@ export default function CampaignPage() {
                 onClick={() => handleReportClick(report)}
                 onMouseEnter={() => setHoveredBg(report.bgImage)}
                 onMouseLeave={() => setHoveredBg(null)}
-                className="cursor-pointer flex items-center gap-4 p-4 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors"
+                className="cursor-pointer flex items-center justify-center px-6 py-3 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors w-fit mx-auto"
               >
-                <input type="radio" className="accent-purple-700" />
-                <div>
-                  <p className="text-white font-medium">{report.description}</p>
+                <div className="max-w-[90ch]">
+                  <p className="text-white font-semibold text-xl text-center break-words" style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}>{report.description}</p>
                 </div>
               </div>
             ))}
@@ -113,17 +112,17 @@ export default function CampaignPage() {
             <>
               <div
                 onClick={() => handleFreeClick(selectedReport.options.free_redirect)}
-                className="cursor-pointer flex items-center gap-4 p-4 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors"
+                className="cursor-pointer flex items-center justify-center gap-4 px-6 py-3 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors w-fit mx-auto"
               >
-                <p className="text-white font-medium">
+                <p className="text-white font-semibold text-xl text-center break-words max-w-[90ch]" style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}>
                   Show me Example report and Interactive Map (Free)
                 </p>
               </div>
               <div
                 onClick={handleCustomClick}
-                className="cursor-pointer flex items-center gap-4 p-4 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors"
+                className="cursor-pointer flex items-center justify-center gap-4 px-6 py-3 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors w-fit mx-auto"
               >
-                <p className="text-white font-medium">I want my Custom Report</p>
+                <p className="text-white font-semibold text-xl text-center break-words max-w-[90ch]" style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}>I want my Custom Report</p>
               </div>
             </>
           )}
@@ -135,17 +134,17 @@ export default function CampaignPage() {
                 onClick={() =>
                   handleAccountClick(selectedReport.options.custom_redirect.has_account)
                 }
-                className="cursor-pointer flex items-center gap-4 p-4 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors"
+                className="cursor-pointer flex items-center justify-center gap-4 px-6 py-3 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors w-fit mx-auto"
               >
-                <p className="text-white font-medium">Already have an account</p>
+                <p className="text-white font-semibold text-xl text-center break-words max-w-[90ch]" style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}>Already have an account</p>
               </div>
               <div
                 onClick={() =>
                   handleAccountClick(selectedReport.options.custom_redirect.no_account)
                 }
-                className="cursor-pointer flex items-center gap-4 p-4 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors"
+                className="cursor-pointer flex items-center justify-center gap-4 px-6 py-3 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors w-fit mx-auto"
               >
-                <p className="text-white font-medium">Does not have account</p>
+                <p className="text-white font-semibold text-xl text-center break-words max-w-[90ch]" style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}>Does not have account</p>
               </div>
             </>
           )}

@@ -4,14 +4,9 @@ export interface Country {
 }
 
 export interface FormData {
-  firstName: string;
-  lastName: string;
+  fullName: string;
   email: string;
   password: string;
-  company: string;
-  title: string;
-  phone: string;
-  country: string;
   reason: string;
   userType: string;
   teamId: string;

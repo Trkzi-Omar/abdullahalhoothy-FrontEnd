@@ -3,8 +3,7 @@ export interface SignUpProps {
 }
 
 export interface FormData {
-  firstName: string;
-  lastName: string;
+  fullName: string;
   email: string;
   company: string;
   title: string;

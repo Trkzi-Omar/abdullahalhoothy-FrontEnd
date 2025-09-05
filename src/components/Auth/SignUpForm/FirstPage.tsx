@@ -13,26 +13,26 @@ const FirstPage: React.FC = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div>
         <div>
-          <label htmlFor="firstName" className="block text-sm font-medium text-gray-100 mb-1">
-            First Name <span className="text-red-500">*</span>
+          <label htmlFor="fullName" className="block text-sm font-medium text-gray-100 mb-1">
+            Full Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            id="firstName"
-            name="firstName"
-            value={formData.firstName}
+            id="fullName"
+            name="fullName"
+            value={formData.fullName}
             onChange={handleInputChange}
-            placeholder="E.g. John"
+            placeholder="E.g. John Doe"
             className={`w-full px-3 py-2 border ${
-              errors.firstName ? 'border-red-500' : 'border-gray-300'
+              errors.fullName ? 'border-red-500' : 'border-gray-300'
             } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[#333333]`}
             required
           />
-          {errors.firstName && <p className="mt-1 text-sm text-red-500">{errors.firstName}</p>}
+          {errors.fullName && <p className="mt-1 text-sm text-red-500">{errors.fullName}</p>}
         </div>
-        <div>
+        {/* <div>
           <label htmlFor="lastName" className="block text-sm font-medium text-gray-100 mb-1">
             Last Name <span className="text-red-500">*</span>
           </label>
@@ -49,7 +49,7 @@ const FirstPage: React.FC = () => {
             required
           />
           {errors.lastName && <p className="mt-1 text-sm text-red-500">{errors.lastName}</p>}
-        </div>
+        </div> */}
       </div>
 
       <div>
@@ -91,84 +91,6 @@ const FirstPage: React.FC = () => {
         <p className="mt-1 text-xs text-gray-400">
           Password must be at least 8 characters and contain uppercase, lowercase, and numbers
         </p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="company" className="block text-sm font-medium text-gray-100 mb-1">
-            Company <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="company"
-            name="company"
-            value={formData.company}
-            onChange={handleInputChange}
-            placeholder="s-locator"
-            className={`w-full px-3 py-2 border ${
-              errors.company ? 'border-red-500' : 'border-gray-300'
-            } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[#333333]`}
-            required
-          />
-          {errors.company && <p className="mt-1 text-sm text-red-500">{errors.company}</p>}
-        </div>
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-100 mb-1">
-            Title <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            value={formData.title}
-            onChange={handleInputChange}
-            placeholder="E.g. CTO"
-            className={`w-full px-3 py-2 border ${
-              errors.title ? 'border-red-500' : 'border-gray-300'
-            } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[#333333]`}
-            required
-          />
-          {errors.title && <p className="mt-1 text-sm text-red-500">{errors.title}</p>}
-        </div>
-      </div>
-
-      <div>
-        <label htmlFor="phone" className="block text-sm font-medium text-gray-100 mb-1">
-          Phone (Optional)
-        </label>
-        <input
-          type="text"
-          id="phone"
-          name="phone"
-          value={formData.phone}
-          onChange={handleInputChange}
-          placeholder="E.g. +1 300 400 5000"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[#333333]"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="country" className="block text-sm font-medium text-gray-100 mb-1">
-          Country <span className="text-red-500">*</span>
-        </label>
-        <select
-          id="country"
-          name="country"
-          value={formData.country}
-          onChange={handleInputChange}
-          className={`w-full px-3 py-2 border ${
-            errors.country ? 'border-red-500' : 'border-gray-300'
-          } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[#333333]`}
-          required
-        >
-          <option value="">Select country</option>
-          {countries.map(country => (
-            <option key={country.isoAlpha3} value={country.name}>
-              {country.name}
-            </option>
-          ))}
-        </select>
-        {errors.country && <p className="mt-1 text-sm text-red-500">{errors.country}</p>}
       </div>
 
       <div>

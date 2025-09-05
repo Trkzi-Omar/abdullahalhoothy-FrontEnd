@@ -23,7 +23,7 @@ export default function CampaignPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch(`${urls.REACT_APP_API_URL + urls.fetch_campaings}`)
+    fetch(`${urls.REACT_APP_API_URL + urls.fetch_campaigns}`)
       .then(res => res.json())
       .then((data: Report[]) => setReports(data))
       .catch(err => console.error('Failed to fetch reports:', err));

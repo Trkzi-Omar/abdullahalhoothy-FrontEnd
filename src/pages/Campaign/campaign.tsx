@@ -23,7 +23,7 @@ export default function CampaignPage() {
   const [hoveredBg, setHoveredBg] = useState<string | null>(null);
   const navigate = useNavigate();
   useEffect(() => {
-    fetch(`${urls.REACT_APP_API_URL + urls.fetch_campaings}`)
+    fetch(`${urls.REACT_APP_API_URL + urls.fetch_campaigns}`)
       .then(res => res.json())
       .then((data: Report[]) => setReports(data))
       .catch(err => console.error('Failed to fetch reports:', err));
@@ -102,7 +102,12 @@ export default function CampaignPage() {
                 className="cursor-pointer flex items-center justify-center px-6 py-3 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors w-fit mx-auto"
               >
                 <div className="max-w-[90ch]">
-                  <p className="text-white font-semibold text-xl text-center break-words" style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}>{report.description}</p>
+                  <p
+                    className="text-white font-semibold text-xl text-center break-words"
+                    style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}
+                  >
+                    {report.description}
+                  </p>
                 </div>
               </div>
             ))}
@@ -114,7 +119,10 @@ export default function CampaignPage() {
                 onClick={() => handleFreeClick(selectedReport.options.free_redirect)}
                 className="cursor-pointer flex items-center justify-center gap-4 px-6 py-3 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors w-fit mx-auto"
               >
-                <p className="text-white font-semibold text-xl text-center break-words max-w-[90ch]" style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}>
+                <p
+                  className="text-white font-semibold text-xl text-center break-words max-w-[90ch]"
+                  style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}
+                >
                   Show me Example report and Interactive Map (Free)
                 </p>
               </div>
@@ -122,7 +130,12 @@ export default function CampaignPage() {
                 onClick={handleCustomClick}
                 className="cursor-pointer flex items-center justify-center gap-4 px-6 py-3 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors w-fit mx-auto"
               >
-                <p className="text-white font-semibold text-xl text-center break-words max-w-[90ch]" style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}>I want my Custom Report</p>
+                <p
+                  className="text-white font-semibold text-xl text-center break-words max-w-[90ch]"
+                  style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}
+                >
+                  I want my Custom Report
+                </p>
               </div>
             </>
           )}
@@ -136,7 +149,12 @@ export default function CampaignPage() {
                 }
                 className="cursor-pointer flex items-center justify-center gap-4 px-6 py-3 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors w-fit mx-auto"
               >
-                <p className="text-white font-semibold text-xl text-center break-words max-w-[90ch]" style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}>Already have an account</p>
+                <p
+                  className="text-white font-semibold text-xl text-center break-words max-w-[90ch]"
+                  style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}
+                >
+                  Already have an account
+                </p>
               </div>
               <div
                 onClick={() =>
@@ -144,7 +162,12 @@ export default function CampaignPage() {
                 }
                 className="cursor-pointer flex items-center justify-center gap-4 px-6 py-3 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors w-fit mx-auto"
               >
-                <p className="text-white font-semibold text-xl text-center break-words max-w-[90ch]" style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}>Does not have account</p>
+                <p
+                  className="text-white font-semibold text-xl text-center break-words max-w-[90ch]"
+                  style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}
+                >
+                  Does not have account
+                </p>
               </div>
             </>
           )}

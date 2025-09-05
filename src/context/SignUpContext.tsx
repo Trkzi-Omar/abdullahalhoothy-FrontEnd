@@ -149,7 +149,6 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           password: formData.password,
           username: formData.fullName,
           fullName: formData.fullName,
-          lastName: formData.fullName,
           reason: formData.reason || '',
           account_type: formData.userType === 'admin' ? 'admin' : 'user',
           teamId: formData.teamId,

@@ -25,7 +25,6 @@ function DataContainer() {
     setIsBenchmarkControlOpen,
     setCurrentStyle,
   } = useCatalogContext();
-  console.log('selectedContainerType', selectedContainerType);
   const { setSelectedCity, setSelectedCountry } = useLayerContext();
   const { isAuthenticated, authResponse, logout } = useAuth();
   const { closeModal } = useUIContext();

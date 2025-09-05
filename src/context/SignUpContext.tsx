@@ -51,7 +51,7 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // First page validation schema
   const firstPageSchema = Yup.object().shape({
-    fullName: Yup.string().required('First name is required'),
+    fullName: Yup.string().required('Full name is required'),
     email: Yup.string().email('Invalid email address').required('Email is required'),
     password: Yup.string()
       .required('Password is required')

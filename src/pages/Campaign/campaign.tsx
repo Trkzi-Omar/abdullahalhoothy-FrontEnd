@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
 import urls from '../../urls.json';
 
 type Report = {
@@ -21,7 +20,6 @@ export default function CampaignPage() {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [step, setStep] = useState(0); // 0 = reports list, 1 = free/custom, 2 = account options
   const [hoveredBg, setHoveredBg] = useState<string | null>(null);
-  const navigate = useNavigate();
   useEffect(() => {
     fetch(`${urls.REACT_APP_API_URL + urls.fetch_campaings}`)
       .then(res => res.json())
@@ -40,7 +38,7 @@ export default function CampaignPage() {
     }
   };
   const handleFreeClick = (url: string) => {
-    navigate(url);
+    window.location.href = url;
   };
 
   const handleCustomClick = () => {
@@ -48,7 +46,7 @@ export default function CampaignPage() {
   };
 
   const handleAccountClick = (url: string) => {
-    navigate(url);
+    window.location.href = url;
   };
 
   const handleBack = () => {

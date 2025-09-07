@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import urls from '../../urls.json';
+import { useNavigate } from 'react-router';
 
 type Feature = {
   included: boolean;
@@ -19,7 +20,7 @@ const PlansPage: React.FC = () => {
   const [plansData, setPlansData] = useState<Plan[]>([]);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const [users, setUsers] = useState<number>(1);
-
+  const navigate = useNavigate();
   useEffect(() => {
     fetch(`${urls.REACT_APP_API_URL + urls.fetch_plans}`)
       .then(res => res.json())
@@ -37,6 +38,9 @@ const PlansPage: React.FC = () => {
     setUsers(users + 1);
   };
 
+  const handleClick = () => {
+    navigate('/sign-up');
+  };
   return (
     <div className="w-full flex flex-col items-center px-6 py-12 bg-gray-50">
       {/* Top controls */}
@@ -103,7 +107,10 @@ const PlansPage: React.FC = () => {
             </p>
 
             {/* CTA button */}
-            <button className="my-2 w-full bg-[#8E50EA] text-white py-2 rounded-xl hover:bg-[#753ecb] transition">
+            <button
+              onClick={handleClick}
+              className="my-2 w-full bg-[#8E50EA] text-white py-2 rounded-xl hover:bg-[#753ecb] transition"
+            >
               Get Started
             </button>
 

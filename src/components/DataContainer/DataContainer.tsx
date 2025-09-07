@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useUIContext } from '../../context/UIContext';
 import apiRequest from '../../services/apiRequest';
 import { useLayerContext } from '../../context/LayerContext';
+import CampaignPage from '../../pages/Campaign/campaign_home';
 
 function DataContainer() {
   const {
@@ -248,65 +249,71 @@ function DataContainer() {
   }
 
   return (
-    <div className="lg:p-6 p-2">
+    <div className="lg:p-6 h-full p-2">
       <h2 className="text-2xl text-center font-semibold">
-        {selectedContainerType === 'Catalogue' || selectedContainerType === 'Home'
+        {selectedContainerType === 'Catalogue'
           ? 'Add Data to Map'
-          : 'Add Layers to Map'}
+          : selectedContainerType === 'Home'
+            ? 'Select report'
+            : 'Add Layers to Map'}
       </h2>
-      <div className="flex flex-wrap lg:gap-0 gap-2 w-full justify-center items-center my-4 rounded-xl font-semibold">
-        <button
-          className={`${
-            (activeTab === 'Data Catalogue' && selectedContainerType === 'Catalogue') ||
-            (activeTab === 'Data Layer' && selectedContainerType === 'Layer')
-              ? 'bg-white text-[#333] border-2 border-[#f5f5f5] font-bold text-base py-[10px] px-5'
-              : 'bg-[#f5f5f5] border-none py-[10px] px-[20px] cursor-pointer text-base text-[#333] transition-colors duration-300 hover:bg-[#e6e6e6]'
-          } text-nowrap flex-1`}
-          onClick={function () {
-            setActiveTab(
-              selectedContainerType === 'Catalogue' || selectedContainerType === 'Home'
-                ? 'Data Catalogue'
-                : 'Data Layer'
-            );
-          }}
-        >
-          {selectedContainerType === 'Catalogue' || selectedContainerType === 'Home'
-            ? 'Data Catalogue'
-            : 'Data Layer'}
-        </button>
-        <button
-          className={`${
-            activeTab === 'Load Files'
-              ? 'bg-white text-[#333] border-2 border-[#f5f5f5] font-bold text-base py-[10px] px-5'
-              : 'bg-[#f5f5f5] border-none py-[10px] px-[20px] cursor-pointer text-base text-[#333] transition-colors duration-300 hover:bg-[#e6e6e6]'
-          } text-nowrap flex-1`}
-          onClick={function () {
-            setActiveTab('Load Files');
-          }}
-        >
-          Load Files
-        </button>
-        <button
-          className={`${
-            activeTab === 'Connect Your Data'
-              ? 'bg-white text-[#333] border-2 border-[#f5f5f5] font-bold text-base py-[10px] px-5'
-              : 'bg-[#f5f5f5] border-none py-[10px] px-[20px] cursor-pointer text-base text-[#333] transition-colors duration-300 hover:bg-[#e6e6e6]'
-          } text-nowrap flex-1`}
-          onClick={function () {
-            setActiveTab('Connect Your Data');
-          }}
-        >
-          Connect Your Data
-        </button>
-      </div>
-      {activeTab === 'Data Catalogue' || activeTab === 'Data Layer' ? (
-        <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 md:gap-x-2 gap-y-3 overflow-y-auto w-full">
-          {renderCards()}
-        </div>
-      ) : activeTab === 'Load Files' ? (
-        <div className="text-center p-8 text-[1.2rem] text-[#666]">Load Files Content</div>
+      {selectedContainerType === 'Home' ? (
+        <CampaignPage />
       ) : (
-        <div className="text-center p-8 text-[1.2rem] text-[#666]">Connect Your Data Content</div>
+        <>
+          <div className="flex flex-wrap lg:gap-0 gap-2 w-full justify-center items-center my-4 rounded-xl font-semibold">
+            <button
+              className={`${
+                (activeTab === 'Data Catalogue' && selectedContainerType === 'Catalogue') ||
+                (activeTab === 'Data Layer' && selectedContainerType === 'Layer')
+                  ? 'bg-white text-[#333] border-2 border-[#f5f5f5] font-bold text-base py-[10px] px-5'
+                  : 'bg-[#f5f5f5] border-none py-[10px] px-[20px] cursor-pointer text-base text-[#333] transition-colors duration-300 hover:bg-[#e6e6e6]'
+              } text-nowrap flex-1`}
+              onClick={function () {
+                setActiveTab(
+                  selectedContainerType === 'Catalogue' ? 'Data Catalogue' : 'Data Layer'
+                );
+              }}
+            >
+              {selectedContainerType === 'Catalogue' ? 'Data Catalogue' : 'Data Layer'}
+            </button>
+            <button
+              className={`${
+                activeTab === 'Load Files'
+                  ? 'bg-white text-[#333] border-2 border-[#f5f5f5] font-bold text-base py-[10px] px-5'
+                  : 'bg-[#f5f5f5] border-none py-[10px] px-[20px] cursor-pointer text-base text-[#333] transition-colors duration-300 hover:bg-[#e6e6e6]'
+              } text-nowrap flex-1`}
+              onClick={function () {
+                setActiveTab('Load Files');
+              }}
+            >
+              Load Files
+            </button>
+            <button
+              className={`${
+                activeTab === 'Connect Your Data'
+                  ? 'bg-white text-[#333] border-2 border-[#f5f5f5] font-bold text-base py-[10px] px-5'
+                  : 'bg-[#f5f5f5] border-none py-[10px] px-[20px] cursor-pointer text-base text-[#333] transition-colors duration-300 hover:bg-[#e6e6e6]'
+              } text-nowrap flex-1`}
+              onClick={function () {
+                setActiveTab('Connect Your Data');
+              }}
+            >
+              Connect Your Data
+            </button>
+          </div>
+          {activeTab === 'Data Catalogue' || activeTab === 'Data Layer' ? (
+            <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 md:gap-x-2 gap-y-3 overflow-y-auto w-full">
+              {renderCards()}
+            </div>
+          ) : activeTab === 'Load Files' ? (
+            <div className="text-center p-8 text-[1.2rem] text-[#666]">Load Files Content</div>
+          ) : (
+            <div className="text-center p-8 text-[1.2rem] text-[#666]">
+              Connect Your Data Content
+            </div>
+          )}
+        </>
       )}
     </div>
   );

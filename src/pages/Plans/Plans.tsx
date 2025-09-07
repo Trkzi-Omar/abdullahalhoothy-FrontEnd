@@ -1,216 +1,156 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import urls from '../../urls.json';
-interface PayAsYouGo {
-  title: string;
-  features: string[];
-  price_per_report: number;
-}
+import { useNavigate } from 'react-router';
 
-interface SliderConfig {
-  min: number;
-  max: number;
-  step: number;
-  base_price_per_user?: number;
-  discount_per_user?: number;
-  base_price_per_report?: number;
-  discount_per_report?: number;
-}
+type Feature = {
+  included: boolean;
+  text: string;
+  subtext?: string;
+  meta?: string;
+};
 
-interface Packages {
-  title: string;
-  sliders: {
-    users: {
-      min: number;
-      max: number;
-      step: number;
-      base_price_per_user: number;
-      discount_per_user: number;
-    };
-    reports: {
-      min: number;
-      max: number;
-      step: number;
-      base_price_per_report: number;
-      discount_per_report: number;
-    };
-  };
-  initial_discount: number;
-}
-
-interface Enterprise {
-  title: string;
-  redirect_url: string;
-}
-
-interface Signup {
-  title: string;
-  redirect_url: string;
-}
-
-interface PlansInterface {
-  pay_as_you_go: PayAsYouGo;
-  packages: Packages;
-  enterprise: Enterprise;
-  signup: Signup;
-}
+type Plan = {
+  id: number;
+  name: string;
+  price: string;
+  features: Feature[];
+};
 
 const PlansPage: React.FC = () => {
-  const [plans, setPlans] = useState<PlansInterface | null>(null);
-  const [userCount, setUserCount] = useState<number>(1);
-  const [reportCount, setReportCount] = useState<number>(1);
+  const [plansData, setPlansData] = useState<Plan[]>([]);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const [users, setUsers] = useState<number>(1);
   const navigate = useNavigate();
-
   useEffect(() => {
     fetch(`${urls.REACT_APP_API_URL + urls.fetch_plans}`)
       .then(res => res.json())
       .then(data => {
-        setPlans(data);
-        if (data.packages?.sliders) {
-          setUserCount(data.packages.sliders.users.min);
-          setReportCount(data.packages.sliders.reports.min);
-        }
+        setPlansData(data);
       })
       .catch(err => console.error('Failed to fetch plans:', err));
   }, []);
 
-  if (!plans) {
-    return (
-      <div className="flex justify-center items-center min-h-screen text-lg font-medium text-purple-700">
-        Loading...
-      </div>
-    );
-  }
-
-  const totalDiscount =
-    (plans?.packages?.initial_discount ?? 0) +
-    userCount * (plans?.packages?.sliders?.users?.discount_per_user ?? 0);
-  const userPrice =
-    userCount * plans.packages.sliders.users.base_price_per_user * (1 - totalDiscount);
-  const reportPrice =
-    reportCount *
-    plans.packages.sliders.reports.base_price_per_report *
-    (1 - plans.packages.sliders.reports.discount_per_report);
-
-  const finalPrice = (userPrice + reportPrice).toFixed(2);
-
-  const Card = ({
-    title,
-    children,
-    className = '',
-  }: {
-    title: string;
-    children: React.ReactNode;
-    className?: string;
-  }) => (
-    <div
-      className={`bg-white rounded-2xl shadow-md p-4 flex flex-col justify-between border border-gray-100 hover:shadow-xl transition duration-200 h-fit ${className}`}
-    >
-      <div>
-        <h2 className="text-2xl font-semibold text-purple-700 mb-3">{title}</h2>
-        <div className="flex-grow">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-
-  const PrimaryButton = ({
-    onClick,
-    href,
-    children,
-  }: {
-    onClick?: () => void;
-    href?: string;
-    children: React.ReactNode;
-  }) => {
-    const handleClick = () => {
-      if (href) {
-        navigate(href);
-      } else if (onClick) {
-        onClick();
-      }
-    };
-
-    return (
-      <button
-        onClick={handleClick}
-        className="mt-3 w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-xl transition duration-200"
-      >
-        {children}
-      </button>
-    );
+  const decreaseUsers = () => {
+    if (users > 1) setUsers(users - 1);
   };
 
+  const increaseUsers = () => {
+    setUsers(users + 1);
+  };
+
+  const handleClick = () => {
+    navigate('/sign-up');
+  };
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-        <Card title={plans.pay_as_you_go.title} className="md:col-span-1">
-          <ul className="mb-3 list-disc pl-5 text-gray-700 space-y-1">
-            {plans.pay_as_you_go.features.map((f: string, idx: number) => (
-              <li key={idx}>{f}</li>
-            ))}
-          </ul>
-          <p className="text-lg font-semibold text-gray-900">
-            ${plans.pay_as_you_go.price_per_report}{' '}
-            <span className="text-sm font-normal text-gray-500">per report</span>
-          </p>
-        </Card>
-
-        <Card title={plans.packages.title} className="md:col-span-2">
-          <div className="mb-4">
-            <div className="flex justify-between mb-2">
-              <span className="font-medium text-gray-800">Users: {userCount}</span>
-              <span className="text-sm text-purple-600">
-                ${plans.packages.sliders.users.base_price_per_user}/user
-              </span>
-            </div>
-            <input
-              type="range"
-              min={plans.packages.sliders.users.min}
-              max={plans.packages.sliders.users.max}
-              step={plans.packages.sliders.users.step}
-              value={userCount}
-              onChange={e => setUserCount(Number(e.target.value))}
-              className="w-full accent-purple-600 cursor-pointer"
-            />
+    <div className="w-full flex flex-col items-center px-6 py-12 bg-gray-50">
+      {/* Top controls */}
+      <div className=" grid">
+        {/* Top controls */}
+        <div className="flex flex-col md:flex-row items-start justify-start w-full max-w-5xl mb-10 gap-6">
+          {/* Billing toggle */}
+          <div className="bg-gray-200 rounded-full p-1 flex">
+            <button
+              onClick={() => setBillingCycle('monthly')}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition ${
+                billingCycle === 'monthly'
+                  ? 'bg-white shadow text-gray-800'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Month
+            </button>
+            <button
+              onClick={() => setBillingCycle('annual')}
+              className={`px-6 py-2 rounded-full text-sm font-medium transition ${
+                billingCycle === 'annual'
+                  ? 'bg-white shadow text-gray-800'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Annual
+            </button>
           </div>
 
-          <div className="mb-4">
-            <div className="flex justify-between mb-2">
-              <span className="font-medium text-gray-800">Reports: {reportCount}</span>
-              <span className="text-sm text-purple-600">
-                ${plans.packages.sliders.reports.base_price_per_report}/report
-              </span>
+          {/* User counter */}
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-gray-700">Users:</span>
+            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+              <button
+                onClick={decreaseUsers}
+                className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700"
+              >
+                −
+              </button>
+              <span className="px-4 py-1 text-gray-800 text-sm font-medium">{users}</span>
+              <button
+                onClick={increaseUsers}
+                className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700"
+              >
+                +
+              </button>
             </div>
-            <input
-              type="range"
-              min={plans.packages.sliders.reports.min}
-              max={plans.packages.sliders.reports.max}
-              step={plans.packages.sliders.reports.step}
-              value={reportCount}
-              onChange={e => setReportCount(Number(e.target.value))}
-              className="w-full accent-purple-600 cursor-pointer"
-            />
           </div>
+        </div>
+      </div>
 
-          <p className="text-lg mb-1">Discount: {(totalDiscount * 100).toFixed(1)}%</p>
-          <p className="text-xl font-bold text-gray-900">
-            Total: <span className="text-purple-700">${finalPrice}</span>
-          </p>
-        </Card>
+      {/* Plans grid */}
+      <div className="h-full grid gap-8 md:grid-cols-3">
+        {plansData.map((plan: Plan) => (
+          <div key={plan.id} className="bg-white w-[25vw] shadow-md rounded-2xl p-6 flex flex-col">
+            {/* Plan name + price centered */}
+            <h2 className="text-xl font-semibold text-gray-800 mb-2 text-center">{plan.name}</h2>
+            <p className="text-lg font-medium text-gray-600 mb-1 text-center">
+              ${plan.price}{' '}
+              <span className="text-sm text-gray-400">
+                / {billingCycle} / {users} user{users > 1 ? 's' : ''}
+              </span>
+            </p>
 
-        <Card title={plans.enterprise.title} className="md:col-span-2">
-          <p className="mb-3 text-gray-700">Custom solutions for your organization.</p>
-          <PrimaryButton onClick={() => navigate(plans.enterprise.redirect_url)}>
-            Contact Us
-          </PrimaryButton>
-        </Card>
+            {/* CTA button */}
+            <button
+              onClick={handleClick}
+              className="my-2 w-full bg-[#8E50EA] text-white py-2 rounded-xl hover:bg-[#753ecb] transition"
+            >
+              Get Started
+            </button>
 
-        <Card title={plans.signup.title} className="md:col-span-1">
-          <p className="mb-3 text-gray-700">Create your account and get started today.</p>
-          <PrimaryButton href={plans.signup.redirect_url}>Sign Up</PrimaryButton>
-        </Card>
+            {/* Features */}
+            <div className="flex-1 space-y-4">
+              {plan.features.map((feature, idx) => (
+                <div key={idx} className="flex items-start justify-between gap-3 relative">
+                  {/* Check/Dash + text */}
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={`text-lg mt-0.5 ${
+                        feature.included ? 'text-[#8E50EA]' : 'text-gray-400'
+                      }`}
+                    >
+                      {feature.included ? '✔' : '—'}
+                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-700">{feature.text}</span>
+                      {feature.subtext && (
+                        <span className="text-xs text-gray-500">{feature.subtext}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Info icon with tooltip */}
+                  {feature.meta && (
+                    <div className="group relative">
+                      <span className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-400 text-gray-500 text-[10px] font-bold cursor-pointer hover:bg-gray-100">
+                        i
+                      </span>
+                      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block bg-gray-800 text-white text-xs rounded-md px-2 py-1 w-48 shadow-lg z-10">
+                        {feature.meta}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

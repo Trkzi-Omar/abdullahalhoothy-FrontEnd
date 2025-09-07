@@ -29,14 +29,9 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<FormData>({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     email: '',
     password: '',
-    company: '',
-    title: '',
-    phone: '',
-    country: '',
     reason: '',
     userType: '',
     teamId: '',
@@ -56,8 +51,7 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // First page validation schema
   const firstPageSchema = Yup.object().shape({
-    firstName: Yup.string().required('First name is required'),
-    lastName: Yup.string().required('Last name is required'),
+    fullName: Yup.string().required('Full name is required'),
     email: Yup.string().email('Invalid email address').required('Email is required'),
     password: Yup.string()
       .required('Password is required')
@@ -66,10 +60,6 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
         'Password must contain at least one uppercase letter, one lowercase letter, and one number'
       ),
-    company: Yup.string().required('Company is required'),
-    title: Yup.string().required('Title is required'),
-    country: Yup.string().required('Country is required'),
-    phone: Yup.string().optional(),
   });
 
   // Second page validation schema
@@ -154,18 +144,11 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setIsSubmitting(true);
 
       try {
-        const selectedCountry = countries.find(c => c.name === formData.country);
-
         const registrationData = {
           email: formData.email,
           password: formData.password,
-          username: `${formData.firstName} ${formData.lastName}`,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          company: formData.company,
-          title: formData.title,
-          phone: formData.phone,
-          country: selectedCountry?.isoAlpha3 || '',
+          username: formData.fullName,
+          fullName: formData.fullName,
           reason: formData.reason || '',
           account_type: formData.userType === 'admin' ? 'admin' : 'user',
           teamId: formData.teamId,
@@ -189,15 +172,14 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               setAuthResponse({
                 localId: userProfileResponse.data.user_id,
                 email: formData.email,
-                displayName: formData.firstName,
+                displayName: formData.fullName,
                 idToken: userProfileResponse.data.token || '',
                 refreshToken: userProfileResponse.data.refresh_token || '',
                 expiresIn: '3600',
                 user: {
                   id: userProfileResponse.data.user_id,
                   email: formData.email,
-                  firstName: formData.firstName,
-                  lastName: formData.lastName,
+                  fullName: formData.fullName,
                 },
               });
 

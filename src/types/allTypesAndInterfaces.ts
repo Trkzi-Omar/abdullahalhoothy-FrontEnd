@@ -548,8 +548,7 @@ export interface TabularData {
 export interface AuthUser {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
 }
 
 export interface AuthSuccessResponse {
@@ -871,4 +870,3 @@ export interface PropertyStats {
   average?: number;
   median?: number;
 }
-

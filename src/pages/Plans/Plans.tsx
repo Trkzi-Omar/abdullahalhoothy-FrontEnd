@@ -9,24 +9,31 @@ type Feature = {
   meta?: string;
 };
 
+type AI = {
+  tier: string;
+  subfeatures: string[];
+};
+
 type Plan = {
   id: number;
   name: string;
   price: string;
+  tagline?: string;
+  recommended?: boolean;
   features: Feature[];
+  ai: AI;
 };
 
 const PlansPage: React.FC = () => {
   const [plansData, setPlansData] = useState<Plan[]>([]);
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const [billingCycle, setBillingCycle] = useState<'month' | 'year'>('month');
   const [users, setUsers] = useState<number>(1);
   const navigate = useNavigate();
+
   useEffect(() => {
     fetch(`${urls.REACT_APP_API_URL + urls.fetch_plans}`)
       .then(res => res.json())
-      .then(data => {
-        setPlansData(data);
-      })
+      .then(data => setPlansData(data))
       .catch(err => console.error('Failed to fetch plans:', err));
   }, []);
 
@@ -41,28 +48,29 @@ const PlansPage: React.FC = () => {
   const handleClick = () => {
     navigate('/sign-up');
   };
+
   return (
-    <div className="w-full flex flex-col items-center px-6 py-12 bg-gray-50">
+    <div className="w-full flex flex-col items-center px-6 py-3 bg-gray-50">
       {/* Top controls */}
-      <div className=" grid">
-        {/* Top controls */}
-        <div className="flex flex-col md:flex-row items-start justify-start w-full max-w-5xl mb-10 gap-6">
-          {/* Billing toggle */}
-          <div className="bg-gray-200 rounded-full p-1 flex">
+      <div className="w-full bg-white border border-gray-200 max-w-4xl p-3 flex flex-col md:flex-row items-start gap-6">
+        {/* Billing toggle */}
+        <div className="flex items-center gap-4">
+          <span className="text-sm font-medium text-gray-700">Billing:</span>
+          <div className="bg-gray-100 p-1 flex">
             <button
-              onClick={() => setBillingCycle('monthly')}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition ${
-                billingCycle === 'monthly'
+              onClick={() => setBillingCycle('month')}
+              className={`px-6 py-1.5 text-sm font-medium transition ${
+                billingCycle === 'month'
                   ? 'bg-white shadow text-gray-800'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Month
+              Monthly
             </button>
             <button
-              onClick={() => setBillingCycle('annual')}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition ${
-                billingCycle === 'annual'
+              onClick={() => setBillingCycle('year')}
+              className={`px-6 py-1.5 text-sm font-medium transition ${
+                billingCycle === 'year'
                   ? 'bg-white shadow text-gray-800'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
@@ -70,23 +78,71 @@ const PlansPage: React.FC = () => {
               Annual
             </button>
           </div>
+        </div>
 
-          {/* User counter */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-gray-700">Users:</span>
-            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+        {/* User counter */}
+        <div className="flex items-center gap-3">
+          <label htmlFor="users" className="text-sm font-medium text-gray-700">
+            Users
+          </label>
+
+          <div className="flex h-9 w-28 items-stretch overflow-hidden border border-gray-300 bg-white shadow-sm">
+            <input
+              id="users"
+              type="number"
+              inputMode="numeric"
+              value={users}
+              onChange={e => setUsers(Number(e.target.value))}
+              // Hide native spinners so we don't get duplicates
+              className="w-full flex-1 px-3 text-center text-sm text-gray-900 focus:outline-none
+                 [&::-webkit-outer-spin-button]:appearance-none
+                 [&::-webkit-inner-spin-button]:appearance-none
+                 [appearance:textfield]"
+              onKeyDown={e => {
+                if (e.key === 'ArrowUp') {
+                  increaseUsers();
+                  e.preventDefault();
+                }
+                if (e.key === 'ArrowDown') {
+                  decreaseUsers();
+                  e.preventDefault();
+                }
+              }}
+            />
+
+            {/* Always-visible custom stepper */}
+            <div className="flex w-8 flex-col border-l border-gray-200">
               <button
-                onClick={decreaseUsers}
-                className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700"
-              >
-                −
-              </button>
-              <span className="px-4 py-1 text-gray-800 text-sm font-medium">{users}</span>
-              <button
+                type="button"
                 onClick={increaseUsers}
-                className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700"
+                className="grid flex-1 place-items-center hover:bg-gray-50 active:bg-gray-100 focus:outline-none"
+                aria-label="Increase users"
               >
-                +
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M6 14l6-6 6 6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={decreaseUsers}
+                className="grid flex-1 place-items-center border-t border-gray-200 hover:bg-gray-50 active:bg-gray-100 focus:outline-none"
+                aria-label="Decrease users"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M18 10l-6 6-6-6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </button>
             </div>
           </div>
@@ -94,63 +150,190 @@ const PlansPage: React.FC = () => {
       </div>
 
       {/* Plans grid */}
-      <div className="h-full grid gap-8 md:grid-cols-3">
-        {plansData.map((plan: Plan) => (
-          <div key={plan.id} className="bg-white w-[25vw] shadow-md rounded-2xl p-6 flex flex-col">
-            {/* Plan name + price centered */}
-            <h2 className="text-xl font-semibold text-gray-800 mb-2 text-center">{plan.name}</h2>
-            <p className="text-lg font-medium text-gray-600 mb-1 text-center">
-              ${plan.price}{' '}
-              <span className="text-sm text-gray-400">
-                / {billingCycle} / {users} user{users > 1 ? 's' : ''}
-              </span>
-            </p>
+      <div className="grid md:grid-cols-3 w-full max-w-4xl">
+        {plansData.map((plan: Plan) => {
+          const included = plan.features.filter(f => f.included);
+          const excluded = plan.features.filter(f => !f.included);
 
-            {/* CTA button */}
-            <button
-              onClick={handleClick}
-              className="my-2 w-full bg-[#8E50EA] text-white py-2 rounded-xl hover:bg-[#753ecb] transition"
+          return (
+            <div
+              key={plan.id}
+              className={`relative bg-white shadow-md p-6 flex flex-col border ${
+                plan.recommended ? 'border-2 border-purple-600' : 'border-gray-200'
+              }`}
             >
-              Get Started
-            </button>
+              {plan.recommended && (
+                <span className="absolute top-0 right-0 bg-purple-600 text-white text-xs font-semibold px-3 py-1">
+                  RECOMMENDED
+                </span>
+              )}
 
-            {/* Features */}
-            <div className="flex-1 space-y-4">
-              {plan.features.map((feature, idx) => (
-                <div key={idx} className="flex items-start justify-between gap-3 relative">
-                  {/* Check/Dash + text */}
-                  <div className="flex items-start gap-3">
-                    <span
-                      className={`text-lg mt-0.5 ${
-                        feature.included ? 'text-[#8E50EA]' : 'text-gray-400'
-                      }`}
+              {/* Plan name + tagline */}
+              <h2 className="text-xl font-semibold text-gray-800 mb-1">{plan.name}</h2>
+              {plan.tagline && <p className="text-sm text-gray-500 mb-3">{plan.tagline}</p>}
+
+              {/* Price */}
+              <p className="text-2xl font-bold text-gray-900 mb-1">
+                {plan.price}
+                <span className="text-sm font-medium text-gray-500 ml-1">
+                  / {billingCycle} / {users} user{users > 1 ? 's' : ''}
+                </span>
+              </p>
+
+              {/* CTA button */}
+              <button
+                onClick={handleClick}
+                className={`my-4 w-full py-2 rounded-md font-semibold transition ${
+                  plan.recommended
+                    ? 'bg-purple-600 text-white hover:bg-purple-700'
+                    : 'bg-white text-purple-600 border border-purple-600 hover:bg-purple-50'
+                }`}
+              >
+                Get Started
+              </button>
+
+              {/* Included features */}
+              <div className="space-y-3">
+                {included.map((feature, idx) => (
+                  <div key={idx} className="flex items-start gap-3">
+                    {/* Checkmark lighter like Slack */}
+                    {/* Check icon (thin stroke) */}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#8E50EA" // purple check color
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="w-4 h-4 flex-shrink-0"
                     >
-                      {feature.included ? '✔' : '—'}
-                    </span>
-                    <div className="flex flex-col">
-                      <span className="text-sm text-gray-700">{feature.text}</span>
+                      <path d="M5 12l5 5L20 7" />
+                    </svg>
+                    <div className="flex w-full flex-col">
+                      <div className="flex justify-between items-center gap-1">
+                        <span className="text-sm text-gray-800">{feature.text}</span>
+                        {feature.meta && (
+                          <div className="relative group">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="w-4 h-4 text-gray-400 cursor-pointer"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={1}
+                            >
+                              <circle cx="12" cy="12" r="9.5" stroke="currentColor" />
+                              <circle cx="12" cy="8" r="0.6" fill="currentColor" />
+                              <line
+                                x1="12"
+                                y1="11"
+                                x2="12"
+                                y2="16"
+                                stroke="currentColor"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+
+                            <div className="absolute left-5 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
+                              {feature.meta}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       {feature.subtext && (
                         <span className="text-xs text-gray-500">{feature.subtext}</span>
                       )}
                     </div>
                   </div>
+                ))}
+              </div>
 
-                  {/* Info icon with tooltip */}
-                  {feature.meta && (
-                    <div className="group relative">
-                      <span className="flex items-center justify-center w-5 h-5 rounded-full border border-gray-400 text-gray-500 text-[10px] font-bold cursor-pointer hover:bg-gray-100">
-                        i
-                      </span>
-                      <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block bg-gray-800 text-white text-xs rounded-md px-2 py-1 w-48 shadow-lg z-10">
-                        {feature.meta}
+              {/* AI Section */}
+              <div className="mt-6 mb-6 rounded-md bg-purple-50 p-4">
+                <h4
+                  className={`flex items-center gap-2 font-semibold mb-2 ${
+                    plan.ai.tier.includes('Advanced') ? 'text-purple-700' : 'text-purple-600'
+                  }`}
+                >
+                  {/* Custom sparkle icon */}
+                  <svg
+                    className="w-5 h-5"
+                    width="20"
+                    height="20"
+                    fill="#730394"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="m13.1413 10.4214-2.4057 1.2003c-.7228.3612-1.30734.9455-1.66873 1.6678l-1.20106 2.4043c-.17006.3435-.66253.3435-.83259 0l-1.20107-2.4043c-.36138-.7223-.94597-1.3066-1.66873-1.6678l-2.40567-1.2003c-.34367-.17-.34367-.66218 0-.83215l2.40567-1.20037c.72276-.36118 1.30735-.94543 1.66873-1.66778l1.20107-2.40429c.17006-.34347.66253-.34347.83259 0l1.20106 2.40429c.36139.72235.94593 1.3066 1.66873 1.66778l2.4057 1.20037c.3436.16997.3436.66215 0 .83215zm5.2471 5.3468-1.031-.517c-.3118-.1523-.5598-.4072-.7157-.7153l-.5173-1.0304c-.0708-.1487-.2834-.1487-.3578 0l-.5173 1.0304c-.1523.3116-.4074.5595-.7156.7153l-1.031.517c-.1488.0708-.1488.2832 0 .3576l1.031.517c.3117.1522.5597.4072.7156.7153l.5173 1.0304c.0709.1487.2834.1487.3578 0l.5173-1.0304c.1524-.3117.4075-.5595.7157-.7153l1.031-.517c.1488-.0708.1488-.2833 0-.3576zm0-11.89401-1.031-.51697c-.3118-.15226-.5598-.40721-.7157-.71527l-.5173-1.03041c-.0708-.14872-.2834-.14872-.3578 0l-.5173 1.03041c-.1523.3116-.4074.55947-.7156.71527l-1.031.51697c-.1488.07082-.1488.28328 0 .35764l1.031.51697c.3117.15226.5597.40721.7156.71527l.5173 1.03041c.0709.14872.2834.14872.3578 0l.5173-1.03041c.1524-.3116.4075-.55947.7157-.71527l1.031-.51697c.1488-.07082.1488-.28328 0-.35764z" />
+                  </svg>
+                  {plan.ai.tier}
+                </h4>
+                <ul className="space-y-1">
+                  {plan.ai.subfeatures.map((sub, idx) => (
+                    <li key={idx} className="flex items-center gap-2 text-sm text-gray-700">
+                      {/* Check icon (thin stroke) */}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#8E50EA" // purple check color
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-4 h-4 flex-shrink-0"
+                      >
+                        <path d="M5 12l5 5L20 7" />
+                      </svg>{' '}
+                      {sub}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Excluded features */}
+              <div className="space-y-3">
+                {excluded.map((feature, idx) => (
+                  <div key={idx} className="flex items-start gap-3 text-gray-400">
+                    <span className="text-sm">—</span>
+                    <div className="flex w-full flex-col">
+                      <div className="flex justify-between items-center gap-1">
+                        <span className="text-sm">{feature.text}</span>
+                        {feature.meta && (
+                          <div className="relative group">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="w-4 h-4 text-gray-400 cursor-pointer"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={1}
+                            >
+                              <circle cx="12" cy="12" r="9.5" stroke="currentColor" />
+                              <circle cx="12" cy="8" r="0.6" fill="currentColor" />
+                              <line
+                                x1="12"
+                                y1="11"
+                                x2="12"
+                                y2="16"
+                                stroke="currentColor"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                            <div className="absolute left-5 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
+                              {feature.meta}
+                            </div>
+                          </div>
+                        )}
                       </div>
+                      {feature.subtext && <span className="text-xs">{feature.subtext}</span>}
                     </div>
-                  )}
-                </div>
-              ))}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

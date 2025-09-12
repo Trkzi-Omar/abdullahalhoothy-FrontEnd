@@ -22,14 +22,18 @@ const Home = () => {
 
   const { setSelectedContainerType } = useCatalogContext();
 
-  useEffect(() => {
-    setSelectedContainerType('Home');
-    openModal(<DataContainer />, {
+  const initilizeHomeDialog = async () => {
+    await setSelectedContainerType('Home');
+    await openModal(<DataContainer />, {
       darkBackground: true,
       hasAutoSize: true,
       isHome: true,
     });
-    setHasOpened(true);
+    await setHasOpened(true);
+  };
+
+  useEffect(() => {
+    initilizeHomeDialog();
   }, []);
 
   useEffect(() => {

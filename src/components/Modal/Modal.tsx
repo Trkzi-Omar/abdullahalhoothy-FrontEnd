@@ -3,7 +3,13 @@ import { ModalProps } from '../../types';
 import { useUIContext } from '../../context/UIContext';
 
 function Modal(props: ModalProps) {
-  const { children, darkBackground = false, isSmaller = false, hasAutoSize = false } = props;
+  const {
+    children,
+    darkBackground = false,
+    isSmaller = false,
+    hasAutoSize = false,
+    isHome = false,
+  } = props;
   const { closeModal, isModalOpen } = useUIContext();
 
   if (!isModalOpen) {
@@ -24,14 +30,14 @@ function Modal(props: ModalProps) {
       }}
     >
       <div
-        className={`bg-white p-5 max-w-[950px] relative ${hasAutoSize ? 'w-auto' : 'w-full lg:h-5/6 h-full'} lg:rounded-lg border shadow overflow-y-auto ${
+        className={`${isHome ? 'bg-transparent p-0' : 'bg-white border shadow'} p-5 max-w-[950px] relative ${hasAutoSize ? 'w-auto' : 'w-full lg:h-5/6 h-full'} lg:rounded-lg  overflow-y-auto ${
           isSmaller
             ? 'flex justify-center items-center max-w-[400px] absolute inset-x-0 md:left-[140px]'
             : ''
         } pointer-events-auto`}
       >
         <button
-          className="transition-all text-xl w-10 h-10 hover:text-white font-bold hover:bg-red-600 absolute top-0 right-0 rounded-tr-lg"
+          className={`${isHome ? 'text-white bg-red-600' : ''} transition-all text-xl w-10 h-10 hover:text-white font-bold hover:bg-red-600 absolute top-0 right-0 rounded-tr-lg`}
           onClick={closeModal}
           aria-label="Close modal"
         >

@@ -9,6 +9,7 @@ export interface ModalProps {
   darkBackground?: boolean;
   isSmaller?: boolean;
   hasAutoSize?: boolean;
+  isHome?: boolean;
 }
 
 export interface ExpandableMenuProps {
@@ -458,6 +459,7 @@ export interface ModalOptions {
   darkBackground?: boolean;
   isSmaller?: boolean;
   hasAutoSize?: boolean;
+  isHome?: boolean;
 }
 
 export interface UIContextProps {

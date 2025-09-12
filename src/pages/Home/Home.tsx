@@ -26,6 +26,8 @@ const Home = () => {
     setSelectedContainerType('Home');
     openModal(<DataContainer />, {
       darkBackground: true,
+      hasAutoSize: true,
+      isHome: true,
     });
     setHasOpened(true);
   }, []);

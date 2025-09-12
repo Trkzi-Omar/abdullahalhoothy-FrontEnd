@@ -249,12 +249,12 @@ function DataContainer() {
   }
 
   return (
-    <div className="lg:p-6 h-full p-2">
+    <div className={`lg:p-6 h-full ${selectedContainerType === 'Home' ? 'px-2 py-1' : 'p-2'}`}>
       <h2 className="text-2xl text-center font-semibold">
         {selectedContainerType === 'Catalogue'
           ? 'Add Data to Map'
           : selectedContainerType === 'Home'
-            ? 'Select report'
+            ? ''
             : 'Add Layers to Map'}
       </h2>
       {selectedContainerType === 'Home' ? (

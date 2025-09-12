@@ -31,7 +31,7 @@ export default function CampaignPage() {
 
   const handleReportClick = (report: Report) => {
     setSelectedReport(report);
-    if (report.id === 4 || report.title === 'Try Something Else') {
+    if (report.title === 'Try Something Else') {
       // step 2 case won't be used anymore since we are hiding this item
       return;
     } else {
@@ -76,22 +76,20 @@ export default function CampaignPage() {
       <div className="space-y-4 w-full flex flex-col items-center">
         {/* Step 0: Report selection */}
         {step === 0 &&
-          reports
-            .filter(r => !(r.id === 4 || r.title === 'Try Something Else')) // hide 4th item
-            .map(report => (
-              <div
-                key={report.id}
-                onClick={() => handleReportClick(report)}
-                className="cursor-pointer flex items-center justify-center px-4 py-6 rounded-md bg-[#8E50EA] hover:bg-purple-400 transition-colors w-full"
+          reports.map(report => (
+            <div
+              key={report.id}
+              onClick={() => handleReportClick(report)}
+              className="cursor-pointer flex items-center justify-center px-4 py-6 rounded-md bg-[#8E50EA] hover:bg-purple-400 transition-colors w-full"
+            >
+              <p
+                className="text-white font-medium text-sm text-center break-words"
+                style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}
               >
-                <p
-                  className="text-white font-medium text-sm text-center break-words"
-                  style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}
-                >
-                  {report.description}
-                </p>
-              </div>
-            ))}
+                {report.description}
+              </p>
+            </div>
+          ))}
 
         {/* Step 1: Free or Custom */}
         {step === 1 && selectedReport && (

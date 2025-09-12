@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+
 import urls from '../../urls.json';
+import { useUIContext } from '../../context/UIContext';
 
 type Report = {
   id: number;
@@ -21,7 +23,7 @@ export default function CampaignPage() {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [step, setStep] = useState(0);
   const navigate = useNavigate();
-
+  const { closeModal } = useUIContext();
   useEffect(() => {
     fetch(`${urls.REACT_APP_API_URL + urls.fetch_campaigns}`)
       .then(res => res.json())
@@ -32,8 +34,7 @@ export default function CampaignPage() {
   const handleReportClick = (report: Report) => {
     setSelectedReport(report);
     if (report.title === 'Try Something Else') {
-      // step 2 case won't be used anymore since we are hiding this item
-      return;
+      closeModal();
     } else {
       setStep(1);
     }

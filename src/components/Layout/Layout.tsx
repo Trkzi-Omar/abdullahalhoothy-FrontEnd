@@ -24,6 +24,7 @@ import AddFunds from '../../pages/AddFunds/AddFunds';
 import SignUp from '../../pages/Auth/SignUp';
 import CampaignPage from '../../pages/Campaign/campaign';
 import PlansPage from '../../pages/Plans/Plans';
+import StaticRedirect from '../StaticRedirect/StaticRedirect';
 const Layout = () => {
   const location = useLocation();
 
@@ -49,6 +50,7 @@ const Layout = () => {
           <Route path={'/billing/*'} element={<Billing />} />
           <Route path="/campaign" element={<CampaignPage />} />
           <Route path="/plans" element={<PlansPage />} />
+          <Route path="/static/*" element={<StaticRedirect />} />
         </Routes>
 
         <Routes>

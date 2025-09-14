@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { HttpReq } from '../../services/apiService';
 import { useEffect, useState } from 'react';
@@ -9,6 +9,7 @@ import { FaEnvelope, FaLock, FaUser } from 'react-icons/fa';
 
 const Auth = () => {
   const nav = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, setAuthResponse } = useAuth();
 
   // RENDER STATE
@@ -40,7 +41,13 @@ const Auth = () => {
         }
         setAuthResponse(data as AuthResponse);
         setTimeout(() => {
-          nav('/');
+          const params = new URLSearchParams(location.search);
+          const redirectUrl = params.get('redirect_url');
+          if (redirectUrl) {
+            window.location.replace(redirectUrl);
+          } else {
+            nav('/');
+          }
         }, 100);
       },
       () => {},

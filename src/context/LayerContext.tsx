@@ -763,10 +763,10 @@ export function LayerProvider(props: { children: ReactNode }) {
       }
       const bounds = map.getBounds();
       const reqBody = {
-        min_lng: bounds.getWest(),
-        min_lat: bounds.getSouth(),
-        max_lng: bounds.getEast(),
-        max_lat: bounds.getNorth(),
+        bottom_lng: bounds.getWest(),
+        bottom_lat: bounds.getSouth(),
+        top_lng: bounds.getEast(),
+        top_lat: bounds.getNorth(),
         population: withPopulation,
         income: withIncome,
         zoom_level: 7 + currentZoomLevel,

@@ -8,7 +8,7 @@ const StaticRedirect = () => {
   const params = useParams();
 
   const filePath = params['*'];
-  const staticFileUrl = `http://37.27.195.216:8000/static/${filePath}`;
+  const staticFileUrl = `http://localhost:8000/static/${filePath}`;
 
   useEffect(() => {
     if (isAuthenticated) {

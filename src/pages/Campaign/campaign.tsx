@@ -1,28 +1,26 @@
 import { useEffect, useState } from 'react';
-import urls from '../../urls.json';
-
-type Report = {
-  id: number;
-  title: string;
-  description: string;
-  bgImage: string;
-  options: {
-    free_redirect: string;
-    custom_redirect: {
-      has_account: string;
-      no_account: string;
-    };
-  };
-};
+import { 
+  Report, 
+  fetchCampaigns, 
+  isTrySomethingElseReport,
+  createNavigationHandlers
+} from './campaignCommon';
+import { CampaignButton, BackButton } from './CampaignComponents';
 
 export default function CampaignPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [step, setStep] = useState(0); // 0 = reports list, 1 = free/custom, 2 = account options
   const [hoveredBg, setHoveredBg] = useState<string | null>(null);
+
+  const navigate = (url: string) => {
+    window.location.href = url;
+  };
+
+  const { handleFreeClick, handleAccountClick, handleBack } = createNavigationHandlers(navigate, setStep);
+
   useEffect(() => {
-    fetch(`${urls.REACT_APP_API_URL + urls.fetch_campaigns}`)
-      .then(res => res.json())
+    fetchCampaigns()
       .then((data: Report[]) => setReports(data))
       .catch(err => console.error('Failed to fetch reports:', err));
   }, []);
@@ -31,33 +29,15 @@ export default function CampaignPage() {
     setSelectedReport(report);
 
     // If it's the "Try something else" report (id === 4 or by title check)
-    if (report.id === 4 || report.title === 'Try Something Else') {
+    if (isTrySomethingElseReport(report)) {
       setStep(2); // Skip directly to account options
     } else {
       setStep(1); // Normal flow
     }
   };
-  const handleFreeClick = (url: string) => {
-    window.location.href = url;
-  };
 
   const handleCustomClick = () => {
     setStep(2);
-  };
-
-  const handleAccountClick = (url: string) => {
-    window.location.href = url;
-  };
-
-  const handleBack = () => {
-    if (
-      step === 2 &&
-      (selectedReport?.id === 4 || selectedReport?.title === 'Try Something Else')
-    ) {
-      setStep(0);
-    } else {
-      setStep(prev => Math.max(prev - 1, 0));
-    }
   };
 
   // ✅ Background logic
@@ -79,12 +59,7 @@ export default function CampaignPage() {
         {/* Back button (only visible after step 0) */}
         {step > 0 && (
           <div className="mb-4">
-            <button
-              onClick={handleBack}
-              className="bg-[#8E50EA] hover:bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-colors"
-            >
-              ← Back
-            </button>
+            <BackButton onClick={() => handleBack(step, selectedReport)} />
           </div>
         )}
 
@@ -92,81 +67,55 @@ export default function CampaignPage() {
           {/* Step 0: Report selection */}
           {step === 0 &&
             reports.map(report => (
-              <div
+              <CampaignButton
                 key={report.id}
                 onClick={() => handleReportClick(report)}
+                className="mx-auto max-w-[90ch]"
+                fullWidth={false}
                 onMouseEnter={() => setHoveredBg(report.bgImage)}
                 onMouseLeave={() => setHoveredBg(null)}
-                className="cursor-pointer flex items-center justify-center px-6 py-3 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors w-fit mx-auto"
               >
-                <div className="max-w-[90ch]">
-                  <p
-                    className="text-white font-semibold text-xl text-center break-words"
-                    style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}
-                  >
-                    {report.description}
-                  </p>
-                </div>
-              </div>
+                {report.description}
+              </CampaignButton>
             ))}
 
           {/* Step 1: Free or Custom */}
           {step === 1 && selectedReport && (
             <>
-              <div
+              <CampaignButton
                 onClick={() => handleFreeClick(selectedReport.options.free_redirect)}
-                className="cursor-pointer flex items-center justify-center gap-4 px-6 py-3 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors w-fit mx-auto"
+                className="mx-auto max-w-[90ch]"
+                fullWidth={false}
               >
-                <p
-                  className="text-white font-semibold text-xl text-center break-words max-w-[90ch]"
-                  style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}
-                >
-                  Show me Example report and Interactive Map (Free)
-                </p>
-              </div>
-              <div
+                Show me Example report and Interactive Map (Free)
+              </CampaignButton>
+              <CampaignButton
                 onClick={handleCustomClick}
-                className="cursor-pointer flex items-center justify-center gap-4 px-6 py-3 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors w-fit mx-auto"
+                className="mx-auto max-w-[90ch]"
+                fullWidth={false}
               >
-                <p
-                  className="text-white font-semibold text-xl text-center break-words max-w-[90ch]"
-                  style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}
-                >
-                  I want my Custom Report
-                </p>
-              </div>
+                I want my Custom Report
+              </CampaignButton>
             </>
           )}
 
           {/* Step 2: Account Options */}
           {step === 2 && selectedReport && (
             <>
-              <div
-                onClick={() =>
-                  handleAccountClick(selectedReport.options.custom_redirect.has_account)
-                }
-                className="cursor-pointer flex items-center justify-center gap-4 px-6 py-3 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors w-fit mx-auto"
+              <CampaignButton
+                onClick={() => handleAccountClick(selectedReport.options.custom_redirect.has_account)}
+                className="mx-auto max-w-[90ch]"
+                fullWidth={false}
               >
-                <p
-                  className="text-white font-semibold text-xl text-center break-words max-w-[90ch]"
-                  style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}
-                >
-                  Already have an account
-                </p>
-              </div>
-              <div
-                onClick={() =>
-                  handleAccountClick(selectedReport.options.custom_redirect.no_account)
-                }
-                className="cursor-pointer flex items-center justify-center gap-4 px-6 py-3 rounded-lg bg-[#8E50EA] hover:bg-purple-400 border border-purple-300 transition-colors w-fit mx-auto"
+                Already have an account
+              </CampaignButton>
+              <CampaignButton
+                onClick={() => handleAccountClick(selectedReport.options.custom_redirect.no_account)}
+                className="mx-auto max-w-[90ch]"
+                fullWidth={false}
               >
-                <p
-                  className="text-white font-semibold text-xl text-center break-words max-w-[90ch]"
-                  style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}
-                >
-                  Does not have account
-                </p>
-              </div>
+                Does not have account
+              </CampaignButton>
             </>
           )}
         </div>

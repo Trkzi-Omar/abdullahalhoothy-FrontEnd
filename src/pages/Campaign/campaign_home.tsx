@@ -1,22 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-
-import urls from '../../urls.json';
+import { 
+  Report, 
+  fetchCampaigns, 
+  isTrySomethingElseReport,
+  createNavigationHandlers
+} from './campaignCommon';
+import { CampaignButton, BackButton } from './CampaignComponents';
 import { useUIContext } from '../../context/UIContext';
-
-type Report = {
-  id: number;
-  title: string;
-  description: string;
-  bgImage: string;
-  options: {
-    free_redirect: string;
-    custom_redirect: {
-      has_account: string;
-      no_account: string;
-    };
-  };
-};
 
 export default function CampaignPage() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -24,40 +15,27 @@ export default function CampaignPage() {
   const [step, setStep] = useState(0);
   const navigate = useNavigate();
   const { closeModal } = useUIContext();
+
+  const { handleFreeClick, handleAccountClick, handleBack } = createNavigationHandlers(navigate, setStep);
+
   useEffect(() => {
-    fetch(`${urls.REACT_APP_API_URL + urls.fetch_campaigns}`)
-      .then(res => res.json())
+    fetchCampaigns()
       .then((data: Report[]) => setReports(data))
       .catch(err => console.error('Failed to fetch reports:', err));
   }, []);
 
   const handleReportClick = (report: Report) => {
     setSelectedReport(report);
-    if (report.title === 'Try Something Else') {
+    if (isTrySomethingElseReport(report)) {
       closeModal();
     } else {
       setStep(1);
     }
   };
 
-  const handleFreeClick = (url: string) => navigate(url);
-
   const handleCustomClick = (report: Report) => {
     // Instead of going to step 2, redirect directly to has_account URL
     navigate(report.options.custom_redirect.has_account);
-  };
-
-  const handleAccountClick = (url: string) => navigate(url);
-
-  const handleBack = () => {
-    if (
-      step === 2 &&
-      (selectedReport?.id === 4 || selectedReport?.title === 'Try Something Else')
-    ) {
-      setStep(0);
-    } else {
-      setStep(prev => Math.max(prev - 1, 0));
-    }
   };
 
   return (
@@ -65,12 +43,7 @@ export default function CampaignPage() {
       {/* Back button */}
       {step > 0 && (
         <div className="self-start">
-          <button
-            onClick={handleBack}
-            className="bg-[#8E50EA] hover:bg-purple-600 text-white font-medium px-3 py-1.5 rounded-md text-sm"
-          >
-            ← Back
-          </button>
+          <BackButton onClick={() => handleBack(step, selectedReport)} />
         </div>
       )}
 
@@ -78,73 +51,48 @@ export default function CampaignPage() {
         {/* Step 0: Report selection */}
         {step === 0 &&
           reports.map(report => (
-            <div
+            <CampaignButton
               key={report.id}
               onClick={() => handleReportClick(report)}
-              className="cursor-pointer flex items-center justify-center px-4 py-6 rounded-md bg-[#8E50EA] hover:bg-purple-400 transition-colors w-full"
+              fullWidth={true}
             >
-              <p
-                className="text-white font-medium text-sm text-center break-words"
-                style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}
-              >
-                {report.description}
-              </p>
-            </div>
+              {report.description}
+            </CampaignButton>
           ))}
 
         {/* Step 1: Free or Custom */}
         {step === 1 && selectedReport && (
           <>
-            <div
+            <CampaignButton
               onClick={() => handleFreeClick(selectedReport.options.free_redirect)}
-              className="cursor-pointer flex items-center justify-center px-4 py-6 rounded-md bg-[#8E50EA] hover:bg-purple-400 transition-colors w-full"
+              fullWidth={true}
             >
-              <p
-                className="text-white font-medium text-sm text-center break-words"
-                style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}
-              >
-                Example report & Interactive Map (Free)
-              </p>
-            </div>
-            <div
+              Example report & Interactive Map (Free)
+            </CampaignButton>
+            <CampaignButton
               onClick={() => handleCustomClick(selectedReport)}
-              className="cursor-pointer flex items-center justify-center px-4 py-6 rounded-md bg-[#8E50EA] hover:bg-purple-400 transition-colors w-full"
+              fullWidth={true}
             >
-              <p
-                className="text-white font-medium text-sm text-center break-words"
-                style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}
-              >
-                I want my Custom Report
-              </p>
-            </div>
+              I want my Custom Report
+            </CampaignButton>
           </>
         )}
 
         {/* Step 2: Account Options (only relevant if Try Something Else was used, but we hide it now) */}
         {step === 2 && selectedReport && (
           <>
-            <div
+            <CampaignButton
               onClick={() => handleAccountClick(selectedReport.options.custom_redirect.has_account)}
-              className="cursor-pointer flex items-center justify-center px-4 py-6 rounded-md bg-[#8E50EA] hover:bg-purple-400 transition-colors w-full"
+              fullWidth={true}
             >
-              <p
-                className="text-white font-medium text-sm text-center break-words"
-                style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}
-              >
-                Already have an account
-              </p>
-            </div>
-            <div
+              Already have an account
+            </CampaignButton>
+            <CampaignButton
               onClick={() => handleAccountClick(selectedReport.options.custom_redirect.no_account)}
-              className="cursor-pointer flex items-center justify-center px-4 py-6 rounded-md bg-[#8E50EA] hover:bg-purple-400 transition-colors w-full"
+              fullWidth={true}
             >
-              <p
-                className="text-white font-medium text-sm text-center break-words"
-                style={{ fontFamily: 'Montserrat Custom, Montserrat, sans-serif' }}
-              >
-                Does not have account
-              </p>
-            </div>
+              Does not have account
+            </CampaignButton>
           </>
         )}
       </div>

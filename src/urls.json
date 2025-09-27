@@ -47,5 +47,7 @@
   "distance_drive_time_polygon": "/distance_drive_time_polygon",
   "fetch_single_catalog": "/fetch_single_catalog",
   "fetch_plans": "/plan-details",
-  "fetch_campaigns": "/campaign-details"
+  "fetch_campaigns": "/campaign-details",
+  "smart_pharmacy_report": "/smart_pharmacy_report",
+  "business_category_metrics": "/business_category_metrics"
 }

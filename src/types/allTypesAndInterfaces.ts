@@ -872,3 +872,93 @@ export interface PropertyStats {
   average?: number;
   median?: number;
 }
+
+export interface EvaluationMetrics {
+  [key: string]: number;
+}
+
+// Specific metric types for different business types
+export interface PharmacyMetrics {
+  traffic: number;
+  demographics: number;
+  competition: number;
+  healthcare: number;
+  complementary: number;
+}
+
+export interface CafeMetrics {
+  traffic: number;
+  demographics: number;
+  competition: number;
+  footfall: number;
+  complementary: number;
+}
+
+export interface RetailMetrics {
+  traffic: number;
+  demographics: number;
+  competition: number;
+  accessibility: number;
+  complementary: number;
+}
+
+export interface RestaurantMetrics {
+  traffic: number;
+  demographics: number;
+  competition: number;
+  footfall: number;
+  complementary: number;
+}
+
+export interface CustomLocation {
+  lat: number;
+  lng: number;
+}
+
+export interface CurrentLocation {
+  lat: number;
+  lng: number;
+}
+
+export interface PharmacyReportData {
+  user_id: string;
+  city_name: string;
+  country_name: string;
+  Type: string;
+  evaluation_metrics: EvaluationMetrics;
+  custom_locations: CustomLocation[];
+  current_location: CurrentLocation;
+}
+
+// Generic interface for all business report types
+export interface CustomReportData {
+  user_id: string;
+  city_name: string;
+  country_name: string;
+  Type: string;
+  evaluation_metrics: EvaluationMetrics;
+  custom_locations: CustomLocation[];
+  current_location: CurrentLocation;
+}
+
+export interface Step {
+  id: number;
+  title: string;
+  description: string;
+}
+
+export interface FormErrors {
+  [key: string]: string;
+}
+
+export type MetricKey = string;
+
+// Business type definitions
+export type BusinessType = string;
+
+export interface ReportGenerationResponse {
+  success: boolean;
+  report_url?: string;
+  message?: string;
+  error?: string;
+}

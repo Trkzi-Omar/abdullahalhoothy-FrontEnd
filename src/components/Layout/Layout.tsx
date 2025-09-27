@@ -1,11 +1,10 @@
-import React, { useLayoutEffect, useState } from 'react';
 import SideBar from '../SideBar/SideBar';
 import { Route, Routes, useLocation } from 'react-router';
 import NotFound from '../../pages/NotFound/NotFound';
 import Dataview from '../../pages/Dataview/Dataview';
 import Auth from '../../pages/Auth/Auth';
 import MapContainer from '../../pages/MapContainer/MapContainer';
-import Home, { HomeContent } from '../../pages/Home/Home';
+import Home from '../../pages/Home/Home';
 import Profile from '../../pages/Profile/Profile';
 import ProfileLayout from '../../pages/Profile/ProfileLayout';
 import OrganizationLayout from '../../pages/Organization/OrganizationLayout';
@@ -25,12 +24,15 @@ import SignUp from '../../pages/Auth/SignUp';
 import CampaignPage from '../../pages/Campaign/campaign';
 import PlansPage from '../../pages/Plans/Plans';
 import StaticRedirect from '../StaticRedirect/StaticRedirect';
+import CustomReportForm from '../CustomReportForm';
 const Layout = () => {
   const location = useLocation();
 
-  // Hide sidebar & navbar only on /campaign or /plans
+  // Hide sidebar & navbar only on /campaign, /plans, or /custom-report
   const hideLayout =
-    location.pathname.startsWith('/campaign') || location.pathname.startsWith('/plans');
+    location.pathname.startsWith('/campaign') ||
+    location.pathname.startsWith('/plans') ||
+    location.pathname.startsWith('/custom-report');
 
   return (
     <div className="flex flex-col ">
@@ -50,6 +52,7 @@ const Layout = () => {
           <Route path={'/billing/*'} element={<Billing />} />
           <Route path="/campaign" element={<CampaignPage />} />
           <Route path="/plans" element={<PlansPage />} />
+          <Route path="/custom-report/:businessType" element={<CustomReportForm />} />
           <Route path="/static/*" element={<StaticRedirect />} />
         </Routes>
 

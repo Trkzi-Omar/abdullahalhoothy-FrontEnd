@@ -26,7 +26,11 @@ const CustomLocationsStep = ({
   businessType,
   businessConfig,
 }: CustomLocationsStepProps) => {
-  const config = getBusinessTypeConfig(businessType, businessConfig);
+  const config = businessConfig ? getBusinessTypeConfig(businessConfig) : null;
+
+  if (!config) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="space-y-4 animate-fade-in-up">

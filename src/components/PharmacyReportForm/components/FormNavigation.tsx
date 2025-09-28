@@ -13,6 +13,7 @@ interface FormNavigationProps {
     custom_locations: Array<{ lat: number; lng: number }>;
     current_location: { lat: number; lng: number };
   };
+  isAdvancedMode: boolean;
 }
 
 const FormNavigation = ({
@@ -24,6 +25,7 @@ const FormNavigation = ({
   validateCurrentStep,
   validateForm,
   formData,
+  isAdvancedMode,
 }: FormNavigationProps) => {
   // Determine if current step should show "Skip" instead of "Next"
   let shouldShowSkip = false;
@@ -38,6 +40,11 @@ const FormNavigation = ({
   }
 
   nextButtonText = shouldShowSkip ? 'Skip' : 'Next';
+
+  // Handle simple mode - show "Generate Report" on step 1
+  if (!isAdvancedMode && currentStep === 1) {
+    nextButtonText = 'Generate Report';
+  }
 
   return (
     <div className="flex items-center justify-between pt-6 border-t border-gray-200">
@@ -58,14 +65,26 @@ const FormNavigation = ({
             onClick={onNextStep}
             disabled={!validateCurrentStep(currentStep)}
             className={`flex items-center px-6 py-2 font-semibold rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed btn-hover-lift ${
-              shouldShowSkip
-                ? 'bg-gray-500 text-white hover:bg-gray-600 focus:ring-gray-500/20'
-                : 'bg-primary text-white hover:bg-primary/90 focus:ring-primary/20'
+              !isAdvancedMode && currentStep === 1
+                ? 'bg-gem-gradient text-white hover:opacity-90 focus:ring-primary/20'
+                : shouldShowSkip
+                  ? 'bg-gray-500 text-white hover:bg-gray-600 focus:ring-gray-500/20'
+                  : 'bg-primary text-white hover:bg-primary/90 focus:ring-primary/20'
             }`}
           >
-            <span className="hidden sm:inline">{nextButtonText}</span>
-            <span className="sm:hidden">{nextButtonText}</span>
-            <FaArrowRight className="w-4 h-4 ml-2" />
+            {!isAdvancedMode && currentStep === 1 ? (
+              <>
+                <FaCheck className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">{nextButtonText}</span>
+                <span className="sm:hidden">{nextButtonText}</span>
+              </>
+            ) : (
+              <>
+                <span className="hidden sm:inline">{nextButtonText}</span>
+                <span className="sm:hidden">{nextButtonText}</span>
+                <FaArrowRight className="w-4 h-4 ml-2" />
+              </>
+            )}
           </button>
         ) : (
           <button

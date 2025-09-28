@@ -28,6 +28,7 @@ const PharmacyReportForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [isAdvancedMode, setIsAdvancedMode] = useState(false);
 
   // Set user_id when component mounts
   useEffect(() => {
@@ -282,7 +283,14 @@ const PharmacyReportForm = () => {
   const goToNextStep = () => {
     if (validateCurrentStep(currentStep)) {
       setCompletedSteps(prev => [...prev.filter(s => s !== currentStep), currentStep]);
-      setCurrentStep(prev => Math.min(prev + 1, TOTAL_STEPS));
+
+      // In simple mode, directly submit the form instead of going to another step
+      if (!isAdvancedMode && currentStep === 1) {
+        handleSubmit();
+        return;
+      } else {
+        setCurrentStep(prev => Math.min(prev + 1, TOTAL_STEPS));
+      }
     }
   };
 
@@ -304,6 +312,8 @@ const PharmacyReportForm = () => {
             formData={formData}
             errors={errors}
             onInputChange={handleInputChange}
+            isAdvancedMode={isAdvancedMode}
+            onToggleAdvancedMode={setIsAdvancedMode}
           />
         );
       case 2:
@@ -362,12 +372,14 @@ const PharmacyReportForm = () => {
             </div>
           </div>
 
-          {/* Progress Indicator */}
-          <ProgressIndicator
-            currentStep={currentStep}
-            completedSteps={completedSteps}
-            onStepClick={goToStep}
-          />
+          {/* Progress Indicator - Only show in advanced mode */}
+          {isAdvancedMode && (
+            <ProgressIndicator
+              currentStep={currentStep}
+              completedSteps={completedSteps}
+              onStepClick={goToStep}
+            />
+          )}
 
           <div className="p-4 sm:p-5">
             <form className="space-y-4">
@@ -398,6 +410,7 @@ const PharmacyReportForm = () => {
                 validateCurrentStep={validateCurrentStep}
                 validateForm={validateFormWithoutStateUpdate}
                 formData={formData}
+                isAdvancedMode={isAdvancedMode}
               />
             </form>
           </div>

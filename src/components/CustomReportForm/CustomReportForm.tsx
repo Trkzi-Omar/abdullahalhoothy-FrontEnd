@@ -6,7 +6,7 @@ import urls from '../../urls.json';
 import './CustomReportForm.css';
 import { FaArrowLeft, FaExclamationTriangle, FaSpinner } from 'react-icons/fa';
 import { CustomReportData, FormErrors, MetricKey } from '../../types/allTypesAndInterfaces';
-import { TOTAL_STEPS, getInitialFormData, getBusinessTypeConfig } from './constants';
+import { TOTAL_STEPS, getInitialFormData } from './constants';
 import { useBusinessTypeConfig } from './hooks/useBusinessTypeConfig';
 
 // Import step components
@@ -55,16 +55,21 @@ const CustomReportForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [isAdvancedMode, setIsAdvancedMode] = useState(false);
 
   // Set user_id when component mounts
   useEffect(() => {
     if (authResponse && 'localId' in authResponse && formData) {
-      setFormData(prev => ({
-        ...prev!,
-        user_id: authResponse.localId,
-      }));
+      setFormData(prev =>
+        prev
+          ? {
+              ...prev,
+              user_id: authResponse.localId,
+            }
+          : null
+      );
     }
-  }, [authResponse]);
+  }, [authResponse, formData]);
 
   // Initialize form data when business configuration is loaded
   useEffect(() => {
@@ -134,10 +139,14 @@ const CustomReportForm = () => {
   };
 
   const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData(prev =>
+      prev
+        ? {
+            ...prev,
+            [field]: value,
+          }
+        : null
+    );
 
     // Clear error when user starts typing
     if (errors[field]) {
@@ -149,13 +158,17 @@ const CustomReportForm = () => {
   };
 
   const handleMetricsChange = (metric: MetricKey, value: number) => {
-    setFormData(prev => ({
-      ...prev,
-      evaluation_metrics: {
-        ...prev.evaluation_metrics,
-        [metric]: value,
-      },
-    }));
+    setFormData(prev =>
+      prev
+        ? {
+            ...prev,
+            evaluation_metrics: {
+              ...prev.evaluation_metrics,
+              [metric]: value,
+            },
+          }
+        : null
+    );
 
     // Clear metrics error when user changes values
     if (errors.evaluation_metrics) {
@@ -185,10 +198,16 @@ const CustomReportForm = () => {
   // Memoized callback for custom location selection
   const handleCustomLocationSelect = useCallback(
     (index: number, newLocation: { lat: number; lng: number }) => {
-      setFormData(prev => ({
-        ...prev,
-        custom_locations: prev.custom_locations.map((loc, i) => (i === index ? newLocation : loc)),
-      }));
+      setFormData(prev =>
+        prev
+          ? {
+              ...prev,
+              custom_locations: prev.custom_locations.map((loc, i) =>
+                i === index ? newLocation : loc
+              ),
+            }
+          : null
+      );
 
       // Clear location error when user changes values
       setErrors(prev => {
@@ -207,10 +226,14 @@ const CustomReportForm = () => {
   // Memoized callback for current location selection
   const handleCurrentLocationSelect = useCallback(
     (newLocation: { lat: number; lng: number }) => {
-      setFormData(prev => ({
-        ...prev,
-        current_location: newLocation,
-      }));
+      setFormData(prev =>
+        prev
+          ? {
+              ...prev,
+              current_location: newLocation,
+            }
+          : null
+      );
 
       // Clear current location error when user changes values
       setErrors(prev => {
@@ -326,7 +349,14 @@ const CustomReportForm = () => {
   const goToNextStep = () => {
     if (validateCurrentStep(currentStep)) {
       setCompletedSteps(prev => [...prev.filter(s => s !== currentStep), currentStep]);
-      setCurrentStep(prev => Math.min(prev + 1, TOTAL_STEPS));
+
+      // In simple mode, directly submit the form instead of going to another step
+      if (!isAdvancedMode && currentStep === 1) {
+        handleSubmit();
+        return;
+      } else {
+        setCurrentStep(prev => Math.min(prev + 1, TOTAL_STEPS));
+      }
     }
   };
 
@@ -341,6 +371,8 @@ const CustomReportForm = () => {
   };
 
   const renderCurrentStep = () => {
+    if (!formData) return null;
+
     switch (currentStep) {
       case 1:
         return (
@@ -348,8 +380,9 @@ const CustomReportForm = () => {
             formData={formData}
             errors={errors}
             onInputChange={handleInputChange}
-            businessType={businessType}
             businessConfig={businessConfig}
+            isAdvancedMode={isAdvancedMode}
+            onToggleAdvancedMode={setIsAdvancedMode}
           />
         );
       case 2:
@@ -490,12 +523,14 @@ const CustomReportForm = () => {
             </div>
           </div>
 
-          {/* Progress Indicator */}
-          <ProgressIndicator
-            currentStep={currentStep}
-            completedSteps={completedSteps}
-            onStepClick={goToStep}
-          />
+          {/* Progress Indicator - Only show in advanced mode */}
+          {isAdvancedMode && (
+            <ProgressIndicator
+              currentStep={currentStep}
+              completedSteps={completedSteps}
+              onStepClick={goToStep}
+            />
+          )}
 
           <div className="p-4 sm:p-5">
             <form className="space-y-4">
@@ -517,17 +552,20 @@ const CustomReportForm = () => {
               )}
 
               {/* Navigation Buttons */}
-              <FormNavigation
-                currentStep={currentStep}
-                isSubmitting={isSubmitting}
-                onPreviousStep={goToPreviousStep}
-                onNextStep={goToNextStep}
-                onSubmit={handleSubmit}
-                validateCurrentStep={validateCurrentStep}
-                validateForm={validateFormWithoutStateUpdate}
-                formData={formData}
-                businessType={businessType}
-              />
+              {formData && (
+                <FormNavigation
+                  currentStep={currentStep}
+                  isSubmitting={isSubmitting}
+                  onPreviousStep={goToPreviousStep}
+                  onNextStep={goToNextStep}
+                  onSubmit={handleSubmit}
+                  validateCurrentStep={validateCurrentStep}
+                  validateForm={validateFormWithoutStateUpdate}
+                  formData={formData}
+                  businessType={businessType}
+                  isAdvancedMode={isAdvancedMode}
+                />
+              )}
             </form>
           </div>
         </div>

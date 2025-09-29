@@ -13,6 +13,7 @@ interface CurrentLocationStepProps {
   onLocationSelect: (location: CurrentLocation) => void;
   businessType: string;
   businessConfig?: BusinessTypeConfig | null;
+  disabled?: boolean;
 }
 
 export const CurrentLocationStep = ({
@@ -21,6 +22,7 @@ export const CurrentLocationStep = ({
   onLocationSelect,
   businessType,
   businessConfig,
+  disabled = false,
 }: CurrentLocationStepProps) => {
   return (
     <div className="space-y-4 animate-fade-in-up">
@@ -55,3 +57,5 @@ export const CurrentLocationStep = ({
     </div>
   );
 };
+
+export default CurrentLocationStep;

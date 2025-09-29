@@ -9,6 +9,7 @@ interface EvaluationMetricsStepProps {
   onMetricsChange: (metric: MetricKey, value: number) => void;
   businessType: string;
   businessConfig?: BusinessTypeConfig | null;
+  disabled?: boolean;
 }
 
 export const EvaluationMetricsStep = ({
@@ -17,6 +18,7 @@ export const EvaluationMetricsStep = ({
   onMetricsChange,
   businessType,
   businessConfig,
+  disabled = false,
 }: EvaluationMetricsStepProps) => {
   const metricsSum = Object.values(formData.evaluation_metrics).reduce(
     (sum, value) => sum + value,
@@ -109,7 +111,10 @@ export const EvaluationMetricsStep = ({
                       onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value))}
                       min="0"
                       max="100"
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider form-transition"
+                      disabled={disabled}
+                      className={`w-full h-2 bg-gray-200 rounded-lg appearance-none slider form-transition ${
+                        disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                      }`}
                       style={{
                         background: `linear-gradient(to right, #115740 0%, #115740 ${value}%, #e5e7eb ${value}%, #e5e7eb 100%)`,
                       }}
@@ -121,8 +126,13 @@ export const EvaluationMetricsStep = ({
                       onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value))}
                       min="0"
                       max="100"
+                      disabled={disabled}
                       className={`w-full px-3 py-2 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
-                        errors[`metrics_${key}`] ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                        disabled
+                          ? 'bg-gray-100 cursor-not-allowed opacity-60'
+                          : errors[`metrics_${key}`]
+                            ? 'border-red-300 bg-red-50'
+                            : 'border-gray-200'
                       }`}
                     />
 
@@ -179,7 +189,10 @@ export const EvaluationMetricsStep = ({
                       onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value))}
                       min="0"
                       max="100"
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider form-transition"
+                      disabled={disabled}
+                      className={`w-full h-2 bg-gray-200 rounded-lg appearance-none slider form-transition ${
+                        disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                      }`}
                       style={{
                         background: `linear-gradient(to right, #115740 0%, #115740 ${value}%, #e5e7eb ${value}%, #e5e7eb 100%)`,
                       }}
@@ -191,8 +204,13 @@ export const EvaluationMetricsStep = ({
                       onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value))}
                       min="0"
                       max="100"
+                      disabled={disabled}
                       className={`w-full px-3 py-2 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
-                        errors[`metrics_${key}`] ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                        disabled
+                          ? 'bg-gray-100 cursor-not-allowed opacity-60'
+                          : errors[`metrics_${key}`]
+                            ? 'border-red-300 bg-red-50'
+                            : 'border-gray-200'
                       }`}
                     />
 

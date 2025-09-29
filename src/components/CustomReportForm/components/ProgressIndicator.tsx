@@ -12,12 +12,14 @@ interface ProgressIndicatorProps {
   currentStep: number;
   completedSteps: number[];
   onStepClick: (step: number) => void;
+  disabled?: boolean;
 }
 
 const ProgressIndicator = ({
   currentStep,
   completedSteps,
   onStepClick,
+  disabled = false,
 }: ProgressIndicatorProps) => {
   return (
     <div className="px-4 sm:px-6 py-3 bg-gray-50 border-b border-gray-200">
@@ -32,15 +34,19 @@ const ProgressIndicator = ({
           <div key={step.id} className="flex flex-col items-center flex-1">
             <button
               onClick={() => onStepClick(step.id)}
-              disabled={step.id > currentStep && !completedSteps.includes(step.id - 1)}
+              disabled={
+                disabled || (step.id > currentStep && !completedSteps.includes(step.id - 1))
+              }
               className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 transition-all duration-200 ${
-                completedSteps.includes(step.id)
-                  ? 'bg-green-500 border-green-500 text-white'
-                  : step.id === currentStep
-                    ? 'bg-primary border-primary text-white'
-                    : step.id < currentStep || completedSteps.includes(step.id - 1)
-                      ? 'bg-blue-100 border-blue-300 text-blue-600 hover:bg-blue-200'
-                      : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'
+                disabled
+                  ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed opacity-60'
+                  : completedSteps.includes(step.id)
+                    ? 'bg-green-500 border-green-500 text-white'
+                    : step.id === currentStep
+                      ? 'bg-primary border-primary text-white'
+                      : step.id < currentStep || completedSteps.includes(step.id - 1)
+                        ? 'bg-blue-100 border-blue-300 text-blue-600 hover:bg-blue-200'
+                        : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'
               }`}
             >
               {completedSteps.includes(step.id) ? (

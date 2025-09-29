@@ -15,6 +15,7 @@ interface BasicInformationStepProps {
   businessConfig?: BusinessTypeConfig | null;
   isAdvancedMode: boolean;
   onToggleAdvancedMode: (enabled: boolean) => void;
+  disabled?: boolean;
 }
 
 const BasicInformationStep = ({
@@ -24,6 +25,7 @@ const BasicInformationStep = ({
   businessConfig,
   isAdvancedMode,
   onToggleAdvancedMode,
+  disabled = false,
 }: BasicInformationStepProps) => {
   const config = businessConfig ? getBusinessTypeConfig(businessConfig) : null;
 
@@ -71,10 +73,13 @@ const BasicInformationStep = ({
             id="city_name"
             value={formData.city_name}
             onChange={e => onInputChange('city_name', e.target.value)}
+            disabled={disabled}
             className={`w-full px-4 py-3 border-2 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
-              errors.city_name
-                ? 'border-red-300 bg-red-50'
-                : 'border-gray-200 hover:border-gray-300'
+              disabled
+                ? 'bg-gray-100 cursor-not-allowed opacity-60'
+                : errors.city_name
+                  ? 'border-red-300 bg-red-50'
+                  : 'border-gray-200 hover:border-gray-300'
             }`}
           >
             {CITY_OPTIONS.map(city => (
@@ -124,8 +129,13 @@ const BasicInformationStep = ({
               <button
                 type="button"
                 onClick={() => onToggleAdvancedMode(!isAdvancedMode)}
+                disabled={disabled}
                 className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                  isAdvancedMode ? 'bg-primary' : 'bg-gray-300'
+                  disabled
+                    ? 'bg-gray-200 cursor-not-allowed opacity-60'
+                    : isAdvancedMode
+                      ? 'bg-primary'
+                      : 'bg-gray-300'
                 }`}
                 aria-label={`${isAdvancedMode ? 'Disable' : 'Enable'} Advanced Configuration`}
                 aria-pressed={isAdvancedMode}

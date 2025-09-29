@@ -13,8 +13,8 @@ interface CustomLocationsStepProps {
   onAddCustomLocation: () => void;
   onRemoveCustomLocation: (index: number) => void;
   onCustomLocationSelect: (index: number, newLocation: { lat: number; lng: number }) => void;
-  businessType: string;
   businessConfig?: BusinessTypeConfig | null;
+  disabled?: boolean;
 }
 
 const CustomLocationsStep = ({
@@ -23,8 +23,8 @@ const CustomLocationsStep = ({
   onAddCustomLocation,
   onRemoveCustomLocation,
   onCustomLocationSelect,
-  businessType,
   businessConfig,
+  disabled = false,
 }: CustomLocationsStepProps) => {
   const config = businessConfig ? getBusinessTypeConfig(businessConfig) : null;
 
@@ -64,7 +64,12 @@ const CustomLocationsStep = ({
                 <button
                   type="button"
                   onClick={() => onRemoveCustomLocation(index)}
-                  className="flex items-center px-3 py-1.5 text-xs bg-red-100 text-red-700 rounded-lg hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200"
+                  disabled={disabled}
+                  className={`flex items-center px-3 py-1.5 text-xs rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 ${
+                    disabled
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
+                      : 'bg-red-100 text-red-700 hover:bg-red-200'
+                  }`}
                 >
                   <FaTrash className="w-3 h-3 mr-1" />
                   Remove
@@ -85,7 +90,12 @@ const CustomLocationsStep = ({
         <button
           type="button"
           onClick={onAddCustomLocation}
-          className="w-full flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary hover:text-primary transition-all duration-200 group"
+          disabled={disabled}
+          className={`w-full flex items-center justify-center px-4 py-3 border-2 border-dashed rounded-lg transition-all duration-200 group ${
+            disabled
+              ? 'border-gray-200 text-gray-400 cursor-not-allowed opacity-60'
+              : 'border-gray-300 text-gray-600 hover:border-primary hover:text-primary'
+          }`}
         >
           <FaPlus className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
           Add Another Location

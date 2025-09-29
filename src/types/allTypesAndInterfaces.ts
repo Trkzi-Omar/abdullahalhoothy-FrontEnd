@@ -920,16 +920,6 @@ export interface CurrentLocation {
   lng: number;
 }
 
-export interface PharmacyReportData {
-  user_id: string;
-  city_name: string;
-  country_name: string;
-  Type: string;
-  evaluation_metrics: EvaluationMetrics;
-  custom_locations: CustomLocation[];
-  current_location: CurrentLocation;
-}
-
 // Generic interface for all business report types
 export interface CustomReportData {
   user_id: string;

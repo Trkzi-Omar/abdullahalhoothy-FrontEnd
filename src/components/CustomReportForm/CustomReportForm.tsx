@@ -562,7 +562,6 @@ const CustomReportForm = () => {
                   validateCurrentStep={validateCurrentStep}
                   validateForm={validateFormWithoutStateUpdate}
                   formData={formData}
-                  businessType={businessType}
                   isAdvancedMode={isAdvancedMode}
                 />
               )}

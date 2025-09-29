@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import apiRequest from '../../services/apiRequest';
 import urls from '../../urls.json';
 import './CustomReportForm.css';
-import { FaArrowLeft, FaExclamationTriangle, FaSpinner } from 'react-icons/fa';
+import { FaArrowLeft, FaExclamationTriangle } from 'react-icons/fa';
 import { CustomReportData, FormErrors, MetricKey } from '../../types/allTypesAndInterfaces';
 import { TOTAL_STEPS, getInitialFormData } from './constants';
 import { useBusinessTypeConfig } from './hooks/useBusinessTypeConfig';
@@ -433,10 +433,39 @@ const CustomReportForm = () => {
   if (configLoading) {
     return (
       <main className="min-h-screen w-full flex justify-center items-center bg-gradient-to-br from-slate-50 to-blue-50">
-        <div className="text-center">
-          <FaSpinner className="w-8 h-8 text-primary animate-spin mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading Configuration</h2>
-          <p className="text-gray-600">Fetching business type settings...</p>
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8">
+            {/* Modern animated loading spinner */}
+            <div className="relative w-16 h-16 mx-auto mb-6">
+              <div className="absolute inset-0 rounded-full border-4 border-blue-100"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-600 animate-spin"></div>
+              <div
+                className="absolute inset-2 rounded-full border-2 border-transparent border-t-blue-400 animate-spin"
+                style={{ animationDirection: 'reverse', animationDuration: '0.8s' }}
+              ></div>
+            </div>
+
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Preparing Your Report</h2>
+            <p className="text-gray-600 mb-4">
+              Setting up the form for your {businessType} location analysis...
+            </p>
+
+            {/* Loading dots animation */}
+            <div className="flex justify-center space-x-1">
+              <div
+                className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+                style={{ animationDelay: '0ms' }}
+              ></div>
+              <div
+                className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+                style={{ animationDelay: '150ms' }}
+              ></div>
+              <div
+                className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+                style={{ animationDelay: '300ms' }}
+              ></div>
+            </div>
+          </div>
         </div>
       </main>
     );
@@ -483,10 +512,37 @@ const CustomReportForm = () => {
   if (!businessConfig || !formData) {
     return (
       <main className="min-h-screen w-full flex justify-center items-center bg-gradient-to-br from-slate-50 to-blue-50">
-        <div className="text-center">
-          <FaSpinner className="w-8 h-8 text-primary animate-spin mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading Configuration</h2>
-          <p className="text-gray-600">Fetching business type settings...</p>
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8">
+            {/* Modern animated loading spinner */}
+            <div className="relative w-16 h-16 mx-auto mb-6">
+              <div className="absolute inset-0 rounded-full border-4 border-blue-100"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-600 animate-spin"></div>
+              <div
+                className="absolute inset-2 rounded-full border-2 border-transparent border-t-blue-400 animate-spin"
+                style={{ animationDirection: 'reverse', animationDuration: '0.8s' }}
+              ></div>
+            </div>
+
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Almost Ready</h2>
+            <p className="text-gray-600 mb-4">Finalizing your {businessType} report setup...</p>
+
+            {/* Loading dots animation */}
+            <div className="flex justify-center space-x-1">
+              <div
+                className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+                style={{ animationDelay: '0ms' }}
+              ></div>
+              <div
+                className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+                style={{ animationDelay: '150ms' }}
+              ></div>
+              <div
+                className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+                style={{ animationDelay: '300ms' }}
+              ></div>
+            </div>
+          </div>
         </div>
       </main>
     );

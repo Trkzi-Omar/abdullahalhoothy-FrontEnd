@@ -59,7 +59,7 @@ const CustomReportForm = () => {
 
   // Set user_id when component mounts
   useEffect(() => {
-    if (authResponse && 'localId' in authResponse && formData) {
+    if (authResponse && 'localId' in authResponse && formData && !formData.user_id) {
       setFormData(prev =>
         prev
           ? {
@@ -69,7 +69,7 @@ const CustomReportForm = () => {
           : null
       );
     }
-  }, [authResponse, formData]);
+  }, [authResponse, formData?.user_id]);
 
   // Initialize form data when business configuration is loaded
   useEffect(() => {
@@ -281,40 +281,46 @@ const CustomReportForm = () => {
         body: submissionData,
       });
 
-      console.log(`${businessType} report submitted successfully:`, res);
-      setShowSuccessMessage(true);
-      setCompletedSteps(Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1));
-
       // Check if we have a report URL to redirect to
-      const reportUrlResponse = res?.data?.metadata?.html_file_path || res?.report_url;
+      // API response format: res.data.data.metadata.html_file_path
+      const reportUrlResponse = res?.data?.data?.metadata?.html_file_path;
+
+      // Redirect to the report URL immediately
       if (reportUrlResponse) {
-        // Redirect to the report URL after a short delay
-        setTimeout(() => {
-          window.location.href = reportUrlResponse;
-        }, 2000);
+        window.location.href = reportUrlResponse;
       } else {
-        // Auto-hide success message after 3 seconds and navigate home
-        setTimeout(() => {
-          setShowSuccessMessage(false);
-          navigate('/'); // Navigate to home or dashboard
-        }, 3000);
+        // Fallback to home if no URL at all
+        navigate('/');
       }
     } catch (error) {
       console.error(`Error submitting ${businessType} report:`, error);
 
       if (error && typeof error === 'object' && 'response' in error) {
         const apiError = error as any;
+
+        // Safely extract error message, ensuring we don't display raw JSON
+        let errorMessage = 'An error occurred while submitting the report';
+
         if (apiError.response?.data?.detail) {
-          setSubmitError(apiError.response.data.detail);
+          errorMessage = apiError.response.data.detail;
         } else if (apiError.response?.data?.message) {
-          setSubmitError(apiError.response.data.message);
+          errorMessage = apiError.response.data.message;
         } else if (apiError.response?.data?.error) {
-          setSubmitError(apiError.response.data.error);
+          errorMessage = apiError.response.data.error;
         } else if (apiError.message) {
-          setSubmitError(apiError.message);
-        } else {
-          setSubmitError('An error occurred while submitting the report');
+          errorMessage = apiError.message;
         }
+
+        // Ensure we don't display raw JSON or object strings
+        if (
+          typeof errorMessage === 'object' ||
+          errorMessage.includes('{') ||
+          errorMessage.includes('[')
+        ) {
+          errorMessage = 'An error occurred while submitting the report';
+        }
+
+        setSubmitError(errorMessage);
       } else {
         // For non-API errors, don't show them to the user
         console.error('Non-API error occurred:', error);

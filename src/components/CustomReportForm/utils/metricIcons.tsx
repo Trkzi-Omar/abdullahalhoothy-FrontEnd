@@ -2,7 +2,7 @@ import {
   FaCar,
   FaUsers,
   FaStore,
-  FaHospital,
+  FaSitemap,
   FaHandshake,
   FaChartBar,
   FaWalking,
@@ -19,7 +19,7 @@ const iconStrategies: Record<string, Record<string, () => JSX.Element>> = {
     traffic: () => <FaCar className="w-4 h-4" />,
     demographics: () => <FaUsers className="w-4 h-4" />,
     competition: () => <FaStore className="w-4 h-4" />,
-    healthcare: () => <FaHospital className="w-4 h-4" />,
+    cross_shopping: () => <FaSitemap className="w-4 h-4" />,
     complementary: () => <FaHandshake className="w-4 h-4" />,
   },
   cafe: {

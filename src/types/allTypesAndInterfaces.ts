@@ -882,7 +882,7 @@ export interface PharmacyMetrics {
   traffic: number;
   demographics: number;
   competition: number;
-  healthcare: number;
+  cross_shopping: number;
   complementary: number;
 }
 

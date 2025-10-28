@@ -53,13 +53,7 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const firstPageSchema = Yup.object().shape({
     fullName: Yup.string().required('Full name is required'),
     email: Yup.string().email('Invalid email address').required('Email is required'),
-    password: Yup.string()
-      .required('Password is required')
-      .min(8, 'Password must be at least 8 characters')
-      .matches(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        'Password must contain at least one uppercase letter, one lowercase letter, and one number'
-      ),
+    password: Yup.string().required('Password is required'),
   });
 
   // Second page validation schema
@@ -203,10 +197,11 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       } catch (error) {
         console.error('Registration error:', error);
-        setSubmitError(error.message || 'Registration failed. Please try again.');
+        const errorMessage = error instanceof Error ? error.message : 'Registration failed. Please try again.';
+        setSubmitError(errorMessage);
         setIsSubmitting(false);
 
-        toast.error(error.message || 'Registration failed. Please try again.', {
+        toast.error(errorMessage, {
           duration: 3000,
         });
       }

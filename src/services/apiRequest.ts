@@ -298,6 +298,25 @@ const apiRequest = async ({
       }
     }
 
+    // Handle other error responses (e.g., 400, 422, etc.)
+    if (err?.response) {
+      const status = err.response.status;
+      const data = err.response.data;
+      let message = 'Request failed';
+
+      if (typeof data === 'string') {
+        message = data;
+      } else if (data?.detail) {
+        message = data.detail;
+      } else if (data?.message) {
+        message = data.message;
+      } else if (data?.error) {
+        message = data.error;
+      }
+
+      throw new Error(`${message} (Status: ${status})`);
+    }
+
     console.error('API request error:', err);
     throw err;
   }

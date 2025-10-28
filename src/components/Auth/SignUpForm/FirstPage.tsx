@@ -88,9 +88,6 @@ const FirstPage: React.FC = () => {
           required
         />
         {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
-        <p className="mt-1 text-xs text-gray-400">
-          Password must be at least 8 characters and contain uppercase, lowercase, and numbers
-        </p>
       </div>
 
       <div>

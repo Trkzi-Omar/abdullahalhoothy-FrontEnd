@@ -1,5 +1,7 @@
 import React from 'react';
 import { useSignUp } from '../../../context/SignUpContext';
+import adminImage from '../../../assets/images/admin.png';
+import teamImage from '../../../assets/images/team.png';
 
 const SecondPage: React.FC = () => {
   const { formData, errors, handleInputChange, handleUserTypeChange } = useSignUp();
@@ -21,11 +23,11 @@ const SecondPage: React.FC = () => {
             />
             <div>
               <span className="block font-medium text-gray-100">
-                Want to Set Up an Account for the Team as an Admin
+                Set Up an Account for the Team as an Admin
               </span>
               <img
                 className="mt-2 h-24 bg-gray-200 rounded"
-                src={'src/assets/images/admin.png'}
+                src={adminImage}
                 alt="Admin illustration"
               />
             </div>
@@ -41,10 +43,10 @@ const SecondPage: React.FC = () => {
               className="mt-1 mr-3"
             />
             <div>
-              <span className="block font-medium text-gray-100">Want to Join a Team</span>
+              <span className="block font-medium text-gray-100">Join a Team</span>
               <img
                 className="mt-2 h-24 bg-gray-200 rounded"
-                src={'src/assets/images/team.png'}
+                src={teamImage}
                 alt="Team illustration"
               />
             </div>

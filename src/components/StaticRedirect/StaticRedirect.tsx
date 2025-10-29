@@ -10,6 +10,7 @@ const StaticRedirect = () => {
   useEffect(() => {
     // Determine the backend URL based on the current hostname
     const currentHost = window.location.hostname;
+    const isHttps = window.location.protocol === 'https:';
     let backendHost: string;
 
     if (currentHost === 'localhost') {
@@ -17,7 +18,7 @@ const StaticRedirect = () => {
     } else if (currentHost === '37.27.195.216') {
       backendHost = 'http://37.27.195.216:8000';
     } else if (currentHost === 's-locator.northernacs.com') {
-      backendHost = 'http://s-locator.northernacs.com:8000';
+      backendHost = isHttps ? 'https://s-locator.northernacs.com:8000' : 'http://s-locator.northernacs.com:8000';
     } else {
       // Fallback to localhost
       backendHost = 'http://localhost:8000';

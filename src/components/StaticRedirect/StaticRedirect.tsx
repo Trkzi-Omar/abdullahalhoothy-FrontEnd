@@ -1,25 +1,45 @@
-import { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 const StaticRedirect = () => {
-  const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
   const params = useParams();
+  const [backendUrl, setBackendUrl] = useState<string>('');
 
   const filePath = params['*'];
-  const staticFileUrl = `http://localhost:8000/static/${filePath}`;
 
   useEffect(() => {
-    if (isAuthenticated) {
-      window.location.replace(staticFileUrl);
-    } else {
-      const redirectUrl = encodeURIComponent(staticFileUrl);
-      navigate(`/auth?redirect_url=${redirectUrl}`);
-    }
-  }, [isAuthenticated, navigate, staticFileUrl]);
+    // Determine the backend URL based on the current hostname
+    const currentHost = window.location.hostname;
+    let backendHost: string;
 
-  return <div>Loading...</div>;
+    if (currentHost === 'localhost') {
+      backendHost = 'http://localhost:8000';
+    } else if (currentHost === '37.27.195.216') {
+      backendHost = 'http://37.27.195.216:8000';
+    } else if (currentHost === 's-locator.northernacs.com') {
+      backendHost = 'http://s-locator.northernacs.com:8000';
+    } else {
+      // Fallback to localhost
+      backendHost = 'http://localhost:8000';
+    }
+
+    const fullUrl = `${backendHost}/static/${filePath}`;
+    setBackendUrl(fullUrl);
+  }, [filePath]);
+
+  if (!backendUrl) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div className="w-full h-full">
+      <iframe
+        src={backendUrl}
+        className="w-full h-full border-none"
+        title="Static Content"
+      />
+    </div>
+  );
 };
 
 export default StaticRedirect;

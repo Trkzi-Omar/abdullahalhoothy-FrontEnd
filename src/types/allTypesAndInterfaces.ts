@@ -929,6 +929,11 @@ export interface CustomReportData {
   evaluation_metrics: EvaluationMetrics;
   custom_locations: CustomLocation[];
   current_location: CurrentLocation;
+  target_age?: number;
+  target_income_level?: string;
+  complementary_categories?: string[];
+  cross_shopping_categories?: string[];
+  competition_categories?: string[];
 }
 
 export interface Step {

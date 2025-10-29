@@ -4,8 +4,9 @@ import { TOTAL_STEPS } from '../constants';
 const STEPS = [
   { id: 1, title: 'Basic Information', description: 'City and location details' },
   { id: 2, title: 'Evaluation Metrics', description: 'Set importance weights' },
-  { id: 3, title: 'Custom Locations', description: 'Add specific locations' },
-  { id: 4, title: 'Current Location', description: 'Set your current position' },
+  { id: 3, title: 'Set Attributes', description: 'Set required attributes' },
+  { id: 4, title: 'Custom Locations', description: 'Add specific locations' },
+  { id: 5, title: 'Current Location', description: 'Set your current position' },
 ];
 
 interface ProgressIndicatorProps {

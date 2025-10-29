@@ -17,6 +17,7 @@ import CurrentLocationStep from './components/CurrentLocationStep';
 import ProgressIndicator from './components/ProgressIndicator';
 import FormNavigation from './components/FormNavigation';
 import SuccessMessage from './components/SuccessMessage';
+import SetAttributeStep from './components/AttributesStep';
 
 const CustomReportForm = () => {
   const { authResponse } = useAuth();
@@ -177,6 +178,18 @@ const CustomReportForm = () => {
         evaluation_metrics: '',
       }));
     }
+  };
+
+  const handleAttributeChange = (key: string, value: number) => {
+    // console.log(key, ':', value);
+    setFormData(prev =>
+      prev
+        ? {
+            ...prev,
+            [key]: value,
+          }
+        : null
+    );
   };
 
   const addCustomLocation = () => {
@@ -404,6 +417,8 @@ const CustomReportForm = () => {
           />
         );
       case 3:
+        return <SetAttributeStep onInputChange={handleAttributeChange} formData={formData} />;
+      case 4:
         return (
           <CustomLocationsStep
             formData={formData}
@@ -415,7 +430,7 @@ const CustomReportForm = () => {
             disabled={isSubmitting}
           />
         );
-      case 4:
+      case 5:
         return (
           <CurrentLocationStep
             formData={formData}

@@ -31,10 +31,10 @@ const FormNavigation = ({
   let shouldShowSkip = false;
   let nextButtonText = 'Next';
 
-  if (currentStep === 3) {
+  if (currentStep === 4) {
     // Custom locations step - check if any location has been set (not 0,0)
     shouldShowSkip = !formData.custom_locations.some(loc => loc.lat !== 0 || loc.lng !== 0);
-  } else if (currentStep === 4) {
+  } else if (currentStep === 5) {
     // Current location step - check if location has been set (not 0,0)
     shouldShowSkip = formData.current_location.lat === 0 && formData.current_location.lng === 0;
   }

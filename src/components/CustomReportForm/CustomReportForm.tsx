@@ -296,11 +296,12 @@ const CustomReportForm = () => {
 
       // Check if we have a report URL to redirect to
       // API response format: res.data.data.metadata.html_file_path
-      const reportUrlResponse = res?.data?.data?.metadata?.html_file_path;
+      const reportUrlResponse = res?.data?.data?.html_file_path;
 
       // Redirect to the report URL immediately
       if (reportUrlResponse) {
-        window.location.href = reportUrlResponse;
+        //window.location.href = reportUrlResponse;
+        navigate(`/${reportUrlResponse.replace(/^\/+/, '')}`);
       } else {
         // Fallback to home if no URL at all
         navigate('/');

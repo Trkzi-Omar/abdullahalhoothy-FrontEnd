@@ -23,7 +23,7 @@ export const getInitialFormData = (
     evaluation_metrics: defaultMetrics,
     custom_locations: [{ lat: 0, lng: 0 }],
     current_location: { lat: 0, lng: 0 },
-    target_age: 0,
+    target_age: 30,
     target_income_level: 'medium',
     complementary_categories: [],
     cross_shopping_categories: [],

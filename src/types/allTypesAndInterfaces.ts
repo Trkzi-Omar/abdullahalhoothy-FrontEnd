@@ -936,6 +936,31 @@ export interface CustomReportData {
   competition_categories?: string[];
 }
 
+export interface BusinessCategoryMetrics {
+  business_type: string;
+  display_name: string;
+  icon: string;
+  description: string;
+  competition_categories: string[];
+  complementary_categories: string[];
+  cross_shopping_categories: string[];
+  metrics: {
+    traffic: MetricDetail;
+    demographics: MetricDetail;
+    competition: MetricDetail;
+    complementary: MetricDetail;
+  };
+}
+
+export interface MetricDetail {
+  name: string;
+  description: string;
+  icon: string;
+  default_weight: number;
+  min_weight: number;
+  max_weight: number;
+}
+
 export interface Step {
   id: number;
   title: string;

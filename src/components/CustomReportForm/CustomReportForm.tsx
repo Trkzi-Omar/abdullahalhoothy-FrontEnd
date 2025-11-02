@@ -5,7 +5,12 @@ import apiRequest from '../../services/apiRequest';
 import urls from '../../urls.json';
 import './CustomReportForm.css';
 import { FaArrowLeft, FaExclamationTriangle } from 'react-icons/fa';
-import { CustomReportData, FormErrors, MetricKey } from '../../types/allTypesAndInterfaces';
+import {
+  BusinessCategoryMetrics,
+  CustomReportData,
+  FormErrors,
+  MetricKey,
+} from '../../types/allTypesAndInterfaces';
 import { TOTAL_STEPS, getInitialFormData } from './constants';
 import { useBusinessTypeConfig } from './hooks/useBusinessTypeConfig';
 
@@ -23,6 +28,7 @@ const CustomReportForm = () => {
   const { authResponse } = useAuth();
   const navigate = useNavigate();
   const { businessType } = useParams<{ businessType: string }>();
+  const [categories, setCategories] = useState<string[]>([]);
 
   // Validate business type exists
   if (!businessType) {
@@ -57,6 +63,7 @@ const CustomReportForm = () => {
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
+  const [businessMetrics, setBusinessMetrics] = useState<BusinessCategoryMetrics | null>(null);
 
   // Set user_id when component mounts
   useEffect(() => {
@@ -71,15 +78,54 @@ const CustomReportForm = () => {
       );
     }
   }, [authResponse, formData?.user_id]);
-
+  const loadBusinessMetrics = async (businessType: string) => {
+    try {
+      const res = await apiRequest({
+        url: `${urls.business_category_metrics}/${businessType}`,
+        method: 'get',
+      });
+      const data = res.data?.data;
+      console.log(JSON.stringify(data));
+      setBusinessMetrics(data);
+    } catch (error) {
+      console.error('Error loading business metrics:', error);
+    }
+  };
   // Initialize form data when business configuration is loaded
   useEffect(() => {
     if (businessConfig) {
       const initialData = getInitialFormData(businessType, businessConfig);
       setFormData(initialData);
+      loadBusinessMetrics(businessType);
     }
   }, [businessConfig, businessType]);
 
+  const handleCategoryLoad = async () => {
+    try {
+      const res = await apiRequest({
+        url: urls.nearby_categories,
+        method: 'get',
+      });
+
+      const data = res.data?.data;
+
+      // Extract all subcategory arrays and flatten them
+      const allSubcategories = Object.values(data).flat();
+
+      // Ensure they are strings
+      const subcategoryList = Array.from(
+        new Set(allSubcategories.filter((item): item is string => typeof item === 'string'))
+      );
+      setCategories(subcategoryList);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      setCategories([]);
+    }
+  };
+
+  useEffect(() => {
+    handleCategoryLoad();
+  }, []);
   const validateForm = (): boolean => {
     if (!formData) return false;
 
@@ -418,7 +464,14 @@ const CustomReportForm = () => {
           />
         );
       case 3:
-        return <SetAttributeStep onInputChange={handleAttributeChange} formData={formData} />;
+        return (
+          <SetAttributeStep
+            onInputChange={handleAttributeChange}
+            inputCategories={categories}
+            formData={formData}
+            metricsData={businessMetrics}
+          />
+        );
       case 4:
         return (
           <CustomLocationsStep

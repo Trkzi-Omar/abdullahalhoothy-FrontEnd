@@ -1,8 +1,7 @@
 import { FaUsers, FaLayerGroup, FaHandshake, FaExclamationTriangle } from 'react-icons/fa';
 import { useEffect, useState } from 'react';
-import { CustomReportData } from '../../../types';
-import apiRequest from '../../../services/apiRequest';
-import urls from '../../../urls.json';
+import { BusinessCategoryMetrics, CustomReportData } from '../../../types';
+
 interface SetAttributeStepProps {
   formData: CustomReportData;
   errors?: {
@@ -13,6 +12,8 @@ interface SetAttributeStepProps {
   };
   onInputChange: (field: string, value: any) => void;
   disabled?: boolean;
+  inputCategories: string[];
+  metricsData: BusinessCategoryMetrics | null;
 }
 
 const INCOME_OPTIONS = ['Low', 'Medium', 'High'];
@@ -22,6 +23,8 @@ const SetAttributeStep = ({
   errors = {},
   onInputChange,
   disabled = false,
+  inputCategories,
+  metricsData,
 }: SetAttributeStepProps) => {
   const [age, setTargetAge] = useState<number>(formData.target_age || 0);
   const [targetIncome, setTargetIncome] = useState<string>(formData.target_income_level || '');
@@ -34,32 +37,14 @@ const SetAttributeStep = ({
   const [selectedCompetition, setSelectedCompetition] = useState<string[]>([]);
   const [selectedCross, setSelectedCross] = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const handleCategoryLoad = async () => {
-    try {
-      const res = await apiRequest({
-        url: urls.nearby_categories,
-        method: 'get',
-      });
-
-      const data = res.data?.data;
-
-      // Extract all subcategory arrays and flatten them
-      const allSubcategories = Object.values(data).flat();
-
-      // Ensure they are strings
-      const subcategoryList = Array.from(
-        new Set(allSubcategories.filter((item): item is string => typeof item === 'string'))
-      );
-      setCategories(subcategoryList);
-    } catch (error) {
-      console.error('Error loading categories:', error);
-      setCategories([]);
-    }
-  };
 
   useEffect(() => {
-    handleCategoryLoad();
+    setCategories(inputCategories);
+    setSelectedCompetition([...(metricsData?.competition_categories ?? [])]);
+    setSelectedComplementary([...(metricsData?.complementary_categories ?? [])]);
+    setSelectedCross([...(metricsData?.cross_shopping_categories ?? [])]);
   }, []);
+
   const onAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
     onInputChange('target_age', value);

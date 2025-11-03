@@ -87,6 +87,16 @@ const CustomReportForm = () => {
       const data = res.data?.data;
       console.log(JSON.stringify(data));
       setBusinessMetrics(data);
+      setFormData(prev =>
+        prev
+          ? {
+              ...prev,
+              complementary_categories: data.complementary_categories,
+              competition_categories: data.competition_categories,
+              cross_shopping_categories: data.cross_shopping_categories,
+            }
+          : null
+      );
     } catch (error) {
       console.error('Error loading business metrics:', error);
     }

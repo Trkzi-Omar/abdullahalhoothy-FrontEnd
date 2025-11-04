@@ -20,7 +20,7 @@ const CategoriesBrowserSubCategories = ({
             onClick={() => onToggleCategory(category)}
           >
             <span>{openedCategories.includes(category) ? <FaCaretDown /> : <FaCaretRight />}</span>
-            {category}
+            {formatSubcategoryName(category)}
           </button>
 
           <div

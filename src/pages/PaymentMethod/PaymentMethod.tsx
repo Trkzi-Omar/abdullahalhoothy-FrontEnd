@@ -258,9 +258,7 @@ const PaymentMethodForm: React.FC = () => {
   );
 };
 
-const stripePromise = loadStripe(
-  'pk_test_51PligvRtvvmhTtnG3whjRPyT3Aclju9ajcwzp9ZCy6ZbOe037NOEzfvih4GdWnJwBYh5UrqDRIE3Eq41OpNEBskQ00C1G2ZjUe'
-);
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 // const stripePromise = null;
 

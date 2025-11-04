@@ -1,5 +1,4 @@
-import { loadStripe } from '@stripe/stripe-js';
-import React, { useState, FormEvent, useLayoutEffect } from 'react';
+import React, { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import apiRequest from '../../services/apiRequest';
@@ -12,22 +11,68 @@ const AddFundsForm: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // State for individual card field errors
   const [submitting, setSubmitting] = useState(false);
-  const [cost, setCost] = useState<number | null>(null);
+  const [cost, setCost] = useState<string>('');
+  const [inputError, setInputError] = useState<string | null>(null);
+
+  // Format the cost to display with .00 for whole numbers
+  const formatCost = (value: string) => {
+    const num = parseFloat(value);
+    if (!isNaN(num) && num >= 0) {
+      return num.toFixed(2);
+    }
+    return value;
+  };
+
+  const handleCostChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Only allow digits (whole numbers only)
+    if (value === '' || /^\d+$/.test(value)) {
+      setCost(value);
+      setInputError(null); // Clear error when valid input
+    } else {
+      setInputError('Only whole dollar amounts are allowed (no decimals)');
+    }
+  };
+
+  const handleCostBlur = () => {
+    if (cost && !isNaN(parseFloat(cost))) {
+      setCost(formatCost(cost));
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    
+    // Check for input validation errors
+    if (inputError) {
+      setErrorMessage('Please fix the input errors before submitting.');
+      return;
+    }
+    
     // Clear previous errors and set loading state
     setErrorMessage(null);
     setSubmitting(true);
 
     try {
-      //Send topup amount and user_id to the backend
+      const amount = parseFloat(cost);
+      if (isNaN(amount) || amount <= 0) {
+        setErrorMessage('Please enter a valid amount.');
+        setSubmitting(false);
+        return;
+      }
 
-      const response = await apiRequest({
+      if (!authResponse?.localId) {
+        setErrorMessage('User not authenticated.');
+        setSubmitting(false);
+        return;
+      }
+
+      await apiRequest({
         url: urls.top_up_wallet,
         method: 'POST',
         body: {
-          amount: cost * 100, //multiply by 100 to convert cents to dollars
+          amount: amount * 100, //multiply by 100 to convert dollars to cents
           user_id: authResponse.localId,
         },
         isAuthRequest: true,
@@ -36,8 +81,8 @@ const AddFundsForm: React.FC = () => {
       navigate('/profile/wallet');
     } catch (error) {
       console.log(error);
-      console.log(error);
-      setErrorMessage('An unexpected error occurred. Please try again later.');
+      setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred. Please try again later.');
+      setInputError(null); // Clear input error on API error
     } finally {
       setSubmitting(false);
     }
@@ -56,11 +101,13 @@ const AddFundsForm: React.FC = () => {
                 id="cardholder-name"
                 type="text"
                 value={cost}
-                onChange={e => setCost(e.target.value)}
+                onChange={handleCostChange}
+                onBlur={handleCostBlur}
                 className="w-full p-3 border border-gray-200 shadow-sm rounded-md focus:outline-none"
-                placeholder="Amount (USD)"
+                placeholder="Amount (USD) - whole dollars only"
                 required
               />
+              {inputError && <p className="text-red-500 text-sm mt-1">{inputError}</p>}
             </div>
           </div>
           <div className="mt-6">

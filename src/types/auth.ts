@@ -7,9 +7,11 @@ export interface FormData {
   fullName: string;
   email: string;
   password: string;
+  phone: string;
   reason: string;
   userType: string;
   teamId: string;
+  source?: string;
 }
 
 export interface FormErrors {

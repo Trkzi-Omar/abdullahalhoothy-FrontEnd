@@ -35,6 +35,8 @@ const ProfileMain: React.FC = () => {
   const [showPrice, setShowPrice] = useState<boolean | undefined>(false);
   const [error, setError] = useState<Error | null>(null);
   const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
+  const [phoneInput, setPhoneInput] = useState<string>('');
+  const [isSavingPhone, setIsSavingPhone] = useState(false);
   const { isAuthenticated, authResponse, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -46,6 +48,10 @@ const ProfileMain: React.FC = () => {
 
     fetchProfile();
   }, [isAuthenticated, authResponse, navigate]);
+
+  useEffect(() => {
+    setPhoneInput(profile.phone || '');
+  }, [profile.phone]);
 
   const fetchProfile = async () => {
     if (!authResponse || !('idToken' in authResponse)) {
@@ -231,6 +237,51 @@ const ProfileMain: React.FC = () => {
             <FaEnvelope className="mr-2 text-[#006400]" />
             <span className="font-bold mr-1 min-w-[100px]">Email:</span>
             {profile.email}
+          </div>
+          <div className="flex items-start mb-2">
+            <span className="font-bold mr-1 min-w-[100px]">Phone:</span>
+            <div className="flex items-center flex-1">
+              <input
+                type="tel"
+                value={phoneInput}
+                onChange={(e) => setPhoneInput(e.target.value)}
+                placeholder="Enter phone number"
+                className="flex-1 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+              <button
+                onClick={async () => {
+                  if (!authResponse || !('idToken' in authResponse)) {
+                    setError(new Error('Authentication information is missing.'));
+                    return;
+                  }
+                  setIsSavingPhone(true);
+                  try {
+                    await apiRequest({
+                      url: urls.update_user_profile,
+                      method: 'POST',
+                      isAuthRequest: true,
+                      body: {
+                        user_id: authResponse.localId,
+                        phone: phoneInput,
+                        username: profile.username,
+                        email: profile.email,
+                      },
+                    });
+                    setProfile(prev => ({ ...prev, phone: phoneInput }));
+                  } catch (error) {
+                    console.error('Failed to update phone number:', error);
+                    // Revert on error
+                    setPhoneInput(profile.phone || '');
+                  } finally {
+                    setIsSavingPhone(false);
+                  }
+                }}
+                disabled={isSavingPhone || phoneInput === (profile.phone || '')}
+                className="ml-2 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {isSavingPhone ? 'Saving...' : 'Save'}
+              </button>
+            </div>
           </div>
           <div className="flex items-start mb-2">
             <label className="flex items-center mb-4 cursor-pointer">

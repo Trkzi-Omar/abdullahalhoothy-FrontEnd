@@ -25,6 +25,7 @@ import CampaignPage from '../../pages/Campaign/campaign';
 import PlansPage from '../../pages/Plans/Plans';
 import StaticRedirect from '../StaticRedirect/StaticRedirect';
 import CustomReportForm from '../CustomReportForm';
+import MarketingDashboard from '../../pages/MarketingDashboard/MarketingDashboard';
 const Layout = () => {
   const location = useLocation();
 
@@ -46,12 +47,14 @@ const Layout = () => {
           <Route path={'/tabularView'} element={<></>} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/sign-up" element={<SignUp />} />
+          <Route path="/sign-up/:source" element={<SignUp />} />
           <Route path="/" element={<Home />} />
           <Route path={'/profile/*'} element={<Profile />} />
           <Route path={'/organization/*'} element={<Organization />} />
           <Route path={'/billing/*'} element={<Billing />} />
           <Route path="/campaign" element={<CampaignPage />} />
           <Route path="/plans" element={<PlansPage />} />
+          <Route path="/marketing-dashboard" element={<MarketingDashboard />} />
           <Route path="/custom-report/:businessType" element={<CustomReportForm />} />
           <Route path="/static/*" element={<StaticRedirect />} />
         </Routes>

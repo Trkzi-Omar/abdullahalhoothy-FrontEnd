@@ -1,11 +1,14 @@
 import React from 'react';
+import { useParams } from 'react-router-dom';
 import MarketingContent from '../../components/Auth/MarketingContent';
 import SignUpForm from '../../components/Auth/SignUpForm';
 import { SignUpProvider } from '../../context/SignUpContext';
 
 const SignUp: React.FC = () => {
+  const { source } = useParams<{ source?: string }>();
+
   return (
-    <SignUpProvider>
+    <SignUpProvider source={source}>
       <main className="w-full font-rajdhani text-gray-50 min-h-screen overflow-y-scroll bg-no-repeat bg-scroll bg-origin-padding bg-clip-border bg-[radial-gradient(circle,rgb(44,24,74)_0%,rgb(18,4,25)_33%)]">
         <div className="container mx-auto px-6 py-12">
           <div className="flex flex-col lg:flex-row gap-8">

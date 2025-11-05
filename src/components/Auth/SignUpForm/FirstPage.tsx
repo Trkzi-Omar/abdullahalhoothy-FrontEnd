@@ -72,6 +72,24 @@ const FirstPage: React.FC = () => {
       </div>
 
       <div>
+        <label htmlFor="phone" className="block text-sm font-medium text-gray-100 mb-1">
+          Phone Number (Optional)
+        </label>
+        <input
+          type="tel"
+          id="phone"
+          name="phone"
+          value={formData.phone}
+          onChange={handleInputChange}
+          placeholder="E.g. +1 (555) 123-4567"
+          className={`w-full px-3 py-2 border ${
+            errors.phone ? 'border-red-500' : 'border-gray-300'
+          } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[#333333]`}
+        />
+        {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
+      </div>
+
+      <div>
         <label htmlFor="password" className="block text-sm font-medium text-gray-100 mb-1">
           Password <span className="text-red-500">*</span>
         </label>

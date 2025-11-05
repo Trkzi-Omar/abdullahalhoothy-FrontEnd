@@ -24,7 +24,7 @@ interface SignUpContextType {
 
 const SignUpContext = createContext<SignUpContextType | undefined>(undefined);
 
-export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const SignUpProvider: React.FC<{ children: React.ReactNode; source?: string }> = ({ children, source }) => {
   const { setAuthResponse } = useAuth();
   const navigate = useNavigate();
 
@@ -32,9 +32,11 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     fullName: '',
     email: '',
     password: '',
+    phone: '',
     reason: '',
     userType: '',
     teamId: '',
+    source: source,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -54,6 +56,7 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     fullName: Yup.string().required('Full name is required'),
     email: Yup.string().email('Invalid email address').required('Email is required'),
     password: Yup.string().required('Password is required'),
+    phone: Yup.string().optional(),
   });
 
   // Second page validation schema
@@ -143,10 +146,12 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           password: formData.password,
           username: formData.fullName,
           fullName: formData.fullName,
+          phone: formData.phone,
           reason: formData.reason || '',
+          source: formData.source || '',
           account_type: formData.userType === 'admin' ? 'admin' : 'user',
           teamId: formData.teamId,
-          show_price_on_purchase: false,
+          show_price_on_purchase: formData.userType === 'admin',
           user_id: '',
         };
 

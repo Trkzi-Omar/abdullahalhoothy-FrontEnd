@@ -799,6 +799,7 @@ export interface UserProfile {
   user_id: string;
   username: string;
   email: string;
+  phone?: string;
   account_type: string;
   settings: ProfileSettings;
   prdcer?: {

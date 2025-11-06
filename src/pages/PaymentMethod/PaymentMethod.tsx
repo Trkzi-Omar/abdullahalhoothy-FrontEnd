@@ -113,10 +113,19 @@ const PaymentMethodForm: React.FC = () => {
         method: 'POST',
         body: {
           payment_method_id: paymentMethodId,
-          user_id: authResponse.localId,
+          user_id: authResponse?.localId,
         },
         isAuthRequest: true,
       });
+
+      // Step 3: Set the newly attached payment method as default
+      if (authResponse?.localId) {
+        await apiRequest({
+          url: `${urls.set_default_stripe_payment_method}?user_id=${authResponse.localId}&payment_method_id=${paymentMethodId}`,
+          method: 'PUT',
+          isAuthRequest: true,
+        });
+      }
 
       navigate('/profile/payment-methods?success=true');
     } catch (error) {

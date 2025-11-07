@@ -23,6 +23,7 @@ import ProgressIndicator from './components/ProgressIndicator';
 import FormNavigation from './components/FormNavigation';
 import SuccessMessage from './components/SuccessMessage';
 import SetAttributeStep from './components/AttributesStep';
+import ReportTierStep from './components/ReportTierStep';
 
 const CustomReportForm = () => {
   const { authResponse } = useAuth();
@@ -146,6 +147,11 @@ const CustomReportForm = () => {
       newErrors.city_name = 'Please select a city';
     }
 
+    // In advanced mode, validate report tier selection
+    if (isAdvancedMode && !formData.report_tier) {
+      newErrors.report_tier = 'Please select a report tier';
+    }
+
     // Validate evaluation metrics sum to 100%
     const metricsSum = Object.values(formData.evaluation_metrics).reduce(
       (sum, value) => sum + value,
@@ -174,6 +180,11 @@ const CustomReportForm = () => {
 
     // Validate city selection
     if (!formData.city_name) {
+      return false;
+    }
+
+    // In advanced mode, also validate report tier
+    if (isAdvancedMode && !formData.report_tier) {
       return false;
     }
 
@@ -340,6 +351,12 @@ const CustomReportForm = () => {
         },
       };
 
+      // In simple mode, don't send report_tier - let backend use default
+      // In advanced mode, include the user's selected report_tier
+      if (!isAdvancedMode) {
+        delete submissionData.report_tier;
+      }
+
       // Use the single endpoint that supports all business types
       // The backend smart_pharmacy_report endpoint handles all business types
       const reportUrl = urls.smart_pharmacy_report;
@@ -410,6 +427,7 @@ const CustomReportForm = () => {
 
     switch (step) {
       case 1:
+        // Step 1 always only requires city selection
         return !!formData.city_name;
       case 2:
         return metricsSum === 100 && Object.values(formData.evaluation_metrics).every(v => v >= 0);
@@ -417,6 +435,10 @@ const CustomReportForm = () => {
         return true; // Custom locations are optional
       case 4:
         return true; // Current location is optional
+      case 5:
+        return true; // Attributes are optional
+      case 6:
+        return !!formData.report_tier; // Report tier must be selected
       default:
         return false;
     }
@@ -426,7 +448,7 @@ const CustomReportForm = () => {
     if (validateCurrentStep(currentStep)) {
       setCompletedSteps(prev => [...prev.filter(s => s !== currentStep), currentStep]);
 
-      // In simple mode, directly submit the form instead of going to another step
+      // In simple mode, submit directly without setting report_tier (backend handles default)
       if (!isAdvancedMode && currentStep === 1) {
         handleSubmit();
         return;
@@ -502,6 +524,14 @@ const CustomReportForm = () => {
             onLocationSelect={handleCurrentLocationSelect}
             businessType={businessType}
             businessConfig={businessConfig}
+            disabled={isSubmitting}
+          />
+        );
+      case 6:
+        return (
+          <ReportTierStep
+            formData={formData}
+            onInputChange={handleInputChange}
             disabled={isSubmitting}
           />
         );

@@ -927,6 +927,7 @@ export interface CustomReportData {
   city_name: string;
   country_name: string;
   Type: string;
+  report_tier?: string;
   evaluation_metrics: EvaluationMetrics;
   custom_locations: CustomLocation[];
   current_location: CurrentLocation;

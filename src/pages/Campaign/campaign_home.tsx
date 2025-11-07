@@ -16,7 +16,13 @@ export default function CampaignPage() {
   const navigate = useNavigate();
   const { closeModal } = useUIContext();
 
-  const { handleFreeClick, handleAccountClick, handleBack } = createNavigationHandlers(navigate, setStep);
+  const handleBack = (currentStep: number, currentSelectedReport: Report | null) => {
+    if (currentStep === 2 && isTrySomethingElseReport(currentSelectedReport!)) {
+      setStep(0);
+    } else {
+      setStep(prev => Math.max(prev - 1, 0));
+    }
+  };
 
   useEffect(() => {
     fetchCampaigns()
@@ -33,9 +39,24 @@ export default function CampaignPage() {
     }
   };
 
-  const handleCustomClick = (report: Report) => {
-    // Instead of going to step 2, redirect directly to has_account URL
-    navigate(report.options.custom_redirect.has_account);
+  const handleCustomClick = () => {
+    // Go directly to account options since report type is now selected in the form
+    setStep(2);
+  };
+
+  const handleFinalCustomClick = () => {
+    if (selectedReport) {
+      // Navigate to custom report (report type will be selected in the form)
+      navigate(`${selectedReport.options.custom_redirect.has_account}`);
+    }
+  };
+
+  const handleFreeClick = (url: string) => {
+    navigate(url);
+  };
+
+  const handleAccountClick = (url: string) => {
+    navigate(url);
   };
 
   return (
@@ -70,7 +91,7 @@ export default function CampaignPage() {
               Example report & Interactive Map (Free)
             </CampaignButton>
             <CampaignButton
-              onClick={() => handleCustomClick(selectedReport)}
+              onClick={handleCustomClick}
               fullWidth={true}
             >
               I want my Custom Report
@@ -78,11 +99,11 @@ export default function CampaignPage() {
           </>
         )}
 
-        {/* Step 2: Account Options (only relevant if Try Something Else was used, but we hide it now) */}
+        {/* Step 2: Account Options */}
         {step === 2 && selectedReport && (
           <>
             <CampaignButton
-              onClick={() => handleAccountClick(selectedReport.options.custom_redirect.has_account)}
+              onClick={handleFinalCustomClick}
               fullWidth={true}
             >
               Already have an account

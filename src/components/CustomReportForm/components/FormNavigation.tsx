@@ -37,6 +37,9 @@ const FormNavigation = ({
   } else if (currentStep === 5) {
     // Current location step - check if location has been set (not 0,0)
     shouldShowSkip = formData.current_location.lat === 0 && formData.current_location.lng === 0;
+  } else if (currentStep === 6) {
+    // Attributes step - always allow skip since it's optional
+    shouldShowSkip = true;
   }
 
   nextButtonText = shouldShowSkip ? 'Skip' : 'Next';

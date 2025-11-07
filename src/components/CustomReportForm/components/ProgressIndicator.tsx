@@ -7,6 +7,7 @@ const STEPS = [
   { id: 3, title: 'Set Attributes', description: 'Set required attributes' },
   { id: 4, title: 'Custom Locations', description: 'Add specific locations' },
   { id: 5, title: 'Current Location', description: 'Set your current position' },
+  { id: 6, title: 'Report Tier', description: 'Choose report tier' },
 ];
 
 interface ProgressIndicatorProps {

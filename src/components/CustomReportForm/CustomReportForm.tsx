@@ -394,6 +394,32 @@ const CustomReportForm = () => {
           errorMessage = apiError.response.data.message;
         } else if (apiError.response?.data?.error) {
           errorMessage = apiError.response.data.error;
+        } else if (typeof apiError.response?.data === 'string') {
+          errorMessage = apiError.response.data;
+        } else if (apiError.response?.status === 400 && apiError.response?.data) {
+          // For 400 errors, try to extract payment-related messages
+          const data = apiError.response.data;
+          if (typeof data === 'object') {
+            // Look for common payment error patterns
+            const paymentErrorPatterns = [
+              'payment method',
+              'payment',
+              'billing',
+              'subscription',
+              'default payment'
+            ];
+            const dataString = JSON.stringify(data).toLowerCase();
+            const hasPaymentError = paymentErrorPatterns.some(pattern => 
+              dataString.includes(pattern.toLowerCase())
+            );
+            if (hasPaymentError) {
+              // Try to find a user-friendly message in the response
+              if (data.detail) errorMessage = data.detail;
+              else if (data.message) errorMessage = data.message;
+              else if (data.error) errorMessage = data.error;
+              else errorMessage = 'Please attach a default payment method to continue';
+            }
+          }
         } else if (apiError.message) {
           errorMessage = apiError.message;
         }
@@ -482,6 +508,7 @@ const CustomReportForm = () => {
             isAdvancedMode={isAdvancedMode}
             onToggleAdvancedMode={setIsAdvancedMode}
             disabled={isSubmitting}
+            categories={categories}
           />
         );
       case 2:
@@ -538,13 +565,6 @@ const CustomReportForm = () => {
       default:
         return null;
     }
-  };
-
-  const getBusinessTypeDisplayName = (type: string) => {
-    if (businessConfig) {
-      return businessConfig.display_name;
-    }
-    return type; // Fallback to the business type string itself
   };
 
   // Show loading state while fetching business configuration
@@ -690,7 +710,7 @@ const CustomReportForm = () => {
               </button>
               <div className="text-center flex-1">
                 <h1 className="text-lg font-bold">
-                  {getBusinessTypeDisplayName(businessType)} Location Report
+                  Location Expansion Report
                 </h1>
               </div>
               <div className="w-16"></div> {/* Spacer for centering */}

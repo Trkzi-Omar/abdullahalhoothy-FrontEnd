@@ -56,7 +56,7 @@ const getFakeData = async (zoomLevel: number) => {
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
 export function LayerProvider(props: { children: ReactNode }) {
-   const { viewport, setViewport } = useIntelligenceViewport(); // get the shared state
+   const { setViewport } = useIntelligenceViewport(); // get the shared state
   const navigate = useNavigate();
   const { authResponse } = useAuth();
   const { children } = props;
@@ -130,8 +130,6 @@ export function LayerProvider(props: { children: ReactNode }) {
   const [currentViewportInsights, setCurrentViewportInsights] = useState<Insights | any | null>(
     null
   );
-const [intelligenceViewport, setIntelligenceViewport] = useState<IntelligenceViewport | null>(null);
-
 
   const [includePopulation, setIncludePopulation] = useState(false);
   const [includeIncome, setIncludeIncome] = useState(false);
@@ -779,7 +777,6 @@ const [intelligenceViewport, setIntelligenceViewport] = useState<IntelligenceVie
         user_id: authResponse?.localId,
       };
       
-      setIntelligenceViewport(reqBody)
       setViewport({
   bottom_lng: bounds.getWest(),
   bottom_lat: bounds.getSouth(),

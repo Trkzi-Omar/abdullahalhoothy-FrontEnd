@@ -41,7 +41,7 @@ export default function CampaignPage() {
     }
   };
 
-  const handleCustomClick = () => (url: string) => navigate(url);
+  // const handleCustomClick = (url: string) => navigate(url);
 
   const handleFinalCustomClick = () => {
     if (selectedReport) {

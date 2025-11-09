@@ -667,7 +667,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
             is_enabled: layer.is_enabled || true,
             opacity: layer.opacity || 1,
           })),
-          intelligence_viewport:viewport
+          intelligence_viewport: viewport
         },
       };
 

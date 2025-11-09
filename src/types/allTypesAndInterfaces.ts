@@ -338,7 +338,7 @@ export interface LayerState {
 }
 
 export interface LayerContextType {
-    currentViewportRequest: {
+    intelligenceViewport: {
     top_lng: number;
     top_lat: number;
     bottom_lng: number;

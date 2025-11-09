@@ -986,3 +986,14 @@ export interface ReportGenerationResponse {
   message?: string;
   error?: string;
 }
+
+
+export interface IntelligenceViewport {
+  top_lng: number;
+  top_lat: number;
+  bottom_lng: number;
+  bottom_lat: number;
+  population: boolean;
+  income: boolean;
+  zoom_level: number;
+}

@@ -35,6 +35,7 @@ import { useMapContext } from './MapContext';
 import { isIntelligentLayer } from '../utils/layerUtils';
 import { mapZoomToFakeDataZoom } from '../utils/mapZoomUtils';
 import _ from 'lodash';
+import { useIntelligenceViewport } from './IntelligenceViewPortContext';
 
 const FAKE_IS_ENABLED = true;
 
@@ -55,6 +56,7 @@ const getFakeData = async (zoomLevel: number) => {
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
 export function LayerProvider(props: { children: ReactNode }) {
+   const { viewport, setViewport } = useIntelligenceViewport(); // get the shared state
   const navigate = useNavigate();
   const { authResponse } = useAuth();
   const { children } = props;
@@ -129,16 +131,6 @@ export function LayerProvider(props: { children: ReactNode }) {
     null
   );
 const [intelligenceViewport, setIntelligenceViewport] = useState<IntelligenceViewport | null>(null);
-
-const [currentViewportRequest, setCurrentViewportRequest] = useState<{
-  bottom_lng: number;
-  bottom_lat: number;
-  top_lng: number;
-  top_lat: number;
-  population: boolean;
-  income: boolean;
-  zoom_level: number;
-} | null>(null);
 
 
   const [includePopulation, setIncludePopulation] = useState(false);
@@ -788,7 +780,7 @@ const [currentViewportRequest, setCurrentViewportRequest] = useState<{
       };
       
       setIntelligenceViewport(reqBody)
-      setCurrentViewportRequest({
+      setViewport({
   bottom_lng: bounds.getWest(),
   bottom_lat: bounds.getSouth(),
   top_lng: bounds.getEast(),
@@ -1219,8 +1211,6 @@ const [currentViewportRequest, setCurrentViewportRequest] = useState<{
   return (
     <LayerContext.Provider
       value={{
-        currentViewportRequest,
-setCurrentViewportRequest,
         intelligenceViewport,
         setIntelligenceViewport,
         reqSaveLayer,

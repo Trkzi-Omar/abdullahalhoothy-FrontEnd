@@ -9,6 +9,7 @@ import { MapProvider } from './context/MapContext';
 import { Toaster } from 'sonner';
 import { ChatProvider } from './context/ChatContext';
 import { CaseStudyProvider } from './components/CaseStudy/CaseStudyPanel';
+import { IntelligenceViewportProvider } from './context/IntelligenceViewPortContext';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <NavigationSetup>
           <AuthProvider>
             <MapProvider>
+              <IntelligenceViewportProvider>
               <CatalogProvider>
                 <LayerProvider>
                   <UIProvider>
@@ -29,6 +31,7 @@ function App() {
                   </UIProvider>
                 </LayerProvider>
               </CatalogProvider>
+              </IntelligenceViewportProvider>
             </MapProvider>
           </AuthProvider>
         </NavigationSetup>

@@ -26,7 +26,7 @@ import defaultMapConfig from '../mapConfig.json';
 import { isIntelligentLayer } from '../utils/layerUtils';
 import { v4 as uuidv4 } from 'uuid';
 import { Descendant } from 'slate';
-import { useLayerContext } from './LayerContext';
+import { useIntelligenceViewport } from './IntelligenceViewPortContext';
 
 const defaultCaseStudyContent: Descendant[] = [
   {
@@ -124,6 +124,7 @@ const defaultCaseStudyContent: Descendant[] = [
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
 
 export function CatalogProvider(props: { children: ReactNode }) {
+  const { viewport } = useIntelligenceViewport();
   const { authResponse } = useAuth();
   const { children } = props;
 
@@ -666,7 +667,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
             is_enabled: layer.is_enabled || true,
             opacity: layer.opacity || 1,
           })),
-          intelligence_viewport:currentViewportRequest
+          intelligence_viewport:viewport
         },
       };
 

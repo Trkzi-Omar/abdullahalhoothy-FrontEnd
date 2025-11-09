@@ -13,15 +13,16 @@ const StaticRedirect = () => {
     let backendHost: string;
 
     if (currentHost === 'localhost') {
-      backendHost = 'http://localhost:8000';
+      backendHost = 'http://37.27.195.216:8000';
     } else if (currentHost === '37.27.195.216') {
       backendHost = 'http://37.27.195.216:8000';
     } else if (currentHost === 's-locator.northernacs.com') {
       backendHost = 'http://s-locator.northernacs.com:8000';
     } else {
       // Fallback to localhost
-      backendHost = 'http://localhost:8000';
+      backendHost = 'http://37.27.195.216:8000';
     }
+
 
     const fullUrl = `${backendHost}/static/${filePath}`;
     setBackendUrl(fullUrl);

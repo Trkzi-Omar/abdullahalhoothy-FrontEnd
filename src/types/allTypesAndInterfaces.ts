@@ -338,6 +338,15 @@ export interface LayerState {
 }
 
 export interface LayerContextType {
+    currentViewportRequest: {
+    top_lng: number;
+    top_lat: number;
+    bottom_lng: number;
+    bottom_lat: number;
+    population: boolean;
+    income: boolean;
+    zoom_level: number;
+  } | null;
   reqSaveLayer: {
     legend: string;
     description: string;

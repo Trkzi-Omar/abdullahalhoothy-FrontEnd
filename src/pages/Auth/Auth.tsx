@@ -152,9 +152,9 @@ const Auth = () => {
     }
   };
 
-  useEffect(() => {
-    if (isAuthenticated) nav('/');
-  }, []);
+  // useEffect(() => {
+  //   if (isAuthenticated) nav('/');
+  // }, []);
 
   const renderForm = () => {
     if (isPasswordReset) {

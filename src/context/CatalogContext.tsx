@@ -26,6 +26,7 @@ import defaultMapConfig from '../mapConfig.json';
 import { isIntelligentLayer } from '../utils/layerUtils';
 import { v4 as uuidv4 } from 'uuid';
 import { Descendant } from 'slate';
+import { useLayerContext } from './LayerContext';
 
 const defaultCaseStudyContent: Descendant[] = [
   {
@@ -213,6 +214,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [sections, setSections] = useState<Section[] | PolygonData[]>([]);
   const [isDraftSaving, setIsDraftSaving] = useState(false);
 
+  
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       if (geoPoints.length > 0) {
@@ -664,6 +666,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
             is_enabled: layer.is_enabled || true,
             opacity: layer.opacity || 1,
           })),
+          intelligence_viewport:currentViewportRequest
         },
       };
 

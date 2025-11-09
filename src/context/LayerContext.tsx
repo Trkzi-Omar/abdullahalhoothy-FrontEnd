@@ -22,6 +22,7 @@ import {
   LayerState,
   MapFeatures,
   Insights,
+  IntelligenceViewport,
 } from '../types/allTypesAndInterfaces';
 import urls from '../urls.json';
 import { useCatalogContext } from './CatalogContext';
@@ -127,6 +128,18 @@ export function LayerProvider(props: { children: ReactNode }) {
   const [currentViewportInsights, setCurrentViewportInsights] = useState<Insights | any | null>(
     null
   );
+const [intelligenceViewport, setIntelligenceViewport] = useState<IntelligenceViewport | null>(null);
+
+const [currentViewportRequest, setCurrentViewportRequest] = useState<{
+  bottom_lng: number;
+  bottom_lat: number;
+  top_lng: number;
+  top_lat: number;
+  population: boolean;
+  income: boolean;
+  zoom_level: number;
+} | null>(null);
+
 
   const [includePopulation, setIncludePopulation] = useState(false);
   const [includeIncome, setIncludeIncome] = useState(false);
@@ -762,6 +775,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         return;
       }
       const bounds = map.getBounds();
+
       const reqBody = {
         bottom_lng: bounds.getWest(),
         bottom_lat: bounds.getSouth(),
@@ -772,6 +786,17 @@ export function LayerProvider(props: { children: ReactNode }) {
         zoom_level: 7 + currentZoomLevel,
         user_id: authResponse?.localId,
       };
+      
+      setIntelligenceViewport(reqBody)
+      setCurrentViewportRequest({
+  bottom_lng: bounds.getWest(),
+  bottom_lat: bounds.getSouth(),
+  top_lng: bounds.getEast(),
+  top_lat: bounds.getNorth(),
+  population: withPopulation,
+  income: withIncome,
+  zoom_level: 7 + currentZoomLevel,
+});
       const res = await apiRequest({
         url: urls.fetch_population_by_viewport,
         method: 'post',
@@ -1194,6 +1219,10 @@ export function LayerProvider(props: { children: ReactNode }) {
   return (
     <LayerContext.Provider
       value={{
+        currentViewportRequest,
+setCurrentViewportRequest,
+        intelligenceViewport,
+        setIntelligenceViewport,
         reqSaveLayer,
         setReqSaveLayer,
         createLayerformStage,

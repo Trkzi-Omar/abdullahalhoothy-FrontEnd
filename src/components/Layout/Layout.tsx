@@ -26,6 +26,7 @@ import PlansPage from '../../pages/Plans/Plans';
 import StaticRedirect from '../StaticRedirect/StaticRedirect';
 import CustomReportForm from '../CustomReportForm';
 import MarketingDashboard from '../../pages/MarketingDashboard/MarketingDashboard';
+import GuestAutoLogin from '../Auth/GuestAutoLogin';
 const Layout = () => {
   const location = useLocation();
 
@@ -41,6 +42,7 @@ const Layout = () => {
 
       <div className="flex-1 flex lg:flex-row flex-col w-screen relative overflow-hidden overflow-y-auto">
         {!hideLayout && <SideBar />}
+        <GuestAutoLogin />
 
         <Routes>
           <Route path="*" element={<NotFound />} />
@@ -49,6 +51,7 @@ const Layout = () => {
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="/sign-up/:source" element={<SignUp />} />
           <Route path="/" element={<Home />} />
+          <Route path="/:source" element={<Home />} />
           <Route path={'/profile/*'} element={<Profile />} />
           <Route path={'/organization/*'} element={<Organization />} />
           <Route path={'/billing/*'} element={<Billing />} />

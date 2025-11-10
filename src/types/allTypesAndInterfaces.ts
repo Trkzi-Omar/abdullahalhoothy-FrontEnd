@@ -792,25 +792,18 @@ export interface LayerCustomizationItemProps {
   isSaved?: boolean;
 }
 
-export interface ProfileSettings {
-  show_price_on_purchase: boolean;
-}
 export interface UserProfile {
   user_id: string;
   username: string;
   email: string;
   phone?: string;
   account_type: string;
-  settings: ProfileSettings;
-  prdcer?: {
-    prdcer_dataset: Record<string, any>;
-    prdcer_lyrs: Record<string, any>;
-    prdcer_ctlgs: Record<string, any>;
-  };
+  show_price_on_purchase: boolean;
+  prdcer?: Record<string, any>;
 }
 
 export interface PopupInfo {
-  type: 'dataset' | 'layer' | 'catalog';
+  type: string;
   name: string;
   data: any;
 }

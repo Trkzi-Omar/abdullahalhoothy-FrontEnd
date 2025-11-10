@@ -22,14 +22,8 @@ const ProfileMain: React.FC = () => {
     username: '',
     email: '',
     account_type: '',
-    settings: {
-      show_price_on_purchase: false,
-    },
-    prdcer: {
-      prdcer_dataset: {},
-      prdcer_lyrs: {},
-      prdcer_ctlgs: {},
-    },
+    show_price_on_purchase: false,
+    prdcer: {},
   });
   const [isLoading, setIsLoading] = useState(true);
   const [showPrice, setShowPrice] = useState<boolean | undefined>(false);
@@ -69,7 +63,7 @@ const ProfileMain: React.FC = () => {
         body: { user_id: authResponse.localId },
       });
       setProfile(res.data.data);
-      setShowPrice(res.data.data.settings.show_price_on_purchase);
+      setShowPrice(res.data.data.show_price_on_purchase);
     } catch (err) {
       console.error('Unexpected error:', err);
       logout();
@@ -110,7 +104,7 @@ const ProfileMain: React.FC = () => {
     return <span>{value.toString()}</span>;
   };
 
-  const handleItemClick = (type: 'dataset' | 'layer' | 'catalog', name: string, data: any) => {
+  const handleItemClick = (type: string, name: string, data: any) => {
     setPopupInfo({ type, name, data });
   };
 
@@ -134,27 +128,27 @@ const ProfileMain: React.FC = () => {
     title: string,
     icon: JSX.Element,
     items: Record<string, any>,
-    type: 'dataset' | 'layer' | 'catalog'
+    type: string
   ) => {
     // Function to handle delete icon click
     const handleDeleteClick = async (
-      type: 'dataset' | 'layer' | 'catalog', // Add type parameter
+      type: string,
       key: string,
       value: any
     ) => {
-      if (type === 'layer') {
+      if (type.includes('lyr')) {
         await apiRequest({
           url: urls.delete_layer,
           method: 'DELETE',
           isAuthRequest: true,
-          body: { user_id: authResponse.localId, prdcer_lyr_id: value.prdcer_lyr_id },
+          body: { user_id: authResponse?.localId, prdcer_lyr_id: value.prdcer_lyr_id },
         });
-      } else if (type === 'catalog') {
+      } else if (type.includes('ctlg')) {
         await apiRequest({
           url: urls.delete_producer_catalog,
           method: 'DELETE',
           isAuthRequest: true,
-          body: { user_id: authResponse.localId, prdcer_ctlg_id: value.prdcer_ctlg_id },
+          body: { user_id: authResponse?.localId, prdcer_ctlg_id: value.prdcer_ctlg_id },
         });
       }
       fetchProfile();
@@ -172,10 +166,10 @@ const ProfileMain: React.FC = () => {
             {Object.entries(items).map(([key, value]) => (
               <li key={key} className={styles.itemName}>
                 <span onClick={() => handleItemClick(type, key, value)}>
-                  {value.prdcer_layer_name || value.prdcer_ctlg_name || key}
+                  {value.prdcer_layer_name || value.prdcer_ctlg_name || value.name || key}
                 </span>
                 {/* Conditionally render the delete icon */}
-                {type !== 'dataset' && (
+                {type.includes('lyr') || type.includes('ctlg') ? (
                   <div className={styles.iconContainer}>
                     <div className={styles.verticalDivider} />
                     <FaTrash
@@ -183,7 +177,7 @@ const ProfileMain: React.FC = () => {
                       onClick={() => handleDeleteClick(type, key, value)} // Pass type here
                     />
                   </div>
-                )}
+                ) : null}
               </li>
             ))}
           </ul>
@@ -326,12 +320,19 @@ const ProfileMain: React.FC = () => {
               </span>
             </label>
           </div>
-          {profile.prdcer && (
+          {profile.prdcer && Object.keys(profile.prdcer).length > 0 && (
             <div>
               <h3 className="text-lg text-[#006400] mt-5 mb-2">Producer Information</h3>
-              {renderSection('Datasets', <FaDatabase />, profile.prdcer.prdcer_dataset, 'dataset')}
-              {renderSection('Layers', <FaLayerGroup />, profile.prdcer.prdcer_lyrs, 'layer')}
-              {renderSection('Catalogs', <FaBook />, profile.prdcer.prdcer_ctlgs, 'catalog')}
+              {Object.entries(profile.prdcer).map(([key, value]) => {
+                const title = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                let icon = <FaDatabase />;
+                if (key.includes('lyr')) icon = <FaLayerGroup />;
+                else if (key.includes('ctlg')) icon = <FaBook />;
+                else if (key.includes('report')) icon = <FaBook />;
+                else if (key.includes('intelligence')) icon = <FaDatabase />;
+                
+                return renderSection(title, icon, value as Record<string, any>, key);
+              })}
             </div>
           )}
         </div>

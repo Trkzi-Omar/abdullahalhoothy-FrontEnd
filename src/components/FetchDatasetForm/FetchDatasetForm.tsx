@@ -98,7 +98,7 @@ const FetchDatasetForm = () => {
         isAuthRequest: true,
         body: { user_id: authResponse.localId },
       });
-      await setIsPriceVisible(res.data.data.settings.show_price_on_purchase);
+      await setIsPriceVisible(res.data.data.show_price_on_purchase);
     } catch (err) {
       console.error('Unexpected error:', err);
       logout();

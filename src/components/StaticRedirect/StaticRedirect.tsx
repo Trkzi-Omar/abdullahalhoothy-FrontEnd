@@ -23,7 +23,6 @@ const StaticRedirect = () => {
       backendHost = 'http://localhost:8000';
     }
 
-
     const fullUrl = `${backendHost}/static/${filePath}`;
     setBackendUrl(fullUrl);
   }, [filePath]);

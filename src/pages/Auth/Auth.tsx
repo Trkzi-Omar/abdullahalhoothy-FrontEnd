@@ -10,7 +10,7 @@ import { FaEnvelope, FaLock, FaUser } from 'react-icons/fa';
 const Auth = () => {
   const nav = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, setAuthResponse } = useAuth();
+  const { isAuthenticated, setAuthResponse, authResponse } = useAuth();
 
   // RENDER STATE
   const [isLogin, setIsLogin] = useState(true);
@@ -152,9 +152,12 @@ const Auth = () => {
     }
   };
 
-  // useEffect(() => {
-  //   if (isAuthenticated) nav('/');
-  // }, []);
+  useEffect(() => {
+      // Only redirect if authenticated AND not guest
+  if (isAuthenticated && authResponse && authResponse.email !== 'guest' && authResponse.registered !== false) {
+    nav('/');
+  }
+  }, []);
 
   const renderForm = () => {
     if (isPasswordReset) {

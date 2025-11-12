@@ -26,7 +26,7 @@ import PlansPage from '../../pages/Plans/Plans';
 import StaticRedirect from '../StaticRedirect/StaticRedirect';
 import CustomReportForm from '../CustomReportForm';
 import MarketingDashboard from '../../pages/MarketingDashboard/MarketingDashboard';
-import GuestAutoLogin from '../Auth/GuestAutoLogin';
+import GuestAutoLogin from '../../pages/Auth/GuestAutoLogin';
 const Layout = () => {
   const location = useLocation();
 
@@ -42,6 +42,7 @@ const Layout = () => {
 
       <div className="flex-1 flex lg:flex-row flex-col w-screen relative overflow-hidden overflow-y-auto">
         {!hideLayout && <SideBar />}
+
         <GuestAutoLogin />
 
         <Routes>

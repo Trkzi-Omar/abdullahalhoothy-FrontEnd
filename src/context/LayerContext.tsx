@@ -1208,8 +1208,6 @@ export function LayerProvider(props: { children: ReactNode }) {
   return (
     <LayerContext.Provider
       value={{
-        intelligenceViewport,
-        setIntelligenceViewport,
         reqSaveLayer,
         setReqSaveLayer,
         createLayerformStage,

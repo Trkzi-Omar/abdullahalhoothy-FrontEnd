@@ -53,7 +53,7 @@ export default function CampaignPage() {
   const handleAccountClick = (url: string) => navigate(url);
 
   // Backend base URL
-  const API_BASE = 'http://localhost:8000' || 'http://37.27.195.216:8000';
+  const API_BASE =  'http://localhost:8000';
 
   // Helper to resolve full backend URL
   const resolveBgImage = (path?: string | null) => {

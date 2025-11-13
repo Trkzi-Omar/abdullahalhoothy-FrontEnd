@@ -578,6 +578,7 @@ export interface AuthContextType {
   authResponse: AuthResponse;
   setAuthResponse: React.Dispatch<React.SetStateAction<AuthResponse>>;
   isAuthenticated: boolean;
+  authLoading: boolean;
   logout: () => void;
 }
 

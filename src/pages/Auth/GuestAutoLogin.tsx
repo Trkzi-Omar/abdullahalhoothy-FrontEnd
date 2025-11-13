@@ -5,17 +5,22 @@ import { HttpReq } from '../../services/apiService';
 import urls from '../../urls.json';
 import { AuthResponse } from '../../types/allTypesAndInterfaces';
 import { useAuth } from '../../context/AuthContext';
+import Banner from '../../components/Banner/Banner';
 
 const GuestAutoLogin = () => {
   const { isAuthenticated, authResponse, setAuthResponse } = useAuth();
   const location = useLocation();
   const nav = useNavigate();
   const [bannerVisible, setBannerVisible] = useState(true);
+  const [guestLoading, setGuestLoading] = useState(true);
+
 
   // Auto-login guest on homepage or marketing pages
   useEffect(() => {
     const performGuestLogin = async () => {
-      if (isAuthenticated) return;
+      if (isAuthenticated) {
+        setGuestLoading(false);
+        return};
 
       const path = location.pathname.replace(/^\/+/, ''); // remove leading slash
       const source = path && path !== '' ? path : undefined;
@@ -56,23 +61,32 @@ const GuestAutoLogin = () => {
 
   if (!isGuest || !bannerVisible) return null;
 
-  return (
-    <div className="fixed top-0 left-0 w-full bg-yellow-200 text-black py-3 px-4 flex justify-between items-center z-50 shadow-md">
-      <span>
-        You are logged in as a guest user. Please{' '}
-        <button className="underline font-semibold" onClick={() => nav('/sign-up')}>
-          sign up
-        </button>{' '}
-        or{' '}
-        <button className="underline font-semibold" onClick={() => nav('/auth')}>
-          sign in
-        </button>{' '}
-        to access full features.
-      </span>
-      <button onClick={() => setBannerVisible(false)} className="font-bold px-2">
-        ×
-      </button>
-    </div>
+  return(
+      <Banner
+        visible={bannerVisible}
+        type="info"
+        message={
+          <>
+            You are logged in as a guest user. Please{' '}
+            <button
+              className="underline font-semibold"
+              onClick={() => nav('/sign-up')}
+            >
+              sign up
+            </button>{' '}
+            or{' '}
+            <button
+              className="underline font-semibold"
+              onClick={() => nav('/auth')}
+            >
+              sign in
+            </button>{' '}
+            to access full features.
+          </>
+        }
+        onClose={() => setBannerVisible(false)}
+        className="rounded-md "
+      />
   );
 };
 

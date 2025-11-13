@@ -41,8 +41,6 @@ export default function CampaignPage() {
     }
   };
 
-  // const handleCustomClick = (url: string) => navigate(url);
-
   const handleFinalCustomClick = () => {
     if (selectedReport) {
       navigate(`${selectedReport.options.custom_redirect}`);
@@ -52,30 +50,34 @@ export default function CampaignPage() {
   const handleFreeClick = (url: string) => navigate(url);
   const handleAccountClick = (url: string) => navigate(url);
 
-  // Backend base URL
   const API_BASE =  'http://localhost:8000';
 
-  // Helper to resolve full backend URL
   const resolveBgImage = (path?: string | null) => {
     if (!path) return undefined;
     return path.startsWith('http') ? path : `${API_BASE}${path}`;
   };
 
   return (
-<div className="relative flex flex-col w-full min-h-screen h-auto justify-center items-center gap-3 p-4" 
->
+    <div className="relative flex flex-col w-full min-h-screen h-auto justify-center items-center gap-3 p-4">
+      
       {/* Background image */}
-      {hoveredBg && (
-  <div
-    className="absolute inset-0 z-0 w-full h-full bg-center bg-no-repeat bg-contain"
-    style={{
-      backgroundImage: `url(${resolveBgImage(hoveredBg)})`,
-    }}
-  />
+{hoveredBg && (
+<div className="fixed top-0 left-1/2 z-0 w-full h-full bg-center bg-no-repeat bg-contain transition-opacity duration-300"
+     style={{
+       backgroundImage: `url(${resolveBgImage(hoveredBg)})`,
+       opacity: hoveredBg ? 1 : 0,
+       transform: 'translateX(-50%)',
+     }} />
+
 )}
 
+
       {/* Foreground content */}
-      <div className="relative z-10 w-full flex flex-col items-center">
+      <div
+        className={`relative z-10 w-full flex flex-col items-center transition-opacity duration-300 ${
+          hoveredBg ? 'opacity-50' : 'opacity-100'
+        }`}
+      >
         {/* Back button */}
         {step > 0 && (
           <div className="self-start mb-4">

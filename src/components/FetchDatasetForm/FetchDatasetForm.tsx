@@ -314,6 +314,7 @@ const FetchDatasetForm = () => {
       boolean_query: type.join(' OR '),
       city_name: selectedCity,
       country_name: selectedCountry,
+      action: 'full data',
     };
     let res = await apiRequest({
       url: urls.cost_calculator,

@@ -259,6 +259,7 @@ const ProfileMain: React.FC = () => {
                         phone: phoneInput,
                         username: profile.username,
                         email: profile.email,
+                        show_price_on_purchase: profile.show_price_on_purchase,
                       },
                     });
                     setProfile(prev => ({ ...prev, phone: phoneInput }));
@@ -291,7 +292,7 @@ const ProfileMain: React.FC = () => {
                       navigate('/auth');
                       return;
                     }
-                    const res = await apiRequest({
+                    await apiRequest({
                       url: urls.update_user_profile,
                       method: 'POST',
                       isAuthRequest: true,
@@ -300,6 +301,7 @@ const ProfileMain: React.FC = () => {
                         show_price_on_purchase: e.target.checked,
                         username: profile.username,
                         email: profile.email,
+                        phone: profile.phone,
                       },
                     });
                   }

@@ -39,7 +39,7 @@ export default function CampaignPage() {
 
   const handleCustomClick = (report: Report) => {
     // Instead of going to step 2, redirect directly to has_account URL
-    navigate(report.options.custom_redirect.has_account);
+    navigate(report.options.custom_redirect);
   };
 
     const API_BASE =  urls.REACT_APP_IMG_API_URL;

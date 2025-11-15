@@ -8,7 +8,7 @@ export default function MarketingDashboard() {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const response = await fetch('http://37.27.195.216:8000/fastapi/marketing-dashboard');
+        const response = await fetch('http://localhost:8000/fastapi/marketing-dashboard');
         if (!response.ok) {
           throw new Error('Failed to fetch dashboard');
         }

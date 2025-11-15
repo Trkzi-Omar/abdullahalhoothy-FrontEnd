@@ -8,6 +8,8 @@ import {
 } from './campaignCommon';
 import { CampaignButton, BackButton } from './CampaignComponents';
 import { useUIContext } from '../../context/UIContext';
+import urls from '../../urls.json'
+
 
 export default function CampaignPage() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -40,7 +42,7 @@ export default function CampaignPage() {
     navigate(report.options.custom_redirect.has_account);
   };
 
-    const API_BASE =  'http://37.27.195.216:8000';
+    const API_BASE =  urls.REACT_APP_IMG_API_URL;
 
   const resolveBgImage = (path?: string | null) => {
     if (!path) return undefined;

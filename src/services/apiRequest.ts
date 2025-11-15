@@ -249,8 +249,10 @@ const apiRequest = async ({
 }: ApiRequestOptions): Promise<any> => {
   const authResponse = getAuthResponse();
   const authResponseFull = authResponse as any as AuthResponse;
+  const email = authResponseFull?.email?.toLowerCase() || '';
   const isGuest =
-    authResponseFull?.email === 'guest' ||
+    email === 'guest' ||
+    email === 'guest@slocator.com' ||
     (authResponseFull as any)?.registered === false ||
     authResponseFull?.localId?.startsWith('guest_') === true;
 

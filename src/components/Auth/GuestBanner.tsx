@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, isGuestUser } from '../../context/AuthContext';
 
 export default function GuestBanner() {
   const navigate = useNavigate();
@@ -9,10 +9,7 @@ export default function GuestBanner() {
 
   if (!authResponse) return null;
 
-  const isGuest =
-    authResponse.email === 'guest' ||
-    authResponse.localId?.startsWith('guest_') ||
-    authResponse.registered === false;
+  const isGuest = isGuestUser(authResponse);
 
   if (!isGuest || dismissed) return null;
 

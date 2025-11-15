@@ -8,8 +8,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Helper function to detect guest users
 export const isGuestUser = (authResponse: AuthResponse | null): boolean => {
   if (!authResponse) return false;
+  const email = authResponse.email?.toLowerCase() || '';
   return (
-    authResponse.email === 'guest' ||
+    email === 'guest' ||
+    email === 'guest@slocator.com' ||
     (authResponse as any).registered === false ||
     authResponse.localId?.startsWith('guest_') === true
   );

@@ -113,7 +113,7 @@ const setCacheEntry = (key: string, data: any) => {
   } catch (error) {
     console.error('Error writing to cache:', error);
     // If localStorage is full, clear it and try again
-    if (error.name === 'QuotaExceededError') {
+    if (error instanceof Error && error.name === 'QuotaExceededError') {
       clearCache();
       try {
         const entry: CacheEntry = {
@@ -248,6 +248,12 @@ const apiRequest = async ({
   useCache = false,
 }: ApiRequestOptions): Promise<any> => {
   const authResponse = getAuthResponse();
+  const authResponseFull = authResponse as any as AuthResponse;
+  const isGuest =
+    authResponseFull?.email === 'guest' ||
+    (authResponseFull as any)?.registered === false ||
+    authResponseFull?.localId?.startsWith('guest_') === true;
+
   if (authResponse?.idToken) {
     setAuthorizationHeader(options, authResponse.idToken);
   }
@@ -259,7 +265,14 @@ const apiRequest = async ({
   }
 
   try {
-    const response = await makeApiCall({ url, method, body, options, isFormData, useCache });
+    const response = await makeApiCall({
+      url: url || '',
+      method: method || 'GET',
+      body,
+      options,
+      isFormData,
+      useCache,
+    });
     return response;
   } catch (err: any) {
     if (err?.response?.status === 403) {
@@ -269,17 +282,24 @@ const apiRequest = async ({
     }
 
     if (err?.response?.status === 401) {
+      if (isGuest) {
+        throw new Error('Access denied for guest user');
+      }
+
       localStorage.removeItem('authResponse');
 
       if (authResponse?.refreshToken) {
         try {
           const newToken = await refreshAuthToken(authResponse.refreshToken);
+          if (!newToken?.idToken) {
+            throw new Error('Invalid token refresh response');
+          }
           addAuthTokenToLocalStorage(newToken);
 
           setAuthorizationHeader(options, newToken.idToken);
           const retryResponse = await makeApiCall({
-            url,
-            method,
+            url: url || '',
+            method: method || 'GET',
             body,
             options,
             isFormData,

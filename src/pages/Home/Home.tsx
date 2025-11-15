@@ -12,7 +12,7 @@ import { useLayerContext } from '../../context/LayerContext';
 import { useMeasurement } from '../../hooks/useMeasurement';
 
 const Home = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, authLoading } = useAuth();
   const nav = useNavigate();
 
   const [selectedTab] = useState<'LAYER' | 'CATALOG'>('LAYER');
@@ -37,8 +37,10 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated && selectedTab === 'CATALOG') nav('/auth');
-  }, [selectedTab]);
+    if (!authLoading && !isAuthenticated && selectedTab === 'CATALOG') {
+      nav('/auth');
+    }
+  }, [authLoading, isAuthenticated, selectedTab, nav]);
 
   const { isMobile, setIsDrawerOpen } = useUIContext();
   return (
@@ -80,7 +82,7 @@ const Home = () => {
 };
 
 export function HomeContent() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, authLoading } = useAuth();
   const nav = useNavigate();
 
   const {
@@ -113,8 +115,10 @@ export function HomeContent() {
   };
 
   useEffect(() => {
-    if (!isAuthenticated && selectedHomeTab === 'CATALOG') nav('/auth');
-  }, [selectedHomeTab]);
+    if (!authLoading && !isAuthenticated && selectedHomeTab === 'CATALOG') {
+      nav('/auth');
+    }
+  }, [authLoading, isAuthenticated, selectedHomeTab, nav]);
 
   return (
     <div className="flex-1 h-full flex flex-col relative overflow-hidden ">

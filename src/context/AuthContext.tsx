@@ -1,14 +1,83 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { AuthContextType, AuthResponse, AuthSuccessResponse } from '../types/allTypesAndInterfaces';
+import { HttpReq } from '../services/apiService';
+import urls from '../urls.json';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [authResponse, setAuthResponse] = useState<AuthResponse>(
-    localStorage.getItem('authResponse')
-      ? (JSON.parse(localStorage.getItem('authResponse')!) as AuthSuccessResponse)
-      : null
+// Helper function to detect guest users
+export const isGuestUser = (authResponse: AuthResponse | null): boolean => {
+  if (!authResponse) return false;
+  return (
+    authResponse.email === 'guest' ||
+    (authResponse as any).registered === false ||
+    authResponse.localId?.startsWith('guest_') === true
   );
+};
+
+export const performLogin = async (
+  setAuthResponse: (response: AuthResponse) => void,
+  options: { isGuest?: boolean; email?: string; password?: string; source?: string } = {}
+): Promise<AuthResponse> => {
+  const storedAuth = localStorage.getItem('authResponse');
+
+  if (storedAuth) {
+    try {
+      const parsedAuth = JSON.parse(storedAuth) as AuthSuccessResponse;
+      if (parsedAuth && 'idToken' in parsedAuth) {
+        const isStoredGuest = isGuestUser(parsedAuth);
+
+        if (options.isGuest || !isStoredGuest) {
+          setAuthResponse(parsedAuth);
+          return parsedAuth;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to parse stored auth:', e);
+    }
+  }
+
+  return new Promise((resolve, reject) => {
+    const credentials = options.isGuest
+      ? {
+          email: 'guest@slocator.com',
+          password: 'guest',
+          ...(options.source && { source: options.source }),
+        }
+      : { email: options.email!, password: options.password! };
+
+    HttpReq<AuthResponse>(
+      urls.login,
+      (data: AuthResponse) => {
+        if (!data || !('idToken' in data)) {
+          reject(new Error('Login Error: Invalid response'));
+          return;
+        }
+
+        if (options.isGuest && isGuestUser(data) && options.source) {
+          (data as any).source = options.source;
+        }
+
+        setAuthResponse(data);
+        resolve(data);
+      },
+      () => {},
+      () => {},
+      () => {},
+      (error: any) => {
+        reject(error);
+      },
+      'post',
+      credentials
+    );
+  });
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [authResponse, setAuthResponse] = useState<AuthResponse>(() => {
+    const stored = localStorage.getItem('authResponse');
+    return stored ? (JSON.parse(stored) as AuthSuccessResponse) : null;
+  });
 
   const logout = () => {
     localStorage.removeItem('authResponse');
@@ -23,12 +92,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [authResponse]);
 
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const storedAuth = localStorage.getItem('authResponse');
+      if (!storedAuth) {
+        setAuthLoading(true);
+        try {
+          await performLogin(setAuthResponse, { isGuest: true });
+        } catch (error) {
+          console.error('Failed to initialize guest session:', error);
+        } finally {
+          setAuthLoading(false);
+        }
+      } else {
+        setAuthLoading(false);
+      }
+    };
+
+    initializeAuth();
+  }, []);
+
   const isAuthenticated = !!(authResponse && 'idToken' in authResponse);
+  const [authLoading, setAuthLoading] = useState(() => {
+    return !localStorage.getItem('authResponse');
+  });
 
   const value = {
     authResponse,
     setAuthResponse,
     isAuthenticated,
+    authLoading,
     logout,
   };
 

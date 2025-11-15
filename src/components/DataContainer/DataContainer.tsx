@@ -56,7 +56,7 @@ function DataContainer() {
         setResMessage(res.data.message);
         setResId(res.data.request_id);
       } catch (error) {
-        setError(error);
+        setError(error instanceof Error ? error : new Error(String(error)));
       } finally {
         setLoading(false);
       }
@@ -77,7 +77,7 @@ function DataContainer() {
         setResMessage(res.data.message);
         setResId(res.data.request_id);
       } catch (error) {
-        setError(error);
+        setError(error instanceof Error ? error : new Error(String(error)));
       } finally {
         setLoading(false);
       }
@@ -98,7 +98,7 @@ function DataContainer() {
         setResMessage(res.data.message);
         setResId(res.data.request_id);
       } catch (error) {
-        setError(error);
+        setError(error instanceof Error ? error : new Error(String(error)));
       } finally {
         setLoading(false);
       }
@@ -159,7 +159,7 @@ function DataContainer() {
         setWsResMessage(res.data.message);
         setWsResId(res.data.request_id);
       } catch (error) {
-        setWsResError(error);
+        setWsResError(error instanceof Error ? error : new Error(String(error)));
       } finally {
         setWsResLoading(false);
       }

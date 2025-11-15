@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { performLogin, isGuestUser } from '../../context/AuthContext';
 import { HttpReq } from '../../services/apiService';
 import { useEffect, useState } from 'react';
 import urls from '../../urls.json';
@@ -31,39 +32,28 @@ const Auth = () => {
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   const handleLogin = async (email: string, password: string) => {
-    await HttpReq(
-      urls.login,
-      data => {
-        console.log('Logged In');
-        if (!('idToken' in (data as any))) {
-          setError(new Error('Login Error'));
-          return;
-        }
-        setAuthResponse(data as AuthResponse);
-        setTimeout(() => {
-          const params = new URLSearchParams(location.search);
-          const redirectUrl = params.get('redirect_url');
-          if (redirectUrl) {
-            window.location.replace(redirectUrl);
-          } else {
-            nav('/');
-          }
-        }, 100);
-      },
-      () => {},
-      () => {},
-      () => {},
-      e => {
-        if (e.response?.status === 401) {
-          setIsAuthorized(false);
-          setAuthMessage(e.response.data.detail || 'Unauthorized access');
+    try {
+      await performLogin(setAuthResponse, { isGuest: false, email, password });
+      console.log('Logged In');
+
+      setTimeout(() => {
+        const params = new URLSearchParams(location.search);
+        const redirectUrl = params.get('redirect_url');
+        if (redirectUrl) {
+          window.location.replace(redirectUrl);
         } else {
-          setError(e);
+          nav('/');
         }
-      },
-      'post',
-      { email, password }
-    );
+      }, 100);
+    } catch (e: any) {
+      // Handle errors
+      if (e.response?.status === 401) {
+        setIsAuthorized(false);
+        setAuthMessage(e.response.data.detail || 'Unauthorized access');
+      } else {
+        setError(e);
+      }
+    }
   };
 
   const handleRegistration = async (email: string, password: string, username: string) => {
@@ -153,13 +143,10 @@ const Auth = () => {
   };
 
   useEffect(() => {
-      // Only redirect if authenticated AND not guest
-  // Wait until auth state is ready
-  if (!authLoading && isAuthenticated && authResponse && authResponse.email !== 'guest' && authResponse.registered !== false) {
-    nav('/');
-  
-  }
-  }, []);
+    if (!authLoading && isAuthenticated && authResponse && !isGuestUser(authResponse)) {
+      nav('/');
+    }
+  }, [authLoading, isAuthenticated, authResponse, nav]);
 
   const renderForm = () => {
     if (isPasswordReset) {

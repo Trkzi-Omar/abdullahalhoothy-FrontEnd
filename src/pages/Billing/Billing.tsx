@@ -7,12 +7,12 @@ import BottomDrawer from '../../components/BottomDrawer/BottomDrawer';
 
 const Billing = () => {
   const { isMobile, isDrawerOpen, setIsDrawerOpen } = useUIContext();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, authLoading } = useAuth();
   const nav = useNavigate();
 
   useEffect(() => {
-    if (!isAuthenticated) nav('/auth');
-  }, []);
+    if (!authLoading && !isAuthenticated) nav('/auth');
+  }, [authLoading, isAuthenticated, nav]);
 
   return (
     <>

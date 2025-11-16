@@ -232,7 +232,6 @@ export const setNavigationHandler = (handler: (path: string) => void) => {
 };
 
 const handleAuthError = () => {
-  // Redirect to auth page
   if (navigationHandler) {
     navigationHandler('/auth');
   }
@@ -261,9 +260,13 @@ const apiRequest = async ({
   }
 
   if (isAuthRequest && !authResponse) {
-    console.error('Not authenticated');
-    handleAuthError();
-    throw new Error('Not authenticated');
+    const hasStoredAuth = !!localStorage.getItem('authResponse');
+    if (hasStoredAuth) {
+      handleAuthError();
+      throw new Error('Not authenticated');
+    } else {
+      throw new Error('Not authenticated - guest login in progress');
+    }
   }
 
   try {

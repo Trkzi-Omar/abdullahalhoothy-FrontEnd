@@ -143,7 +143,7 @@ const Auth = () => {
   };
 
   useEffect(() => {
-    if (!authLoading && isAuthenticated && authResponse && !isGuestUser(authResponse)) {
+    if (!authLoading && isAuthenticated && authResponse) {
       nav('/');
     }
   }, [authLoading, isAuthenticated, authResponse, nav]);

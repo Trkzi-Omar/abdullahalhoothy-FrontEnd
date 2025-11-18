@@ -28,7 +28,8 @@ import ReportTierStep from './components/ReportTierStep';
 const CustomReportForm = () => {
   const { authResponse } = useAuth();
   const navigate = useNavigate();
-  const { businessType } = useParams<{ businessType: string }>();
+  const businessType = 'pharmacy';
+  // const { businessType } = useParams<{ businessType: string }>();
   const [categories, setCategories] = useState<string[]>([]);
 
   // Validate business type exists
@@ -406,10 +407,10 @@ const CustomReportForm = () => {
               'payment',
               'billing',
               'subscription',
-              'default payment'
+              'default payment',
             ];
             const dataString = JSON.stringify(data).toLowerCase();
-            const hasPaymentError = paymentErrorPatterns.some(pattern => 
+            const hasPaymentError = paymentErrorPatterns.some(pattern =>
               dataString.includes(pattern.toLowerCase())
             );
             if (hasPaymentError) {
@@ -709,9 +710,7 @@ const CustomReportForm = () => {
                 <span className="hidden sm:inline">Back</span>
               </button>
               <div className="text-center flex-1">
-                <h1 className="text-lg font-bold">
-                  Location Expansion Report
-                </h1>
+                <h1 className="text-lg font-bold">Location Expansion Report</h1>
               </div>
               <div className="w-16"></div> {/* Spacer for centering */}
             </div>

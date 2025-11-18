@@ -54,6 +54,19 @@ const SetAttributeStep = ({
   const filterCategories = (query: string) =>
     categories.filter(c => c.toLowerCase().includes(query.toLowerCase()));
 
+  const getOrderedCategories = (
+    query: string,
+    categories: string[],
+    selected: string[]
+  ): string[] => {
+    const filtered = categories.filter(cat => cat.toLowerCase().includes(query.toLowerCase()));
+
+    const selectedFiltered = selected.filter(cat => filtered.includes(cat));
+
+    const unselected = filtered.filter(cat => !selected.includes(cat));
+
+    return [...selectedFiltered, ...unselected];
+  };
   const toggleSelection = (
     key: string,
     category: string,
@@ -180,8 +193,13 @@ const SetAttributeStep = ({
           />
 
           <div className="flex flex-wrap gap-1 max-h-52 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-            {filterCategories(searchComplementary).map(cat => {
+            {getOrderedCategories(
+              searchComplementary,
+              inputCategories, // your full list of category strings
+              selectedComplementary
+            ).map((cat: string) => {
               const isSelected = selectedComplementary.includes(cat);
+
               return (
                 <span
                   key={cat}
@@ -229,8 +247,13 @@ const SetAttributeStep = ({
           />
 
           <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-            {filterCategories(searchCompetition).map(cat => {
+            {getOrderedCategories(
+              searchCompetition,
+              inputCategories, // same source categories as Complementary
+              selectedCompetition
+            ).map((cat: string) => {
               const isSelected = selectedCompetition.includes(cat);
+
               return (
                 <span
                   key={cat}
@@ -260,7 +283,7 @@ const SetAttributeStep = ({
           className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-5"
         >
           <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center">
-            {<FaUsers className="w-4 h-4 mr-2 text-primary" />}
+            <FaUsers className="w-4 h-4 mr-2 text-primary" />
             Cross Shopping
           </h3>
 
@@ -278,8 +301,13 @@ const SetAttributeStep = ({
           />
 
           <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-            {filterCategories(searchCross).map(cat => {
+            {getOrderedCategories(
+              searchCross,
+              inputCategories, // same main list of categories
+              selectedCross
+            ).map((cat: string) => {
               const isSelected = selectedCross.includes(cat);
+
               return (
                 <span
                   key={cat}

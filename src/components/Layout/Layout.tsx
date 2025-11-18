@@ -57,7 +57,7 @@ const Layout = () => {
         <Route path="/campaign" element={<CampaignPage />} />
         <Route path="/plans" element={<PlansPage />} />
         <Route path="/marketing-dashboard" element={<MarketingDashboard />} />
-        <Route path="/custom-report/:businessType" element={<CustomReportForm />} />
+        <Route path="/custom-report" element={<CustomReportForm />} />
         <Route path="/static/*" element={<StaticRedirect />} />
       </Routes>
 

@@ -10,9 +10,8 @@ import ProfileLayout from '../../pages/Profile/ProfileLayout';
 import OrganizationLayout from '../../pages/Organization/OrganizationLayout';
 import Organization from '../../pages/Organization/Organization';
 import BillingLayout from '../../pages/Billing/BillingLayout';
-import Billing from '../../pages/Billing/Billing';
 import ProfileMain from '../../pages/Profile/Routes/ProfileMain/ProfileMain';
-import InternalCostEstimator from '../../pages/Billing/Routes/InternalCostEstimator/InternalCostEstimator';
+import CheckoutBilling from '../../pages/Billing/Routes/CheckoutBilling/CheckoutBilling';
 import ChangeEmail from '../../pages/ChangeEmail/ChangeEmail';
 import ChangePassword from '../../pages/ChangePassword/ChangePassword';
 import PaymentMethods from '../../pages/PaymentMethods/PaymentMethods';
@@ -26,6 +25,8 @@ import PlansPage from '../../pages/Plans/Plans';
 import StaticRedirect from '../StaticRedirect/StaticRedirect';
 import CustomReportForm from '../CustomReportForm';
 import MarketingDashboard from '../../pages/MarketingDashboard/MarketingDashboard';
+import { BillingProvider } from '../../context/BillingContext';
+import Billing from '../../pages/Billing/Billing';
 import GuestAutoLogin from '../../pages/Auth/GuestAutoLogin';
 const Layout = () => {
   const location = useLocation();
@@ -36,6 +37,55 @@ const Layout = () => {
     location.pathname.startsWith('/plans') ||
     location.pathname.startsWith('/custom-report');
 
+  const isBillingRoute = location.pathname.startsWith('/billing');
+
+  const routesContent = (
+    <>
+      <GuestAutoLogin />
+
+      <Routes>
+        <Route path="*" element={<NotFound />} />
+        <Route path={'/tabularView'} element={<></>} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/sign-up" element={<SignUp />} />
+        <Route path="/sign-up/:source" element={<SignUp />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/:source" element={<Home />} />
+        <Route path={'/profile/*'} element={<Profile />} />
+        <Route path={'/organization/*'} element={<Organization />} />
+        <Route path={'/billing/*'} element={<Billing />} />
+        <Route path="/campaign" element={<CampaignPage />} />
+        <Route path="/plans" element={<PlansPage />} />
+        <Route path="/marketing-dashboard" element={<MarketingDashboard />} />
+        <Route path="/custom-report/:businessType" element={<CustomReportForm />} />
+        <Route path="/static/*" element={<StaticRedirect />} />
+      </Routes>
+
+      <Routes>
+        <Route path={'/'} element={<MapContainer />} />
+        <Route path="/tabularView" element={<Dataview />} />
+
+        <Route path={'/profile'} element={<ProfileLayout />}>
+          <Route path="" element={<ProfileMain />} />
+          <Route path="change-password" element={<ChangePassword />} />
+          <Route path="change-email" element={<ChangeEmail />} />
+          <Route path="payment-methods" element={<PaymentMethods />} />
+          <Route path="payment-methods/add" element={<PaymentMethod />} />
+          <Route path="wallet" element={<Wallet />} />
+          <Route path="wallet/add" element={<AddFunds />} />
+        </Route>
+        <Route path={'/organization'} element={<OrganizationLayout />}>
+          <Route path="" element={<CommingSoon data={'Organization Features'} />} />
+        </Route>
+        <Route path={'/billing'} element={<BillingLayout />}>
+          <Route path="" element={<CheckoutBilling Name="area" />} />
+          <Route path="datasets" element={<CheckoutBilling Name="dataset" />} />
+          <Route path="reports" element={<CheckoutBilling Name="reports" />} />
+        </Route>
+      </Routes>
+    </>
+  );
+
   return (
     <div className="flex flex-col ">
       {!hideLayout && <MobileNavbar />}
@@ -43,47 +93,7 @@ const Layout = () => {
       <div className="flex-1 flex lg:flex-row flex-col w-screen relative overflow-hidden overflow-y-auto">
         {!hideLayout && <SideBar />}
 
-        <GuestAutoLogin />
-
-        <Routes>
-          <Route path="*" element={<NotFound />} />
-          <Route path={'/tabularView'} element={<></>} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/sign-up" element={<SignUp />} />
-          <Route path="/sign-up/:source" element={<SignUp />} />
-          <Route path="/" element={<Home />} />
-          <Route path="/:source" element={<Home />} />
-          <Route path={'/profile/*'} element={<Profile />} />
-          <Route path={'/organization/*'} element={<Organization />} />
-          <Route path={'/billing/*'} element={<Billing />} />
-          <Route path="/campaign" element={<CampaignPage />} />
-          <Route path="/plans" element={<PlansPage />} />
-          <Route path="/marketing-dashboard" element={<MarketingDashboard />} />
-          <Route path="/custom-report/:businessType" element={<CustomReportForm />} />
-          <Route path="/static/*" element={<StaticRedirect />} />
-        </Routes>
-
-        <Routes>
-          <Route path={'/'} element={<MapContainer />} />
-          <Route path="/tabularView" element={<Dataview />} />
-
-          <Route path={'/profile'} element={<ProfileLayout />}>
-            <Route path="" element={<ProfileMain />} />
-            <Route path="change-password" element={<ChangePassword />} />
-            <Route path="change-email" element={<ChangeEmail />} />
-            <Route path="payment-methods" element={<PaymentMethods />} />
-            <Route path="payment-methods/add" element={<PaymentMethod />} />
-            <Route path="wallet" element={<Wallet />} />
-            <Route path="wallet/add" element={<AddFunds />} />
-          </Route>
-          <Route path={'/organization'} element={<OrganizationLayout />}>
-            <Route path="" element={<CommingSoon data={'Organization Features'} />} />
-          </Route>
-          <Route path={'/billing'} element={<BillingLayout />}>
-            <Route path="" element={<InternalCostEstimator />} />
-            <Route path="price" element={<CommingSoon data={'Price'} />} />
-          </Route>
-        </Routes>
+        {isBillingRoute ? <BillingProvider>{routesContent}</BillingProvider> : routesContent}
       </div>
     </div>
   );

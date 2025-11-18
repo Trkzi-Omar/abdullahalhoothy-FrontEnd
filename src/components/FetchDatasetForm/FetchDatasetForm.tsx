@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import {
   formatSubcategoryName,
   processCityData,
@@ -6,14 +6,13 @@ import {
 } from '../../utils/helperFunctions';
 import { PiX } from 'react-icons/pi';
 import urls from '../../urls.json';
-import { CategoryData, City, Layer } from '../../types/allTypesAndInterfaces';
+import { CategoryData, Layer } from '../../types/allTypesAndInterfaces';
 import { useLayerContext } from '../../context/LayerContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router';
 import apiRequest from '../../services/apiRequest';
 import LayerDisplaySubCategories from '../LayerDisplaySubCategories/LayerDisplaySubCategories';
 import CategoriesBrowserSubCategories from '../CategoriesBrowserSubCategories/CategoriesBrowserSubCategories';
-import { useCatalogContext } from '../../context/CatalogContext';
 import { useMapContext } from '../../context/MapContext';
 import ChatTrigger from '../Chat/ChatTrigger';
 import Chat from '../Chat/Chat';
@@ -25,12 +24,9 @@ const FetchDatasetForm = () => {
 
   // LAYER CONTEXT
   const {
-    reqFetchDataset,
     setReqFetchDataset,
-    handleFetchDataset,
     showErrorMessage,
     setShowErrorMessage,
-    validateFetchDatasetForm,
     resetFetchDatasetForm,
     categories,
     setCategories,
@@ -38,7 +34,6 @@ const FetchDatasetForm = () => {
     setCountries,
     cities,
     handleCountryCitySelection,
-    handleTypeToggle,
     selectedCity,
     setSelectedCity,
     searchType,
@@ -47,23 +42,18 @@ const FetchDatasetForm = () => {
     setTextSearchInput,
     selectedCountry,
     setSelectedCountry,
-    setCentralizeOnce,
-    setShowLoaderTopup,
-    incrementFormStage,
     isError,
     setIsError,
-    switchPopulationLayer,
-    includePopulation,
     handleSubmitFetchDataset,
+    setCitiesData,
   } = useLayerContext();
 
   // AUTH CONTEXT
-  const { isAuthenticated, authResponse, logout } = useAuth();
+  const { authResponse, logout } = useAuth();
   const [isPriceVisible, setIsPriceVisible] = useState<boolean>(false);
   // FETCHED DATA
   const [layers, setLayers] = useState<Layer[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>({});
   const [errorMessage, setErrorMessage] = useState('');
   const [costEstimate, setCostEstimate] = useState<number>(0.0);
   // COLBASE CATEGORY
@@ -74,9 +64,6 @@ const FetchDatasetForm = () => {
 
   // Add ref for the categories section
   const categoriesRef = useRef<HTMLDivElement>(null);
-
-  // Add this near other context hooks
-  const { setGeoPoints } = useCatalogContext();
 
   const { backendZoom } = useMapContext();
 
@@ -105,16 +92,67 @@ const FetchDatasetForm = () => {
       nav('/auth');
     }
   };
-  useEffect(() => {
-    if (
-      reqFetchDataset.includedTypes &&
-      reqFetchDataset.selectedCity &&
-      reqFetchDataset.selectedCountry
-    ) {
-      let total_cost = layers.reduce((sum, layer) => sum + layer.cost, 0);
-      setCostEstimate(total_cost);
+  // Get all unique datasets from all layers (only included types)
+  const allDatasets = useMemo(() => {
+    const datasetsSet = new Set<string>();
+    layers.forEach(layer => {
+      layer.includedTypes.forEach(type => datasetsSet.add(type));
+    });
+    return Array.from(datasetsSet).sort();
+  }, [layers]);
+
+  // Create a string key for datasets to track changes
+  const datasetsKey = useMemo(() => {
+    return allDatasets.join(',');
+  }, [allDatasets]);
+
+  // Calculate cart cost using the new endpoint
+  const calculateCartCost = useCallback(async () => {
+    if (!authResponse?.localId) {
+      setCostEstimate(0.0);
+      return;
     }
-  }, [layers, selectedCity, selectedCity]);
+
+    // Don't calculate if there are no datasets or missing location
+    if (allDatasets.length === 0 || !selectedCity || !selectedCountry) {
+      setCostEstimate(0.0);
+      return;
+    }
+
+    try {
+      const requestBody = {
+        user_id: authResponse.localId,
+        country_name: selectedCountry,
+        city_name: selectedCity,
+        datasets: allDatasets,
+        intelligences: [] as string[],
+        displayed_price: 0,
+      };
+
+      const response = await apiRequest({
+        url: urls.calculate_cart_cost,
+        method: 'POST',
+        body: requestBody,
+        isAuthRequest: true,
+      });
+
+      const totalCost = response.data?.data?.total_cost || 0;
+      setCostEstimate(totalCost);
+    } catch (error) {
+      console.error('Error calculating cart cost:', error);
+      setCostEstimate(0.0);
+    }
+  }, [authResponse?.localId, allDatasets, selectedCity, selectedCountry]);
+
+  // Only calculate cost when datasets change (add/remove) or location changes
+  useEffect(() => {
+    // Use a small delay to debounce rapid changes
+    const timeoutId = setTimeout(() => {
+      calculateCartCost();
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [datasetsKey, selectedCity, selectedCountry, calculateCartCost]);
 
   const filteredCategories = Object.entries(categories).reduce((acc, [category, types]) => {
     const filteredTypes = (types as string[]).filter(type =>
@@ -163,11 +201,17 @@ const FetchDatasetForm = () => {
   }
 
   function handleClear() {
+    // Clear all layers
+    setLayers([]);
+    // Clear reqFetchDataset
     setReqFetchDataset(prevData => ({
       ...prevData,
       includedTypes: [],
       excludedTypes: [],
+      layers: [],
     }));
+    // Reset cost estimate
+    setCostEstimate(0.0);
   }
 
   // Add scroll handler function
@@ -181,28 +225,28 @@ const FetchDatasetForm = () => {
 
   // Add new handler to remove type from specific layer
   const removeTypeFromLayer = (type: string, layerId: number, isExcluded: boolean) => {
-    setLayers(
-      layers
-        .map(layer => {
-          if (layer.id === layerId) {
-            return {
-              ...layer,
-              includedTypes: isExcluded
-                ? layer.includedTypes
-                : layer.includedTypes.filter(t => t !== type),
-              excludedTypes: isExcluded
-                ? layer.excludedTypes.filter(t => t !== type)
-                : layer.excludedTypes,
-            };
-          }
-          return layer;
-        })
-        .filter(layer => layer.includedTypes.length > 0 || layer.excludedTypes.length > 0)
-    );
+    const updatedLayers = layers
+      .map(layer => {
+        if (layer.id === layerId) {
+          return {
+            ...layer,
+            includedTypes: isExcluded
+              ? layer.includedTypes
+              : layer.includedTypes.filter(t => t !== type),
+            excludedTypes: isExcluded
+              ? layer.excludedTypes.filter(t => t !== type)
+              : layer.excludedTypes,
+          };
+        }
+        return layer;
+      })
+      .filter(layer => layer.includedTypes.length > 0 || layer.excludedTypes.length > 0);
+
+    setLayers(updatedLayers);
 
     // Update reqFetchDataset based on remaining types
-    const remainingIncluded = layers.flatMap(layer => layer.includedTypes);
-    const remainingExcluded = layers.flatMap(layer => layer.excludedTypes);
+    const remainingIncluded = updatedLayers.flatMap(layer => layer.includedTypes);
+    const remainingExcluded = updatedLayers.flatMap(layer => layer.excludedTypes);
 
     setReqFetchDataset(prevData => ({
       ...prevData,
@@ -227,13 +271,7 @@ const FetchDatasetForm = () => {
   };
 
   // Add this helper function
-  const addTypeToFirstAvailableLayer = async (type: string, setAsExcluded: boolean) => {
-    // Calculate the cost if the type is not excluded
-    let layerCost = 0;
-    if (!setAsExcluded) {
-      layerCost = await estimateCost([type]);
-    }
-
+  const addTypeToFirstAvailableLayer = (type: string, setAsExcluded: boolean) => {
     // Update the layers state
     setLayers(prevLayers => {
       if (prevLayers.length === 0) {
@@ -245,13 +283,13 @@ const FetchDatasetForm = () => {
           excludedTypes: setAsExcluded ? [type] : [],
           display: true,
           points_color: getDefaultLayerColor(1),
-          cost: layerCost,
+          cost: 0,
         };
         return [newLayer];
       }
 
       // Try to find the first layer that doesn't have this type
-      let targetLayerIndex = prevLayers.findIndex(
+      const targetLayerIndex = prevLayers.findIndex(
         layer => !layer.includedTypes.includes(type) && !layer.excludedTypes.includes(type)
       );
 
@@ -266,7 +304,7 @@ const FetchDatasetForm = () => {
           excludedTypes: setAsExcluded ? [type] : [],
           display: true,
           points_color: getDefaultLayerColor(newLayerId),
-          cost: layerCost,
+          cost: 0,
         };
         return [...prevLayers, newLayer];
       }
@@ -281,22 +319,6 @@ const FetchDatasetForm = () => {
             excludedTypes: setAsExcluded ? [...layer.excludedTypes, type] : layer.excludedTypes,
           };
 
-          // If the type is included, update the cost
-          if (!setAsExcluded) {
-            estimateCost(updatedLayer.includedTypes).then(updatedCost => {
-              // Create a new updated layer with the new cost
-              const finalUpdatedLayer = {
-                ...updatedLayer,
-                cost: updatedCost,
-              };
-
-              // Update the state with the final updated layer
-              setLayers(currentLayers =>
-                currentLayers.map((l, i) => (i === targetLayerIndex ? finalUpdatedLayer : l))
-              );
-            });
-          }
-
           return updatedLayer;
         }
         return layer;
@@ -304,26 +326,6 @@ const FetchDatasetForm = () => {
     });
   };
 
-  const estimateCost = async (type: string[]) => {
-    if (!authResponse || !('idToken' in authResponse)) {
-      return 0; // Return a default cost if auth is not available
-    }
-    console.log('Estimating Cost');
-    const requestBody = {
-      user_id: authResponse.localId,
-      boolean_query: type.join(' OR '),
-      city_name: selectedCity,
-      country_name: selectedCountry,
-      action: 'full data',
-    };
-    let res = await apiRequest({
-      url: urls.cost_calculator,
-      method: 'Post',
-      body: requestBody,
-    });
-    let layerCost = res.data.data.cost;
-    return layerCost;
-  };
   // Replace handleAddToIncluded and handleAddToExcluded with:
   const handleAddToIncluded = (type: string) => {
     addTypeToFirstAvailableLayer(type, false);
@@ -343,8 +345,8 @@ const FetchDatasetForm = () => {
 
   // Add this new function
   const toggleTypeInLayer = (type: string, layerId: number, setAsExcluded: boolean) => {
-    setLayers(prevLayers =>
-      prevLayers.map(layer => {
+    setLayers(prevLayers => {
+      const updatedLayers = prevLayers.map(layer => {
         if (layer.id === layerId) {
           // If trying to exclude
           if (setAsExcluded) {
@@ -374,23 +376,25 @@ const FetchDatasetForm = () => {
           }
         }
         return layer;
-      })
-    );
+      });
 
-    // Update reqFetchDataset based on all layers
-    const allIncludedTypes = new Set<string>();
-    const allExcludedTypes = new Set<string>();
+      // Update reqFetchDataset based on all layers
+      const allIncludedTypes = new Set<string>();
+      const allExcludedTypes = new Set<string>();
 
-    layers.forEach(layer => {
-      layer.includedTypes.forEach(t => allIncludedTypes.add(t));
-      layer.excludedTypes.forEach(t => allExcludedTypes.add(t));
+      updatedLayers.forEach(layer => {
+        layer.includedTypes.forEach(t => allIncludedTypes.add(t));
+        layer.excludedTypes.forEach(t => allExcludedTypes.add(t));
+      });
+
+      setReqFetchDataset(prevData => ({
+        ...prevData,
+        includedTypes: Array.from(allIncludedTypes),
+        excludedTypes: Array.from(allExcludedTypes),
+      }));
+
+      return updatedLayers;
     });
-
-    setReqFetchDataset(prevData => ({
-      ...prevData,
-      includedTypes: Array.from(allIncludedTypes),
-      excludedTypes: Array.from(allExcludedTypes),
-    }));
   };
 
   // Add this handler
@@ -402,38 +406,21 @@ const FetchDatasetForm = () => {
 
   // Update reqFetchDataset when layers change
   useEffect(() => {
-    setReqFetchDataset((prev: any) => ({
+    setReqFetchDataset(prev => ({
       ...prev,
       layers: layers.map(layer => ({
         id: layer.id,
+        name: layer.name || `Layer ${layer.id}`,
+        points_color: layer.points_color || '#000000',
         includedTypes: layer.includedTypes,
         excludedTypes: layer.excludedTypes,
+        layer_name: layer.layer_name,
       })),
       // Maintain backward compatibility
       includedTypes: layers.flatMap(layer => layer.includedTypes),
       excludedTypes: layers.flatMap(layer => layer.excludedTypes),
     }));
   }, [layers, setReqFetchDataset]);
-
-  const handleSubmit = async () => {
-    try {
-      const validationResult = validateFetchDatasetForm();
-      if (validationResult !== true) {
-        setError(validationResult.message);
-        return;
-      }
-
-      await handleFetchDataset('sample');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    }
-  };
-
-  const handleReset = () => {
-    resetFetchDatasetForm();
-    setLayers([]);
-    setError(null);
-  };
 
   useEffect(() => {
     if (isError) {
@@ -468,10 +455,10 @@ const FetchDatasetForm = () => {
       setErrorMessage('');
     }
 
-    const delayDebounceFn = setTimeout(async () => {
-      const typesArray = textSearchInput.split(',').map(t => t.trim());
-      const estimatedCost = await estimateCost(typesArray);
-      setCostEstimate(estimatedCost);
+    const delayDebounceFn = setTimeout(() => {
+      // For keyword search, we don't calculate cost until datasets are actually added to layers
+      // The cost will be calculated automatically when datasets are added
+      setCostEstimate(0.0);
     }, typingDelay);
 
     return () => clearTimeout(delayDebounceFn);
@@ -673,19 +660,30 @@ const FetchDatasetForm = () => {
       <div className="flex-col flex  px-2 py-2 select-none border-t lg:mb-0 mb-14">
         <div className="flex space-x-2">
           <button
-            onClick={e => onButtonClick('sample', e)}
+            onClick={() => {
+              console.log('buy now ');
+            }}
             className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
                  hover:bg-white transition-all cursor-pointer"
           >
             Get Sample
           </button>
-
-          <button
-            className="w-full h-10 bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
-            onClick={e => onButtonClick('full data', e)}
-          >
-            Full Data {isPriceVisible ? `($${costEstimate.toFixed(2)})` : null}
-          </button>
+          <div className="w-full bg-[#115740] text-white flex justify-between items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer px-4 py-3">
+            <div className="text-lg">Full Data</div>
+            <div className="flex flex-col items-end gap-1">
+              {isPriceVisible && (
+                <span className="text-sm font-normal opacity-90">${costEstimate.toFixed(2)}</span>
+              )}
+              <button
+                className="text-base font-semibold hover:underline"
+                onClick={e => {
+                  onButtonClick('full', e);
+                }}
+              >
+                Buy Now
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

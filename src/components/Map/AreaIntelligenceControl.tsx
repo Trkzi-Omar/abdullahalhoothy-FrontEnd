@@ -49,7 +49,7 @@ export const AreaIntelligeneControl: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
         className={`
           flex items-center justify-center
-          w-[47px] h-[47px] rounded-md p-2
+          h-[47px] rounded-md p-2
           bg-gem-gradient border text-gray-200 border-gem/20 
           shadow-sm transition-all duration-200
           hover:bg-gray-100
@@ -63,8 +63,10 @@ export const AreaIntelligeneControl: React.FC = () => {
             className={`
               text-current
               ${includePopulation || includeIncome ? 'text-white' : ''}
+              m-2
             `}
           />
+          Area Intelligence
         </div>
       </button>
 

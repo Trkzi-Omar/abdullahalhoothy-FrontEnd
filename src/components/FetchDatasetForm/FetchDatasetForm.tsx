@@ -18,6 +18,9 @@ import ChatTrigger from '../Chat/ChatTrigger';
 import Chat from '../Chat/Chat';
 import { topics } from '../../types';
 import { FaWandMagicSparkles } from 'react-icons/fa6';
+import Modal from '../common/Modal';
+import { Spinner } from '../common';
+import DatasetModalContent from './DatasetModalContent';
 
 const FetchDatasetForm = () => {
   const nav = useNavigate();
@@ -45,9 +48,10 @@ const FetchDatasetForm = () => {
     isError,
     setIsError,
     handleSubmitFetchDataset,
+    handleFullDataFetchSuccess,
+    isLoadingDataset,
     setCitiesData,
   } = useLayerContext();
-
   // AUTH CONTEXT
   const { authResponse, logout } = useAuth();
   const [isPriceVisible, setIsPriceVisible] = useState<boolean>(false);
@@ -58,6 +62,9 @@ const FetchDatasetForm = () => {
   const [costEstimate, setCostEstimate] = useState<number>(0.0);
   // COLBASE CATEGORY
   const [openedCategories, setOpenedCategories] = useState<string[]>([]);
+
+  // MODAL
+  const [isDatasetModalOpen, setIsDatasetModalOpen] = useState<boolean>(false);
 
   // USER INPUT
   const [searchQuery, setSearchQuery] = useState('');
@@ -193,10 +200,20 @@ const FetchDatasetForm = () => {
       }
     }
   }
-  function onButtonClick(action: string, event: React.MouseEvent<HTMLButtonElement>) {
+  async function onButtonClick(action: string, event: React.MouseEvent<HTMLButtonElement>) {
     const result = handleSubmitFetchDataset(action, event);
+
     if (result instanceof Error) {
       setError(result.message);
+      return;
+    }
+    console.log('reached here for full data');
+
+    // For full data, wait for loading to complete before showing modal
+    if (action === 'full data' && result === true) {
+      setIsDatasetModalOpen(true);
+    } else if (action === 'sample' && result === true) {
+      handleFullDataFetchSuccess();
     }
   }
 
@@ -464,9 +481,16 @@ const FetchDatasetForm = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [textSearchInput, selectedCountry, selectedCity]);
 
+  function handleDatasetModalChange(open: boolean) {
+    if (!open) {
+      handleFullDataFetchSuccess();
+    }
+    setIsDatasetModalOpen(open);
+  }
+
   return (
     <>
-      <div className="flex-1 flex flex-col justify-between overflow-y-auto ">
+      <div className="flex-1 flex flex-col justify-between overflow-y-auto relative">
         <div className="w-full p-4 overflow-y-auto ">
           {error && <div className="mt-6 text-red-500 font-semibold">{error}</div>}
 
@@ -657,7 +681,7 @@ const FetchDatasetForm = () => {
           )}
         </div>
       </div>
-      <div className="flex-col flex  px-2 py-2 select-none border-t lg:mb-0 mb-14">
+      <div className="flex-col flex  px-2 py-2 select-none border-t lg:mb-0 mb-14 relative">
         <div className="flex space-x-2">
           <button
             onClick={() => {
@@ -665,6 +689,7 @@ const FetchDatasetForm = () => {
             }}
             className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
                  hover:bg-white transition-all cursor-pointer"
+            disabled={isLoadingDataset}
           >
             Get Sample
           </button>
@@ -679,6 +704,7 @@ const FetchDatasetForm = () => {
                 onClick={e => {
                   onButtonClick('full', e);
                 }}
+                disabled={isLoadingDataset}
               >
                 Buy Now
               </button>
@@ -723,6 +749,16 @@ const FetchDatasetForm = () => {
           </div>
         </div>
       )}
+
+      {/* dataset modal - only show when not loading */}
+      <Modal
+        open={isDatasetModalOpen && !isLoadingDataset}
+        onOpenChange={handleDatasetModalChange}
+        title="Dataset"
+        contentClassName="max-w-4xl"
+      >
+        <DatasetModalContent />
+      </Modal>
     </>
   );
 };

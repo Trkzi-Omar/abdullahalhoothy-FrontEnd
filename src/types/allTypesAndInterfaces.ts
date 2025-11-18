@@ -56,6 +56,7 @@ export interface Catalog {
 }
 
 export interface UserLayer {
+  progress: number;
   prdcer_lyr_id: string;
   prdcer_layer_name: string;
   points_color?: string;
@@ -91,6 +92,7 @@ export interface UserLayerCardProps {
   typeOfCard: string;
   legend: string;
   points_color?: string;
+  progress: number;
   onMoreInfo(selectedCatalog: { id: string; name: string; typeOfCard: string }): void;
 }
 export interface CardItem {
@@ -446,11 +448,17 @@ export interface LayerContextType {
   currentViewportInsights: Insights | null;
   layerDataMap: LayerDataMap;
   setLayerDataMap: React.Dispatch<React.SetStateAction<LayerDataMap>>;
+  handleFullDataFetchSuccess: () => void;
+  isLoadingDataset: boolean;
+  setIsLoadingDataset: React.Dispatch<React.SetStateAction<boolean>>;
+  showErrorMessage: boolean;
+  setShowErrorMessage: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export interface ReqFetchDataset {
   selectedCountry: string;
   selectedCity: string;
+  action?: string;
   layers: {
     name: string;
     points_color: string;
@@ -526,6 +534,7 @@ export interface FetchDatasetResponse {
   records_count: number;
   next_page_token: string;
   display?: boolean;
+  progress?: number;
 }
 
 export type Bounds = [number, number, number, number]; // [west, south, east, north]

@@ -10,6 +10,7 @@ import { useUIContext } from '../../context/UIContext';
 import apiRequest from '../../services/apiRequest';
 import { useLayerContext } from '../../context/LayerContext';
 import CampaignPage from '../../pages/Campaign/campaign_home';
+import { Spinner } from '../common';
 
 function DataContainer() {
   const {
@@ -24,12 +25,14 @@ function DataContainer() {
     setBenchmarks,
     setIsBenchmarkControlOpen,
     setCurrentStyle,
+    isLoading,
   } = useCatalogContext();
   const { setSelectedCity, setSelectedCountry } = useLayerContext();
   const { isAuthenticated, authResponse, logout } = useAuth();
   const { closeModal } = useUIContext();
   const [activeTab, setActiveTab] = useState('Data Catalogue');
   const [resData, setResData] = useState<(Catalog | UserLayer)[] | string>('');
+  // layers data that will be sat after user clicks Add Layer
   const [userLayersData, setUserLayersData] = useState<UserLayer[]>([]);
   const [catalogCollectionData, setCatalogCollectionData] = useState<Catalog[]>([]);
   const [userCatalogsData, setUserCatalogsData] = useState<Catalog[]>([]);
@@ -40,7 +43,7 @@ function DataContainer() {
 
   const [wsResMessage, setWsResMessage] = useState<string>('');
   const [wsResId, setWsResId] = useState<string>('');
-  const [wsResloading, setWsResLoading] = useState<boolean>(true);
+  const [wsResloading, setWsResLoading] = useState<boolean>(false);
   const [wsResError, setWsResError] = useState<Error | null>(null);
 
   useEffect(() => {
@@ -149,6 +152,7 @@ function DataContainer() {
   async function handleCatalogCardClick(selectedItem: CardItem) {
     if (selectedContainerType === 'Home') {
       setWsResLoading(true);
+
       try {
         const res = await apiRequest({
           url: urls.http_catlog_data,
@@ -158,16 +162,25 @@ function DataContainer() {
         setGeoPoints(res.data.data);
         setWsResMessage(res.data.message);
         setWsResId(res.data.request_id);
+        setWsResLoading(false);
+        closeModal();
+        console.log('res', res);
       } catch (error) {
         setWsResError(error instanceof Error ? error : new Error(String(error)));
       } finally {
-        setWsResLoading(false);
+        console.log('finally.....................');
       }
     } else {
-      handleAddClick(selectedItem.id, selectedItem.typeOfCard, (country: string, city: string) => {
-        setSelectedCountry(country);
-        setSelectedCity(city);
-      });
+      // layer or catalog
+      // we are here
+      await handleAddClick(
+        selectedItem.id,
+        selectedItem.typeOfCard,
+        (country: string, city: string) => {
+          setSelectedCountry(country);
+          setSelectedCity(city);
+        }
+      );
     }
 
     closeModal();
@@ -186,6 +199,7 @@ function DataContainer() {
           legend={item.layer_legend}
           typeOfCard="layer"
           points_color={item.points_color}
+          progress={item.progress}
           onMoreInfo={function () {
             handleCatalogCardClick({
               id: item.prdcer_lyr_id,
@@ -245,11 +259,18 @@ function DataContainer() {
   }
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <Spinner className="size-32 " />;
   }
 
   return (
-    <div className={`lg:p-6 h-full ${selectedContainerType === 'Home' ? 'px-2 py-1' : 'p-2'}`}>
+    <div className={`lg:p-6 h-full   ${selectedContainerType === 'Home' ? 'px-2 py-1' : 'p-2'}`}>
+      {/* when add layer or category */}
+      {isLoading && (
+        <div className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-30 z-50">
+          <Spinner className="size-32 border-white border-4" />
+        </div>
+      )}
+
       <h2 className="text-2xl text-center font-semibold">
         {selectedContainerType === 'Catalogue'
           ? 'Add Data to Map'
@@ -303,7 +324,11 @@ function DataContainer() {
             </button>
           </div>
           {activeTab === 'Data Catalogue' || activeTab === 'Data Layer' ? (
-            <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 md:gap-x-2 gap-y-3 overflow-y-auto w-full">
+            <div
+              className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 md:gap-x-2 gap-y-10  w-full pb-10
+            "
+              // overflow-y-auto
+            >
               {renderCards()}
             </div>
           ) : activeTab === 'Load Files' ? (

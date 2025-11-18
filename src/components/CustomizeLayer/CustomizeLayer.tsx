@@ -101,6 +101,7 @@ function CustomizeLayer() {
       setAllSaved(allLayersSaved);
     }
   }, [savedLayers, layerCustomizations]);
+  console.log('layerCustomizations', layerCustomizations);
 
   const handleLayerChange = (layerId: number, field: keyof LayerCustomization, value: string) => {
     setLayerCustomizations(prev => {
@@ -140,6 +141,7 @@ function CustomizeLayer() {
       try {
         setSavingLayers(prev => new Set(prev).add(layerId));
         const layerData = layerCustomizations.find(l => l.layerId === layerId);
+
         if (layerData) {
           await handleSaveLayer({ layers: [layerData] });
           setSavedLayers(prev => new Set(prev).add(layerId));

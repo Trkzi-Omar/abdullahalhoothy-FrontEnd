@@ -5,9 +5,10 @@ import { useLayerContext } from '../../context/LayerContext';
 import CustomizeLayer from '../CustomizeLayer/CustomizeLayer';
 import FetchDatasetForm from '../FetchDatasetForm/FetchDatasetForm';
 import { useUIContext } from '../../context/UIContext';
+import { Spinner } from '../common';
 
 function LayerFormLoader() {
-  const { createLayerformStage, resetFormStage } = useLayerContext();
+  const { createLayerformStage, resetFormStage, isLoadingDataset } = useLayerContext();
 
   const { sidebarMode, setSidebarMode } = useUIContext();
 

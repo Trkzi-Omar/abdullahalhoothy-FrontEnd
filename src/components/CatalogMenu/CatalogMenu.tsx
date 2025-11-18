@@ -10,6 +10,7 @@ import { defaultMapConfig } from '../../hooks/map/useMapInitialization';
 import Chat from '../Chat/Chat';
 import ChatTrigger from '../Chat/ChatTrigger';
 import { CaseStudyToggle } from '../CaseStudy/CaseStudyToggle';
+import { Spinner } from '../common';
 
 const enableAI = true;
 
@@ -30,6 +31,7 @@ function CatalogMenu() {
     setPolygons,
     setBenchmarks,
     setIsBenchmarkControlOpen,
+    isLoading,
   } = useCatalogContext();
   const { setSelectedCity, setSelectedCountry } = useLayerContext();
 

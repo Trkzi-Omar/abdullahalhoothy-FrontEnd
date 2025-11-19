@@ -207,7 +207,6 @@ const FetchDatasetForm = () => {
       setError(result.message);
       return;
     }
-    console.log('reached here for full data');
 
     // For full data, wait for loading to complete before showing modal
     if (action === 'full data' && result === true) {
@@ -684,8 +683,8 @@ const FetchDatasetForm = () => {
       <div className="flex-col flex  px-2 py-2 select-none border-t lg:mb-0 mb-14 relative">
         <div className="flex space-x-2">
           <button
-            onClick={() => {
-              console.log('buy now ');
+            onClick={e => {
+              onButtonClick('sample', e);
             }}
             className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
                  hover:bg-white transition-all cursor-pointer"
@@ -693,16 +692,16 @@ const FetchDatasetForm = () => {
           >
             Get Sample
           </button>
-          <div className="w-full bg-[#115740] text-white flex justify-between items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer px-4 py-3">
+          <div className="w-full h-10 bg-[#115740] text-white flex justify-between items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer px-4 ">
             <div className="text-lg">Full Data</div>
             <div className="flex flex-col items-end gap-1">
               {isPriceVisible && (
                 <span className="text-sm font-normal opacity-90">${costEstimate.toFixed(2)}</span>
               )}
               <button
-                className="text-base font-semibold hover:underline"
+                className="text-xs font-semibold hover:underline"
                 onClick={e => {
-                  onButtonClick('full', e);
+                  onButtonClick('full data', e);
                 }}
                 disabled={isLoadingDataset}
               >

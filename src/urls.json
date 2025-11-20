@@ -49,5 +49,7 @@
   "fetch_plans": "/plan-details",
   "fetch_campaigns": "/campaign-details",
   "smart_pharmacy_report": "/smart_pharmacy_report",
-  "business_category_metrics": "/business_category_metrics"
+  "business_category_metrics": "/business_category_metrics",
+  "calculate_cart_cost": "/calculate_cart_cost",
+  "purchase_items": "/purchase_items"
 }

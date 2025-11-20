@@ -147,6 +147,7 @@ const FetchDatasetForm = () => {
       setCostEstimate(totalCost);
     } catch (error) {
       console.error('Error calculating cart cost:', error);
+      setError('Error calculating cart cost.');
       setCostEstimate(0.0);
     }
   }, [authResponse?.localId, allDatasets, selectedCity, selectedCountry]);

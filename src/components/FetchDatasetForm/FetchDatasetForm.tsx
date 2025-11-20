@@ -692,23 +692,23 @@ const FetchDatasetForm = () => {
           >
             Get Sample
           </button>
-          <div className="w-full h-10 bg-[#115740] text-white flex justify-between items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer px-4 ">
-            <div className="text-lg">Full Data</div>
+          <button
+            className="w-full bg-[#115740] text-white flex justify-between items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer px-4 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={e => {
+              onButtonClick('full data', e);
+            }}
+            disabled={isLoadingDataset}
+          >
+            <div className="text-lg">{costEstimate > 0 ? 'Buy now' : 'Full Data'}</div>
             <div className="flex flex-col items-end gap-1">
               {isPriceVisible && (
                 <span className="text-sm font-normal opacity-90">${costEstimate.toFixed(2)}</span>
               )}
-              <button
-                className="text-xs font-semibold hover:underline"
-                onClick={e => {
-                  onButtonClick('full data', e);
-                }}
-                disabled={isLoadingDataset}
-              >
-                Buy Now
-              </button>
+              {isPriceVisible && costEstimate > 0 && (
+                <span className="text-xs font-normal opacity-90">Full data</span>
+              )}
             </div>
-          </div>
+          </button>
         </div>
       </div>
 

@@ -66,6 +66,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
   const [openedCategories, setOpenedCategories] = React.useState<string[]>([]);
   const [isCalculatingCost, setIsCalculatingCost] = React.useState(false);
   const [isPurchasing, setIsPurchasing] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
   const [cartCostResponse, setCartCostResponse] = React.useState<{
     data?: {
       total_cost?: number;
@@ -303,6 +304,25 @@ function CheckoutBilling({ Name }: { Name: string }) {
   const canCalculateCost = useMemo(() => (
     (checkout.datasets.length > 0 || checkout.intelligences.length > 0 || checkout.report !== '')
   ), [checkout]);
+
+  // Filter categories based on search query
+  const filteredCategories = useMemo(() => {
+    return Object.entries(categories).reduce((acc, [category, types]) => {
+      const filteredTypes = (types as string[]).filter(type =>
+        type.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      if (filteredTypes.length > 0) {
+        acc[category] = filteredTypes;
+      }
+      return acc;
+    }, {} as CategoryData);
+  }, [categories, searchQuery]);
+
+  // Handle clear all datasets
+  const handleClear = useCallback(() => {
+    dispatch({ type: 'clearDatasets' });
+    setSearchQuery('');
+  }, [dispatch]);
 
   // Automatically calculate cart cost when checkout state changes
   useEffect(() => {
@@ -555,10 +575,31 @@ function CheckoutBilling({ Name }: { Name: string }) {
         ) : (
           <>
             <div className="w-full pl-4 pr-2 px-24">
-              <div className="flex flex-col my-5 w-96">
-                <label className="mb-4 font-bold">What are you looking for?</label>
+              <div className="flex flex-col my-5 w-full">
+                <div className="flex justify-between mb-4" >
+                  <label className="font-bold">What are you looking for?</label>
+                  <button
+                    onClick={handleClear}
+                    className="w-16 h-6 text-sm bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                </div>
+
+                <div className="pb-3">
+                  <input
+                    type="text"
+                    id="searchInput"
+                    name="searchInput"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                    placeholder="Search for a type..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                  />
+                </div>
+
                 <div className="flex flex-wrap gap-5">
-                  {Object.entries(categories).map(([category, types]) => (
+                  {Object.entries(filteredCategories).map(([category, types]) => (
                     <div key={category} className="flex-1 min-w-[200px]">
                       <button
                         className="font-semibold cursor-pointer flex justify-start items-center w-full hover:bg-gray-200 transition-all rounded"

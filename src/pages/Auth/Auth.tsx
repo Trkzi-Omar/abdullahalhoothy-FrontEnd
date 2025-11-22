@@ -7,6 +7,7 @@ import urls from '../../urls.json';
 import { AuthResponse } from '../../types/allTypesAndInterfaces';
 import styles from './Auth.module.css';
 import { FaEnvelope, FaLock, FaUser } from 'react-icons/fa';
+import { usePreserveQueryNavigate } from '../../hooks/usePreserveQueryNavigate';
 
 const Auth = () => {
   const nav = useNavigate();
@@ -31,10 +32,11 @@ const Auth = () => {
   const [isRegistered, setIsRegistered] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
+  const navigate = usePreserveQueryNavigate();
+
   const handleLogin = async (email: string, password: string) => {
     try {
       await performLogin(setAuthResponse, { isGuest: false, email, password });
-      console.log('Logged In');
 
       setTimeout(() => {
         const params = new URLSearchParams(location.search);
@@ -144,7 +146,7 @@ const Auth = () => {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated && authResponse) {
-      nav('/');
+      navigate('/');
     }
   }, [authLoading, isAuthenticated, authResponse, nav]);
 

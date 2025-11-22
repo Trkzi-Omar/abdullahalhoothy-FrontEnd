@@ -2,6 +2,8 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { AuthContextType, AuthResponse, AuthSuccessResponse } from '../types/allTypesAndInterfaces';
 import { HttpReq } from '../services/apiService';
 import urls from '../urls.json';
+import { useLocation } from 'react-router';
+import { useSearchParams } from 'react-router-dom';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -22,7 +24,6 @@ export const performLogin = async (
   options: { isGuest?: boolean; email?: string; password?: string; source?: string } = {}
 ): Promise<AuthResponse> => {
   const storedAuth = localStorage.getItem('authResponse');
-
   if (storedAuth) {
     try {
       const parsedAuth = JSON.parse(storedAuth) as AuthSuccessResponse;
@@ -81,6 +82,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return stored ? (JSON.parse(stored) as AuthSuccessResponse) : null;
   });
 
+  const pathname = useLocation().pathname;
+  const [searchParams] = useSearchParams();
+  const source = searchParams.get('source');
+
   const logout = () => {
     localStorage.removeItem('authResponse');
     setAuthResponse(null);
@@ -95,12 +100,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [authResponse]);
 
   useEffect(() => {
+    if (pathname === '/auth') return;
     const initializeAuth = async () => {
       const storedAuth = localStorage.getItem('authResponse');
       if (!storedAuth) {
         setAuthLoading(true);
         try {
-          await performLogin(setAuthResponse, { isGuest: true });
+          const loginOptions: { isGuest?: boolean; source?: string } = { isGuest: true };
+          if (source) {
+            loginOptions.source = source;
+          }
+          await performLogin(setAuthResponse, loginOptions);
         } catch (error) {
           console.error('Failed to initialize guest session:', error);
         } finally {
@@ -110,7 +120,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAuthLoading(false);
       }
     };
-
     initializeAuth();
   }, []);
 

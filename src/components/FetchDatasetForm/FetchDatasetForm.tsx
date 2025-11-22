@@ -21,6 +21,7 @@ import { FaWandMagicSparkles } from 'react-icons/fa6';
 import Modal from '../common/Modal';
 import { Spinner } from '../common';
 import DatasetModalContent from './DatasetModalContent';
+import { usePreserveQueryNavigate } from '../../hooks/usePreserveQueryNavigate';
 
 const FetchDatasetForm = () => {
   const nav = useNavigate();
@@ -73,6 +74,7 @@ const FetchDatasetForm = () => {
   const categoriesRef = useRef<HTMLDivElement>(null);
 
   const { backendZoom } = useMapContext();
+  const navigate = usePreserveQueryNavigate();
 
   useEffect(() => {
     resetFetchDatasetForm();
@@ -81,7 +83,7 @@ const FetchDatasetForm = () => {
   }, []);
   const fetchProfile = async () => {
     if (!authResponse || !('idToken' in authResponse)) {
-      nav('/auth');
+      navigate('/auth');
       return;
     }
 

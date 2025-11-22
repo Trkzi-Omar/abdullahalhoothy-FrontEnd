@@ -69,7 +69,7 @@ const SideBar = () => {
           <div>
             <HiCurrencyDollar className="w-6 h-6 transition-all fill-white" />
           </div>
-          {!isColabsed && <span className="ml-2 text-white">Billing and Cost Management</span>}
+          {!isColabsed && <span className="ml-2 text-white">Checkout</span>}
         </Link>
 
         {/* Bottom Icons */}

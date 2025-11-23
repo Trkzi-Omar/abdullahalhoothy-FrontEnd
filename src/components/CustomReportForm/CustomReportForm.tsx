@@ -66,6 +66,8 @@ const CustomReportForm = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
   const [businessMetrics, setBusinessMetrics] = useState<BusinessCategoryMetrics | null>(null);
+  const [additionalCost, setAdditionalCost] = useState<number | null>(null);
+  const [isCalculatingCost, setIsCalculatingCost] = useState(false);
 
   // Set user_id when component mounts
   useEffect(() => {
@@ -259,6 +261,91 @@ const CustomReportForm = () => {
         : null
     );
   };
+
+  // Calculate cart cost for extra datasets on step 3
+  const calculateCartCost = useCallback(async () => {
+    if (!formData || currentStep !== 3 || !authResponse?.localId) {
+      setAdditionalCost(null);
+      return;
+    }
+
+    // Collect all selected datasets from categories
+    const allDatasets: string[] = [];
+    if (formData.complementary_categories) {
+      allDatasets.push(...formData.complementary_categories);
+    }
+    if (formData.competition_categories) {
+      allDatasets.push(...formData.competition_categories);
+    }
+    if (formData.cross_shopping_categories) {
+      allDatasets.push(...formData.cross_shopping_categories);
+    }
+
+    // Don't calculate if there are no datasets or missing location
+    if (allDatasets.length === 0 || !formData.city_name || !formData.country_name) {
+      setAdditionalCost(null);
+      return;
+    }
+
+    setIsCalculatingCost(true);
+
+    try {
+      const requestBody = {
+        user_id: authResponse.localId,
+        country_name: formData.country_name,
+        city_name: formData.city_name,
+        datasets: allDatasets,
+        intelligences: [] as string[],
+        displayed_price: 0,
+      };
+
+      // Include report tier if available
+      if (formData.report_tier) {
+        (requestBody as any).report = formData.report_tier;
+      }
+
+      const response = await apiRequest({
+        url: urls.calculate_cart_cost,
+        method: 'POST',
+        body: requestBody,
+        isAuthRequest: true,
+      });
+
+      // Extract additional cost from response
+      // The backend calculates the total cost, and if there are extra datasets, it will be in the response
+      const totalCost = response?.data?.data?.total_cost || 0;
+      const additionalCostValue = totalCost > 0 ? totalCost : null;
+      setAdditionalCost(additionalCostValue);
+    } catch (error) {
+      console.error('Error calculating cart cost:', error);
+      setAdditionalCost(null);
+    } finally {
+      setIsCalculatingCost(false);
+    }
+  }, [formData, currentStep, authResponse?.localId]);
+
+  // Calculate cost when on step 3 and datasets change
+  useEffect(() => {
+    if (currentStep === 3) {
+      // Debounce the calculation
+      const timeoutId = setTimeout(() => {
+        calculateCartCost();
+      }, 300);
+
+      return () => clearTimeout(timeoutId);
+    } else {
+      setAdditionalCost(null);
+    }
+  }, [
+    currentStep,
+    formData?.complementary_categories,
+    formData?.competition_categories,
+    formData?.cross_shopping_categories,
+    formData?.city_name,
+    formData?.country_name,
+    formData?.report_tier,
+    calculateCartCost,
+  ]);
 
   const addCustomLocation = () => {
     if (!formData) return;
@@ -785,6 +872,43 @@ const CustomReportForm = () => {
                     <div className="ml-3">
                       <p className="text-sm font-medium">{submitError}</p>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Additional Cost Message for Step 3 */}
+              {currentStep === 3 && (additionalCost !== null && additionalCost > 0) && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center justify-center">
+                    {isCalculatingCost ? (
+                      <div className="flex items-center text-blue-700">
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        <span className="text-sm font-medium">Calculating additional cost...</span>
+                      </div>
+                    ) : (
+                      <p className="text-sm font-semibold text-blue-800">
+                        +${additionalCost.toFixed(2)} for extra datasets
+                      </p>
+                    )}
                   </div>
                 </div>
               )}

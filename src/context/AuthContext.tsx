@@ -24,6 +24,7 @@ export const performLogin = async (
   options: { isGuest?: boolean; email?: string; password?: string; source?: string } = {}
 ): Promise<AuthResponse> => {
   const storedAuth = localStorage.getItem('authResponse');
+
   if (storedAuth) {
     try {
       const parsedAuth = JSON.parse(storedAuth) as AuthSuccessResponse;
@@ -84,7 +85,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const pathname = useLocation().pathname;
   const [searchParams] = useSearchParams();
-  const source = searchParams.get('source');
+  const urlSource = searchParams.get('source');
+  const [sourceLocal, setSourceLocal] = useState<string | null>(null);
 
   const logout = () => {
     localStorage.removeItem('authResponse');
@@ -101,6 +103,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     if (pathname === '/auth') return;
+
+    let source: string | null = null;
+    if (urlSource) {
+      source = urlSource;
+      localStorage.setItem('source', urlSource);
+    } else {
+      const storedSource = localStorage.getItem('source');
+      if (storedSource) {
+        source = storedSource;
+      }
+    }
+
+    setSourceLocal(source);
     const initializeAuth = async () => {
       const storedAuth = localStorage.getItem('authResponse');
       if (!storedAuth) {
@@ -123,6 +138,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
   }, []);
 
+  // useEffect(() => {
+  //   let source: string | null = null;
+  //   if (urlSource) {
+  //     source = urlSource;
+  //     localStorage.setItem('source', urlSource);
+  //   } else {
+  //     const storedSource = localStorage.getItem('source');
+  //     if (storedSource) {
+  //       source = storedSource;
+  //     }
+  //   }
+  //   setSourceLocal(source);
+  // }, [urlSource]);
+  console.log('sourceLocal', sourceLocal);
+
   const isAuthenticated = !!(authResponse && 'idToken' in authResponse);
   const [authLoading, setAuthLoading] = useState(() => {
     return !localStorage.getItem('authResponse');
@@ -134,6 +164,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated,
     authLoading,
     logout,
+    sourceLocal,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

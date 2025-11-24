@@ -1,17 +1,13 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { isGuestUser } from '../../context/AuthContext';
 import Banner from '../../components/Banner/Banner';
-import { usePreserveQueryNavigate } from '../../hooks/usePreserveQueryNavigate';
 
 const GuestAutoLogin = () => {
-  const { authResponse, logout } = useAuth();
-  const nav = useNavigate();
+  const { authResponse } = useAuth();
   const [bannerVisible, setBannerVisible] = useState(true);
-  const navigate = usePreserveQueryNavigate();
-  const [searchParams] = useSearchParams();
-  const source = searchParams.get('source');
+  const navigate = useNavigate();
 
   if (!authResponse) return null;
 
@@ -20,8 +16,11 @@ const GuestAutoLogin = () => {
   if (!isGuest || !bannerVisible) return null;
 
   function handleSigninClick() {
-    logout();
     navigate('/auth');
+  }
+  function handleSignupClick() {
+    const source = localStorage.getItem('source') || '';
+    navigate(`/sign-up/${source}`);
   }
 
   return (
@@ -31,7 +30,7 @@ const GuestAutoLogin = () => {
       message={
         <>
           You are logged in as a guest user. Please{' '}
-          <button className="underline font-semibold" onClick={() => nav(`/sign-up/${source}`)}>
+          <button className="underline font-semibold" onClick={handleSignupClick}>
             sign up
           </button>{' '}
           or{' '}

@@ -340,7 +340,7 @@ export interface LayerState {
 }
 
 export interface LayerContextType {
-    intelligenceViewport: {
+  intelligenceViewport: {
     top_lng: number;
     top_lat: number;
     bottom_lng: number;
@@ -589,6 +589,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   authLoading: boolean;
   logout: () => void;
+  sourceLocal: string | null;
 }
 
 export interface AuthFailedResponse {
@@ -996,7 +997,6 @@ export interface ReportGenerationResponse {
   message?: string;
   error?: string;
 }
-
 
 export interface IntelligenceViewport {
   top_lng: number;

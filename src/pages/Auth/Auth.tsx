@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { performLogin, isGuestUser } from '../../context/AuthContext';
 import { HttpReq } from '../../services/apiService';
@@ -7,7 +7,6 @@ import urls from '../../urls.json';
 import { AuthResponse } from '../../types/allTypesAndInterfaces';
 import styles from './Auth.module.css';
 import { FaEnvelope, FaLock, FaUser } from 'react-icons/fa';
-import { usePreserveQueryNavigate } from '../../hooks/usePreserveQueryNavigate';
 
 const Auth = () => {
   const nav = useNavigate();
@@ -32,7 +31,8 @@ const Auth = () => {
   const [isRegistered, setIsRegistered] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
-  const navigate = usePreserveQueryNavigate();
+  const [searchParams] = useSearchParams();
+  const authQuery = searchParams.get('auth');
 
   const handleLogin = async (email: string, password: string) => {
     try {
@@ -146,7 +146,12 @@ const Auth = () => {
 
   useEffect(() => {
     if (!authLoading && isAuthenticated && authResponse) {
-      navigate('/');
+      // If "auth=auto" IS present, it means the user was sent here automatically
+      // because a protected request required real credentials(You should add this query manually like fetchDatasetForm) — so allow redirect.
+      if (isGuestUser(authResponse) && authQuery !== 'auto') {
+        return;
+      }
+      nav('/');
     }
   }, [authLoading, isAuthenticated, authResponse, nav]);
 

@@ -1,9 +1,10 @@
-import React from "react";
-import styles from "./UserLayerCard.module.css";
-import placeHolderImage from "../../placeholderImage/layer.png";
-import { UserLayerCardProps } from "../../types/allTypesAndInterfaces";
-import { useCatalogContext } from "../../context/CatalogContext";
-import { Progress } from "../common";
+import React from 'react';
+import styles from './UserLayerCard.module.css';
+import placeHolderImage from '../../placeholderImage/layer.png';
+import { UserLayerCardProps } from '../../types/allTypesAndInterfaces';
+import { useCatalogContext } from '../../context/CatalogContext';
+import { Progress } from '../common';
+import { FaCheckCircle } from 'react-icons/fa';
 
 function UserLayerCard(props: UserLayerCardProps) {
   const { geoPoints } = useCatalogContext();
@@ -19,12 +20,14 @@ function UserLayerCard(props: UserLayerCardProps) {
   return (
     <div className="relative transition-all">
       {/* Progress + Percentage */}
-      {props.progress && (
+      {props.progress && props.progress > 0 && (
         <div className="absolute top-0 left-0 z-[1] w-full p-2 flex items-center gap-2 bg-white/70">
           <Progress value={props.progress} className="w-full" />
-          <p className="text-sm text-gray-600 min-w-[40px] text-right">
-            {props.progress}%
-          </p>
+          {props.progress < 100 ? (
+            <p className="text-sm text-gray-600 min-w-[40px] text-right">{props.progress}%</p>
+          ) : (
+            <FaCheckCircle className="text-green-500" />
+          )}
         </div>
       )}
 
@@ -45,12 +48,8 @@ function UserLayerCard(props: UserLayerCardProps) {
           </div>
 
           <div className="mt-2 flex-grow">
-            <span className="block text-sm text-[#888]">
-              Legend: {props.legend}
-            </span>
-            <p className="m-0 text-sm text-[#555]">
-              Description: {props.description}
-            </p>
+            <span className="block text-sm text-[#888]">Legend: {props.legend}</span>
+            <p className="m-0 text-sm text-[#555]">Description: {props.description}</p>
           </div>
         </div>
 

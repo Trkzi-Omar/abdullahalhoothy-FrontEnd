@@ -86,6 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const pathname = useLocation().pathname;
   const [searchParams] = useSearchParams();
   const urlSource = searchParams.get('source');
+  const urlAuth = searchParams.get('auth');
   const [sourceLocal, setSourceLocal] = useState<string | null>(null);
 
   const logout = () => {
@@ -102,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [authResponse]);
 
   useEffect(() => {
-    if (pathname === '/auth') return;
+    if (pathname === '/auth' && urlAuth !== 'auto') return;
 
     let source: string | null = null;
     if (urlSource) {
@@ -136,7 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
     initializeAuth();
-  }, []);
+  }, [urlAuth]);
 
   // useEffect(() => {
   //   let source: string | null = null;

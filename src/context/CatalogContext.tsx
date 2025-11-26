@@ -166,13 +166,13 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [colors, setColors] = useState<string[][]>([]);
   const [reqGradientColorBasedOnZone, setReqGradientColorBasedOnZone] =
     useState<ReqGradientColorBasedOnZone>({
-      prdcer_lyr_id: '',
-      change_lyr_name: '',
-      based_on_lyr_name: '',
+      layer_id: '',
+      change_layer_name: '',
+      based_on_layer_name: '',
       user_id: '',
       color_grid_choice: [],
-      change_lyr_id: '',
-      based_on_lyr_id: '',
+      change_layer_id: '',
+      based_on_layer_id: '',
       coverage_value: 0,
       coverage_property: '',
       color_based_on: '',
@@ -382,7 +382,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
                     }
                     const layerMap = sectionsMap.get(key);
                     const layerName =
-                      geoPoint.prdcer_layer_name || geoPoint.layer_legend || 'Unknown Layer';
+                      geoPoint.layer_name || geoPoint.layer_legend || 'Unknown Layer';
                     if (!layerMap.has(layerName)) {
                       layerMap.set(layerName, new Map());
                     }
@@ -412,7 +412,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
                 percentage: parseFloat(
                   (
                     (areaData.count /
-                      (geoPoints.find((gp: MapFeatures) => gp.prdcer_layer_name === layer_name)
+                      (geoPoints.find((gp: MapFeatures) => gp.layer_name === layer_name)
                         ?.features?.length || 1)) *
                     100
                   ).toFixed(1)
@@ -476,18 +476,18 @@ export function CatalogProvider(props: { children: ReactNode }) {
     const apiJsonRequest =
       typeOfCard === 'layer'
         ? {
-            prdcer_lyr_id: id,
+            layer_id: id,
             user_id: userIdData.user_id,
           }
         : typeOfCard === 'userCatalog'
-          ? { prdcer_ctlg_id: id, as_layers: true, user_id: authResponse.localId }
+          ? { catalog_id: id, as_layers: true, user_id: authResponse.localId }
           : { catalogue_dataset_id: id };
 
     const url =
       typeOfCard === 'layer'
-        ? urls.prdcer_lyr_map_data
+        ? urls.layer_map_data
         : typeOfCard === 'userCatalog'
-          ? urls.fetch_ctlg_lyrs
+          ? urls.fetch_catalog_layers
           : urls.http_catlog_data;
 
     let unprocessedData: MapFeatures | MapFeatures[] | null = null;
@@ -532,7 +532,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
 
         updatedDataArray.forEach(newLayer => {
           const existingIndex = updatedGeoPoints.findIndex(
-            p => p.prdcer_lyr_id === newLayer.prdcer_lyr_id
+            p => p.layer_id === newLayer.layer_id
           );
 
           if (existingIndex !== -1) {
@@ -570,7 +570,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
       // this is the reason for fetching singal catalog while user pressed on add layer.
       if (typeOfCard === 'catalog') {
         try {
-          const body = { user_id: authResponse?.localId, ctlg_id: id };
+          const body = { user_id: authResponse?.localId, catalog_id: id };
 
           const res = await apiRequest({
             url: urls.fetch_single_catalog,
@@ -665,12 +665,12 @@ export function CatalogProvider(props: { children: ReactNode }) {
         message: 'Save catalog request',
         request_info: {},
         request_body: {
-          prdcer_ctlg_name: name,
+          catalog_name: name,
           subscription_price: subscriptionPrice,
-          ctlg_description: description,
+          catalog_description: description,
           total_records: 0,
-          lyrs: geoPoints.map(layer => ({
-            layer_id: layer.prdcer_lyr_id,
+          layers: geoPoints.map(layer => ({
+            layer_id: layer.layer_id,
             points_color: layer.points_color,
           })),
           user_id: authResponse.localId,
@@ -705,7 +705,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
       console.log(requestBody);
 
       const res = await apiRequest({
-        url: urls.save_producer_catalog,
+        url: urls.save_catalog,
         method: 'post',
         body: formData,
         isAuthRequest: true,
@@ -1401,7 +1401,7 @@ export function calculatePolygonStats(polygon: any, geoPoints: any[]) {
   // Process points within polygon
   const pointsWithin = geoPoints.map(layer => {
     console.log(
-      `Processing layer in calculatePolygonStats: ${layer.prdcer_layer_name || 'unnamed'}`
+      `Processing layer in calculatePolygonStats: ${layer.layer_name || 'unnamed'}`
     );
     console.log(`Layer has ${layer.features?.length || 0} features`);
 
@@ -1462,7 +1462,7 @@ export function calculatePolygonStats(polygon: any, geoPoints: any[]) {
     });
 
     return {
-      title: layer.layer_legend || layer.prdcer_layer_name,
+      title: layer.layer_legend || layer.layer_name,
       count: matchingPoints.length,
       percentage: ((matchingPoints.length / layer.features.length) * 100).toFixed(1),
     };

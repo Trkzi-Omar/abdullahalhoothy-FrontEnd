@@ -88,7 +88,7 @@ export function LayerProvider(props: { children: ReactNode }) {
   const [saveMethod, setSaveMethod] = useState<string>('');
   const [datasetInfo, setDatasetInfo] = useState<{
     bknd_dataset_id: string;
-    prdcer_lyr_id: string;
+    layer_id: string;
   } | null>(null);
 
   const [saveResponse, setSaveResponse] = useState<SaveResponse | null>(null);
@@ -158,8 +158,8 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   async function saveSingleLayer(layerData: LayerCustomization) {
     const postData = {
-      prdcer_layer_name: layerData.name,
-      prdcer_lyr_id: layerDataMap[layerData.layerId]?.prdcer_lyr_id,
+      layer_name: layerData.name,
+      layer_id: layerDataMap[layerData.layerId]?.layer_id,
       bknd_dataset_id: layerDataMap[layerData.layerId]?.bknd_dataset_id,
       points_color: layerData.color,
       layer_legend: layerData.legend,
@@ -220,8 +220,8 @@ export function LayerProvider(props: { children: ReactNode }) {
         layerId: String(layerId),
         city_name: reqFetchDataset.selectedCity,
         layer_legend: layerName,
-        prdcer_layer_name: layerName,
-        prdcer_lyr_id: data.prdcer_lyr_id,
+        layer_name: layerName,
+        layer_id: data.layer_id,
         bknd_dataset_id: data.bknd_dataset_id,
         isTemporary: true,
       };
@@ -236,7 +236,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         //   layerId,
         //   layerName,
         //   data.next_page_token,
-        //   data.prdcer_lyr_id,
+        //   data.layer_id,
         // ).catch((err) => {
         //   console.error(`Error fetching page for layer ${layerId}:`, err);
         // });
@@ -290,7 +290,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     action: string,
     pageToken?: string,
     layerId?: number,
-    prevPrdcerLyrId?: string,
+    prevLayerId?: string,
     customBody?: any
   ) {
     if (!pageToken && !layerId) {
@@ -361,9 +361,9 @@ export function LayerProvider(props: { children: ReactNode }) {
               : ''
           }`;
 
-          const prdcerLayerId = layerDataMapRef.current[layer.id]?.prdcer_lyr_id;
+          const LayerId = layerDataMapRef.current[layer.id]?.layer_id;
           const payloadLayerId = pageToken
-            ? prevPrdcerLyrId || layerDataMapRef.current[layer.id]?.prdcer_lyr_id || ''
+            ? prevLayerId || layerDataMapRef.current[layer.id]?.layer_id || ''
             : '';
 
           try {
@@ -424,7 +424,7 @@ export function LayerProvider(props: { children: ReactNode }) {
             country_name: reqFetchDataset.selectedCountry,
             city_name: reqFetchDataset.selectedCity,
             boolean_query: `@${textSearchInput?.trim()}@`, // Use the search term as the boolean query
-            layerId: pageToken ? prevPrdcerLyrId || '' : '',
+            layerId: pageToken ? prevLayerId || '' : '',
             layer_name: defaultName,
             action: action,
             search_type: searchType,
@@ -565,14 +565,14 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   async function fetchAllPages(layerId: number, initialPageToken: string, customBody?: any) {
     let pageToken = initialPageToken;
-    let prevPrdcerLyrId = '';
+    let prevLayerId = '';
 
     while (pageToken) {
       const resData = await handleFetchDataset(
         'full data',
         pageToken,
         layerId,
-        prevPrdcerLyrId,
+        prevLayerId,
         customBody
       );
 
@@ -581,8 +581,8 @@ export function LayerProvider(props: { children: ReactNode }) {
         break;
       }
 
-      // Use the prdcer_lyr_id from the current response for the next call
-      prevPrdcerLyrId = resData.prdcer_lyr_id;
+      // Use the layer_id from the current response for the next call
+      prevLayerId = resData.layer_id;
 
       pageToken = resData.next_page_token || '';
     }
@@ -592,17 +592,17 @@ export function LayerProvider(props: { children: ReactNode }) {
     layerId: number,
     defaultName: string,
     initialPageToken: string,
-    initialPrdcerLyrId: string
+    initialLayerId: string
   ) {
     let pageToken = initialPageToken;
-    let prevPrdcerLyrId = initialPrdcerLyrId;
+    let prevLayerId = initialLayerId;
     // Loop until there is no pageToken
     while (pageToken) {
       // Await each API call and get its response data
-      const resData = await handleFetchDataset('full data', pageToken, layerId, prevPrdcerLyrId);
+      const resData = await handleFetchDataset('full data', pageToken, layerId, prevLayerId);
       if (!resData) break;
-      // Use the prdcer_lyr_id from the current response for the next call
-      prevPrdcerLyrId = resData.prdcer_lyr_id;
+      // Use the layer_id from the current response for the next call
+      prevLayerId = resData.layer_id;
       pageToken = resData.next_page_token || '';
     }
   }

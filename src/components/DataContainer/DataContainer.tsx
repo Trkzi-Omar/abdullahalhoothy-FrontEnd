@@ -188,13 +188,13 @@ function DataContainer() {
 
   // Render a card based on the item type
   function makeCard(item: Catalog | UserLayer, index: number) {
-    if ('prdcer_lyr_id' in item) {
+    if ('layer_id' in item) {
       // Render UserLayerCard if item is a user layer
       return (
         <UserLayerCard
-          key={item.prdcer_lyr_id + '-' + index} // Use a combination of id and index
-          id={item.prdcer_lyr_id}
-          name={item.prdcer_layer_name}
+          key={item.layer_id + '-' + index} // Use a combination of id and index
+          id={item.layer_id}
+          name={item.layer_name}
           description={item.layer_description}
           legend={item.layer_legend}
           typeOfCard="layer"
@@ -202,8 +202,8 @@ function DataContainer() {
           progress={item.progress}
           onMoreInfo={function () {
             handleCatalogCardClick({
-              id: item.prdcer_lyr_id,
-              name: item.prdcer_layer_name,
+              id: item.layer_id,
+              name: item.layer_name,
               typeOfCard: 'layer',
               points_color: isValidColor(item.points_color as string)
                 ? item.points_color
@@ -215,21 +215,21 @@ function DataContainer() {
       );
     } else {
       // Render CatalogueCard if item is a catalog
-      var typeOfCard = 'prdcer_ctlg_name' in item ? 'userCatalog' : 'catalog';
+      var typeOfCard = 'catalog_name' in item ? 'userCatalog' : 'catalog';
       return (
         <CatalogueCard
-          key={(item.id || item.prdcer_ctlg_id || '') + '-' + index}
-          id={item.id || item.prdcer_ctlg_id || ''}
+          key={(item.id || item.catalog_id || '') + '-' + index}
+          id={item.id || item.catalog_id || ''}
           thumbnail_url={item.thumbnail_url || item.image || ''}
-          name={item.name || item.prdcer_ctlg_name || ''}
+          name={item.name || item.catalog_name || ''}
           records_number={item.records_number || item.total_records || 0}
-          description={item.description || item.ctlg_description || ''}
+          description={item.description || item.catalog_description || ''}
           onMoreInfo={function () {
             handleCatalogCardClick({
-              id: item.id || item.prdcer_ctlg_id || '',
-              name: item.name || item.prdcer_ctlg_name || '',
+              id: item.id || item.catalog_id || '',
+              name: item.name || item.catalog_name || '',
               typeOfCard: typeOfCard,
-              ...(typeOfCard === 'userCatalog' && { lyrs: item.lyrs }),
+              ...(typeOfCard === 'userCatalog' && { layers: item.layers }),
             });
           }}
           can_access={item.can_access ?? false}

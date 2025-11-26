@@ -20,9 +20,9 @@ function DatasetModalContent() {
             const layerData = layerDataMap[layer.id];
             const progress = layerData?.progress || 0;
 
-            // Find layer name from geoPoints which has prdcer_layer_name
+            // Find layer name from geoPoints which has layer_name
             const geoPointData = geoPoints.find(gp => String(gp.layerId) === String(layer.id));
-            const layerName = geoPointData?.prdcer_layer_name || `Layer ${layer.id}`;
+            const layerName = geoPointData?.layer_name || `Layer ${layer.id}`;
 
             return (
               <div key={layer.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">

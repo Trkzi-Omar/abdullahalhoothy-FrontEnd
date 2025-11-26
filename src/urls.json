@@ -12,10 +12,10 @@
   "user_catalogs": "user_catalogs",
   "fetch_dataset": "fetch_dataset",
   "save_layer": "save_layer",
-  "fetch_ctlg_lyrs": "fetch_ctlg_lyrs",
+  "fetch_catalog_layers": "fetch_catalog_layers",
   "user_layers": "user_layers",
-  "prdcer_lyr_map_data": "prdcer_lyr_map_data",
-  "save_producer_catalog": "save_producer_catalog",
+  "layer_map_data": "layer_map_data",
+  "save_catalog": "save_catalog",
   "login": "login",
   "reset_password": "reset_password",
   "create_user_profile": "create_user_profile",
@@ -37,7 +37,7 @@
   "top_up_wallet": "/top_up_wallet",
   "fetch_wallet": "/fetch_wallet",
   "deduct_wallet": "/deduct_wallet",
-  "delete_producer_catalog": "/delete_producer_catalog",
+  "delete_catalog": "/delete_catalog",
   "delete_layer": "/delete_layer",
   "filter_based_zone": "/filter_based_on",
   "process_llm_query": "/process_llm_query",
@@ -51,5 +51,4 @@
   "business_category_metrics": "/business_category_metrics",
   "calculate_cart_cost": "/calculate_cart_cost",
   "purchase_items": "/purchase_items"
-}  
-
+}

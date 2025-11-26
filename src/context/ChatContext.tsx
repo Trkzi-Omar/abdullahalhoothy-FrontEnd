@@ -251,10 +251,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     // Extract parameters, defaulting if necessary
     const {
       color_grid_choice = colors?.[0] || ['#ff0000', '#00ff00', '#0000ff'],
-      change_lyr_id,
-      change_lyr_name,
-      based_on_lyr_id,
-      based_on_lyr_name,
+      change_layer_id,
+      change_layer_name,
+      based_on_layer_id,
+      based_on_layer_name,
       coverage_property = 'radius',
       coverage_value = 1000,
       color_based_on,
@@ -264,21 +264,21 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     } = responseBody;
 
     // Validate essential parameters
-    if (!change_lyr_id || !based_on_lyr_id) {
+    if (!change_layer_id || !based_on_layer_id) {
       throw new Error('Missing required layer IDs in response');
     }
 
     // Format parameters appropriately
     return {
       color_grid_choice,
-      change_lyr_id,
-      change_lyr_name: change_lyr_name || `Layer ${change_lyr_id}`,
-      based_on_lyr_id,
-      based_on_lyr_name: based_on_lyr_name || `Layer ${based_on_lyr_id}`,
+      change_layer_id,
+      change_layer_name: change_layer_name || `Layer ${change_layer_id}`,
+      based_on_layer_id,
+      based_on_layer_name: based_on_layer_name || `Layer ${based_on_layer_id}`,
       coverage_property,
       coverage_value,
-      change_lyr_new_color: responseBody.change_lyr_new_color || '',
-      change_lyr_orginal_color: responseBody.change_lyr_orginal_color || '',
+      change_layer_new_color: responseBody.change_layer_new_color || '',
+      change_layer_orginal_color: responseBody.change_layer_orginal_color || '',
       color_based_on,
       list_names: Array.isArray(list_names)
         ? list_names.filter((name: string) => name.trim() !== '')
@@ -309,11 +309,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       // Update geoPoints with gradient information
       setGeoPoints(prev => {
         return prev.map(point => {
-          const matchingGroup = responseData.find(g => g.prdcer_lyr_id === point.prdcer_lyr_id);
+          const matchingGroup = responseData.find(g => g.layer_id === point.layer_id);
           if (matchingGroup) {
             return {
               ...point,
-              prdcer_layer_name: matchingGroup.prdcer_layer_name || point.prdcer_layer_name,
+              layer_name: matchingGroup.layer_name || point.layer_name,
               layer_legend: matchingGroup.layer_legend || point.layer_legend,
               features: combinedFeatures.filter((f: any) => f.layer_id === point.layerId),
               gradient_groups: responseData.map(group => ({
@@ -322,7 +322,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 count: group.records_count || 0,
               })),
               is_gradient: true,
-              gradient_based_on: matchingGroup.based_on_lyr_id || null,
+              gradient_based_on: matchingGroup.based_on_layer_id || null,
             };
           }
           return point;

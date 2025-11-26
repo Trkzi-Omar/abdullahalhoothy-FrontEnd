@@ -29,11 +29,11 @@ export interface Catalog {
   records_number: number;
   catalog_link: string;
   can_access: boolean;
-  prdcer_ctlg_id?: string;
-  prdcer_ctlg_name?: string;
+  catalog_id?: string;
+  catalog_name?: string;
   total_records?: number;
-  ctlg_description?: string;
-  lyrs?: { layer_id: string; points_color: string }[];
+  catalog_description?: string;
+  layers?: { layer_id: string; points_color: string }[];
   display_elements: {
     details: any[];
     markers: {
@@ -57,13 +57,13 @@ export interface Catalog {
 
 export interface UserLayer {
   progress: number;
-  prdcer_lyr_id: string;
-  prdcer_layer_name: string;
+  layer_id: string;
+  layer_name: string;
   points_color?: string;
   layer_legend: string;
   layer_description: string;
   records_count: number;
-  is_zone_lyr: boolean;
+  is_zone_layer: boolean;
   city_name?: string;
 }
 
@@ -120,7 +120,7 @@ export interface CardItem {
       currentStyle: string;
     };
   };
-  lyrs?: { layer_id: string; points_color: string }[];
+  layers?: { layer_id: string; points_color: string }[];
   city_name?: string;
 }
 
@@ -284,18 +284,18 @@ export interface CatalogContextType {
 }
 
 export interface GradientColorBasedOnZone extends MapFeatures {
-  sub_lyr_id: string;
+  sub_layer_id: string;
   [key: string]: any;
 }
 
 export interface ReqGradientColorBasedOnZone {
-  prdcer_lyr_id: string;
+  layer_id: string;
   user_id: string;
   color_grid_choice: string[];
-  change_lyr_id: string;
-  change_lyr_name: string;
-  based_on_lyr_id: string;
-  based_on_lyr_name: string;
+  change_layer_id: string;
+  change_layer_name: string;
+  based_on_layer_id: string;
+  based_on_layer_name: string;
   coverage_value: number | string;
   coverage_property: string;
   color_based_on: string;
@@ -334,7 +334,7 @@ export interface LayerState {
   isLoading: boolean;
   datasetInfo: {
     bknd_dataset_id: string;
-    prdcer_lyr_id: string;
+    layer_id: string;
   } | null;
   customName?: string;
 }
@@ -379,11 +379,11 @@ export interface LayerContextType {
   setSelectedColor: React.Dispatch<React.SetStateAction<Color | null>>;
   saveOption: string;
   setSaveOption: React.Dispatch<React.SetStateAction<string>>;
-  datasetInfo: { bknd_dataset_id: string; prdcer_lyr_id: string } | null;
+  datasetInfo: { bknd_dataset_id: string; layer_id: string } | null;
   setDatasetInfo: React.Dispatch<
     React.SetStateAction<{
       bknd_dataset_id: string;
-      prdcer_lyr_id: string;
+      layer_id: string;
     } | null>
   >;
   saveResponseMsg: string;
@@ -530,7 +530,7 @@ export interface FetchDatasetResponse {
   type: 'FeatureCollection';
   features: Feature[];
   bknd_dataset_id: string;
-  prdcer_lyr_id: string;
+  layer_id: string;
   records_count: number;
   next_page_token: string;
   display?: boolean;
@@ -540,11 +540,11 @@ export interface FetchDatasetResponse {
 export type Bounds = [number, number, number, number]; // [west, south, east, north]
 
 export interface MapFeatures extends FetchDatasetResponse {
-  prdcer_layer_name?: string;
+  layer_name?: string;
   points_color?: string;
   layer_legend?: string;
   layer_description?: string;
-  is_zone_lyr?: string;
+  is_zone_layer?: string;
   city_name?: string;
   is_heatmap?: boolean;
   is_grid?: boolean;
@@ -642,7 +642,7 @@ export interface Layer {
   basedon?: string;
   layer_legend?: string;
   layer_description?: string;
-  prdcer_lyr_id?: string;
+  layer_id?: string;
   cost: number;
 }
 
@@ -720,11 +720,11 @@ export type GeoPointData = {
   features: Feature[];
   avgRating?: number;
   totalUserRatings?: number;
-  prdcer_layer_name?: string;
+  layer_name?: string;
   points_color?: string;
   layer_legend?: string;
   layer_description?: string;
-  is_zone_lyr?: string;
+  is_zone_layer?: string;
   city_name?: string;
   percentageInside?: number;
 };
@@ -819,7 +819,7 @@ export interface UserProfile {
   phone?: string;
   account_type: string;
   show_price_on_purchase: boolean;
-  prdcer?: Record<string, any>;
+  maker?: Record<string, any>;
 }
 
 export interface PopupInfo {

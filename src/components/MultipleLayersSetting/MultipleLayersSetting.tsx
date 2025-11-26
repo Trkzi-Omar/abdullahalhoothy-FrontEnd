@@ -87,9 +87,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   } = useCatalogContext();
   const layer = geoPoints[layerIndex];
 
-  const { prdcer_layer_name, layer_legend, is_zone_lyr, display, is_heatmap, is_grid, city_name } =
+  const { layer_name, layer_legend, is_zone_layer, display, is_heatmap, is_grid, city_name } =
     layer;
-  const [, setIsZoneLayer] = useState(is_zone_lyr);
+  const [, setIsZoneLayer] = useState(is_zone_layer);
   const [isDisplay, setIsDisplay] = useState(display);
   const [isHeatmap, setIsHeatmap] = useState(is_heatmap);
   const [isGrid, setIsGrid] = useState(is_grid);
@@ -130,11 +130,11 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
   useEffect(
     function () {
-      setIsZoneLayer(layer.is_zone_lyr);
+      setIsZoneLayer(layer.is_zone_layer);
       setIsDisplay(layer.display);
       setIsHeatmap(layer.is_heatmap);
     },
-    [layer.is_zone_lyr, layer.display, layer.is_heatmap]
+    [layer.is_zone_layer, layer.display, layer.is_heatmap]
   );
 
   useEffect(() => {
@@ -220,22 +220,22 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     }
   }
 
-  function handleApplyRadius(newRadius: number | string) {
+  function handleApplayeradius(newRadius: number | string) {
     if (!newRadius) {
       return null;
     } else {
       setIsRadiusMode(true);
-      const prdcer_lyr_id =
+      const layer_id =
         layerIndex == 0
-          ? geoPoints[0]?.prdcer_lyr_id
+          ? geoPoints[0]?.layer_id
           : layerIndex == 1
-            ? geoPoints[1]?.prdcer_lyr_id
+            ? geoPoints[1]?.layer_id
             : '';
-      const change_lyr_id =
+      const change_layer_id =
         layerIndex == 0
-          ? geoPoints[1]?.prdcer_lyr_id
+          ? geoPoints[1]?.layer_id
           : layerIndex == 1
-            ? geoPoints[0]?.prdcer_lyr_id
+            ? geoPoints[0]?.layer_id
             : '';
 
       const updatedLayer = {
@@ -249,13 +249,13 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       });
 
       setReqGradientColorBasedOnZone({
-        prdcer_lyr_id,
+        layer_id,
         user_id: authResponse?.localId || '',
         color_grid_choice: colors[chosenPallet || 0],
-        change_lyr_id,
-        change_lyr_name: geoPoints[layerIndex]?.prdcer_layer_name || `Layer ${layerIndex}`,
-        based_on_lyr_id: prdcer_lyr_id,
-        based_on_lyr_name: geoPoints[layerIndex]?.prdcer_layer_name || `Layer ${layerIndex}`,
+        change_layer_id,
+        change_layer_name: geoPoints[layerIndex]?.layer_name || `Layer ${layerIndex}`,
+        based_on_layer_id: layer_id,
+        based_on_layer_name: geoPoints[layerIndex]?.layer_name || `Layer ${layerIndex}`,
         threshold: getFormattedThreshold(propertyThreshold, basedOnProperty),
         coverage_value: newRadius,
         coverage_property: selectedBasedon,
@@ -328,7 +328,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
     try {
       const currentLayer = geoPoints[layerIndex];
-      const baseLayer = geoPoints.find(layer => layer.prdcer_lyr_id === basedOnLayerId);
+      const baseLayer = geoPoints.find(layer => layer.layer_id === basedOnLayerId);
       const selectedColors = colors[chosenPallet || 0];
 
       if (!currentLayer || !baseLayer || !selectedColors) {
@@ -338,20 +338,20 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       }
 
       const filterRequest = {
-        prdcer_lyr_id: currentLayer.prdcer_lyr_id,
+        layer_id: currentLayer.layer_id,
         user_id: authResponse?.localId || '',
         color_grid_choice: selectedColors,
-        change_lyr_id: currentLayer.prdcer_lyr_id,
-        change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
-        change_lyr_current_color: currentLayer.points_color || '#000000', // Send current color
-        based_on_lyr_id: baseLayer.prdcer_lyr_id,
-        based_on_lyr_name: baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`,
+        change_layer_id: currentLayer.layer_id,
+        change_layer_name: currentLayer.layer_name || `Layer ${currentLayer.layerId}`,
+        change_layer_current_color: currentLayer.points_color || '#000000', // Send current color
+        based_on_layer_id: baseLayer.layer_id,
+        based_on_layer_name: baseLayer.layer_name || `Layer ${baseLayer.layerId}`,
         coverage_property: coverageType,
         coverage_value: parseInt(coverageValue) || 0,
         color_based_on: basedOnProperty || '',
         list_names: nameInputs.filter(name => name.trim() !== ''),
         threshold: getFormattedThreshold(propertyThreshold, basedOnProperty),
-        change_lyr_new_color: recolorSelectedColor, // Use the selected color
+        change_layer_new_color: recolorSelectedColor, // Use the selected color
         comparison_type: comparisonType, // Add comparison_type to the request
       };
 
@@ -367,7 +367,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       setGeoPoints(prevGeoPoints =>
         prevGeoPoints.map(layer => {
           const matchedFilterData = filterResponse.filter(
-            filter => filter.bknd_dataset_id === layer.prdcer_lyr_id
+            filter => filter.bknd_dataset_id === layer.layer_id
           );
 
           if (matchedFilterData.length > 0) {
@@ -391,7 +391,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     }
   };
 
-  const handleApplyRecolor = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleApplayerecolor = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
     // Validate required fields for recolor
@@ -404,8 +404,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
     try {
       const currentLayer = geoPoints[layerIndex];
-      const baseLayer = geoPoints.find(layer => layer.prdcer_lyr_id === basedOnLayerId);
-      const currentLayerId = currentLayer.prdcer_lyr_id;
+      const baseLayer = geoPoints.find(layer => layer.layer_id === basedOnLayerId);
+      const currentLayerId = currentLayer.layer_id;
       const selectedColors = colors[chosenPallet || 0];
 
       if (!currentLayer || !baseLayer || !selectedColors) {
@@ -415,20 +415,20 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
       // Prepare Gradient API request
       const gradientRequest = {
-        prdcer_lyr_id: currentLayer.prdcer_lyr_id,
+        layer_id: currentLayer.layer_id,
         user_id: authResponse?.localId || '',
         color_grid_choice: selectedColors,
-        change_lyr_id: currentLayer.prdcer_lyr_id,
-        change_lyr_name: currentLayer.prdcer_layer_name || `Layer ${currentLayer.layerId}`,
-        change_lyr_current_color: currentLayer.points_color || '#000000', // Send current color
-        based_on_lyr_id: baseLayer.prdcer_lyr_id,
-        based_on_lyr_name: baseLayer.prdcer_layer_name || `Layer ${baseLayer.layerId}`,
+        change_layer_id: currentLayer.layer_id,
+        change_layer_name: currentLayer.layer_name || `Layer ${currentLayer.layerId}`,
+        change_layer_current_color: currentLayer.points_color || '#000000', // Send current color
+        based_on_layer_id: baseLayer.layer_id,
+        based_on_layer_name: baseLayer.layer_name || `Layer ${baseLayer.layerId}`,
         coverage_property: coverageType,
         threshold: getFormattedThreshold(propertyThreshold, basedOnProperty),
         coverage_value: parseInt(coverageValue) || 0,
         color_based_on: basedOnProperty || '',
         list_names: nameInputs.filter(name => name.trim() !== ''),
-        change_lyr_new_color: recolorSelectedColor, // Use the selected recolor color
+        change_layer_new_color: recolorSelectedColor, // Use the selected recolor color
         comparison_type: comparisonType, // Add comparison_type to the request
       };
 
@@ -457,10 +457,10 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
       setGeoPoints(prev => {
         return prev.map(point => {
-          if (point.prdcer_lyr_id === currentLayerId) {
+          if (point.layer_id === currentLayerId) {
             return {
               ...point,
-              prdcer_layer_name: gradientData[0]?.prdcer_layer_name,
+              layer_name: gradientData[0]?.layer_name,
               layer_legend: gradientData.map(g => g.layer_legend).join(' | '),
               records_count: gradientData.reduce((sum, g) => sum + g.records_count, 0),
               features: combinedFeatures,
@@ -576,8 +576,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
           </button>
 
           <div className="font-bold text-[#333] w-[105px] overflow-hidden">
-            <span className="text-sm text-[#333] block truncate" title={prdcer_layer_name}>
-              {prdcer_layer_name || layer_legend}
+            <span className="text-sm text-[#333] block truncate" title={layer_name}>
+              {layer_name || layer_legend}
             </span>
           </div>
           <div className="flex">
@@ -617,7 +617,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
           <div className="flex flex-col gap-2 mt-4   py-3 px-4 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-50">
             <div className="flex justify-between items-center">
               <p className="text-base mb-0 capitalize font-medium">
-                {prdcer_layer_name || layer_legend}
+                {layer_name || layer_legend}
               </p>
               <div className="flex items-center  gap-2">
                 <p className="text-xs mb-0 font-medium">Advanced</p>
@@ -750,7 +750,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
             <div>
               {selectedOption === 'recolor' ? (
                 <button
-                  onClick={e => handleApplyRecolor(e)}
+                  onClick={e => handleApplayerecolor(e)}
                   disabled={isLoading}
                   className="w-full h-7 text-sm bg-[#115740] text-white font-semibold rounded-md hover:bg-[#123f30] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                 >

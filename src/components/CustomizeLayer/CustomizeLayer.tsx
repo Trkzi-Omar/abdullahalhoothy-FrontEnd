@@ -88,8 +88,8 @@ function CustomizeLayer() {
 
       layerCustomizations.forEach(layer => {
         const savedLayerData = layerDataMap[layer.layerId];
-        if (savedLayerData?.prdcer_lyr_id) {
-          fetchGeoPoints(savedLayerData.prdcer_lyr_id, 'layer');
+        if (savedLayerData?.layer_id) {
+          fetchGeoPoints(savedLayerData.layer_id, 'layer');
         }
       });
     }

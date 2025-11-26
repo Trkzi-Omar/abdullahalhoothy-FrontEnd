@@ -32,8 +32,8 @@ export default function BasedOnLayerDropdown({
   } = useCatalogContext();
   
   const availableLayers = geoPoints.map(layer => ({
-    id: layer.prdcer_lyr_id,
-    name: layer.prdcer_layer_name || `Layer ${layer.layerId}`,
+    id: layer.layer_id,
+    name: layer.layer_name || `Layer ${layer.layerId}`,
   }));
   
   const [selectedColor, setSelectedColor] = useState('#ff0000');
@@ -61,7 +61,7 @@ export default function BasedOnLayerDropdown({
 
   const pickerRef = useRef<HTMLDivElement>(null);
 
-  const currentLayerName = geoPoints[layerIndex]?.prdcer_layer_name || `Layer ${layerIndex + 1}`;
+  const currentLayerName = geoPoints[layerIndex]?.layer_name || `Layer ${layerIndex + 1}`;
 
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
@@ -93,10 +93,10 @@ export default function BasedOnLayerDropdown({
 
   // For recolor mode, use current layer's properties. For filter mode, use comparison layer's properties
   const metrics = useMemo(() => {
-    const targetLayerId = selectedOption === 'recolor' ? geoPoints[layerIndex]?.prdcer_lyr_id : basedOnLayerId;
+    const targetLayerId = selectedOption === 'recolor' ? geoPoints[layerIndex]?.layer_id : basedOnLayerId;
     
     const filteredMetrics = geoPoints
-      .filter(layer => layer.prdcer_lyr_id === targetLayerId)
+      .filter(layer => layer.layer_id === targetLayerId)
       .map(layer => layer.properties)
       .flat()
       .filter(metric => metric !== null);
@@ -237,7 +237,7 @@ export default function BasedOnLayerDropdown({
             >
               <option value="">select layer</option>
               {availableLayers.map(layer => {
-                const isSelf = layer.id === geoPoints[layerIndex]?.prdcer_lyr_id;
+                const isSelf = layer.id === geoPoints[layerIndex]?.layer_id;
                 return (
                   <option key={layer.id} value={layer.id}>
                     {(layer.name.length > 15
@@ -378,7 +378,7 @@ export default function BasedOnLayerDropdown({
             >
               <option value="">select layer</option>
               {availableLayers.map(layer => {
-                const isSelf = layer.id === geoPoints[layerIndex]?.prdcer_lyr_id;
+                const isSelf = layer.id === geoPoints[layerIndex]?.layer_id;
                 return (
                   <option key={layer.id} value={layer.id}>
                     {(layer.name.length > 15

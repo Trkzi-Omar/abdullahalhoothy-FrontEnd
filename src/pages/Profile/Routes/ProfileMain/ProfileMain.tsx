@@ -23,7 +23,7 @@ const ProfileMain: React.FC = () => {
     email: '',
     account_type: '',
     show_price_on_purchase: false,
-    prdcer: {},
+    maker: {},
   });
   const [isLoading, setIsLoading] = useState(true);
   const [showPrice, setShowPrice] = useState<boolean | undefined>(false);
@@ -136,19 +136,19 @@ const ProfileMain: React.FC = () => {
       key: string,
       value: any
     ) => {
-      if (type.includes('lyr')) {
+      if (type.includes('layer')) {
         await apiRequest({
           url: urls.delete_layer,
           method: 'DELETE',
           isAuthRequest: true,
-          body: { user_id: authResponse?.localId, prdcer_lyr_id: value.prdcer_lyr_id },
+          body: { user_id: authResponse?.localId, layer_id: value.layer_id },
         });
-      } else if (type.includes('ctlg')) {
+      } else if (type.includes('catalog')) {
         await apiRequest({
-          url: urls.delete_producer_catalog,
+          url: urls.delete_catalog,
           method: 'DELETE',
           isAuthRequest: true,
-          body: { user_id: authResponse?.localId, prdcer_ctlg_id: value.prdcer_ctlg_id },
+          body: { user_id: authResponse?.localId, catalog_id: value.catalog_id },
         });
       }
       fetchProfile();
@@ -166,10 +166,10 @@ const ProfileMain: React.FC = () => {
             {Object.entries(items).map(([key, value]) => (
               <li key={key} className={styles.itemName}>
                 <span onClick={() => handleItemClick(type, key, value)}>
-                  {value.prdcer_layer_name || value.prdcer_ctlg_name || value.name || key}
+                  {value.layer_name || value.catalog_name || value.name || key}
                 </span>
                 {/* Conditionally render the delete icon */}
-                {type.includes('lyr') || type.includes('ctlg') ? (
+                {type.includes('layer') || type.includes('catalog') ? (
                   <div className={styles.iconContainer}>
                     <div className={styles.verticalDivider} />
                     <FaTrash
@@ -322,14 +322,14 @@ const ProfileMain: React.FC = () => {
               </span>
             </label>
           </div>
-          {profile.prdcer && Object.keys(profile.prdcer).length > 0 && (
+          {profile.maker && Object.keys(profile.maker).length > 0 && (
             <div>
-              <h3 className="text-lg text-[#006400] mt-5 mb-2">Producer Information</h3>
-              {Object.entries(profile.prdcer).map(([key, value]) => {
+              <h3 className="text-lg text-[#006400] mt-5 mb-2">Maker Information</h3>
+              {Object.entries(profile.maker).map(([key, value]) => {
                 const title = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 let icon = <FaDatabase />;
-                if (key.includes('lyr')) icon = <FaLayerGroup />;
-                else if (key.includes('ctlg')) icon = <FaBook />;
+                if (key.includes('layer')) icon = <FaLayerGroup />;
+                else if (key.includes('catalog')) icon = <FaBook />;
                 else if (key.includes('report')) icon = <FaBook />;
                 else if (key.includes('intelligence')) icon = <FaDatabase />;
                 

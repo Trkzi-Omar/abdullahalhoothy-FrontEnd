@@ -50,6 +50,6 @@
   "smart_pharmacy_report": "/smart_pharmacy_report",
   "business_category_metrics": "/business_category_metrics",
   "calculate_cart_cost": "/calculate_cart_cost",
-  "purchase_items": "/purchase_items",
-  "REACT_APP_IMG_API_URL": "http://localhost:8000/static/"
-}
+  "purchase_items": "/purchase_items"
+}  
+

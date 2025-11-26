@@ -42,7 +42,7 @@ export default function CampaignPage() {
     navigate(report.options.custom_redirect);
   };
 
-  const API_BASE =  urls.REACT_APP_API_URL.replace("fastapi","");
+  const API_BASE =  urls.REACT_APP_API_URL.replace("/fastapi","");
 
   const resolveBgImage = (path?: string | null) => {
     if (!path) return undefined;

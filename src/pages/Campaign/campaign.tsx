@@ -103,14 +103,14 @@ export default function CampaignPage() {
           {step === 2 && selectedReport && (
             <>
               <CampaignButton
-                onClick={() => handleAccountClick(selectedReport.options.custom_redirect.has_account)}
+                onClick={() => handleAccountClick(selectedReport.options.custom_redirect)}
                 className="mx-auto max-w-[90ch]"
                 fullWidth={false}
               >
                 Already have an account
               </CampaignButton>
               <CampaignButton
-                onClick={() => handleAccountClick(selectedReport.options.custom_redirect.no_account)}
+                onClick={() => handleAccountClick(selectedReport.options.custom_redirect)}
                 className="mx-auto max-w-[90ch]"
                 fullWidth={false}
               >

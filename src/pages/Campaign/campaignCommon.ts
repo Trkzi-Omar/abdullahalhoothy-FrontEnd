@@ -8,10 +8,7 @@ export type Report = {
   bgImage: string;
   options: {
     free_redirect: string;
-    custom_redirect: {
-      has_account: string;
-      no_account: string;
-    };
+    custom_redirect: string;
   };
 };
 

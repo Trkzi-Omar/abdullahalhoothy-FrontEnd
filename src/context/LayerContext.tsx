@@ -56,7 +56,7 @@ const getFakeData = async (zoomLevel: number) => {
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
 export function LayerProvider(props: { children: ReactNode }) {
-   const { setViewport } = useIntelligenceViewport(); // get the shared state
+   const { viewport: intelligenceViewport, setViewport, pendingActivation, setPendingActivation } = useIntelligenceViewport(); // get the shared state
   const navigate = useNavigate();
   const { authResponse } = useAuth();
   const { children } = props;
@@ -995,6 +995,30 @@ export function LayerProvider(props: { children: ReactNode }) {
   useEffect(() => {
     console.debug('includePopulation', includePopulation, 'includeIncome', includeIncome);
   }, [includePopulation, includeIncome]);
+
+  // Handle pending activation from loaded catalog's intelligence_viewport
+  useEffect(() => {
+    if (pendingActivation && intelligenceViewport) {
+      console.debug('Activating intelligence layers from loaded catalog:', intelligenceViewport);
+      
+      // Activate population layer if it was enabled in the saved catalog
+      if (intelligenceViewport.population && !includePopulation) {
+        handlePopulationLayer(true);
+      } else if (!intelligenceViewport.population && includePopulation) {
+        handlePopulationLayer(false);
+      }
+      
+      // Activate income layer if it was enabled in the saved catalog
+      if (intelligenceViewport.income && !includeIncome) {
+        handleIncomeLayer(true);
+      } else if (!intelligenceViewport.income && includeIncome) {
+        handleIncomeLayer(false);
+      }
+      
+      // Reset pending activation flag
+      setPendingActivation(false);
+    }
+  }, [pendingActivation, intelligenceViewport]);
 
   const _handleIncomeLayer = useCallback(
     async (shouldInclude: boolean, isRefetch: boolean = false) => {

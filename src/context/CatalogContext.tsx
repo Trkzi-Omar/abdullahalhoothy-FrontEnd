@@ -124,7 +124,7 @@ const defaultCaseStudyContent: Descendant[] = [
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
 
 export function CatalogProvider(props: { children: ReactNode }) {
-  const { viewport } = useIntelligenceViewport();
+  const { viewport, setViewport, setPendingActivation } = useIntelligenceViewport();
   const { authResponse } = useAuth();
   const { children } = props;
 
@@ -505,9 +505,38 @@ export function CatalogProvider(props: { children: ReactNode }) {
         isAuthRequest: true,
       });
       if (res?.data?.data) {
-        callData(res.data.data);
+        // Handle different response structures for userCatalog vs other types
+        if (typeOfCard === 'userCatalog') {
+          // userCatalog response has layers_geo_data, display_elements, and intelligence_viewport
+          const responseData = res.data.data;
+          callData(responseData.layers_geo_data);
+          
+          // Handle display_elements
+          if (responseData.display_elements) {
+            setMarkers(responseData.display_elements?.annotations?.pins || []);
+            setMeasurements(responseData.display_elements?.annotations?.routes || []);
+            setCaseStudyContent(responseData.display_elements?.case_study || []);
+            setPolygons(responseData.display_elements?.statisticsPopupData?.polygons || []);
+            setBenchmarks(responseData.display_elements?.statisticsPopupData?.benchmarks || []);
+            setIsBenchmarkControlOpen(
+              responseData.display_elements?.statisticsPopupData?.isBenchmarkControlOpen ?? false
+            );
+            setCurrentStyle(
+              responseData.display_elements?.statisticsPopupData?.currentStyle || 'default'
+            );
+          }
+          
+          // Handle intelligence_viewport if needed
+          if (responseData.intelligence_viewport) {
+            setViewport(responseData.intelligence_viewport);
+            // Trigger pending activation for population/income layers
+            setPendingActivation(true);
+          }
+        } else {
+          callData(res.data.data);
+        }
         setLastGeoMessageRequest(res.data.message);
-        setLastGeoIdRequest(res.data.id);
+        setLastGeoIdRequest(res.data.request_id || res.data.id);
       }
     } catch (error) {
       setIsError(error instanceof Error ? error : new Error('Failed to fetch geo points'));
@@ -669,10 +698,12 @@ export function CatalogProvider(props: { children: ReactNode }) {
           subscription_price: subscriptionPrice,
           catalog_description: description,
           total_records: 0,
-          layers: geoPoints.map(layer => ({
-            layer_id: layer.layer_id,
-            points_color: layer.points_color,
-          })),
+          layers: geoPoints
+            .filter(layer => layer.layer_id && !isIntelligentLayer(layer))
+            .map(layer => ({
+              layer_id: layer.layer_id,
+              points_color: layer.points_color,
+            })),
           user_id: authResponse.localId,
           display_elements: {
             statisticsPopupData: {
@@ -687,15 +718,17 @@ export function CatalogProvider(props: { children: ReactNode }) {
             },
             case_study: caseStudyContent,
           },
-          details: geoPoints.map(layer => ({
-            layer_id: layer.layerId,
-            display: layer.display,
-            points_color: layer.points_color,
-            is_heatmap: layer.is_heatmap,
-            is_grid: layer.is_grid,
-            is_enabled: layer.is_enabled || true,
-            opacity: layer.opacity || 1,
-          })),
+          details: geoPoints
+            .filter(layer => layer.layer_id && !isIntelligentLayer(layer))
+            .map(layer => ({
+              layer_id: layer.layer_id,
+              display: layer.display,
+              points_color: layer.points_color,
+              is_heatmap: layer.is_heatmap,
+              is_grid: layer.is_grid,
+              is_enabled: layer.is_enabled || true,
+              opacity: layer.opacity || 1,
+            })),
           intelligence_viewport: viewport
         },
       };
@@ -714,7 +747,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
 
       setSaveResponse(res.data.data);
       setSaveResponseMsg(res.data.message);
-      setSaveReqId(res.data.id);
+      setSaveReqId(res.data.request_id || res.data.id);
       setFormStage('catalog');
       setIsBenchmarkControlOpen(false);
       clearDraft();

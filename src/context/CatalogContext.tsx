@@ -617,6 +617,15 @@ export function CatalogProvider(props: { children: ReactNode }) {
           setIsBenchmarkControlOpen(
             catalogData.display_elements?.statisticsPopupData?.isBenchmarkControlOpen ?? false
           );
+          setCurrentStyle(
+            catalogData.display_elements?.statisticsPopupData?.currentStyle || 'mapbox://styles/mapbox/streets-v11'
+          );
+          
+          // Handle intelligence_viewport for regular catalogs
+          if (catalogData.intelligence_viewport) {
+            setViewport(catalogData.intelligence_viewport);
+            setPendingActivation(true);
+          }
         } catch (error) {
           console.error('Error fetching single catalog:', error);
         }

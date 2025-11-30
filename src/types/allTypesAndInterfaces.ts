@@ -201,6 +201,11 @@ export interface CatalogContextType {
     index: number;
     timestamp: number;
   }[];
+  setDeletedLayers: React.Dispatch<React.SetStateAction<{
+    layer: MapFeatures;
+    index: number;
+    timestamp: number;
+  }[]>>;
   visualizationMode: VisualizationMode;
   setVisualizationMode: React.Dispatch<React.SetStateAction<VisualizationMode>>;
   basedOnLayerId: string | null;

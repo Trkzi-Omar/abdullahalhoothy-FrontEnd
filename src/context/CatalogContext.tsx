@@ -159,6 +159,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [saveResponse, setSaveResponse] = useState<SaveResponse | null>(null);
   const [saveResponseMsg, setSaveResponseMsg] = useState('');
   const [saveReqId, setSaveReqId] = useState('');
+  const [currentCatalogId, setCurrentCatalogId] = useState<string | null>(null);
   const [isAdvanced, setIsAdvanced] = useState<boolean>(false);
   const [isAdvancedMode, setIsAdvancedMode] = useState({});
   const [radiusInput, setRadiusInput] = useState<number | null>(null);
@@ -511,27 +512,33 @@ export function CatalogProvider(props: { children: ReactNode }) {
           const responseData = res.data.data;
           callData(responseData.layers_geo_data);
           
-          // Handle display_elements
-          if (responseData.display_elements) {
-            setMarkers(responseData.display_elements?.annotations?.pins || []);
-            setMeasurements(responseData.display_elements?.annotations?.routes || []);
-            setCaseStudyContent(responseData.display_elements?.case_study || []);
-            setPolygons(responseData.display_elements?.statisticsPopupData?.polygons || []);
-            setBenchmarks(responseData.display_elements?.statisticsPopupData?.benchmarks || []);
-            setIsBenchmarkControlOpen(
-              responseData.display_elements?.statisticsPopupData?.isBenchmarkControlOpen ?? false
-            );
-            setCurrentStyle(
-              responseData.display_elements?.statisticsPopupData?.currentStyle || 'default'
-            );
-          }
+          // Track the current catalog ID for updates
+          setCurrentCatalogId(id);
           
-          // Handle intelligence_viewport if needed
-          if (responseData.intelligence_viewport) {
-            setViewport(responseData.intelligence_viewport);
-            // Trigger pending activation for population/income layers
-            setPendingActivation(true);
+          // Handle display_elements - always set to clear old state
+          const displayElements = responseData.display_elements || {};
+          setMarkers(displayElements?.annotations?.pins || []);
+          setMeasurements(displayElements?.annotations?.routes || []);
+          setCaseStudyContent(displayElements?.case_study || []);
+          setPolygons(displayElements?.statisticsPopupData?.polygons || []);
+          setBenchmarks(displayElements?.statisticsPopupData?.benchmarks || []);
+          setIsBenchmarkControlOpen(
+            displayElements?.statisticsPopupData?.isBenchmarkControlOpen ?? false
+          );
+          setCurrentStyle(
+            displayElements?.statisticsPopupData?.currentStyle || 'mapbox://styles/mapbox/streets-v11'
+          );
+          
+          // Handle intelligence_viewport - always set to update toggle states
+          const intelligenceViewport = responseData.intelligence_viewport;
+          if (intelligenceViewport) {
+            setViewport(intelligenceViewport);
+          } else {
+            // Clear viewport if not present
+            setViewport(null);
           }
+          // Always trigger pending activation to sync toggle states
+          setPendingActivation(true);
         } else {
           callData(res.data.data);
         }
@@ -554,7 +561,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
       const updatedDataArray = (
         Array.isArray(unprocessedData) ? unprocessedData : [unprocessedData]
       ).map(function (layer) {
-        return Object.assign({}, layer, { display: true, isTemporary: false });
+        return Object.assign({}, layer, { display: true, isTemporary: false, uniqueId: uuidv4() });
       });
       setGeoPoints(function (prevGeoPoints) {
         const updatedGeoPoints = [...prevGeoPoints];
@@ -609,23 +616,29 @@ export function CatalogProvider(props: { children: ReactNode }) {
           });
 
           const catalogData = res.data.data;
-          setMarkers(catalogData.display_elements?.annotations?.pins || []);
-          setMeasurements(catalogData.display_elements?.annotations?.routes || []);
-          setCaseStudyContent(catalogData.display_elements?.case_study || []);
-          setPolygons(catalogData.display_elements?.statisticsPopupData?.polygons || []);
-          setBenchmarks(catalogData.display_elements?.statisticsPopupData?.benchmarks || []);
+          const displayElements = catalogData.display_elements || {};
+          
+          // Always set to clear old state
+          setMarkers(displayElements?.annotations?.pins || []);
+          setMeasurements(displayElements?.annotations?.routes || []);
+          setCaseStudyContent(displayElements?.case_study || []);
+          setPolygons(displayElements?.statisticsPopupData?.polygons || []);
+          setBenchmarks(displayElements?.statisticsPopupData?.benchmarks || []);
           setIsBenchmarkControlOpen(
-            catalogData.display_elements?.statisticsPopupData?.isBenchmarkControlOpen ?? false
+            displayElements?.statisticsPopupData?.isBenchmarkControlOpen ?? false
           );
           setCurrentStyle(
-            catalogData.display_elements?.statisticsPopupData?.currentStyle || 'mapbox://styles/mapbox/streets-v11'
+            displayElements?.statisticsPopupData?.currentStyle || 'mapbox://styles/mapbox/streets-v11'
           );
           
           // Handle intelligence_viewport for regular catalogs
           if (catalogData.intelligence_viewport) {
             setViewport(catalogData.intelligence_viewport);
-            setPendingActivation(true);
+          } else {
+            setViewport(null);
           }
+          // Always trigger to sync toggle states
+          setPendingActivation(true);
         } catch (error) {
           console.error('Error fetching single catalog:', error);
         }
@@ -703,6 +716,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
         message: 'Save catalog request',
         request_info: {},
         request_body: {
+          // Include catalog_id if updating an existing catalog
+          ...(currentCatalogId ? { catalog_id: currentCatalogId } : {}),
           catalog_name: name,
           subscription_price: subscriptionPrice,
           catalog_description: description,
@@ -727,24 +742,49 @@ export function CatalogProvider(props: { children: ReactNode }) {
             },
             case_study: caseStudyContent,
           },
-          details: geoPoints
-            .filter(layer => layer.layer_id && !isIntelligentLayer(layer))
-            .map(layer => ({
-              layer_id: layer.layer_id,
-              display: layer.display,
-              points_color: layer.points_color,
-              is_heatmap: layer.is_heatmap,
-              is_grid: layer.is_grid,
-              is_enabled: layer.is_enabled || true,
-              opacity: layer.opacity || 1,
-            })),
-          intelligence_viewport: viewport
+          details: [
+            // Include current layers with their settings
+            ...geoPoints
+              .filter(layer => layer.layer_id && !isIntelligentLayer(layer))
+              .map(layer => ({
+                layer_id: layer.layer_id,
+                display: layer.display,
+                points_color: layer.points_color,
+                is_heatmap: layer.is_heatmap,
+                is_grid: layer.is_grid,
+                is_enabled: layer.is_enabled ?? true,
+                opacity: layer.opacity || 1,
+              })),
+            // Include deleted layers with is_enabled: false
+            ...deletedLayers
+              .filter(({ layer }) => layer.layer_id && !isIntelligentLayer(layer))
+              .map(({ layer }) => ({
+                layer_id: layer.layer_id,
+                display: false,
+                points_color: layer.points_color,
+                is_heatmap: layer.is_heatmap,
+                is_grid: layer.is_grid,
+                is_enabled: false,
+                opacity: layer.opacity || 1,
+              })),
+          ],
+          // Update intelligence_viewport based on deleted layers
+          intelligence_viewport: viewport ? {
+            ...viewport,
+            // Set population to false if a population layer was deleted
+            population: deletedLayers.some(({ layer }) => 
+              String(layer.layer_id) === '1001' || layer.basedon === 'population'
+            ) ? false : viewport.population,
+            // Set income to false if an income layer was deleted
+            income: deletedLayers.some(({ layer }) => 
+              String(layer.layer_id) === '1003' || layer.basedon === 'income'
+            ) ? false : viewport.income,
+          } : viewport
         },
       };
 
       formData.append('req', JSON.stringify(requestBody));
 
-      console.log(requestBody);
 
       const res = await apiRequest({
         url: urls.save_catalog,
@@ -753,7 +793,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         isAuthRequest: true,
         isFormData: true,
       });
-
+console.log( deletedLayers, 'request body')
       setSaveResponse(res.data.data);
       setSaveResponseMsg(res.data.message);
       setSaveReqId(res.data.request_id || res.data.id);
@@ -766,6 +806,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
       setMarkers([]);
       setMeasurements([]);
       setCaseStudyContent([]);
+      setCurrentCatalogId(null); // Reset catalog ID after saving
+      setDeletedLayers([]); // Clear deleted layers after saving
       resetState();
     } catch (error) {
       setIsError(error instanceof Error ? error : new Error('Failed to save catalog'));
@@ -781,6 +823,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
     setSaveResponse(null);
     setIsError(null);
     setFormStage(resetTo);
+    setCurrentCatalogId(null);
   }
 
   function resetState(keepGeoPointsState?: boolean) {
@@ -1363,6 +1406,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setIsRadiusMode,
         updateLayerGrid,
         deletedLayers,
+        setDeletedLayers,
         restoreLayer,
         visualizationMode,
         setVisualizationMode,

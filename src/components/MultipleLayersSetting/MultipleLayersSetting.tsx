@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FaTrash } from 'react-icons/fa';
 import ColorSelect from '../ColorSelect/ColorSelect';
 import { useCatalogContext } from '../../context/CatalogContext';
+import { useLayerContext } from '../../context/LayerContext';
 import { MultipleLayersSettingProps, DisplayType } from '../../types/allTypesAndInterfaces';
 import DropdownColorSelect from '../ColorSelect/DropdownColorSelect';
 import { IoIosArrowDropdown } from 'react-icons/io';
@@ -48,6 +49,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     updateLayerDisplay,
     updateLayerHeatmap,
     restoreLayer,
+    deletedLayers,
+    setDeletedLayers,
     isAdvanced,
     setIsAdvanced,
     openDropdownIndices,
@@ -85,6 +88,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setPropertyThreshold,
     comparisonType,
   } = useCatalogContext();
+
+  const { setIncludePopulation, setIncludeIncome, setLayerDataMap } = useLayerContext();
   const layer = geoPoints[layerIndex];
 
   const { layer_name, layer_legend, is_zone_layer, display, is_heatmap, is_grid, city_name } =
@@ -172,6 +177,15 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   }
 
   function handleRemoveLayer() {
+    // Check if the removed layer is a population or income layer and turn off the toggle
+    if (layer.layer_id === 1001 || layer.basedon === 'population') {
+      setIncludePopulation(false);
+    }
+
+    if (layer.layer_id === 1003 || layer.basedon === 'income') {
+      setIncludeIncome(false);
+    }
+
     setIsAdvancedMode(prev => {
       const newMode = { ...prev };
       delete newMode[`circle-layer-${layerIndex}`];
@@ -180,6 +194,17 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
     // Remove this layer from gradient colors
     setGradientColorBasedOnZone(prev => prev.filter(item => item.layerId !== layerIndex));
+
+    // Add the layer to deletedLayers before removing from geoPoints
+    // This tracks deleted layers so they can be sent as is_enabled: false in save request
+    setDeletedLayers(prev => [
+      ...prev,
+      {
+        layer: layer,
+        index: layerIndex,
+        timestamp: Date.now(),
+      },
+    ]);
 
     // Remove this layer from geoPoints
     setGeoPoints(prev => prev.filter((_, index) => index !== layerIndex));
@@ -190,6 +215,15 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       delete newColors[layerIndex];
       return newColors;
     });
+
+    // Clean up layerDataMap
+    if (layer.id) {
+      setLayerDataMap(prev => {
+        const newMap = { ...prev };
+        delete newMap[layer.id];
+        return newMap;
+      });
+    }
 
     // Reset chosen pallet only if it was this layer
     if (chosenPallet === layerIndex) {

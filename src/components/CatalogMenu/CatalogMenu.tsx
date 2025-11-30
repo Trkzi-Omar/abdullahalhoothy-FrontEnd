@@ -246,8 +246,8 @@ function CatalogMenu() {
         )}
         <div className="block overflow-y-auto overflow-x-hidden h-auto">
           <div className="flex flex-col flex-grow overflow-y-scroll justify-start items-center px-4">
-            {safeGeoPoints.map(function (_, index) {
-              return <MultipleLayersSetting key={index} layerIndex={index} />;
+            {safeGeoPoints.map(function (layer, index) {
+              return <MultipleLayersSetting key={layer.uniqueId || index} layerIndex={index} />;
             })}
           </div>
         </div>

@@ -998,21 +998,32 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   // Handle pending activation from loaded catalog's intelligence_viewport
   useEffect(() => {
-    if (pendingActivation && intelligenceViewport) {
-      console.debug('Activating intelligence layers from loaded catalog:', intelligenceViewport);
-      
-      // Activate population layer if it was enabled in the saved catalog
-      if (intelligenceViewport.population && !includePopulation) {
-        handlePopulationLayer(true);
-      } else if (!intelligenceViewport.population && includePopulation) {
-        handlePopulationLayer(false);
-      }
-      
-      // Activate income layer if it was enabled in the saved catalog
-      if (intelligenceViewport.income && !includeIncome) {
-        handleIncomeLayer(true);
-      } else if (!intelligenceViewport.income && includeIncome) {
-        handleIncomeLayer(false);
+    if (pendingActivation) {
+      if (intelligenceViewport) {
+        console.debug('Activating intelligence layers from loaded catalog:', intelligenceViewport);
+        
+        // Activate/deactivate population layer based on saved catalog setting
+        if (intelligenceViewport.population && !includePopulation) {
+          handlePopulationLayer(true);
+        } else if (!intelligenceViewport.population && includePopulation) {
+          handlePopulationLayer(false);
+        }
+        
+        // Activate/deactivate income layer based on saved catalog setting
+        if (intelligenceViewport.income && !includeIncome) {
+          handleIncomeLayer(true);
+        } else if (!intelligenceViewport.income && includeIncome) {
+          handleIncomeLayer(false);
+        }
+      } else {
+        // No intelligence viewport - turn off both toggles
+        console.debug('No intelligence viewport - disabling intelligence layers');
+        if (includePopulation) {
+          handlePopulationLayer(false);
+        }
+        if (includeIncome) {
+          handleIncomeLayer(false);
+        }
       }
       
       // Reset pending activation flag

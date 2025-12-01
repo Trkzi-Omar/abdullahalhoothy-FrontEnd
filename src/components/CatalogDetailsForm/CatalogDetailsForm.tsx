@@ -5,12 +5,10 @@ import { HiCheck } from 'react-icons/hi';
 function CatalogDetailsForm() {
   const {
     legendList,
-    subscriptionPrice,
     description,
     name,
     setDescription,
     setName,
-    setSubscriptionPrice,
     resetState,
     setFormStage,
     handleSaveCatalog,
@@ -45,7 +43,6 @@ function CatalogDetailsForm() {
     resetState();
     setName('');
     setDescription('');
-    setSubscriptionPrice('0');
     setMarkers([]);
     setMeasurements([]);
     setFormStage('catalog');
@@ -59,9 +56,6 @@ function CatalogDetailsForm() {
         break;
       case 'description':
         setDescription(value);
-        break;
-      case 'subprice':
-        setSubscriptionPrice(value);
         break;
     }
   }
@@ -84,19 +78,6 @@ function CatalogDetailsForm() {
             readOnly
           ></textarea>
         </div>
-        <div className="mb-5 flex flex-col w-full">
-          <label className="block mb-2 text-md font-medium text-black" htmlFor="subprice">
-            Subscription Price
-          </label>
-          <input
-            type="number"
-            id="subprice"
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-            value={subscriptionPrice || '0'}
-            onChange={handleChange}
-          />
-        </div>
-
         <div className="mb-5 flex flex-col w-full">
           <label className="block mb-2 text-md font-medium text-black" htmlFor="name">
             Name *

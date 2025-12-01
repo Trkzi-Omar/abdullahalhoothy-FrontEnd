@@ -743,7 +743,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
             case_study: caseStudyContent,
           },
           details: [
-            // Include current layers with their settings
+            // Only include current layers (deleted layers are removed entirely)
             ...geoPoints
               .filter(layer => layer.layer_id && !isIntelligentLayer(layer))
               .map(layer => ({
@@ -755,31 +755,21 @@ export function CatalogProvider(props: { children: ReactNode }) {
                 is_enabled: layer.is_enabled ?? true,
                 opacity: layer.opacity || 1,
               })),
-            // Include deleted layers with is_enabled: false
-            ...deletedLayers
-              .filter(({ layer }) => layer.layer_id && !isIntelligentLayer(layer))
-              .map(({ layer }) => ({
-                layer_id: layer.layer_id,
-                display: false,
-                points_color: layer.points_color,
-                is_heatmap: layer.is_heatmap,
-                is_grid: layer.is_grid,
-                is_enabled: false,
-                opacity: layer.opacity || 1,
-              })),
           ],
-          // Update intelligence_viewport based on deleted layers
+          // Update viewport based on actual intelligence layers in geoPoints
           intelligence_viewport: viewport ? {
             ...viewport,
-            // Set population to false if a population layer was deleted
-            population: deletedLayers.some(({ layer }) => 
-              String(layer.layer_id) === '1001' || layer.basedon === 'population'
-            ) ? false : viewport.population,
-            // Set income to false if an income layer was deleted
-            income: deletedLayers.some(({ layer }) => 
-              String(layer.layer_id) === '1003' || layer.basedon === 'income'
-            ) ? false : viewport.income,
-          } : viewport
+            // Check if population layer exists in current geoPoints
+            population: geoPoints.some(layer => 
+              isIntelligentLayer(layer) && 
+              (String(layer.layer_id) === '1001' || layer.basedon === 'population')
+            ),
+            // Check if income layer exists in current geoPoints
+            income: geoPoints.some(layer => 
+              isIntelligentLayer(layer) && 
+              (String(layer.layer_id) === '1003' || layer.basedon === 'income')
+            ),
+          } : null
         },
       };
 
@@ -793,7 +783,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
         isAuthRequest: true,
         isFormData: true,
       });
-console.log( deletedLayers, 'request body')
       setSaveResponse(res.data.data);
       setSaveResponseMsg(res.data.message);
       setSaveReqId(res.data.request_id || res.data.id);

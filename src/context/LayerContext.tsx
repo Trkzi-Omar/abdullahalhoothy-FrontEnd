@@ -947,6 +947,9 @@ export function LayerProvider(props: { children: ReactNode }) {
               ...prev,
               1001: features,
             }));
+
+            // Update viewport to reflect population layer is active
+            setViewport(prev => prev ? { ...prev, population: true } : prev);
           } catch (error) {
             const message =
               error instanceof Error ? error.message : 'Failed to fetch population data';
@@ -967,6 +970,9 @@ export function LayerProvider(props: { children: ReactNode }) {
             delete newMap[1001];
             return newMap;
           });
+
+          // Update viewport to reflect population layer is inactive
+          setViewport(prev => prev ? { ...prev, population: false } : prev);
         }
       } catch (error) {
         console.error('Error updating population layer:', error);
@@ -1090,6 +1096,9 @@ export function LayerProvider(props: { children: ReactNode }) {
               newMap[1003] = features; // Add income layer
               return newMap;
             });
+
+            // Update viewport to reflect income layer is active
+            setViewport(prev => prev ? { ...prev, income: true } : prev);
           } catch (error) {
             const message = error instanceof Error ? error.message : 'Failed to fetch income data';
             console.error('Income layer error:', error);
@@ -1109,6 +1118,9 @@ export function LayerProvider(props: { children: ReactNode }) {
             delete newMap[1003];
             return newMap;
           });
+
+          // Update viewport to reflect income layer is inactive
+          setViewport(prev => prev ? { ...prev, income: false } : prev);
         }
       } catch (error) {
         console.error('Error updating income layer:', error);

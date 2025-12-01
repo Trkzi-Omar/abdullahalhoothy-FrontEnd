@@ -345,10 +345,20 @@ const FetchDatasetForm = () => {
 
   // Replace handleAddToIncluded and handleAddToExcluded with:
   const handleAddToIncluded = (type: string) => {
+    if (!selectedCountry || !selectedCity) {
+      setError('Please select a country and city before adding datasets.');
+      return;
+    }
+    setError(null);
     addTypeToFirstAvailableLayer(type, false);
   };
 
   const handleAddToExcluded = (type: string) => {
+    if (!selectedCountry || !selectedCity) {
+      setError('Please select a country and city before adding datasets.');
+      return;
+    }
+    setError(null);
     addTypeToFirstAvailableLayer(type, true);
   };
 

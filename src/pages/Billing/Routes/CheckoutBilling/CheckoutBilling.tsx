@@ -128,8 +128,23 @@ function CheckoutBilling({ Name }: { Name: string }) {
     `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, []);
 
   const handleDatasetToggle = useCallback((type: string) => {
+    if (!checkout.country_name || !checkout.city_name) {
+      openModal(
+        <div className="flex flex-col items-center justify-center p-8 text-center">
+          <MdErrorOutline className="text-orange-500 text-6xl mb-4" />
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Location Required</h2>
+          <p className="text-gray-600">Please select a country and city before adding datasets.</p>
+        </div>,
+        {
+          darkBackground: true,
+          isSmaller: true,
+          hasAutoSize: true,
+        }
+      );
+      return;
+    }
     dispatch({ type: 'toggleDataset', payload: type });
-  }, [dispatch]);
+  }, [dispatch, checkout.country_name, checkout.city_name, openModal]);
 
   const handleIntelligenceToggle = useCallback((service: 'population' | 'income') => {
     const formatted = service === 'population' ? 'Population' : 'Income';

@@ -4,7 +4,7 @@ import urls from '../../../../urls.json';
 import { FaCaretDown, FaCaretRight } from 'react-icons/fa';
 import { useAuth } from '../../../../context/AuthContext';
 import apiRequest from '../../../../services/apiRequest';
-import { MdAttachMoney, MdCheckCircle, MdCheckCircleOutline, MdErrorOutline, MdClose } from 'react-icons/md';
+import { MdAttachMoney, MdCheckCircle, MdCheckCircleOutline, MdErrorOutline, MdClose, MdPhone, MdSupport } from 'react-icons/md';
 import { CategoryData } from '../../../../types/allTypesAndInterfaces';
 import { useUIContext } from '../../../../context/UIContext';
 import { useBillingContext, type ReportTier } from '../../../../context/BillingContext';
@@ -690,6 +690,28 @@ function CheckoutBilling({ Name }: { Name: string }) {
                   return `${totalItems} item${totalItems === 1 ? '' : 's'}`;
                 })()}
               </span>
+            </div>
+
+            {/* Welcome and Support Message */}
+            <div className="bg-gradient-to-r from-[#115740] to-[#0d4632] rounded-lg p-6 mb-6 text-white shadow-md">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 mt-1">
+                  <MdSupport className="text-3xl text-white opacity-90" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold mb-2">We're Here to Help You!</h3>
+                  <p className="text-sm leading-relaxed opacity-95 mb-3">
+                    We're excited to support you throughout your purchasing journey! Our team is dedicated to answering any questions and providing the assistance you need to ensure you have the best possible experience with our services.
+                  </p>
+                  <div className="flex items-center gap-2 bg-white bg-opacity-20 rounded-lg px-4 py-3 backdrop-blur-sm">
+                    <MdPhone className="text-xl flex-shrink-0" />
+                    <div>
+                      <p className="text-xs opacity-90 mb-1">Need immediate assistance? Call us directly:</p>
+                      <p className="font-semibold text-base">+970 (59) 514 - 207</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {(() => {

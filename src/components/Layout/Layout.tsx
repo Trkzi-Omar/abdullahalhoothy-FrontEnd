@@ -28,6 +28,7 @@ import MarketingDashboard from '../../pages/MarketingDashboard/MarketingDashboar
 import { BillingProvider } from '../../context/BillingContext';
 import Billing from '../../pages/Billing/Billing';
 import GuestAutoLogin from '../../pages/Auth/GuestAutoLogin';
+import SmartSegmentReport from '../SegmentReport';
 const Layout = () => {
   const location = useLocation();
 
@@ -59,6 +60,7 @@ const Layout = () => {
         <Route path="/marketing-dashboard" element={<MarketingDashboard />} />
         <Route path="/custom-report" element={<CustomReportForm />} />
         <Route path="/static/*" element={<StaticRedirect />} />
+        <Route path="/smart-segment-report" element={<SmartSegmentReport />} />
       </Routes>
 
       <Routes>

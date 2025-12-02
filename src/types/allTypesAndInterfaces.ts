@@ -1007,3 +1007,47 @@ export interface IntelligenceViewport {
   income: boolean;
   zoom_level: number;
 }
+
+export interface SegmentEvaluationMetrics {
+  traffic: number;
+  demographics: number;
+  competition: number;
+  complementary: number;
+  cross_shopping: number;
+}
+
+export interface SegmentAttributes {
+  target_income_level: 'low' | 'medium' | 'high';
+  target_age: number;
+  analysis_radius: number;
+  complementary_categories: string[];
+  optimal_num_complementary_businesses_per_category: number;
+  cross_shopping_categories: string[];
+  optimal_num_cross_shopping_businesses_per_category: number;
+  competition_categories: string[];
+  max_competition_threshold_per_category: number;
+  evaluation_metrics: SegmentEvaluationMetrics;
+}
+
+export interface SegmentDemographicProfile {
+  age_range: string;
+  household_size: string;
+  income: 'low' | 'medium' | 'high';
+  lifestyle: string;
+  spending_habits: string;
+}
+
+export interface CustomSegment {
+  segment_id: string;
+  name: string;
+  name_ar: string;
+  description: string;
+  description_ar: string;
+  emoji: string;
+  icon: string;
+  attributes: SegmentAttributes;
+  demographic_profile: SegmentDemographicProfile;
+  suitable_businesses: string[];
+}
+
+export type CustomSegmentReportResponse = CustomSegment[];

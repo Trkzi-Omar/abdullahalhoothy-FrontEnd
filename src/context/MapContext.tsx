@@ -53,8 +53,6 @@ export function MapProvider({ children }: { children: ReactNode }) {
     [mapState.currentZoom]
   );
 
-  console.log('mapState', mapState);
-
   useEffect(() => {
     return () => {
       handleZoomChange.cancel();

@@ -18,7 +18,8 @@ export async function HttpReq<T>(
   setError: (error: Error | null) => void,
   method: 'get' | 'post' | 'put' | 'delete' | 'patch' = 'get',
   body?: any,
-  token?: string // Add this parameter
+  token?: string,
+  defaultErrorValue?: T // Add this parameter to specify error fallback value
 ) {
   setLoading(true);
   try {
@@ -33,9 +34,13 @@ export async function HttpReq<T>(
 
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-    const response = await apiClient[method](end_point, wrappedBody, {
-      headers,
-    });
+    let response;
+
+    if (method === 'get') {
+      response = await apiClient.get(end_point, { headers });
+    } else {
+      response = await apiClient[method](end_point, wrappedBody, { headers });
+    }
 
     const message: string = response.data.message;
     const request_id: string = response.data.request_id;
@@ -47,7 +52,8 @@ export async function HttpReq<T>(
     setLoading(false);
     setError(null);
   } catch (fetchError: any) {
-    setResData({} as T);
+    // Use provided default error value, or fallback to empty object
+    setResData(defaultErrorValue !== undefined ? defaultErrorValue : ({} as T));
     setResMessage('');
     setResId('');
     setLoading(false);

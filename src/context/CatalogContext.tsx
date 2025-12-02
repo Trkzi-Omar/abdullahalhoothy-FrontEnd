@@ -185,13 +185,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [selectedBasedon, setSelectedBasedon] = useState<string>('');
   const [layerColors, setLayerColors] = useState({});
   const [visualizationMode, setVisualizationMode] = useState<VisualizationMode>('vertex');
-  const [deletedLayers, setDeletedLayers] = useState<
-    {
-      layer: MapFeatures;
-      index: number;
-      timestamp: number;
-    }[]
-  >([]);
+
   const [basedOnLayerId, setBasedOnLayerId] = useState<string | null>(null);
   const [basedOnProperty, setBasedOnProperty] = useState<string | null>(null);
   const [markers, setMarkers] = useState<MarkerData[]>([]);
@@ -796,7 +790,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
       setMeasurements([]);
       setCaseStudyContent([]);
       setCurrentCatalogId(null); // Reset catalog ID after saving
-      setDeletedLayers([]); // Clear deleted layers after saving
+
       resetState();
     } catch (error) {
       setIsError(error instanceof Error ? error : new Error('Failed to save catalog'));
@@ -868,44 +862,12 @@ export function CatalogProvider(props: { children: ReactNode }) {
         return [];
       }
 
-      // Find the layer to be removed
-      const removedLayer = prevGeoPoints.find(
-        point =>
-          // Convert both to same type for comparison
-          String(point.layerId) === String(layerIndex)
-      );
-
-      if (removedLayer) {
-        // Store the removed layer in deletedLayers
-        setDeletedLayers(prev => [
-          ...prev,
-          {
-            layer: removedLayer,
-            index: layerIndex,
-            timestamp: Date.now(),
-          },
-        ]);
-
-        // Remove the layer from geoPoints
-        return prevGeoPoints.filter(point => String(point.layerId) !== String(layerIndex));
-      }
-
-      return prevGeoPoints;
+      // Remove the layer from geoPoints - fix syntax error
+      return prevGeoPoints.filter(point => String(point.layerId) !== String(layerIndex));
     });
   }
 
-  function restoreLayer(timestamp: number) {
-    const deletedLayer = deletedLayers.find(layer => layer.timestamp === timestamp);
-    if (!deletedLayer) return;
 
-    setGeoPoints(prev => {
-      const newLayers = [...prev];
-      newLayers.splice(deletedLayer.index, 0, deletedLayer.layer);
-      return newLayers;
-    });
-
-    setDeletedLayers(prev => prev.filter(layer => layer.timestamp !== timestamp));
-  }
 
   function updateLayerVisualization(layerIndex: number, mode: VisualizationMode) {
     setGeoPoints(function (prevGeoPoints) {
@@ -1394,9 +1356,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         isRadiusMode,
         setIsRadiusMode,
         updateLayerGrid,
-        deletedLayers,
-        setDeletedLayers,
-        restoreLayer,
+
         visualizationMode,
         setVisualizationMode,
         basedOnLayerId,

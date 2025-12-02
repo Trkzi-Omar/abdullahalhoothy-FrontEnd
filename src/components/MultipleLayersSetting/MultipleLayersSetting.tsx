@@ -48,9 +48,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setGeoPoints,
     updateLayerDisplay,
     updateLayerHeatmap,
-    restoreLayer,
-    deletedLayers,
-    setDeletedLayers,
     isAdvanced,
     setIsAdvanced,
     openDropdownIndices,
@@ -110,8 +107,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const dropdownIndex = layerIndex ?? -1;
   const isOpen = openDropdownIndices[1] === dropdownIndex;
 
-  const [showRestorePrompt, setShowRestorePrompt] = useState(false);
-  const [deletedTimestamp, setDeletedTimestamp] = useState<number | null>(null);
+
 
   const [displayType, setDisplayType] = useState(
     layer.is_gradient
@@ -195,16 +191,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     // Remove this layer from gradient colors
     setGradientColorBasedOnZone(prev => prev.filter(item => item.layerId !== layerIndex));
 
-    // Add the layer to deletedLayers before removing from geoPoints
-    // This tracks deleted layers so they can be sent as is_enabled: false in save request
-    setDeletedLayers(prev => [
-      ...prev,
-      {
-        layer: layer,
-        index: layerIndex,
-        timestamp: Date.now(),
-      },
-    ]);
+
 
     // Remove this layer from geoPoints
     setGeoPoints(prev => prev.filter((_, index) => index !== layerIndex));
@@ -858,21 +845,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         </div>
       )}
 
-      {/* Add restore prompt */}
-      {showRestorePrompt && deletedTimestamp && (
-        <div className="fixed bottom-4 right-4 bg-white shadow-lg rounded-lg p-4 flex items-center gap-4">
-          <span>Layer removed.</span>
-          <button
-            onClick={() => {
-              restoreLayer(deletedTimestamp);
-              setShowRestorePrompt(false);
-            }}
-            className="text-[#115740] hover:text-[#123f30] font-medium"
-          >
-            Undo
-          </button>
-        </div>
-      )}
+
     </div>
   );
 }

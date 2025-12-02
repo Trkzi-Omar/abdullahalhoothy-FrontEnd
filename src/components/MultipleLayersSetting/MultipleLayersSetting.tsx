@@ -715,7 +715,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
               </div>
             </div>
             <div className="flex  justify-between items-center">
-              <p className="font-semibold">Conditional</p>
+              <p className="font-semibold"></p>
               <div className="flex border-b">
                 <button
                   onClick={() => setSelectedOption('recolor')}
@@ -740,7 +740,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
               </div>
             </div>
 
-            <p className="text-sm mt-2 mb-0 font-medium">based on metric</p>
+            <p className="text-sm mt-2 mb-0 font-medium"></p>
 
             <BasedOnLayerDropdown
               layerIndex={layerIndex}

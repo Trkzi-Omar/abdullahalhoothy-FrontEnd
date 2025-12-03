@@ -11,6 +11,7 @@ import {
   FormErrors,
   MetricKey,
 } from '../../types/allTypesAndInterfaces';
+import { CustomSegment, CustomSegmentReportResponse } from '../../types';
 import { TOTAL_STEPS, getInitialFormData } from './constants';
 import { useBusinessTypeConfig } from './hooks/useBusinessTypeConfig';
 
@@ -24,6 +25,7 @@ import FormNavigation from './components/FormNavigation';
 import SuccessMessage from './components/SuccessMessage';
 import SetAttributeStep from './components/AttributesStep';
 import ReportTierStep from './components/ReportTierStep';
+import SmartSegmentReport from '../SegmentReport';
 
 const CustomReportForm = () => {
   const { authResponse } = useAuth();
@@ -69,6 +71,11 @@ const CustomReportForm = () => {
   const [additionalCost, setAdditionalCost] = useState<number | null>(null);
   const [isCalculatingCost, setIsCalculatingCost] = useState(false);
 
+  // Segment Report State
+  const [segmentReportData, setSegmentReport] = useState<CustomSegmentReportResponse | null>(null);
+  const [segmentReportLoading, setSegmentReportLoading] = useState(false);
+  const [selectedSegment, setSelectedSegment] = useState<CustomSegment | null>(null);
+
   // Set user_id when component mounts
   useEffect(() => {
     if (authResponse && 'localId' in authResponse && formData && !formData.user_id) {
@@ -82,6 +89,7 @@ const CustomReportForm = () => {
       );
     }
   }, [authResponse, formData?.user_id]);
+
   const loadBusinessMetrics = async (businessType: string) => {
     try {
       const res = await apiRequest({
@@ -114,6 +122,41 @@ const CustomReportForm = () => {
     }
   }, [businessConfig, businessType]);
 
+  useEffect(() => {
+    if (selectedSegment) {
+      //  set evolution metrics, categories, and demographics
+      setFormData(prev =>
+        prev
+          ? {
+              ...prev,
+              evaluation_metrics: selectedSegment.attributes.evaluation_metrics,
+              target_age: selectedSegment.attributes.target_age,
+              target_income: selectedSegment.attributes.target_income_level,
+            }
+          : null
+      );
+      setBusinessMetrics(prev =>
+        prev
+          ? {
+              ...prev,
+              competition_categories: [
+                ...(prev?.competition_categories || []),
+                ...(selectedSegment.attributes.competition_categories || []),
+              ],
+              complementary_categories: [
+                ...(prev?.complementary_categories || []),
+                ...(selectedSegment.attributes.complementary_categories || []),
+              ],
+              cross_shopping_categories: [
+                ...(prev?.cross_shopping_categories || []),
+                ...(selectedSegment.attributes.cross_shopping_categories || []),
+              ],
+            }
+          : null
+      );
+    }
+  }, [selectedSegment]);
+
   const handleCategoryLoad = async () => {
     try {
       const res = await apiRequest({
@@ -140,6 +183,45 @@ const CustomReportForm = () => {
   useEffect(() => {
     handleCategoryLoad();
   }, []);
+
+  const getSegmentReport = async () => {
+    if (!formData?.city_name) return;
+
+    setSegmentReportLoading(true);
+    try {
+      const res = await apiRequest({
+        url: urls.fetch_smart_segment_report,
+      });
+
+      if (res.data.data) {
+        setSegmentReport(res.data.data);
+        // Set the first segment as selected by default
+        if (res.data.data.length > 0) {
+          setSelectedSegment(res.data.data[0]);
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSegmentReportLoading(false);
+    }
+  };
+
+  const handleSegmentSelect = (segmentId: string | null) => {
+    if (!segmentReportData || !segmentId) {
+      setSelectedSegment(null);
+      return;
+    }
+    const segment = segmentReportData.find(s => s.segment_id === segmentId);
+    setSelectedSegment(segment || null);
+  };
+
+  useEffect(() => {
+    if (currentStep === 2 && !segmentReportData && !segmentReportLoading) {
+      getSegmentReport();
+    }
+  }, [currentStep, segmentReportData, segmentReportLoading]);
+
   const validateForm = (): boolean => {
     if (!formData) return false;
 
@@ -155,13 +237,13 @@ const CustomReportForm = () => {
       newErrors.report_tier = 'Please select a report tier';
     }
 
-    // Validate evaluation metrics sum to 100%
+    // Validate evaluation metrics sum to 1.0
     const metricsSum = Object.values(formData.evaluation_metrics).reduce(
       (sum, value) => sum + value,
       0
     );
-    if (metricsSum !== 100) {
-      newErrors.evaluation_metrics = `Evaluation metrics must sum to 100%. Current sum: ${metricsSum}%`;
+    if (Math.abs(metricsSum - 1) > 0.001) {
+      newErrors.evaluation_metrics = `Evaluation metrics must sum to 1.0. Current sum: ${metricsSum.toFixed(2)}`;
     }
 
     // Validate individual metrics are not negative
@@ -191,12 +273,12 @@ const CustomReportForm = () => {
       return false;
     }
 
-    // Validate evaluation metrics sum to 100%
+    // Validate evaluation metrics sum to 100% (now 1.0)
     const metricsSum = Object.values(formData.evaluation_metrics).reduce(
       (sum, value) => sum + value,
       0
     );
-    if (metricsSum !== 100) {
+    if (Math.abs(metricsSum - 1) > 0.001) {
       return false;
     }
 
@@ -314,6 +396,7 @@ const CustomReportForm = () => {
       // Extract additional cost from response
       // The backend calculates the total cost, and if there are extra datasets, it will be in the response
       const totalCost = response?.data?.data?.total_cost || 0;
+
       const additionalCostValue = totalCost > 0 ? totalCost : null;
       setAdditionalCost(additionalCostValue);
     } catch (error) {
@@ -544,7 +627,10 @@ const CustomReportForm = () => {
         // Step 1 always only requires city selection
         return !!formData.city_name;
       case 2:
-        return metricsSum === 100 && Object.values(formData.evaluation_metrics).every(v => v >= 0);
+        return (
+          Math.abs(metricsSum - 1) < 0.001 &&
+          Object.values(formData.evaluation_metrics).every(v => v >= 0)
+        );
       case 3:
         return true; // Custom locations are optional
       case 4:
@@ -601,6 +687,15 @@ const CustomReportForm = () => {
         );
       case 2:
         return (
+          <SmartSegmentReport
+            segmentReportData={segmentReportData}
+            segmentReportLoading={segmentReportLoading}
+            selectedSegment={selectedSegment}
+            onSegmentSelect={handleSegmentSelect}
+          />
+        );
+      case 3:
+        return (
           <EvaluationMetricsStep
             formData={formData}
             errors={errors}
@@ -610,7 +705,7 @@ const CustomReportForm = () => {
             disabled={isSubmitting}
           />
         );
-      case 3:
+      case 4:
         return (
           <SetAttributeStep
             onInputChange={handleAttributeChange}
@@ -619,7 +714,7 @@ const CustomReportForm = () => {
             metricsData={businessMetrics}
           />
         );
-      case 4:
+      case 5:
         return (
           <CustomLocationsStep
             formData={formData}
@@ -631,7 +726,7 @@ const CustomReportForm = () => {
             disabled={isSubmitting}
           />
         );
-      case 5:
+      case 6:
         return (
           <CurrentLocationStep
             formData={formData}
@@ -642,7 +737,7 @@ const CustomReportForm = () => {
             disabled={isSubmitting}
           />
         );
-      case 6:
+      case 7:
         return (
           <ReportTierStep
             formData={formData}
@@ -877,7 +972,7 @@ const CustomReportForm = () => {
               )}
 
               {/* Additional Cost Message for Step 3 */}
-              {currentStep === 3 && (additionalCost !== null && additionalCost > 0) && (
+              {currentStep === 3 && additionalCost !== null && additionalCost > 0 && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-center justify-center">
                     {isCalculatingCost ? (

@@ -25,12 +25,19 @@ export const EvaluationMetricsStep = ({
     0
   );
 
+  // Helper to format display value (e.g. 0.5 -> 50%) if needed, or just keep as decimal
+  // User requested "change logic... to 1", implying decimal values.
+  // We will display as decimal for consistency with the input.
+
+  const isBalanced = Math.abs(metricsSum - 1) < 0.001; // Use epsilon for float comparison
+  const isOver = metricsSum > 1.001;
+
   return (
     <div className="space-y-4 animate-fade-in-up">
       <div className="text-center mb-4">
         <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Evaluation Metrics</h3>
         <p className="text-sm text-gray-600">
-          Set the importance weights for different factors (must total 100%)
+          Set the importance weights for different factors (must total 1.0)
         </p>
       </div>
 
@@ -43,15 +50,15 @@ export const EvaluationMetricsStep = ({
           </div>
           <div
             className={`flex items-center px-3 py-1.5 rounded-full ${
-              metricsSum === 100
+              isBalanced
                 ? 'bg-green-100 text-green-800'
-                : metricsSum > 100
+                : isOver
                   ? 'bg-red-100 text-red-800'
                   : 'bg-yellow-100 text-yellow-800'
             }`}
           >
-            <span className="text-lg font-bold mr-1">{metricsSum}%</span>
-            {metricsSum === 100 ? (
+            <span className="text-lg font-bold mr-1">{metricsSum.toFixed(2)}</span>
+            {isBalanced ? (
               <FaCheck className="w-4 h-4" />
             ) : (
               <FaExclamationTriangle className="w-4 h-4" />
@@ -61,21 +68,17 @@ export const EvaluationMetricsStep = ({
         <div className="w-full bg-gray-200 rounded-full h-3">
           <div
             className={`h-3 rounded-full progress-bar ${
-              metricsSum === 100
-                ? 'bg-green-500'
-                : metricsSum > 100
-                  ? 'bg-red-500'
-                  : 'bg-yellow-500'
+              isBalanced ? 'bg-green-500' : isOver ? 'bg-red-500' : 'bg-yellow-500'
             }`}
-            style={{ width: `${Math.min(metricsSum, 100)}%` }}
+            style={{ width: `${Math.min(metricsSum * 100, 100)}%` }}
           />
         </div>
         <p className="text-sm text-gray-600 mt-2 text-center">
-          {metricsSum === 100
+          {isBalanced
             ? 'Perfect! All weights are balanced.'
-            : metricsSum > 100
-              ? 'Total exceeds 100%. Please reduce some values.'
-              : `${100 - metricsSum}% remaining to reach 100%`}
+            : isOver
+              ? 'Total exceeds 1.0. Please reduce some values.'
+              : `${(1 - metricsSum).toFixed(2)} remaining to reach 1.0`}
         </p>
       </div>
 
@@ -101,7 +104,7 @@ export const EvaluationMetricsStep = ({
                         </span>
                         {key.replace('_', ' ')}
                       </label>
-                      <span className="text-xl font-bold text-primary">{value}%</span>
+                      <span className="text-xl font-bold text-primary">{value.toFixed(2)}</span>
                     </div>
 
                     <input
@@ -110,13 +113,14 @@ export const EvaluationMetricsStep = ({
                       value={value}
                       onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value))}
                       min="0"
-                      max="100"
+                      max="1"
+                      step="0.01"
                       disabled={disabled}
                       className={`w-full h-2 bg-gray-200 rounded-lg appearance-none slider form-transition ${
                         disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
                       }`}
                       style={{
-                        background: `linear-gradient(to right, #115740 0%, #115740 ${value}%, #e5e7eb ${value}%, #e5e7eb 100%)`,
+                        background: `linear-gradient(to right, #115740 0%, #115740 ${value * 100}%, #e5e7eb ${value * 100}%, #e5e7eb 100%)`,
                       }}
                     />
 
@@ -125,7 +129,8 @@ export const EvaluationMetricsStep = ({
                       value={value}
                       onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value))}
                       min="0"
-                      max="100"
+                      max="1"
+                      step="0.01"
                       disabled={disabled}
                       className={`w-full px-3 py-2 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
                         disabled
@@ -179,7 +184,7 @@ export const EvaluationMetricsStep = ({
                         </span>
                         {key.replace('_', ' ')}
                       </label>
-                      <span className="text-xl font-bold text-primary">{value}%</span>
+                      <span className="text-xl font-bold text-primary">{value.toFixed(2)}</span>
                     </div>
 
                     <input
@@ -188,13 +193,14 @@ export const EvaluationMetricsStep = ({
                       value={value}
                       onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value))}
                       min="0"
-                      max="100"
+                      max="1"
+                      step="0.01"
                       disabled={disabled}
                       className={`w-full h-2 bg-gray-200 rounded-lg appearance-none slider form-transition ${
                         disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
                       }`}
                       style={{
-                        background: `linear-gradient(to right, #115740 0%, #115740 ${value}%, #e5e7eb ${value}%, #e5e7eb 100%)`,
+                        background: `linear-gradient(to right, #115740 0%, #115740 ${value * 100}%, #e5e7eb ${value * 100}%, #e5e7eb 100%)`,
                       }}
                     />
 
@@ -203,7 +209,8 @@ export const EvaluationMetricsStep = ({
                       value={value}
                       onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value))}
                       min="0"
-                      max="100"
+                      max="1"
+                      step="0.01"
                       disabled={disabled}
                       className={`w-full px-3 py-2 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
                         disabled
@@ -255,7 +262,7 @@ export const EvaluationMetricsStep = ({
                     </span>
                     {key.replace('_', ' ')}
                   </label>
-                  <span className="text-xl font-bold text-primary">{value}%</span>
+                  <span className="text-xl font-bold text-primary">{value.toFixed(2)}</span>
                 </div>
 
                 <input
@@ -264,10 +271,11 @@ export const EvaluationMetricsStep = ({
                   value={value}
                   onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value))}
                   min="0"
-                  max="100"
+                  max="1"
+                  step="0.01"
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider form-transition"
                   style={{
-                    background: `linear-gradient(to right, #115740 0%, #115740 ${value}%, #e5e7eb ${value}%, #e5e7eb 100%)`,
+                    background: `linear-gradient(to right, #115740 0%, #115740 ${value * 100}%, #e5e7eb ${value * 100}%, #e5e7eb 100%)`,
                   }}
                 />
 
@@ -276,7 +284,8 @@ export const EvaluationMetricsStep = ({
                   value={value}
                   onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value))}
                   min="0"
-                  max="100"
+                  max="1"
+                  step="0.01"
                   className={`w-full px-3 py-2 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
                     errors[`metrics_${key}`] ? 'border-red-300 bg-red-50' : 'border-gray-200'
                   }`}

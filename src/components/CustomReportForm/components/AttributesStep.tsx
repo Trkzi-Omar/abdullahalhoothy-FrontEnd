@@ -101,21 +101,24 @@ const SetAttributeStep = ({
     field: string
   ) => (
     <div className="flex flex-wrap gap-2 mt-3">
-      {options.map(option => (
-        <button
-          key={option}
-          type="button"
-          disabled={disabled}
-          onClick={() => handleTagSelect(setSelected, field, option)}
-          className={`px-3 py-1.5 rounded-full border-2 text-sm font-medium transition-all duration-200 ${
-            selected.includes(option)
-              ? 'bg-primary text-white border-primary shadow-sm'
-              : 'bg-white text-gray-700 border-gray-200 hover:border-primary hover:text-primary'
-          } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-        >
-          {option}
-        </button>
-      ))}
+      {options.map(option => {
+        const value = option.toLowerCase();
+        return (
+          <button
+            key={option}
+            type="button"
+            disabled={disabled}
+            onClick={() => handleTagSelect(setSelected, field, value)}
+            className={`px-3 py-1.5 rounded-full border-2 text-sm font-medium transition-all duration-200 ${
+              selected.includes(value)
+                ? 'bg-primary text-white border-primary shadow-sm'
+                : 'bg-white text-gray-700 border-gray-200 hover:border-primary hover:text-primary'
+            } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+          >
+            {option}
+          </button>
+        );
+      })}
     </div>
   );
 

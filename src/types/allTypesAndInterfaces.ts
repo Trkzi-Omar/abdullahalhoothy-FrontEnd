@@ -941,7 +941,8 @@ export interface CustomReportData {
   country_name: string;
   Type: string;
   report_tier?: string;
-  evaluation_metrics: EvaluationMetrics;
+  // evaluation_metrics: EvaluationMetrics;
+  evaluation_metrics: SegmentEvaluationMetrics;
   custom_locations: CustomLocation[];
   current_location: CurrentLocation;
   target_age?: number;

@@ -1,4 +1,3 @@
-import React from 'react';
 import { FaFile } from 'react-icons/fa';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { CustomSegment } from '../../types';
@@ -57,6 +56,7 @@ function DetailedSegment({
           onClick={handlePrevious}
           disabled={segmentReportData?.findIndex(seg => seg.segment_id === selectedSegmentId) === 0}
           className="p-3 rounded-full border-2 border-[#582c83] disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-[#582c83] hover:bg-[#582c83] hover:text-white"
+          type="button"
         >
           <FiChevronLeft className="w-6 h-6 " />
         </button>
@@ -84,6 +84,7 @@ function DetailedSegment({
             (segmentReportData?.length ?? 0) - 1
           }
           className="p-3 rounded-full border-2 border-[#582c83] disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-[#582c83] hover:bg-[#582c83] hover:text-white"
+          type="button"
         >
           <FiChevronRight className="w-6 h-6 " />
         </button>

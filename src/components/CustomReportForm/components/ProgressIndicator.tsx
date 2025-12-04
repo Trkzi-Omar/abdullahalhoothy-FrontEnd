@@ -3,7 +3,7 @@ import { TOTAL_STEPS } from '../constants';
 
 const STEPS = [
   { id: 1, title: 'Basic Information', description: 'City and location details' },
-  { id: 2, title: 'Segment Information', description: 'Segment information' },
+  { id: 2, title: 'Segment Selection', description: 'Select segment type' },
   { id: 3, title: 'Evaluation Metrics', description: 'Set importance weights' },
   { id: 4, title: 'Set Attributes', description: 'Set required attributes' },
   { id: 5, title: 'Custom Locations', description: 'Add specific locations' },

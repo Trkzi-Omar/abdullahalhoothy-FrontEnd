@@ -37,6 +37,7 @@ const SetAttributeStep = ({
   const [selectedCompetition, setSelectedCompetition] = useState<string[]>([]);
   const [selectedCross, setSelectedCross] = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  console.log('selectedComplementary', selectedComplementary);
 
   useEffect(() => {
     setCategories(inputCategories);

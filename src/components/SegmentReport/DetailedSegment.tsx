@@ -104,6 +104,7 @@ function DetailedSegment({
                   ? 'text-[#582c83] bg-[#e3dbea]'
                   : 'text-gray-600 hover:text-[#582c83]'
               }`}
+              type="button"
             >
               WHO THEY ARE
               <div

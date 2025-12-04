@@ -40,11 +40,15 @@ const SetAttributeStep = ({
   console.log('selectedComplementary', selectedComplementary);
 
   useEffect(() => {
-    setCategories(inputCategories);
-    setSelectedCompetition([...(metricsData?.competition_categories ?? [])]);
-    setSelectedComplementary([...(metricsData?.complementary_categories ?? [])]);
-    setSelectedCross([...(metricsData?.cross_shopping_categories ?? [])]);
-  }, []);
+    if (inputCategories.length > 0) {
+      setCategories(inputCategories);
+    }
+    if (metricsData) {
+      setSelectedCompetition([...(metricsData?.competition_categories ?? [])]);
+      setSelectedComplementary([...(metricsData?.complementary_categories ?? [])]);
+      setSelectedCross([...(metricsData?.cross_shopping_categories ?? [])]);
+    }
+  }, [inputCategories, metricsData]);
 
   const onAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);

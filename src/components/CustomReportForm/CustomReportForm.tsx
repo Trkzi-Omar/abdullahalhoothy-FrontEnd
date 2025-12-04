@@ -97,18 +97,10 @@ const CustomReportForm = () => {
         method: 'get',
       });
       const data = res.data?.data;
-      console.log(JSON.stringify(data));
+      console.log(data);
+      // Only store the metrics data, don't automatically populate formData
+      // Categories should be selected by user or come from selected segment
       setBusinessMetrics(data);
-      setFormData(prev =>
-        prev
-          ? {
-              ...prev,
-              complementary_categories: data.complementary_categories,
-              competition_categories: data.competition_categories,
-              cross_shopping_categories: data.cross_shopping_categories,
-            }
-          : null
-      );
     } catch (error) {
       console.error('Error loading business metrics:', error);
     }
@@ -125,6 +117,11 @@ const CustomReportForm = () => {
   useEffect(() => {
     if (selectedSegment) {
       //  set evolution metrics, categories, and demographics
+      // Use ONLY the segment's categories, don't combine with business metrics
+      const segmentCompetition = selectedSegment.attributes.competition_categories || [];
+      const segmentComplementary = selectedSegment.attributes.complementary_categories || [];
+      const segmentCrossShopping = selectedSegment.attributes.cross_shopping_categories || [];
+
       setFormData(prev =>
         prev
           ? {
@@ -132,6 +129,9 @@ const CustomReportForm = () => {
               evaluation_metrics: selectedSegment.attributes.evaluation_metrics,
               target_age: selectedSegment.attributes.target_age,
               target_income: selectedSegment.attributes.target_income_level,
+              competition_categories: segmentCompetition,
+              complementary_categories: segmentComplementary,
+              cross_shopping_categories: segmentCrossShopping,
             }
           : null
       );
@@ -139,18 +139,9 @@ const CustomReportForm = () => {
         prev
           ? {
               ...prev,
-              competition_categories: [
-                ...(prev?.competition_categories || []),
-                ...(selectedSegment.attributes.competition_categories || []),
-              ],
-              complementary_categories: [
-                ...(prev?.complementary_categories || []),
-                ...(selectedSegment.attributes.complementary_categories || []),
-              ],
-              cross_shopping_categories: [
-                ...(prev?.cross_shopping_categories || []),
-                ...(selectedSegment.attributes.cross_shopping_categories || []),
-              ],
+              competition_categories: segmentCompetition,
+              complementary_categories: segmentComplementary,
+              cross_shopping_categories: segmentCrossShopping,
             }
           : null
       );

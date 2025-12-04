@@ -37,7 +37,7 @@ export const EvaluationMetricsStep = ({
       <div className="text-center mb-4">
         <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Evaluation Metrics</h3>
         <p className="text-sm text-gray-600">
-          Set the importance weights for different factors (must total 1.0)
+          Set the importance weights for different factors (must total 100%)
         </p>
       </div>
 
@@ -57,7 +57,7 @@ export const EvaluationMetricsStep = ({
                   : 'bg-yellow-100 text-yellow-800'
             }`}
           >
-            <span className="text-lg font-bold mr-1">{metricsSum.toFixed(2)}</span>
+            <span className="text-lg font-bold mr-1">{(metricsSum * 100).toFixed(0)}%</span>
             {isBalanced ? (
               <FaCheck className="w-4 h-4" />
             ) : (
@@ -77,8 +77,8 @@ export const EvaluationMetricsStep = ({
           {isBalanced
             ? 'Perfect! All weights are balanced.'
             : isOver
-              ? 'Total exceeds 1.0. Please reduce some values.'
-              : `${(1 - metricsSum).toFixed(2)} remaining to reach 1.0`}
+              ? 'Total exceeds 100%. Please reduce some values.'
+              : `${((1 - metricsSum) * 100).toFixed(0)}% remaining to reach 100%`}
         </p>
       </div>
 
@@ -104,7 +104,9 @@ export const EvaluationMetricsStep = ({
                         </span>
                         {key.replace('_', ' ')}
                       </label>
-                      <span className="text-xl font-bold text-primary">{value.toFixed(2)}</span>
+                      <span className="text-xl font-bold text-primary">
+                        {(value * 100).toFixed(0)}%
+                      </span>
                     </div>
 
                     <input
@@ -124,22 +126,29 @@ export const EvaluationMetricsStep = ({
                       }}
                     />
 
-                    <input
-                      type="number"
-                      value={value}
-                      onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value))}
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      disabled={disabled}
-                      className={`w-full px-3 py-2 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
-                        disabled
-                          ? 'bg-gray-100 cursor-not-allowed opacity-60'
-                          : errors[`metrics_${key}`]
-                            ? 'border-red-300 bg-red-50'
-                            : 'border-gray-200'
-                      }`}
-                    />
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={(value * 100).toFixed(0)}
+                        onChange={e =>
+                          onMetricsChange(key as MetricKey, Number(e.target.value) / 100)
+                        }
+                        min="0"
+                        max="100"
+                        step="1"
+                        disabled={disabled}
+                        className={`w-full px-3 py-2 pr-8 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
+                          disabled
+                            ? 'bg-gray-100 cursor-not-allowed opacity-60'
+                            : errors[`metrics_${key}`]
+                              ? 'border-red-300 bg-red-50'
+                              : 'border-gray-200'
+                        }`}
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold pointer-events-none">
+                        %
+                      </span>
+                    </div>
 
                     {errors[`metrics_${key}`] && (
                       <p className="text-sm text-red-600 flex items-center">
@@ -184,7 +193,9 @@ export const EvaluationMetricsStep = ({
                         </span>
                         {key.replace('_', ' ')}
                       </label>
-                      <span className="text-xl font-bold text-primary">{value.toFixed(2)}</span>
+                      <span className="text-xl font-bold text-primary">
+                        {(value * 100).toFixed(0)}%
+                      </span>
                     </div>
 
                     <input
@@ -204,22 +215,29 @@ export const EvaluationMetricsStep = ({
                       }}
                     />
 
-                    <input
-                      type="number"
-                      value={value}
-                      onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value))}
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      disabled={disabled}
-                      className={`w-full px-3 py-2 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
-                        disabled
-                          ? 'bg-gray-100 cursor-not-allowed opacity-60'
-                          : errors[`metrics_${key}`]
-                            ? 'border-red-300 bg-red-50'
-                            : 'border-gray-200'
-                      }`}
-                    />
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={(value * 100).toFixed(0)}
+                        onChange={e =>
+                          onMetricsChange(key as MetricKey, Number(e.target.value) / 100)
+                        }
+                        min="0"
+                        max="100"
+                        step="1"
+                        disabled={disabled}
+                        className={`w-full px-3 py-2 pr-8 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
+                          disabled
+                            ? 'bg-gray-100 cursor-not-allowed opacity-60'
+                            : errors[`metrics_${key}`]
+                              ? 'border-red-300 bg-red-50'
+                              : 'border-gray-200'
+                        }`}
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold pointer-events-none">
+                        %
+                      </span>
+                    </div>
 
                     {errors[`metrics_${key}`] && (
                       <p className="text-sm text-red-600 flex items-center">
@@ -262,7 +280,9 @@ export const EvaluationMetricsStep = ({
                     </span>
                     {key.replace('_', ' ')}
                   </label>
-                  <span className="text-xl font-bold text-primary">{value.toFixed(2)}</span>
+                  <span className="text-xl font-bold text-primary">
+                    {(value * 100).toFixed(0)}%
+                  </span>
                 </div>
 
                 <input
@@ -279,17 +299,22 @@ export const EvaluationMetricsStep = ({
                   }}
                 />
 
-                <input
-                  type="number"
-                  value={value}
-                  onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value))}
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  className={`w-full px-3 py-2 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
-                    errors[`metrics_${key}`] ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                  }`}
-                />
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={(value * 100).toFixed(0)}
+                    onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value) / 100)}
+                    min="0"
+                    max="100"
+                    step="1"
+                    className={`w-full px-3 py-2 pr-8 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
+                      errors[`metrics_${key}`] ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                    }`}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold pointer-events-none">
+                    %
+                  </span>
+                </div>
 
                 {errors[`metrics_${key}`] && (
                   <p className="text-sm text-red-600 flex items-center">

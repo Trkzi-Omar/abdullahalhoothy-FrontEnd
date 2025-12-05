@@ -446,8 +446,8 @@ const CustomReportForm = () => {
       }
 
       // Use the single endpoint that supports all business types
-      // The backend smart_pharmacy_report endpoint handles all business types
-      const reportUrl = urls.smart_pharmacy_report;
+      // The backend smart_site_report endpoint handles all business types
+      const reportUrl = urls.smart_site_report;
 
       const res = await apiRequest({
         url: reportUrl,

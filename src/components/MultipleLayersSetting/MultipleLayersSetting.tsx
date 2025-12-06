@@ -84,8 +84,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     propertyThreshold,
     setPropertyThreshold,
     comparisonType,
-    setDeletedLayers,
-    restoreLayer,
   } = useCatalogContext();
 
   const { setIncludePopulation, setIncludeIncome, setLayerDataMap } = useLayerContext();
@@ -105,19 +103,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
   // Add state for the recolor color selection
   const [recolorSelectedColor, setRecolorSelectedColor] = useState<string>('#ff0000');
-
-  const [showRestorePrompt, setShowRestorePrompt] = useState(false);
-  const [deletedTimestamp, setDeletedTimestamp] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (showRestorePrompt) {
-      const timer = setTimeout(() => {
-        setShowRestorePrompt(false);
-        setDeletedTimestamp(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [showRestorePrompt]);
 
   const dropdownIndex = layerIndex ?? -1;
   const isOpen = openDropdownIndices[1] === dropdownIndex;
@@ -206,20 +191,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     // Remove this layer from gradient colors
     setGradientColorBasedOnZone(prev => prev.filter(item => item.layerId !== layerIndex));
 
-    // Store timestamp before removing for undo functionality
-    const timestamp = Date.now();
-    setDeletedTimestamp(timestamp);
-
-    // Store the removed layer in deletedLayers for undo
-    setDeletedLayers(prev => [
-      ...prev,
-      {
-        layer: layer,
-        index: layerIndex,
-        timestamp: timestamp,
-      },
-    ]);
-
     // Remove this layer from geoPoints
     setGeoPoints(prev => prev.filter((_, index) => index !== layerIndex));
 
@@ -243,9 +214,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     if (chosenPallet === layerIndex) {
       setChosenPallet(null);
     }
-
-    // Show the restore prompt
-    setShowRestorePrompt(true);
   }
 
   function toggleDropdown(event: React.MouseEvent<HTMLDivElement>) {
@@ -872,22 +840,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
               )}
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Add restore prompt */}
-      {showRestorePrompt && deletedTimestamp && (
-        <div className="fixed bottom-4 right-4 bg-white shadow-lg rounded-lg p-4 flex items-center gap-4">
-          <span>Layer removed.</span>
-          <button
-            onClick={() => {
-              restoreLayer(deletedTimestamp);
-              setShowRestorePrompt(false);
-            }}
-            className="text-[#115740] hover:text-[#123f30] font-medium"
-          >
-            Undo
-          </button>
         </div>
       )}
     </div>

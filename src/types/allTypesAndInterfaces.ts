@@ -195,18 +195,6 @@ export interface CatalogContextType {
   updateLayerHeatmap: (layerIndex: number, isHeatmap: boolean) => void;
   updateLayerGrid: (layerIndex: number, isGrid: boolean) => void;
   removeLayer: (layerIndex: number) => void;
-  deletedLayers: {
-    layer: MapFeatures;
-    index: number;
-    timestamp: number;
-  }[];
-  setDeletedLayers: React.Dispatch<React.SetStateAction<{
-    layer: MapFeatures;
-    index: number;
-    timestamp: number;
-  }[]>>;
-  restoreLayer: (timestamp: number) => void;
-
   visualizationMode: VisualizationMode;
   setVisualizationMode: React.Dispatch<React.SetStateAction<VisualizationMode>>;
   basedOnLayerId: string | null;

@@ -337,7 +337,7 @@ const CustomReportForm = () => {
 
   // Calculate cart cost for extra datasets on step 3
   const calculateCartCost = useCallback(async () => {
-    if (!formData || currentStep !== 3 || !authResponse?.localId) {
+    if (!formData || currentStep !== 4 || !authResponse?.localId) {
       setAdditionalCost(null);
       return;
     }

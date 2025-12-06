@@ -398,9 +398,9 @@ const CustomReportForm = () => {
     }
   }, [formData, currentStep, authResponse?.localId]);
 
-  // Calculate cost when on step 3 and datasets change
+  // Calculate cost when on step 4 and datasets change(previously was step 3)
   useEffect(() => {
-    if (currentStep === 3) {
+    if (currentStep === 4) {
       // Debounce the calculation
       const timeoutId = setTimeout(() => {
         calculateCartCost();
@@ -962,8 +962,8 @@ const CustomReportForm = () => {
                 </div>
               )}
 
-              {/* Additional Cost Message for Step 3 */}
-              {currentStep === 3 && additionalCost !== null && additionalCost > 0 && (
+              {/* Additional Cost Message for Step 4(previously was step 3) */}
+              {currentStep === 4 && additionalCost !== null && additionalCost > 0 && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-center justify-center">
                     {isCalculatingCost ? (

@@ -618,18 +618,20 @@ const CustomReportForm = () => {
         // Step 1 always only requires city selection
         return !!formData.city_name;
       case 2:
+        return true;
+      case 3:
         return (
           Math.abs(metricsSum - 1) < 0.001 &&
           Object.values(formData.evaluation_metrics).every(v => v >= 0)
-        );
-      case 3:
-        return true; // Custom locations are optional
+        ); // Custom locations are optional
       case 4:
         return true; // Current location is optional
       case 5:
         return true; // Attributes are optional
       case 6:
-        return !!formData.report_tier; // Report tier must be selected
+        return true; // Report tier must be selected
+      case 7:
+        return !!formData.report_tier;
       default:
         return false;
     }

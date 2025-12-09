@@ -4,7 +4,7 @@ import { BusinessTypeConfig } from './services/businessMetricsService';
 
 export const CITY_OPTIONS = ['Riyadh', 'Mecca', 'Jeddah'];
 
-export const TOTAL_STEPS = 6;
+export const TOTAL_STEPS = 7;
 
 export const getInitialFormData = (
   businessType: string,

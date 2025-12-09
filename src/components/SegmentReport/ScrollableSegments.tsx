@@ -22,20 +22,11 @@ function ScrollableSegments({
 
   // Auto-scroll to center the selected segment
   useEffect(() => {
-    if (selectedCardRef.current && scrollContainerRef.current) {
-      const container = scrollContainerRef.current;
-      const card = selectedCardRef.current;
-
-      const containerWidth = container.offsetWidth;
-      const cardLeft = card.offsetLeft;
-      const cardWidth = card.offsetWidth;
-
-      // Calculate scroll position to center the card
-      const scrollPosition = cardLeft - containerWidth / 2 + cardWidth / 2;
-
-      container.scrollTo({
-        left: scrollPosition,
+    if (selectedCardRef.current) {
+      selectedCardRef.current.scrollIntoView({
         behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
       });
     }
   }, [selectedSegmentId]);

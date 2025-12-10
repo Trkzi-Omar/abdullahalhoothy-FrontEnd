@@ -124,7 +124,15 @@ const defaultCaseStudyContent: Descendant[] = [
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
 
 export function CatalogProvider(props: { children: ReactNode }) {
-  const { viewport, setViewport, setPendingActivation } = useIntelligenceViewport();
+  const {
+    viewport,
+    setViewport,
+    setPendingActivation,
+    populationSample,
+    setPopulationSample,
+    incomeSample,
+    setIncomeSample,
+  } = useIntelligenceViewport();
   const { authResponse } = useAuth();
   const { children } = props;
 
@@ -527,9 +535,23 @@ export function CatalogProvider(props: { children: ReactNode }) {
           const intelligenceViewport = responseData.intelligence_viewport;
           if (intelligenceViewport) {
             setViewport(intelligenceViewport);
+            // Map separate sample keys if available, otherwise fallback to legacy 'sample'
+            if (intelligenceViewport.populationSample !== undefined) {
+              setPopulationSample(intelligenceViewport.populationSample);
+            } else {
+              setPopulationSample(!!intelligenceViewport.sample);
+            }
+
+            if (intelligenceViewport.incomeSample !== undefined) {
+              setIncomeSample(intelligenceViewport.incomeSample);
+            } else {
+              setIncomeSample(!!intelligenceViewport.sample);
+            }
           } else {
             // Clear viewport if not present
             setViewport(null);
+            setPopulationSample(false);
+            setIncomeSample(false);
           }
           // Always trigger pending activation to sync toggle states
           setPendingActivation(true);
@@ -628,8 +650,22 @@ export function CatalogProvider(props: { children: ReactNode }) {
           // Handle intelligence_viewport for regular catalogs
           if (catalogData.intelligence_viewport) {
             setViewport(catalogData.intelligence_viewport);
+            // Map separate sample keys if available, otherwise fallback to legacy 'sample'
+            if (catalogData.intelligence_viewport.populationSample !== undefined) {
+              setPopulationSample(catalogData.intelligence_viewport.populationSample);
+            } else {
+              setPopulationSample(!!catalogData.intelligence_viewport.sample);
+            }
+
+            if (catalogData.intelligence_viewport.incomeSample !== undefined) {
+              setIncomeSample(catalogData.intelligence_viewport.incomeSample);
+            } else {
+              setIncomeSample(!!catalogData.intelligence_viewport.sample);
+            }
           } else {
             setViewport(null);
+            setPopulationSample(false);
+            setIncomeSample(false);
           }
           // Always trigger to sync toggle states
           setPendingActivation(true);
@@ -763,6 +799,11 @@ export function CatalogProvider(props: { children: ReactNode }) {
               isIntelligentLayer(layer) && 
               (String(layer.layer_id) === '1003' || layer.basedon === 'income')
             ),
+            // Save separate sample states
+            populationSample: populationSample,
+            incomeSample: incomeSample,
+            // Keep legacy sample for backward compatibility (optional, or just remove if not needed)
+            sample: populationSample || incomeSample, 
           } : null
         },
       };
@@ -812,6 +853,9 @@ export function CatalogProvider(props: { children: ReactNode }) {
   function resetState(keepGeoPointsState?: boolean) {
     if (!keepGeoPointsState) {
       setGeoPoints([]);
+      setViewport(null);
+      setPopulationSample(false);
+      setIncomeSample(false);
     }
     setLastGeoIdRequest(undefined);
     setLastGeoMessageRequest(undefined);

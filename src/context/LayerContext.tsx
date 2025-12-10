@@ -56,7 +56,14 @@ const getFakeData = async (zoomLevel: number) => {
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
 export function LayerProvider(props: { children: ReactNode }) {
-   const { viewport: intelligenceViewport, setViewport, pendingActivation, setPendingActivation } = useIntelligenceViewport(); // get the shared state
+   const { 
+    viewport: intelligenceViewport, 
+    setViewport, 
+    pendingActivation, 
+    setPendingActivation,
+    populationSample,
+    incomeSample
+  } = useIntelligenceViewport(); // get the shared state
   const navigate = useNavigate();
   const { authResponse } = useAuth();
   const { children } = props;
@@ -778,10 +785,12 @@ export function LayerProvider(props: { children: ReactNode }) {
       withPopulation,
       withIncome,
       shouldReturnFeatures = false,
+      sample = false,
     }: {
       withPopulation: boolean;
       withIncome: boolean;
       shouldReturnFeatures?: boolean;
+      sample?: boolean;
     }): Promise<any> => {
       const map = mapRef.current;
       if (!map) {
@@ -799,6 +808,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         income: withIncome,
         zoom_level: 7 + currentZoomLevel,
         user_id: authResponse?.localId,
+        sample: sample,
       };
       
       setViewport({
@@ -809,6 +819,8 @@ export function LayerProvider(props: { children: ReactNode }) {
   population: withPopulation,
   income: withIncome,
   zoom_level: 7 + currentZoomLevel,
+  populationSample: populationSample,
+  incomeSample: incomeSample,
 });
       const res = await apiRequest({
         url: urls.fetch_population_by_viewport,
@@ -838,12 +850,14 @@ export function LayerProvider(props: { children: ReactNode }) {
       withPopulation: true,
       withIncome: false,
       shouldReturnFeatures,
+      sample: populationSample,
     });
   const fetchIncomeByViewport = (shouldReturnFeatures: boolean = false) =>
     fetchAreaIntelligenceByViewport({
       withPopulation: true,
       withIncome: true,
       shouldReturnFeatures,
+      sample: incomeSample,
     });
 
   useEffect(() => {
@@ -1001,6 +1015,20 @@ export function LayerProvider(props: { children: ReactNode }) {
   useEffect(() => {
     console.debug('includePopulation', includePopulation, 'includeIncome', includeIncome);
   }, [includePopulation, includeIncome]);
+
+  // Trigger refetch when population sample toggle changes
+  useEffect(() => {
+    if (includePopulation) {
+      handlePopulationLayer(true);
+    }
+  }, [populationSample]);
+
+  // Trigger refetch when income sample toggle changes
+  useEffect(() => {
+    if (includeIncome) {
+      handleIncomeLayer(true);
+    }
+  }, [incomeSample]);
 
   // Handle pending activation from loaded catalog's intelligence_viewport
   useEffect(() => {

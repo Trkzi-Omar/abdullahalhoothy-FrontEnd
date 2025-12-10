@@ -3,9 +3,13 @@ import { IntelligenceViewport } from '../types/allTypesAndInterfaces';
 
 interface IntelligenceViewportContextType {
   viewport: IntelligenceViewport | null;
-  setViewport: (v: IntelligenceViewport | null) => void;
+  setViewport: React.Dispatch<React.SetStateAction<IntelligenceViewport | null>>;
   pendingActivation: boolean;
   setPendingActivation: (v: boolean) => void;
+  populationSample: boolean;
+  setPopulationSample: (v: boolean) => void;
+  incomeSample: boolean;
+  setIncomeSample: (v: boolean) => void;
 }
 
 const IntelligenceViewportContext = createContext<IntelligenceViewportContextType | undefined>(
@@ -15,9 +19,20 @@ const IntelligenceViewportContext = createContext<IntelligenceViewportContextTyp
 export const IntelligenceViewportProvider = ({ children }: { children: ReactNode }) => {
   const [viewport, setViewport] = useState<IntelligenceViewport | null>(null);
   const [pendingActivation, setPendingActivation] = useState(false);
+  const [populationSample, setPopulationSample] = useState(false);
+  const [incomeSample, setIncomeSample] = useState(false);
 
   return (
-    <IntelligenceViewportContext.Provider value={{ viewport, setViewport, pendingActivation, setPendingActivation }}>
+    <IntelligenceViewportContext.Provider value={{ 
+      viewport, 
+      setViewport, 
+      pendingActivation, 
+      setPendingActivation, 
+      populationSample, 
+      setPopulationSample,
+      incomeSample,
+      setIncomeSample
+    }}>
       {children}
     </IntelligenceViewportContext.Provider>
   );

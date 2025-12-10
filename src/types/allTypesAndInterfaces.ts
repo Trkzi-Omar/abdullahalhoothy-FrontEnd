@@ -1001,6 +1001,9 @@ export interface IntelligenceViewport {
   population: boolean;
   income: boolean;
   zoom_level: number;
+  populationSample: boolean;
+  incomeSample: boolean;
+  sample?: boolean;
 }
 
 export interface SegmentEvaluationMetrics {

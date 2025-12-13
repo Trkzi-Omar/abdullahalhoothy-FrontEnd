@@ -10,6 +10,7 @@ import { Toaster } from 'sonner';
 import { ChatProvider } from './context/ChatContext';
 import { CaseStudyProvider } from './components/CaseStudy/CaseStudyPanel';
 import { IntelligenceViewportProvider } from './context/IntelligenceViewPortContext';
+import WhatsAppFloatButton from './components/WhatsAppFloatButton/WhatsAppFloatButton';
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
             </MapProvider>
           </AuthProvider>
         </NavigationSetup>
+        <WhatsAppFloatButton />
       </BrowserRouter>
     </div>
   );

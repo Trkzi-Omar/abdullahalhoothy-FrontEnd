@@ -355,17 +355,17 @@ function CheckoutBilling({ Name }: { Name: string }) {
   }, [checkout.datasets, checkout.intelligences, checkout.report, checkout.country_name, checkout.city_name, canCalculateCost, authResponse?.localId, calculateCartCost]);
 
   const getAreaCardClasses = useCallback((isSelected: boolean) =>
-    `border rounded-lg transition-all flex items-center justify-between w-[80%] px-4 py-3 cursor-pointer ${isSelected
+    `border rounded-lg transition-all flex items-center justify-between w-full max-w-md px-3 py-2 sm:px-4 sm:py-3 cursor-pointer ${isSelected
       ? 'border-green-600 bg-green-50 text-green-800 shadow-lg ring-2 ring-green-200'
       : 'border-gray-300 bg-white text-gray-700 shadow-md hover:shadow-lg hover:border-[#115740] hover:bg-gray-50'
     }`, []);
 
   // ... Render JSX updated to use 'checkout' state and dispatch actions ...
   return (
-    <div className="h-full overflow-hidden relative flex">
-      <div className="w-1/3 flex flex-col justify-between items-center overflow-y-auto">
+    <div className="h-full overflow-hidden relative flex flex-col lg:flex-row">
+      <div className="w-full lg:w-1/3 flex flex-col justify-between items-center overflow-y-auto">
         {Name === 'area' ? (
-          <div className="w-full pl-4 pr-2 px-24">
+          <div className="w-full px-4 sm:px-8 lg:px-24">
             <div className="text-2xl pl-6 pt-4 font-semibold mb-4">Area Intelligence</div>
             <div className="flex flex-col items-center space-y-6">
               <div
@@ -474,13 +474,13 @@ function CheckoutBilling({ Name }: { Name: string }) {
             </div>
           </div>
         ) : Name === 'reports' ? (
-          <div className="w-full pl-4 pr-2 px-24">
+          <div className="w-full px-4 sm:px-8 lg:px-24">
             <div className="text-2xl pl-6 pt-4 font-semibold mb-6">Report</div>
-            <div className="flex flex-row gap-6 flex-wrap">
+            <div className="flex flex-col lg:flex-row gap-6 flex-wrap">
               {REPORT_TIERS.map(tier => {
                 const isSelected = checkout.report === tier.reportKey;
                 return (
-                  <details key={tier.id} className="relative border rounded-xl shadow-md hover:shadow-lg transition-all flex-1 min-w-[300px] max-w-[400px] bg-white overflow-hidden">
+                  <details key={tier.id} className="relative border rounded-xl shadow-md hover:shadow-lg transition-all flex-1 min-w-full sm:min-w-[300px] max-w-full lg:max-w-[400px] bg-white overflow-hidden">
                     {tier.isMostPopular && (
                       <div className="absolute top-0 right-0 bg-purple-600 text-white px-4 py-1.5 text-xs font-semibold rounded-bl-lg z-10">
                         Most Popular
@@ -589,7 +589,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
           </div>
         ) : (
           <>
-            <div className="w-full pl-4 pr-2 px-24">
+            <div className="w-full px-4 sm:px-8 lg:px-24">
               <div className="flex flex-col my-5 w-full">
                 <div className="flex justify-between mb-4" >
                   <label className="font-bold">What are you looking for?</label>
@@ -615,7 +615,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
 
                 <div className="flex flex-wrap gap-5">
                   {Object.entries(filteredCategories).map(([category, types]) => (
-                    <div key={category} className="flex-1 min-w-[200px]">
+                    <div key={category} className="flex-1 min-w-full sm:min-w-[200px]">
                       <button
                         className="font-semibold cursor-pointer flex justify-start items-center w-full hover:bg-gray-200 transition-all rounded"
                         onClick={() => {
@@ -675,8 +675,8 @@ function CheckoutBilling({ Name }: { Name: string }) {
       </div>
 
       {/* Checkout summary panel... */}
-      <div className="w-2/3 flex flex-col justify-center items-center border-l border-gray-200">
-        <div className="max-w-3xl w-full p-8 overflow-y-auto">
+      <div className="w-full lg:w-2/3 flex flex-col justify-center items-center border-l-0 lg:border-l border-gray-200">
+        <div className="max-w-3xl w-full p-4 sm:p-6 lg:p-8 overflow-y-auto">
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-semibold text-gray-900">Checkout</h2>
@@ -696,7 +696,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
             <div className="bg-gray-50 border border-gray-100 rounded-lg px-4 py-3 mb-6">
               <p className="text-xs text-gray-500 leading-relaxed">
                 Questions? We're happy to help — reach us at{' '}
-                <a href="tel:+970595142078" className="text-[#115740] font-medium hover:underline">+970 (59) 514 - 207</a>
+                <a href="tel:+966558188632" className="text-[#115740] font-medium hover:underline">+966 (55) 818 - 8632</a>
               </p>
             </div>
 

@@ -147,7 +147,7 @@ function BillingContent() {
         })}
       </div>
 
-      <div className="mt-auto px-6 pb-4 pt-6 border-t">
+      <div className="mt-[20vh] px-6 pb-4 pt-6 border-t lg:mt-auto">
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
             {error}

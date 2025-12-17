@@ -226,9 +226,9 @@ const Auth = () => {
   };
 
   return (
-    <div className="w-full h-full lg:border-l">
-      <div className="flex items-center justify-center h-screen bg-[#115740]">
-        <div className="bg-white p-10 rounded-lg shadow-lg w-full max-w-md">
+    <div className="w-full h-full lg:border-l overflow-hidden flex flex-col">
+      <div className="flex-1 flex items-center justify-center bg-[#115740] py-4 lg:py-0 min-h-0">
+        <div className="bg-white p-6 sm:p-10 rounded-lg shadow-lg w-full max-w-md mx-4">
           <h2 className="text-2xl text-[#006400] mb-5 text-center">
             {isPasswordReset ? 'Reset Password' : isLogin ? 'Login' : 'Register'}
           </h2>

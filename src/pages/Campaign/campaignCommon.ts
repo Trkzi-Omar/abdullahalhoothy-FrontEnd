@@ -15,11 +15,11 @@ export type Report = {
 // Shared constants
 export const FONT_FAMILY = 'Montserrat Custom, Montserrat, sans-serif';
 
-export const BUTTON_BASE_CLASSES = 'cursor-pointer flex items-center justify-center px-4 py-6 rounded-md bg-[#8E50EA] hover:bg-purple-400 transition-colors';
+export const BUTTON_BASE_CLASSES = 'cursor-pointer flex items-center justify-center px-2 sm:px-4 py-4 sm:py-6 rounded-md bg-[#8E50EA] hover:bg-purple-400 transition-colors';
 
 export const BACK_BUTTON_CLASSES = 'bg-[#8E50EA] hover:bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-colors';
 
-export const TEXT_CLASSES = 'text-white font-semibold text-xl text-center break-words';
+export const TEXT_CLASSES = 'text-white font-semibold text-sm sm:text-base md:text-xl text-center break-words';
 
 // Shared API functions
 export const fetchCampaigns = async (): Promise<Report[]> => {

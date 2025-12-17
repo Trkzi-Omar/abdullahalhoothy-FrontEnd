@@ -13,8 +13,8 @@ interface WhatsAppFloatButtonProps {
 
 const defaultProps: WhatsAppFloatButtonProps = {    
   phoneNumber: '966558188632',
-  message: 'Hello! I would like to get in touch.',
-  position: 'fixed lg:bottom-6 lg:right-6 bottom-4 right-4',
+  message: 'Hello! I\'m interested in learning more about S-Locator\'s location intelligence solutions for optimizing distribution routes and supply chain visibility.',
+  position: 'fixed lg:bottom-6 lg:right-6',
   size: 'w-16 h-16',
   colors: 'bg-[#25D366]',
   className: '',
@@ -45,13 +45,18 @@ function WhatsAppFloatButton(props: WhatsAppFloatButtonProps = defaultProps) {
   if (!isVisible) return null;
 
   return (
-    <div className={`${position} z-50 group`}>
+    <div 
+      className={`${position} bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 group`}
+      style={{
+        paddingBottom: 'env(safe-area-inset-bottom, 0)',
+      }}
+    >
       <button
         onClick={handleClose}
-        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 
+        className="absolute -top-1 -right-1 w-7 h-7 bg-red-500 hover:bg-red-600 
           rounded-full flex items-center justify-center shadow-lg
           transition-all duration-200
-          z-10"
+          z-10 border-2 border-white"
         aria-label="Hide WhatsApp button"
         title="Hide WhatsApp button"
       >

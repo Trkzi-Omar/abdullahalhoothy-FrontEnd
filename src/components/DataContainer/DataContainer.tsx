@@ -5,12 +5,14 @@ import { Catalog, UserLayer, CardItem } from '../../types/allTypesAndInterfaces'
 import { useCatalogContext } from '../../context/CatalogContext';
 import UserLayerCard from '../UserLayerCard/UserLayerCard';
 import { isValidColor } from '../../utils/helperFunctions';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, isGuestUser } from '../../context/AuthContext';
 import { useUIContext } from '../../context/UIContext';
 import apiRequest from '../../services/apiRequest';
 import { useLayerContext } from '../../context/LayerContext';
 import CampaignPage from '../../pages/Campaign/campaign_home';
 import { Spinner } from '../common';
+import Banner from '../Banner/Banner';
+import { useNavigate } from 'react-router-dom';
 
 function DataContainer() {
   const {
@@ -30,6 +32,8 @@ function DataContainer() {
   const { setSelectedCity, setSelectedCountry } = useLayerContext();
   const { isAuthenticated, authResponse, logout } = useAuth();
   const { closeModal } = useUIContext();
+  const navigate = useNavigate();
+  const [bannerVisible, setBannerVisible] = useState(true);
   const [activeTab, setActiveTab] = useState('Data Catalogue');
   const [resData, setResData] = useState<(Catalog | UserLayer)[] | string>('');
   // layers data that will be sat after user clicks Add Layer
@@ -279,7 +283,40 @@ function DataContainer() {
             : 'Add Layers to Map'}
       </h2>
       {selectedContainerType === 'Home' ? (
-        <CampaignPage />
+        <>
+          {authResponse && isGuestUser(authResponse) && bannerVisible && (
+            <Banner
+              visible={bannerVisible}
+              type="info"
+              inline={true}
+              message={
+                <>
+                  You are logged in as a guest user. Please{' '}
+                  <button 
+                    className="underline font-semibold" 
+                    onClick={() => {
+                      const source = localStorage.getItem('source') || '';
+                      navigate(`/sign-up/${source}`);
+                    }}
+                  >
+                    sign up
+                  </button>{' '}
+                  or{' '}
+                  <button 
+                    className="underline font-semibold" 
+                    onClick={() => navigate('/auth')}
+                  >
+                    sign in
+                  </button>{' '}
+                  to access full features.
+                </>
+              }
+              onClose={() => setBannerVisible(false)}
+              className="rounded-md mb-2"
+            />
+          )}
+          <CampaignPage />
+        </>
       ) : (
         <>
           <div className="flex flex-wrap lg:gap-0 gap-2 w-full justify-center items-center my-4 rounded-xl font-semibold">

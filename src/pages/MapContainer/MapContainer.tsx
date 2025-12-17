@@ -33,9 +33,9 @@ function Container() {
         <StatisticsPopups />
         {shouldInitializeFeatures && (
           <>
-            <div className="absolute top-4 left-4 flex items-start gap-2 z-[1]">
-              <BenchmarkControl />
+            <div className="absolute top-4 left-4 flex items-center gap-2 z-[1]">
               <AreaIntelligeneControl />
+              <BenchmarkControl />
             </div>
             <SavedLocations />
           </>

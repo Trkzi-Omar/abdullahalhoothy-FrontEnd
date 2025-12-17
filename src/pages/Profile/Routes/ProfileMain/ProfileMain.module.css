@@ -181,12 +181,26 @@
   padding: 8px;
   border-bottom: 1px solid #ccc;
   cursor: pointer;
+  min-width: 0; /* Allow flex item to shrink below content size */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.itemText {
+  flex: 1;
+  min-width: 0; /* Allow text to shrink */
+  word-break: break-word;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
 }
 
 .iconContainer {
   display: flex;
   align-items: center;
   gap: 8px; /* Space between the divider and the icon */
+  flex-shrink: 0; /* Prevent icon container from shrinking */
+  margin-left: 8px; /* Add margin on small screens */
 }
 
 .verticalDivider {

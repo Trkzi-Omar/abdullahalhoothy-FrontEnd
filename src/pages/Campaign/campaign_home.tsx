@@ -50,7 +50,7 @@ export default function CampaignPage() {
   };
 
   return (
-    <div className="flex flex-col w-full h-full justify-center items-center gap-3 p-4 relative">
+    <div className="flex flex-col w-full h-full justify-center items-center gap-3 p-2 sm:p-4 relative">
       {/* Background image */}
       {hoveredBg && (
         <div 

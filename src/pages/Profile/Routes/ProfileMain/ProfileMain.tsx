@@ -165,7 +165,10 @@ const ProfileMain: React.FC = () => {
           <ul className={styles.itemList}>
             {Object.entries(items).map(([key, value]) => (
               <li key={key} className={styles.itemName}>
-                <span onClick={() => handleItemClick(type, key, value)}>
+                <span 
+                  onClick={() => handleItemClick(type, key, value)}
+                  className={styles.itemText}
+                >
                   {value.layer_name || value.catalog_name || value.name || key}
                 </span>
                 {/* Conditionally render the delete icon */}
@@ -232,15 +235,15 @@ const ProfileMain: React.FC = () => {
             <span className="font-bold mr-1 min-w-[100px]">Email:</span>
             {profile.email}
           </div>
-          <div className="flex items-start mb-2">
+          <div className="flex flex-col sm:flex-row sm:items-start items-start mb-2 gap-2">
             <span className="font-bold mr-1 min-w-[100px]">Phone:</span>
-            <div className="flex items-center flex-1">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center flex-1 gap-2 w-full sm:w-auto">
               <input
                 type="tel"
                 value={phoneInput}
                 onChange={(e) => setPhoneInput(e.target.value)}
                 placeholder="Enter phone number"
-                className="flex-1 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="flex-1 min-w-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
               />
               <button
                 onClick={async () => {
@@ -272,7 +275,7 @@ const ProfileMain: React.FC = () => {
                   }
                 }}
                 disabled={isSavingPhone || phoneInput === (profile.phone || '')}
-                className="ml-2 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="sm:ml-2 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 {isSavingPhone ? 'Saving...' : 'Save'}
               </button>

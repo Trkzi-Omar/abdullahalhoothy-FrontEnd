@@ -27,7 +27,6 @@ import CustomReportForm from '../CustomReportForm';
 import MarketingDashboard from '../../pages/MarketingDashboard/MarketingDashboard';
 import { BillingProvider } from '../../context/BillingContext';
 import Billing from '../../pages/Billing/Billing';
-import GuestAutoLogin from '../../pages/Auth/GuestAutoLogin';
 import SmartSegmentReport from '../SegmentReport';
 const Layout = () => {
   const location = useLocation();
@@ -42,8 +41,6 @@ const Layout = () => {
 
   const routesContent = (
     <>
-      <GuestAutoLogin />
-
       <Routes>
         <Route path="*" element={<NotFound />} />
         <Route path={'/tabularView'} element={<></>} />

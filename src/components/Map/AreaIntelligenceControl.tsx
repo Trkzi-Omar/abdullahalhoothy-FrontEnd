@@ -15,12 +15,8 @@ export const AreaIntelligeneControl: React.FC = () => {
     includePopulation,
     includeIncome,
   } = useLayerContext();
-  const {
-    populationSample,
-    setPopulationSample,
-    incomeSample,
-    setIncomeSample,
-  } = useIntelligenceViewport();
+  const { populationSample, setPopulationSample, incomeSample, setIncomeSample } =
+    useIntelligenceViewport();
   const [isOpen, setIsOpen] = useState(false);
   const { selectedContainerType } = useCatalogContext();
   const [isPopulationRefetching, setIsPopulationRefetching] = useState(false);
@@ -459,4 +455,3 @@ export const AreaIntelligeneControl: React.FC = () => {
     </div>
   );
 };
-

@@ -1,0 +1,4 @@
+1. [ ] Add prices on Items and Area intelligence(also add description here). Currently data is not available. and should come from backend.
+2. [ ] Instead of checkout, add the Tabs view(for data variables and description) called Item select view which is gonna be for items and area intelligence. So everytime user select an item or area intelligence, the descrioptin and data variables tab is gonna be render its data. Checkout will be after pressing a view Checkout button which will be at the end  of page in the middle. Also add a checkout cart icon in the navbar on the right.
+3. [ ] Description is gonna be the description for each item or area intelligence he selected. As description is gonna be trimmed in the area intellegience and we will show it in the decsiption tab.
+4. [ ] Need to be able to view and add to cart.

@@ -814,6 +814,7 @@ export interface UserProfile {
   account_type: string;
   show_price_on_purchase: boolean;
   maker?: Record<string, any>;
+  has_used_free_location_report?: boolean;
 }
 
 export interface PopupInfo {
@@ -935,6 +936,7 @@ export interface CustomReportData {
   country_name: string;
   Type: string;
   report_tier?: string;
+  report_type?: 'full' | 'location';
   // evaluation_metrics: EvaluationMetrics;
   evaluation_metrics: SegmentEvaluationMetrics;
   custom_locations: CustomLocation[];

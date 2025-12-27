@@ -8,6 +8,8 @@ interface ReportTierStepProps {
   formData: CustomReportData;
   onInputChange: (field: string, value: any) => void;
   disabled?: boolean;
+  reportType?: 'full' | 'location';
+  hasUsedFreeLocationReport?: boolean;
 }
 
 interface TierPrice {
@@ -20,6 +22,8 @@ const ReportTierStep = ({
   formData,
   onInputChange,
   disabled = false,
+  reportType,
+  hasUsedFreeLocationReport = false,
 }: ReportTierStepProps) => {
   const { authResponse } = useAuth();
   const [tierPrices, setTierPrices] = useState<TierPrice>({
@@ -28,13 +32,6 @@ const ReportTierStep = ({
     premium: null,
   });
   const [isLoadingPrices, setIsLoadingPrices] = useState(false);
-
-  // Set default to premium if not already set
-  useEffect(() => {
-    if (!formData.report_tier) {
-      onInputChange('report_tier', 'premium');
-    }
-  }, [formData.report_tier, onInputChange]);
 
   // Calculate prices for all tiers
   const calculateTierPrices = useCallback(async () => {
@@ -59,7 +56,7 @@ const ReportTierStep = ({
 
       // Calculate price for each tier
       const tiers: Array<'basic' | 'standard' | 'premium'> = ['basic', 'standard', 'premium'];
-      const pricePromises = tiers.map(async (tier) => {
+      const pricePromises = tiers.map(async tier => {
         try {
           const requestBody = {
             user_id: authResponse.localId,
@@ -103,7 +100,14 @@ const ReportTierStep = ({
     } finally {
       setIsLoadingPrices(false);
     }
-  }, [authResponse?.localId, formData.city_name, formData.country_name, formData.complementary_categories, formData.competition_categories, formData.cross_shopping_categories]);
+  }, [
+    authResponse?.localId,
+    formData.city_name,
+    formData.country_name,
+    formData.complementary_categories,
+    formData.competition_categories,
+    formData.cross_shopping_categories,
+  ]);
 
   // Calculate prices when component mounts or when relevant data changes
   useEffect(() => {
@@ -120,6 +124,59 @@ const ReportTierStep = ({
     }
     return `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
+
+  // For location reports, show simple pricing
+  if (reportType === 'location') {
+    const price = hasUsedFreeLocationReport ? '$150.00' : 'FREE';
+    const badge = hasUsedFreeLocationReport ? 'Subsequent Report' : 'First Report';
+
+    return (
+      <div className="space-y-4 animate-fade-in-up">
+        <div className="text-center mb-4">
+          <h3 className="text-lg font-bold text-gray-900 mb-1">Location Analysis Report</h3>
+          <p className="text-sm text-gray-600">
+            Instant analysis comparing your location to our database
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-400 rounded-xl p-6">
+          <div className="text-center">
+            <div className="text-4xl font-bold text-green-600 mb-2">{price}</div>
+            <div className="text-sm text-gray-600 mb-3">{badge}</div>
+            <p className="text-sm text-gray-700 mb-4">
+              {hasUsedFreeLocationReport
+                ? 'Get detailed analysis of your specific location for $150'
+                : 'Get your first location analysis absolutely free!'}
+            </p>
+            <ul className="text-left text-sm text-gray-700 space-y-2 max-w-md mx-auto">
+              <li className="flex items-start">
+                <span className="text-green-500 mr-2">✓</span>
+                <span>Compare your location to existing database</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-green-500 mr-2">✓</span>
+                <span>Detailed demographic and competitive analysis</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-green-500 mr-2">✓</span>
+                <span>Instant insights and recommendations</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {hasUsedFreeLocationReport && (
+          <div className="text-center">
+            <p className="text-xs text-gray-500">
+              You've already claimed your free location report
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // For full reports, use existing tier pricing logic
   return (
     <div className="space-y-3 animate-fade-in-up">
       <div className="text-center mb-3">
@@ -157,11 +214,13 @@ const ReportTierStep = ({
       <div className="space-y-3">
         <div className="grid grid-cols-1 gap-3">
           {/* Premium Report */}
-          <label className={`relative flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
-            currentTier === 'premium'
-              ? 'border-primary bg-primary/5 shadow-md'
-              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-          } ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}>
+          <label
+            className={`relative flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+              currentTier === 'premium'
+                ? 'border-primary bg-primary/5 shadow-md'
+                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+            } ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
+          >
             <input
               type="radio"
               name="report_tier"
@@ -173,11 +232,11 @@ const ReportTierStep = ({
             />
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center">
-                <div className={`w-4 h-4 border-2 rounded-full mr-3 flex items-center justify-center ${
-                  currentTier === 'premium'
-                    ? 'border-primary bg-primary'
-                    : 'border-gray-300'
-                }`}>
+                <div
+                  className={`w-4 h-4 border-2 rounded-full mr-3 flex items-center justify-center ${
+                    currentTier === 'premium' ? 'border-primary bg-primary' : 'border-gray-300'
+                  }`}
+                >
                   {currentTier === 'premium' && (
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                   )}
@@ -185,7 +244,8 @@ const ReportTierStep = ({
                 <div>
                   <div className="font-semibold text-gray-900">Premium Report</div>
                   <div className="text-sm text-gray-600">
-                    Includes pharmacy, dentists, hospitals, supermarkets, population intelligence, and income intelligence datasets
+                    Includes pharmacy, dentists, hospitals, supermarkets, population intelligence,
+                    and income intelligence datasets
                   </div>
                 </div>
               </div>
@@ -199,11 +259,13 @@ const ReportTierStep = ({
           </label>
 
           {/* Standard Report */}
-          <label className={`relative flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
-            currentTier === 'standard'
-              ? 'border-primary bg-primary/5 shadow-md'
-              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-          } ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}>
+          <label
+            className={`relative flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+              currentTier === 'standard'
+                ? 'border-primary bg-primary/5 shadow-md'
+                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+            } ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
+          >
             <input
               type="radio"
               name="report_tier"
@@ -215,11 +277,11 @@ const ReportTierStep = ({
             />
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center">
-                <div className={`w-4 h-4 border-2 rounded-full mr-3 flex items-center justify-center ${
-                  currentTier === 'standard'
-                    ? 'border-primary bg-primary'
-                    : 'border-gray-300'
-                }`}>
+                <div
+                  className={`w-4 h-4 border-2 rounded-full mr-3 flex items-center justify-center ${
+                    currentTier === 'standard' ? 'border-primary bg-primary' : 'border-gray-300'
+                  }`}
+                >
                   {currentTier === 'standard' && (
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                   )}
@@ -241,11 +303,13 @@ const ReportTierStep = ({
           </label>
 
           {/* Basic Report */}
-          <label className={`relative flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
-            currentTier === 'basic'
-              ? 'border-primary bg-primary/5 shadow-md'
-              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-          } ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}>
+          <label
+            className={`relative flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+              currentTier === 'basic'
+                ? 'border-primary bg-primary/5 shadow-md'
+                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+            } ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
+          >
             <input
               type="radio"
               name="report_tier"
@@ -257,14 +321,12 @@ const ReportTierStep = ({
             />
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center">
-                <div className={`w-4 h-4 border-2 rounded-full mr-3 flex items-center justify-center ${
-                  currentTier === 'basic'
-                    ? 'border-primary bg-primary'
-                    : 'border-gray-300'
-                }`}>
-                  {currentTier === 'basic' && (
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                  )}
+                <div
+                  className={`w-4 h-4 border-2 rounded-full mr-3 flex items-center justify-center ${
+                    currentTier === 'basic' ? 'border-primary bg-primary' : 'border-gray-300'
+                  }`}
+                >
+                  {currentTier === 'basic' && <div className="w-2 h-2 bg-white rounded-full"></div>}
                 </div>
                 <div>
                   <div className="font-semibold text-gray-900">Basic Report</div>

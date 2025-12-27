@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import apiRequest from '../../services/apiRequest';
 import urls from '../../urls.json';
 import './CustomReportForm.css';
@@ -12,7 +12,7 @@ import {
   MetricKey,
 } from '../../types/allTypesAndInterfaces';
 import { CustomSegment, CustomSegmentReportResponse } from '../../types';
-import { TOTAL_STEPS, getInitialFormData } from './constants';
+import { getTotalSteps, getInitialFormData, getStepDefinitions } from './constants';
 import { useBusinessTypeConfig } from './hooks/useBusinessTypeConfig';
 
 // Import step components
@@ -22,35 +22,23 @@ import CustomLocationsStep from './components/CustomLocationsStep';
 import CurrentLocationStep from './components/CurrentLocationStep';
 import ProgressIndicator from './components/ProgressIndicator';
 import FormNavigation from './components/FormNavigation';
-import SuccessMessage from './components/SuccessMessage';
 import SetAttributeStep from './components/AttributesStep';
 import ReportTierStep from './components/ReportTierStep';
 import SmartSegmentReport from '../SegmentReport';
+import ReportTypeSelectionStep from './components/ReportTypeSelectionStep';
 
 const CustomReportForm = () => {
+  // STEP INDEXING CONVENTION:
+  // - Step 0: Report Type Selection (special case)
+  // - Steps 1+: Actual form steps (1-indexed for display)
+  // - Use getActualStepContent(step, reportType) to map step number to content
+  // - Step definitions are 0-indexed arrays representing 1-indexed steps
+
   const { authResponse } = useAuth();
   const navigate = useNavigate();
   const businessType = 'pharmacy';
+  // TODO: Dynamic business type from URL params - currently disabled
   // const { businessType } = useParams<{ businessType: string }>();
-  const [categories, setCategories] = useState<string[]>([]);
-
-  // Validate business type exists
-  if (!businessType) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Business Type Required</h1>
-          <p className="text-gray-600 mb-4">Please specify a business type in the URL</p>
-          <button
-            onClick={() => navigate('/')}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Go Home
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   // Fetch business type configuration from API
   const {
@@ -59,22 +47,30 @@ const CustomReportForm = () => {
     error: configError,
   } = useBusinessTypeConfig(businessType);
 
+  const [categories, setCategories] = useState<string[]>([]);
+
   const [formData, setFormData] = useState<CustomReportData | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
   const [businessMetrics, setBusinessMetrics] = useState<BusinessCategoryMetrics | null>(null);
   const [additionalCost, setAdditionalCost] = useState<number | null>(null);
   const [isCalculatingCost, setIsCalculatingCost] = useState(false);
 
+  // New state for report type selection
+  const [reportType, setReportType] = useState<'full' | 'location' | null>(null);
+  const [hasUsedFreeLocationReport, setHasUsedFreeLocationReport] = useState<boolean>(false);
+
   // Segment Report State
   const [segmentReportData, setSegmentReport] = useState<CustomSegmentReportResponse | null>(null);
   const [segmentReportLoading, setSegmentReportLoading] = useState(false);
   const [selectedSegment, setSelectedSegment] = useState<CustomSegment | null>(null);
+
+  // Ref to track previous mode/reportType to prevent race conditions
+  const prevModeRef = useRef({ isAdvancedMode, reportType });
 
   // Set user_id when component mounts
   useEffect(() => {
@@ -90,6 +86,30 @@ const CustomReportForm = () => {
     }
   }, [authResponse, formData?.user_id]);
 
+  // Fetch user profile to check free location report status
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!authResponse?.localId) return;
+
+      try {
+        const response = await apiRequest({
+          url: urls.user_profile,
+          method: 'get',
+          isAuthRequest: true,
+        });
+
+        const hasUsedFree = response?.data?.has_used_free_location_report || false;
+        setHasUsedFreeLocationReport(hasUsedFree);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        // Default to false if error (user can still try to claim free report)
+        setHasUsedFreeLocationReport(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [authResponse?.localId]);
+
   const loadBusinessMetrics = async (businessType: string) => {
     try {
       const res = await apiRequest({
@@ -97,7 +117,6 @@ const CustomReportForm = () => {
         method: 'get',
       });
       const data = res.data?.data;
-      console.log(data);
       // Only store the metrics data, don't automatically populate formData
       // Categories should be selected by user or come from selected segment
       setBusinessMetrics(data);
@@ -175,7 +194,32 @@ const CustomReportForm = () => {
     handleCategoryLoad();
   }, []);
 
-  const getSegmentReport = async () => {
+  // Handle advanced mode toggle - adjust steps if needed
+  useEffect(() => {
+    if (!reportType) return;
+
+    const prev = prevModeRef.current;
+    const modeChanged = prev.isAdvancedMode !== isAdvancedMode || prev.reportType !== reportType;
+
+    if (!modeChanged) return;
+
+    prevModeRef.current = { isAdvancedMode, reportType };
+
+    const totalSteps = getTotalSteps(reportType, isAdvancedMode);
+
+    // Adjust current step if it exceeds new total
+    setCurrentStep(current => {
+      if (current > totalSteps) {
+        return totalSteps;
+      }
+      return current;
+    });
+
+    // Filter completed steps to only include valid steps
+    setCompletedSteps(prev => prev.filter(step => step <= totalSteps));
+  }, [isAdvancedMode, reportType]);
+
+  const getSegmentReport = useCallback(async () => {
     if (!formData?.city_name) return;
 
     setSegmentReportLoading(true);
@@ -196,7 +240,7 @@ const CustomReportForm = () => {
     } finally {
       setSegmentReportLoading(false);
     }
-  };
+  }, [formData?.city_name]);
 
   const handleSegmentSelect = (segmentId: string | null) => {
     if (!segmentReportData || !segmentId) {
@@ -208,13 +252,32 @@ const CustomReportForm = () => {
   };
 
   useEffect(() => {
-    if (currentStep === 2 && !segmentReportData && !segmentReportLoading) {
+    // Load segment report when user reaches the segment selection step
+    if (!reportType || !currentStep) return;
+
+    const stepDefinitions = getStepDefinitions(reportType, isAdvancedMode);
+    const stepDef = stepDefinitions[currentStep - 1];
+
+    if (stepDef?.content === 'segment-selection' && !segmentReportData && !segmentReportLoading) {
       getSegmentReport();
     }
-  }, [currentStep, segmentReportData, segmentReportLoading]);
+  }, [
+    currentStep,
+    segmentReportData,
+    segmentReportLoading,
+    reportType,
+    isAdvancedMode,
+    getSegmentReport,
+  ]);
 
   const validateForm = (): boolean => {
     if (!formData) return false;
+
+    // Validate report type is selected
+    if (!reportType) {
+      setErrors(prev => ({ ...prev, report_type: 'Please select a report type' }));
+      return false;
+    }
 
     const newErrors: FormErrors = {};
 
@@ -228,23 +291,34 @@ const CustomReportForm = () => {
       newErrors.report_tier = 'Please select a report tier';
     }
 
-    // Validate evaluation metrics sum to 1.0
-    const metricsSum = Object.values(formData.evaluation_metrics).reduce(
-      (sum, value) => sum + value,
-      0
-    );
-    if (Math.abs(metricsSum - 1) > 0.001) {
-      newErrors.evaluation_metrics = `Evaluation metrics must sum to 1.0. Current sum: ${metricsSum.toFixed(2)}`;
+    // In advanced mode, validate evaluation metrics
+    // In simple mode, users use default metrics and skip this step
+    if (isAdvancedMode) {
+      // Validate evaluation metrics sum to 1.0
+      const metricsSum = Object.values(formData.evaluation_metrics).reduce(
+        (sum, value) => sum + value,
+        0
+      );
+      if (Math.abs(metricsSum - 1) > 0.001) {
+        newErrors.evaluation_metrics = `Evaluation metrics must sum to 1.0. Current sum: ${metricsSum.toFixed(2)}`;
+      }
+
+      // Validate individual metrics are not negative
+      Object.entries(formData.evaluation_metrics).forEach(([key, value]) => {
+        if (value < 0) {
+          newErrors[`metrics_${key}`] = `${key} cannot be negative`;
+        }
+      });
     }
 
-    // Validate individual metrics are not negative
-    Object.entries(formData.evaluation_metrics).forEach(([key, value]) => {
-      if (value < 0) {
-        newErrors[`metrics_${key}`] = `${key} cannot be negative`;
+    // Current location is required for location reports
+    if (reportType === 'location') {
+      if (formData.current_location.lat === 0 && formData.current_location.lng === 0) {
+        newErrors.current_location = 'Please select your current location';
       }
-    });
+    }
 
-    // Custom locations and current location are optional - no validation needed
+    // Custom locations are optional for all report types
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -264,19 +338,32 @@ const CustomReportForm = () => {
       return false;
     }
 
-    // Validate evaluation metrics sum to 100% (now 1.0)
-    const metricsSum = Object.values(formData.evaluation_metrics).reduce(
-      (sum, value) => sum + value,
-      0
-    );
-    if (Math.abs(metricsSum - 1) > 0.001) {
-      return false;
+    // In advanced mode, validate evaluation metrics
+    // In simple mode, users use default metrics and skip this step
+    if (isAdvancedMode) {
+      // Validate evaluation metrics sum to 100% (now 1.0)
+      const metricsSum = Object.values(formData.evaluation_metrics).reduce(
+        (sum, value) => sum + value,
+        0
+      );
+      if (Math.abs(metricsSum - 1) > 0.001) {
+        return false;
+      }
+
+      // Validate individual metrics are not negative
+      const hasNegativeMetrics = Object.values(formData.evaluation_metrics).some(
+        value => value < 0
+      );
+      if (hasNegativeMetrics) {
+        return false;
+      }
     }
 
-    // Validate individual metrics are not negative
-    const hasNegativeMetrics = Object.values(formData.evaluation_metrics).some(value => value < 0);
-    if (hasNegativeMetrics) {
-      return false;
+    // Current location is required for location reports
+    if (reportType === 'location') {
+      if (formData.current_location.lat === 0 && formData.current_location.lng === 0) {
+        return false;
+      }
     }
 
     return true;
@@ -335,9 +422,19 @@ const CustomReportForm = () => {
     );
   };
 
-  // Calculate cart cost for extra datasets on step 3
+  // Calculate cart cost for extra datasets on attributes step
   const calculateCartCost = useCallback(async () => {
-    if (!formData || currentStep !== 4 || !authResponse?.localId) {
+    // Check if we're on the attributes step by looking at step definitions
+    if (!reportType) {
+      setAdditionalCost(null);
+      return;
+    }
+
+    const stepDefinitions = getStepDefinitions(reportType, isAdvancedMode);
+    const stepDef = stepDefinitions[currentStep - 1];
+    const isAttributesStep = stepDef?.content === 'attributes';
+
+    if (!formData || !isAttributesStep || !authResponse?.localId) {
       setAdditionalCost(null);
       return;
     }
@@ -396,11 +493,17 @@ const CustomReportForm = () => {
     } finally {
       setIsCalculatingCost(false);
     }
-  }, [formData, currentStep, authResponse?.localId]);
+  }, [formData, currentStep, authResponse?.localId, reportType, isAdvancedMode]);
 
-  // Calculate cost when on step 4 and datasets change(previously was step 3)
+  // Calculate cost when on attributes step and datasets change
   useEffect(() => {
-    if (currentStep === 4) {
+    if (!reportType) return;
+
+    const stepDefinitions = getStepDefinitions(reportType, isAdvancedMode);
+    const stepDef = stepDefinitions[currentStep - 1];
+    const isAttributesStep = stepDef?.content === 'attributes';
+
+    if (isAttributesStep) {
       // Debounce the calculation
       const timeoutId = setTimeout(() => {
         calculateCartCost();
@@ -412,6 +515,8 @@ const CustomReportForm = () => {
     }
   }, [
     currentStep,
+    reportType,
+    isAdvancedMode,
     formData?.complementary_categories,
     formData?.competition_categories,
     formData?.cross_shopping_categories,
@@ -462,7 +567,7 @@ const CustomReportForm = () => {
         return prev;
       });
     },
-    [] // No dependencies - callback is stable
+    [] // Empty deps OK: uses functional setState, no external dependencies
   );
 
   // Memoized callback for current location selection
@@ -488,11 +593,17 @@ const CustomReportForm = () => {
         return prev;
       });
     },
-    [] // No dependencies - callback is stable
+    [] // Empty deps OK: uses functional setState, no external dependencies
   );
 
   const handleSubmit = async () => {
     if (!formData || !validateForm()) {
+      return;
+    }
+
+    // Additional safety check for report type
+    if (!reportType) {
+      setSubmitError('Please select a report type before submitting');
       return;
     }
 
@@ -503,10 +614,14 @@ const CustomReportForm = () => {
       // Prepare form data with default values for optional locations
       const submissionData = {
         ...formData,
-        custom_locations: formData.custom_locations.map(loc => ({
-          lat: loc.lat || 0,
-          lng: loc.lng || 0,
-        })),
+        report_type: reportType, // Add report type
+        custom_locations:
+          reportType === 'location'
+            ? [] // Don't send custom locations for location reports
+            : formData.custom_locations.map(loc => ({
+                lat: loc.lat || 0,
+                lng: loc.lng || 0,
+              })),
         current_location: {
           lat: formData.current_location.lat || 0,
           lng: formData.current_location.lng || 0,
@@ -532,6 +647,13 @@ const CustomReportForm = () => {
       // Check if we have a report URL to redirect to
       // API response format: res.data.data.metadata.html_file_path
       const reportUrlResponse = res?.data?.data?.html_file_path;
+
+      // Update free report status for location reports
+      if (reportType === 'location' && !hasUsedFreeLocationReport) {
+        // The backend should have updated the flag
+        // Refresh it locally to reflect new state
+        setHasUsedFreeLocationReport(true);
+      }
 
       // Redirect to the report URL immediately
       if (reportUrlResponse) {
@@ -586,6 +708,21 @@ const CustomReportForm = () => {
           errorMessage = apiError.message;
         }
 
+        // Special handling for location report payment errors
+        if (reportType === 'location') {
+          if (!hasUsedFreeLocationReport) {
+            // This shouldn't happen for free reports, but handle gracefully
+            errorMessage = 'Unable to process your free location report. Please try again.';
+          } else {
+            // User has already used free report - check for payment-related errors
+            const lowerErrorMsg = errorMessage.toLowerCase();
+            if (lowerErrorMsg.includes('payment') || lowerErrorMsg.includes('billing')) {
+              errorMessage =
+                'Payment required for additional location reports ($150). Please ensure you have a payment method on file.';
+            }
+          }
+        }
+
         // Ensure we don't display raw JSON or object strings
         if (
           typeof errorMessage === 'object' ||
@@ -612,47 +749,69 @@ const CustomReportForm = () => {
 
   const validateCurrentStep = (step: number): boolean => {
     if (!formData) return false;
+    if (step === 0) return true; // Step 0 (report type selection) always valid
 
-    switch (step) {
-      case 1:
-        // Step 1 always only requires city selection
+    const actualStep = getActualStepContent(step, reportType);
+
+    switch (actualStep) {
+      case 'basic-info':
         return !!formData.city_name;
-      case 2:
-        return true;
-      case 3:
+
+      case 'current-location':
+        // Required for location reports (it's always shown in location reports)
+        // Optional for full reports (only shown in advanced mode)
+        if (reportType === 'location') {
+          return formData.current_location.lat !== 0 && formData.current_location.lng !== 0;
+        }
+        return true; // Optional for full reports
+
+      case 'evaluation-metrics':
         return (
           Math.abs(metricsSum - 1) < 0.001 &&
           Object.values(formData.evaluation_metrics).every(v => v >= 0)
-        ); // Custom locations are optional
-      case 4:
-        return true; // Current location is optional
-      case 5:
-        return true; // Attributes are optional
-      case 6:
-        return true; // Report tier must be selected
-      case 7:
-        return !!formData.report_tier;
+        );
+
+      case 'custom-locations':
+        return true; // Always optional
+
+      case 'attributes':
+        return true; // Always optional
+
+      case 'segment-selection':
+        return true; // Always optional
+
+      case 'report-tier':
+        // In advanced mode, report tier is required
+        // In simple mode, we use backend default, so it's optional
+        return isAdvancedMode ? !!formData.report_tier : true;
+
       default:
         return false;
     }
   };
 
   const goToNextStep = () => {
+    // Prevent advancing from step 0 without selecting report type
+    if (currentStep === 0 && !reportType) {
+      setSubmitError('Please select a report type to continue');
+      return;
+    }
+
     if (validateCurrentStep(currentStep)) {
       setCompletedSteps(prev => [...prev.filter(s => s !== currentStep), currentStep]);
-
-      // In simple mode, submit directly without setting report_tier (backend handles default)
-      if (!isAdvancedMode && currentStep === 1) {
-        handleSubmit();
-        return;
-      } else {
-        setCurrentStep(prev => Math.min(prev + 1, TOTAL_STEPS));
-      }
+      setCurrentStep(prev => Math.min(prev + 1, getTotalSteps(reportType, isAdvancedMode)));
     }
   };
 
   const goToPreviousStep = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
+    const newStep = currentStep - 1;
+
+    // If navigating back to Step 0, reset report type
+    if (newStep === 0) {
+      setReportType(null);
+    }
+
+    setCurrentStep(Math.max(newStep, 0));
   };
 
   const goToStep = (step: number) => {
@@ -661,11 +820,42 @@ const CustomReportForm = () => {
     }
   };
 
+  const handleReportTypeSelect = (type: 'full' | 'location') => {
+    setReportType(type);
+    setCurrentStep(1); // Move to first actual step
+  };
+
+  // Helper function to map step numbers to actual step content based on report type and advanced mode
+  // @param step - 1-indexed step number (0 = report type selection, 1+ = form steps)
+  // @param reportType - The selected report type
+  // @returns The step content identifier (e.g., 'basic-info', 'evaluation-metrics')
+  const getActualStepContent = (step: number, reportType: 'full' | 'location' | null): string => {
+    if (step === 0) return 'report-type-selection';
+    if (!reportType) return '';
+
+    // Get filtered step definitions based on advanced mode
+    const stepDefinitions = getStepDefinitions(reportType, isAdvancedMode);
+    const stepDef = stepDefinitions[step - 1]; // Convert 1-indexed step to 0-indexed array
+
+    return stepDef?.content || '';
+  };
+
   const renderCurrentStep = () => {
     if (!formData) return null;
 
-    switch (currentStep) {
-      case 1:
+    const actualStepContent = getActualStepContent(currentStep, reportType);
+
+    switch (actualStepContent) {
+      case 'report-type-selection':
+        return (
+          <ReportTypeSelectionStep
+            onSelectReportType={handleReportTypeSelect}
+            disabled={isSubmitting}
+            selectedReportType={reportType}
+          />
+        );
+
+      case 'basic-info':
         return (
           <BasicInformationStep
             formData={formData}
@@ -678,7 +868,8 @@ const CustomReportForm = () => {
             categories={categories}
           />
         );
-      case 2:
+
+      case 'segment-selection':
         return (
           <SmartSegmentReport
             segmentReportData={segmentReportData}
@@ -687,7 +878,8 @@ const CustomReportForm = () => {
             onSegmentSelect={handleSegmentSelect}
           />
         );
-      case 3:
+
+      case 'evaluation-metrics':
         return (
           <EvaluationMetricsStep
             formData={formData}
@@ -698,7 +890,8 @@ const CustomReportForm = () => {
             disabled={isSubmitting}
           />
         );
-      case 4:
+
+      case 'attributes':
         return (
           <SetAttributeStep
             onInputChange={handleAttributeChange}
@@ -707,7 +900,8 @@ const CustomReportForm = () => {
             metricsData={businessMetrics}
           />
         );
-      case 5:
+
+      case 'custom-locations':
         return (
           <CustomLocationsStep
             formData={formData}
@@ -719,7 +913,8 @@ const CustomReportForm = () => {
             disabled={isSubmitting}
           />
         );
-      case 6:
+
+      case 'current-location':
         return (
           <CurrentLocationStep
             formData={formData}
@@ -728,16 +923,22 @@ const CustomReportForm = () => {
             businessType={businessType}
             businessConfig={businessConfig}
             disabled={isSubmitting}
+            isRequired={reportType === 'location'}
+            reportType={reportType || undefined}
           />
         );
-      case 7:
+
+      case 'report-tier':
         return (
           <ReportTierStep
             formData={formData}
             onInputChange={handleInputChange}
             disabled={isSubmitting}
+            reportType={reportType || undefined}
+            hasUsedFreeLocationReport={hasUsedFreeLocationReport}
           />
         );
+
       default:
         return null;
     }
@@ -865,13 +1066,6 @@ const CustomReportForm = () => {
   return (
     <main className="min-h-screen w-full flex justify-center items-start bg-gradient-to-br from-slate-50 to-blue-50 py-2 px-2 sm:py-4 sm:px-4">
       <div className="max-w-4xl mx-auto w-full">
-        {/* Success Message */}
-        <SuccessMessage
-          show={showSuccessMessage}
-          businessType={businessType}
-          businessConfig={businessConfig}
-        />
-
         <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
           {/* Header */}
           <div className="bg-gem-gradient px-4 py-3 text-white">
@@ -885,19 +1079,27 @@ const CustomReportForm = () => {
                 <span className="hidden sm:inline">Back</span>
               </button>
               <div className="text-center flex-1">
-                <h1 className="text-lg font-bold">Location Expansion Report</h1>
+                <h1 className="text-lg font-bold">
+                  {reportType === 'location'
+                    ? 'Evaluate Your Location'
+                    : reportType === 'full'
+                      ? 'Full Expansion Report'
+                      : 'Location Expansion Report'}
+                </h1>
               </div>
               <div className="w-16"></div> {/* Spacer for centering */}
             </div>
           </div>
 
-          {/* Progress Indicator - Only show in advanced mode */}
-          {isAdvancedMode && (
+          {/* Progress Indicator - Show when user has selected a report type (step 1+) */}
+          {currentStep > 0 && reportType && (
             <ProgressIndicator
               currentStep={currentStep}
               completedSteps={completedSteps}
               onStepClick={goToStep}
               disabled={isSubmitting}
+              reportType={reportType || undefined}
+              isAdvancedMode={isAdvancedMode}
             />
           )}
 
@@ -964,9 +1166,11 @@ const CustomReportForm = () => {
                 </div>
               )}
 
-              {/* Additional Cost Message for Step 4(previously was step 3) */}
-              {currentStep === 4 && additionalCost !== null && additionalCost > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              {/* Additional Cost Message for Attributes Step */}
+              {(() => {
+                const isAttributesStep = getActualStepContent(currentStep, reportType) === 'attributes';
+                return isAttributesStep && additionalCost !== null && additionalCost > 0 && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-center justify-center">
                     {isCalculatingCost ? (
                       <div className="flex items-center text-blue-700">
@@ -999,10 +1203,11 @@ const CustomReportForm = () => {
                     )}
                   </div>
                 </div>
-              )}
+                );
+              })()}
 
-              {/* Navigation Buttons */}
-              {formData && (
+              {/* Navigation Buttons - Hide at Step 0 (report type selection) */}
+              {formData && currentStep > 0 && (
                 <FormNavigation
                   currentStep={currentStep}
                   isSubmitting={isSubmitting}
@@ -1012,6 +1217,7 @@ const CustomReportForm = () => {
                   validateCurrentStep={validateCurrentStep}
                   validateForm={validateFormWithoutStateUpdate}
                   formData={formData}
+                  reportType={reportType || undefined}
                   isAdvancedMode={isAdvancedMode}
                 />
               )}

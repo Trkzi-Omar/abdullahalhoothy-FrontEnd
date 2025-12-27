@@ -14,6 +14,8 @@ interface CurrentLocationStepProps {
   businessType: string;
   businessConfig?: BusinessTypeConfig | null;
   disabled?: boolean;
+  isRequired?: boolean;
+  reportType?: 'full' | 'location';
 }
 
 export const CurrentLocationStep = ({
@@ -23,14 +25,26 @@ export const CurrentLocationStep = ({
   businessType,
   businessConfig,
   disabled = false,
+  isRequired = false,
+  reportType,
 }: CurrentLocationStepProps) => {
+  const title = reportType === 'location' ? 'Your Location' : 'Current Location';
+  const helpText = reportType === 'location'
+    ? "Select the exact location you want to analyze. We'll compare it to our database."
+    : 'Set your current position for distance calculations';
+
   return (
     <div className="space-y-4 animate-fade-in-up">
       <div className="text-center mb-4">
         <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">
-          Current Location <span className="text-sm font-normal text-gray-500">(Optional)</span>
+          {title}
+          {isRequired ? (
+            <span className="text-red-500 ml-1">*</span>
+          ) : (
+            <span className="text-sm font-normal text-gray-500 ml-1">(Optional)</span>
+          )}
         </h3>
-        <p className="text-sm text-gray-600">Set your current position for distance calculations</p>
+        <p className="text-sm text-gray-600">{helpText}</p>
       </div>
 
       <div className="bg-white border-2 border-gray-100 rounded-lg p-4 hover:border-primary/30 transition-all duration-200">

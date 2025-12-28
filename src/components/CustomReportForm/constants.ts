@@ -125,6 +125,8 @@ export const getInitialFormData = (
     city_name: 'Riyadh',
     country_name: mapConfig.fallBackCountry,
     Type: businessType,
+    potential_business_type: businessType,
+    ecosystem_string_name: '',
     evaluation_metrics: defaultMetrics,
     custom_locations: [{ lat: 0, lng: 0 }],
     current_location: { lat: 0, lng: 0 },

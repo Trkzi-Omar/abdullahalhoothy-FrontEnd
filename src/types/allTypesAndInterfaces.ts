@@ -935,6 +935,8 @@ export interface CustomReportData {
   city_name: string;
   country_name: string;
   Type: string;
+  potential_business_type?: string;
+  ecosystem_string_name?: string;
   report_tier?: string;
   report_type?: 'full' | 'location';
   // evaluation_metrics: EvaluationMetrics;

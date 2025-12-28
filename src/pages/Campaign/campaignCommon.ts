@@ -5,21 +5,20 @@ export type Report = {
   id: number;
   title: string;
   description: string;
-  bgImage: string;
   options: {
     free_redirect: string;
     custom_redirect: string;
   };
 };
 
+// Step definitions for campaign flow
+export const CAMPAIGN_STEPS = [
+  { id: 'select-report', title: 'Choose Report' },
+  { id: 'select-option', title: 'Choose Option' },
+];
+
 // Shared constants
-export const FONT_FAMILY = 'Montserrat Custom, Montserrat, sans-serif';
-
-export const BUTTON_BASE_CLASSES = 'cursor-pointer flex items-center justify-center px-2 sm:px-4 py-4 sm:py-6 rounded-md bg-[#8E50EA] hover:bg-purple-400 transition-colors';
-
-export const BACK_BUTTON_CLASSES = 'bg-[#8E50EA] hover:bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-colors';
-
-export const TEXT_CLASSES = 'text-white font-semibold text-sm sm:text-base md:text-xl text-center break-words';
+export const FONT_FAMILY = 'Montserrat, sans-serif';
 
 // Shared API functions
 export const fetchCampaigns = async (): Promise<Report[]> => {
@@ -38,7 +37,7 @@ export const isTrySomethingElseReport = (report: Report): boolean => {
   return report.id === 4 || report.title === 'Try Something Else';
 };
 
-// Common navigation handlers (these can be customized per component if needed)
+// Common navigation handlers
 export const createNavigationHandlers = (
   navigate: (url: string) => void,
   setStep?: (step: number | ((prev: number) => number)) => void
@@ -47,33 +46,18 @@ export const createNavigationHandlers = (
     navigate(url);
   };
 
-  const handleAccountClick = (url: string) => {
+  const handleCustomClick = (url: string) => {
     navigate(url);
   };
 
-  const handleBack = (currentStep: number, currentSelectedReport: Report | null) => {
+  const handleBack = () => {
     if (!setStep) return;
-    
-    if (currentStep === 2 && isTrySomethingElseReport(currentSelectedReport!)) {
-      setStep(0);
-    } else {
-      setStep(prev => Math.max(prev - 1, 0));
-    }
+    setStep(prev => Math.max(prev - 1, 0));
   };
 
   return {
     handleFreeClick,
-    handleAccountClick,
+    handleCustomClick,
     handleBack,
   };
 };
-
-// Common button component props interface
-export interface CampaignButtonProps {
-  onClick: () => void;
-  children: React.ReactNode;
-  className?: string;
-  fullWidth?: boolean;
-  onMouseEnter?: () => void;
-  onMouseLeave?: () => void;
-}

@@ -30,7 +30,7 @@ function Modal(props: ModalProps) {
       }}
     >
       <div
-        className={`${isHome ? 'bg-transparent p-0' : 'bg-white border shadow'} p-5 max-w-[950px] relative ${hasAutoSize ? 'w-auto' : 'w-full lg:h-5/6 h-full'} lg:rounded-lg  overflow-y-auto ${
+        className={`${isHome ? 'backdrop-blur-sm bg-white/40' : 'bg-white border shadow'} p-5 max-w-[950px] relative ${hasAutoSize ? 'w-auto' : 'w-full lg:h-5/6 h-full'} lg:rounded-lg  overflow-y-auto ${
           isSmaller
             ? 'flex justify-center items-center max-w-[400px] absolute inset-x-0 md:left-[140px]'
             : ''

@@ -267,7 +267,7 @@ function DataContainer() {
   }
 
   return (
-    <div className={`lg:p-6 h-full   ${selectedContainerType === 'Home' ? 'px-2 py-1' : 'p-2'}`}>
+    <div className={`lg:p-6 h-full ${selectedContainerType === 'Home' ? 'px-2 py-1' : 'p-2'}`}>
       {/* when add layer or category */}
       {isLoading && (
         <div className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-30 z-50">
@@ -292,8 +292,8 @@ function DataContainer() {
               message={
                 <>
                   You are logged in as a guest user. Please{' '}
-                  <button 
-                    className="underline font-semibold" 
+                  <button
+                    className="underline font-semibold"
                     onClick={() => {
                       const source = localStorage.getItem('source') || '';
                       navigate(`/sign-up/${source}`);
@@ -302,10 +302,7 @@ function DataContainer() {
                     sign up
                   </button>{' '}
                   or{' '}
-                  <button 
-                    className="underline font-semibold" 
-                    onClick={() => navigate('/auth')}
-                  >
+                  <button className="underline font-semibold" onClick={() => navigate('/auth')}>
                     sign in
                   </button>{' '}
                   to access full features.

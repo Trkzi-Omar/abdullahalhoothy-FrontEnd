@@ -1,125 +1,169 @@
 import { useEffect, useState } from 'react';
-import { 
-  Report, 
-  fetchCampaigns, 
+import { FaMapMarkedAlt, FaGift, FaFileAlt } from 'react-icons/fa';
+import {
+  Report,
+  fetchCampaigns,
   isTrySomethingElseReport,
-  createNavigationHandlers
+  createNavigationHandlers,
 } from './campaignCommon';
-import { CampaignButton, BackButton } from './CampaignComponents';
+import {
+  SelectableCard,
+  BackButton,
+  LoadingState,
+  ErrorState,
+  PageHeader,
+  HelpSection,
+} from './CampaignComponents';
 
 export default function CampaignPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
-  const [step, setStep] = useState(0); // 0 = reports list, 1 = free/custom, 2 = account options
-  const [hoveredBg, setHoveredBg] = useState<string | null>(null);
+  const [step, setStep] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const navigate = (url: string) => {
     window.location.href = url;
   };
 
-  const { handleFreeClick, handleAccountClick, handleBack } = createNavigationHandlers(navigate, setStep);
+  const { handleFreeClick, handleCustomClick, handleBack } = createNavigationHandlers(
+    navigate,
+    setStep
+  );
 
   useEffect(() => {
+    setIsLoading(true);
+    setError(null);
     fetchCampaigns()
-      .then((data: Report[]) => setReports(data))
-      .catch(err => console.error('Failed to fetch reports:', err));
+      .then((data: Report[]) => {
+        setReports(data);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch reports:', err);
+        setError('Failed to load reports. Please try again.');
+        setIsLoading(false);
+      });
   }, []);
 
   const handleReportClick = (report: Report) => {
     setSelectedReport(report);
 
-    // If it's the "Try something else" report (id === 4 or by title check)
     if (isTrySomethingElseReport(report)) {
-      setStep(2); // Skip directly to account options
+      // Skip to custom report page directly
+      navigate(report.options.custom_redirect);
     } else {
-      setStep(1); // Normal flow
+      setStep(1);
     }
   };
 
-  const handleCustomClick = () => {
-    setStep(2);
+  const handleRetry = () => {
+    setIsLoading(true);
+    setError(null);
+    fetchCampaigns()
+      .then((data: Report[]) => {
+        setReports(data);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch reports:', err);
+        setError('Failed to load reports. Please try again.');
+        setIsLoading(false);
+      });
   };
 
-  // ✅ Background logic
-  const bgImage =
-    step === 0
-      ? hoveredBg || undefined // hover only works on step 0
-      : selectedReport?.bgImage || undefined; // from step 1 onward, fixed
-
   return (
-    <div
-      className={`flex w-full justify-center absolute items-center min-h-screen transition-all duration-300 
-      ${bgImage ? 'bg-no-repeat bg-cover bg-top bg-center' : 'bg-white'}`}
-      style={{
-        backgroundImage: bgImage ? `url(${bgImage})` : 'none',
-      }}
-    >
-      {bgImage && <div className="absolute inset-0 bg-black/50"></div>}
-      <div className="bg-transparent border-0 w-[87vw] relative z-10">
-        {/* Back button (only visible after step 0) */}
-        {step > 0 && (
-          <div className="mb-4">
-            <BackButton onClick={() => handleBack(step, selectedReport)} />
-          </div>
-        )}
-
-        <div className="space-y-4">
-          {/* Step 0: Report selection */}
-          {step === 0 &&
-            reports.map(report => (
-              <CampaignButton
-                key={report.id}
-                onClick={() => handleReportClick(report)}
-                className="mx-auto max-w-[90ch]"
-                fullWidth={false}
-                onMouseEnter={() => setHoveredBg(report.bgImage)}
-                onMouseLeave={() => setHoveredBg(null)}
-              >
-                {report.description}
-              </CampaignButton>
-            ))}
-
-          {/* Step 1: Free or Custom */}
-          {step === 1 && selectedReport && (
-            <>
-              <CampaignButton
-                onClick={() => handleFreeClick(selectedReport.options.free_redirect)}
-                className="mx-auto max-w-[90ch]"
-                fullWidth={false}
-              >
-                Show me Example report and Interactive Map (Free)
-              </CampaignButton>
-              <CampaignButton
-                onClick={handleCustomClick}
-                className="mx-auto max-w-[90ch]"
-                fullWidth={false}
-              >
-                I want my Custom Report
-              </CampaignButton>
-            </>
+    <main className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Main Container */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
+          {/* Page Header */}
+          {step === 0 && (
+            <PageHeader
+              title="Choose Your Report Type"
+              description="Select the analysis that best fits your business needs"
+            />
+          )}
+          {step === 1 && (
+            <PageHeader
+              title="Select Your Option"
+              description="Choose between a free preview or a custom detailed report"
+            />
           )}
 
-          {/* Step 2: Account Options */}
-          {step === 2 && selectedReport && (
+          {/* Back Button */}
+          {step > 0 && (
+            <div className="mb-6">
+              <BackButton onClick={handleBack} />
+            </div>
+          )}
+
+          {/* Loading State */}
+          {isLoading && <LoadingState message="Loading available reports..." />}
+
+          {/* Error State */}
+          {error && <ErrorState message={error} onRetry={handleRetry} />}
+
+          {/* Content */}
+          {!isLoading && !error && (
             <>
-              <CampaignButton
-                onClick={() => handleAccountClick(selectedReport.options.custom_redirect)}
-                className="mx-auto max-w-[90ch]"
-                fullWidth={false}
-              >
-                Already have an account
-              </CampaignButton>
-              <CampaignButton
-                onClick={() => handleAccountClick(selectedReport.options.custom_redirect)}
-                className="mx-auto max-w-[90ch]"
-                fullWidth={false}
-              >
-                Does not have account
-              </CampaignButton>
+              {/* Step 0: Report Selection */}
+              {step === 0 && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {reports.map((report, index) => (
+                      <SelectableCard
+                        key={report.id}
+                        title={report.title}
+                        description={report.description}
+                        onClick={() => handleReportClick(report)}
+                        icon={<FaMapMarkedAlt className="w-6 h-6" />}
+                        badge={index === 0 ? 'Popular' : undefined}
+                      />
+                    ))}
+                  </div>
+
+                  <HelpSection>
+                    <p className="font-medium mb-1">Need help deciding?</p>
+                    <p className="text-xs text-gray-600">
+                      Each report provides unique insights to help you make data-driven location
+                      decisions for your business expansion.
+                    </p>
+                  </HelpSection>
+                </div>
+              )}
+
+              {/* Step 1: Free or Custom */}
+              {step === 1 && selectedReport && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <SelectableCard
+                      title="Free Preview"
+                      description="Explore an example report with our interactive map. No account required."
+                      onClick={() => handleFreeClick(selectedReport.options.free_redirect)}
+                      icon={<FaGift className="w-6 h-6" />}
+                    />
+                    <SelectableCard
+                      title="Custom Report"
+                      description="Get a personalized analysis tailored to your specific location and business needs."
+                      onClick={() => handleCustomClick(selectedReport.options.custom_redirect)}
+                      icon={<FaFileAlt className="w-6 h-6" />}
+                      recommended
+                    />
+                  </div>
+
+                  <HelpSection>
+                    <p className="text-xs text-gray-600">
+                      The free preview gives you a sample of what's possible. Create a custom report
+                      to get analysis specific to your target location.
+                    </p>
+                  </HelpSection>
+                </div>
+              )}
             </>
           )}
         </div>
       </div>
-    </div>
+    </main>
   );
 }

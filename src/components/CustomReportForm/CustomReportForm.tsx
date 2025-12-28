@@ -151,6 +151,7 @@ const CustomReportForm = () => {
               competition_categories: segmentCompetition,
               complementary_categories: segmentComplementary,
               cross_shopping_categories: segmentCrossShopping,
+              ecosystem_string_name: selectedSegment.name,
             }
           : null
       );
@@ -615,6 +616,8 @@ const CustomReportForm = () => {
       const submissionData = {
         ...formData,
         report_type: reportType, // Add report type
+        potential_business_type: formData.potential_business_type || businessType,
+        ecosystem_string_name: formData.ecosystem_string_name || '',
         custom_locations:
           reportType === 'location'
             ? [] // Don't send custom locations for location reports

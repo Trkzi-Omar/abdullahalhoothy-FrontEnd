@@ -28,14 +28,16 @@ import MarketingDashboard from '../../pages/MarketingDashboard/MarketingDashboar
 import { BillingProvider } from '../../context/BillingContext';
 import Billing from '../../pages/Billing/Billing';
 import SmartSegmentReport from '../SegmentReport';
+import Landing from '../../pages/Landing/Landing';
 const Layout = () => {
   const location = useLocation();
 
-  // Hide sidebar & navbar only on /campaign, /plans, or /custom-report
+  // Hide sidebar & navbar only on /campaign, /plans, /custom-report, or /landing
   const hideLayout =
     location.pathname.startsWith('/campaign') ||
     location.pathname.startsWith('/plans') ||
-    location.pathname.startsWith('/custom-report');
+    location.pathname.startsWith('/custom-report') ||
+    location.pathname.startsWith('/landing');
 
   const isBillingRoute = location.pathname.startsWith('/billing');
 
@@ -54,6 +56,7 @@ const Layout = () => {
         <Route path={'/billing/*'} element={<Billing />} />
         <Route path="/campaign" element={<CampaignPage />} />
         <Route path="/plans" element={<PlansPage />} />
+        <Route path="/landing" element={<Landing />} />
         <Route path="/marketing-dashboard" element={<MarketingDashboard />} />
         <Route path="/custom-report" element={<CustomReportForm />} />
         <Route path="/static/*" element={<StaticRedirect />} />

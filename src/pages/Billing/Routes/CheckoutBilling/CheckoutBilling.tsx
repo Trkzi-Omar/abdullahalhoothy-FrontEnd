@@ -4,7 +4,7 @@ import urls from '../../../../urls.json';
 import { FaCaretDown, FaCaretRight } from 'react-icons/fa';
 import { useAuth } from '../../../../context/AuthContext';
 import apiRequest from '../../../../services/apiRequest';
-import { MdAttachMoney, MdCheckCircle, MdCheckCircleOutline, MdErrorOutline, MdClose } from 'react-icons/md';
+import { MdAttachMoney, MdCheckCircle, MdCheckCircleOutline, MdErrorOutline, MdClose, MdHome } from 'react-icons/md';
 import { CategoryData } from '../../../../types/allTypesAndInterfaces';
 import { useUIContext } from '../../../../context/UIContext';
 import { useBillingContext, type ReportTier } from '../../../../context/BillingContext';
@@ -470,6 +470,25 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 ) : (
                   <span className="text-xs text-gray-400">Tap to add</span>
                 )}
+              </div>
+              <div
+                className="border rounded-lg transition-all flex items-center justify-between w-full max-w-md px-3 py-2 sm:px-4 sm:py-3 border-gray-300 bg-gray-100/60 shadow-md cursor-not-allowed relative"
+                role="button"
+                tabIndex={-1}
+                aria-disabled="true"
+              >
+                <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
+                  <span className="text-[10px] sm:text-xs bg-purple-500 text-white px-2 py-1 rounded-full font-semibold shadow-sm">Coming next month</span>
+                </div>
+                <div className="flex items-center gap-3 opacity-50 pr-24 sm:pr-28">
+                  <MdHome size={24} />
+                  <div>
+                    <div className="font-semibold text-gray-700">
+                      Real Estate Intelligence
+                    </div>
+                    <div className="text-xs text-gray-500">Enable smart real estate data</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

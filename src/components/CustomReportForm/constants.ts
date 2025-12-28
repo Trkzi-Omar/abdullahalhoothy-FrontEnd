@@ -1,4 +1,4 @@
-import { CustomReportData } from '../../types/allTypesAndInterfaces';
+import { CustomReportData, SegmentEvaluationMetrics } from '../../types/allTypesAndInterfaces';
 import mapConfig from '../../mapConfig.json';
 import { BusinessTypeConfig } from './services/businessMetricsService';
 
@@ -118,7 +118,7 @@ export const getInitialFormData = (
   // Use API configuration - no fallbacks
   const defaultMetrics = Object.fromEntries(
     Object.entries(config.metrics).map(([key, metric]) => [key, metric.default_weight])
-  );
+  ) as unknown as SegmentEvaluationMetrics;
 
   return {
     user_id: '',

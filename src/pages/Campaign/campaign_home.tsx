@@ -16,6 +16,7 @@ import {
   HelpSection,
 } from './CampaignComponents';
 import { useUIContext } from '../../context/UIContext';
+import urls from '../../urls.json';
 
 export default function CampaignHomePage() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -23,6 +24,8 @@ export default function CampaignHomePage() {
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hoveredBg, setHoveredBg] = useState<string | null>(null); // added for hover background
+  const [preloadedImages, setPreloadedImages] = useState<Map<string, string>>(new Map()); // cache for preloaded images
 
   const navigate = useNavigate();
   const { closeModal } = useUIContext();
@@ -38,6 +41,24 @@ export default function CampaignHomePage() {
     fetchCampaigns()
       .then((data: Report[]) => {
         setReports(data);
+        // Preload all background images when reports are loaded
+        const imageCache = new Map<string, string>();
+        const API_BASE = urls.REACT_APP_API_URL.replace("/fastapi","");
+        
+        data.forEach(report => {
+          if (report.bgImage) {
+            const imageUrl = report.bgImage.startsWith('http') 
+              ? report.bgImage 
+              : `${API_BASE}${report.bgImage}`;
+            
+            // Preload the image
+            const img = new Image();
+            img.src = imageUrl;
+            imageCache.set(report.bgImage, imageUrl);
+          }
+        });
+        
+        setPreloadedImages(imageCache);
         setIsLoading(false);
       })
       .catch(err => {
@@ -62,6 +83,24 @@ export default function CampaignHomePage() {
     fetchCampaigns()
       .then((data: Report[]) => {
         setReports(data);
+        // Preload all background images when reports are loaded
+        const imageCache = new Map<string, string>();
+        const API_BASE = urls.REACT_APP_API_URL.replace("/fastapi","");
+        
+        data.forEach(report => {
+          if (report.bgImage) {
+            const imageUrl = report.bgImage.startsWith('http') 
+              ? report.bgImage 
+              : `${API_BASE}${report.bgImage}`;
+            
+            // Preload the image
+            const img = new Image();
+            img.src = imageUrl;
+            imageCache.set(report.bgImage, imageUrl);
+          }
+        });
+        
+        setPreloadedImages(imageCache);
         setIsLoading(false);
       })
       .catch(err => {
@@ -69,6 +108,17 @@ export default function CampaignHomePage() {
         setError('Failed to load reports. Please try again.');
         setIsLoading(false);
       });
+  };
+
+  const API_BASE = urls.REACT_APP_API_URL.replace("/fastapi","");
+
+  const resolveBgImage = (path?: string | null) => {
+    if (!path) return undefined;
+    // Use preloaded image if available, otherwise construct URL
+    if (preloadedImages.has(path)) {
+      return preloadedImages.get(path);
+    }
+    return path.startsWith('http') ? path : `${API_BASE}${path}`;
   };
 
   return (

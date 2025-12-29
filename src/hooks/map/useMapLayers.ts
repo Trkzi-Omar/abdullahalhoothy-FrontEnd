@@ -48,6 +48,50 @@ const debouncedStreetViewCheck = _.debounce(
   300
 );
 
+// Preload street view checks for all features in a feature collection
+const preloadStreetViewChecks = async (featureCollection: any) => {
+  if (!featureCollection || !featureCollection.features || !Array.isArray(featureCollection.features)) {
+    return;
+  }
+
+  // Extract unique coordinates from all features
+  const coordinatesMap = new Map<string, { lat: number; lng: number }>();
+  
+  featureCollection.features.forEach((feature: any) => {
+    if (feature.geometry && feature.geometry.coordinates) {
+      const [lng, lat] = feature.geometry.coordinates;
+      const cacheKey = `${lat},${lng}`;
+      if (!streetViewCache.has(cacheKey) && !coordinatesMap.has(cacheKey)) {
+        coordinatesMap.set(cacheKey, { lat, lng });
+      }
+    }
+  });
+
+  // Batch preload all street view checks
+  const preloadPromises = Array.from(coordinatesMap.values()).map(async ({ lat, lng }) => {
+    const cacheKey = `${lat},${lng}`;
+    try {
+      const hasStreetView = await apiRequest({
+        url: urls.check_street_view,
+        method: 'POST',
+        body: { lat, lng },
+      });
+      const hasStreetViewValue = hasStreetView.data.data.has_street_view;
+      streetViewCache.set(cacheKey, hasStreetViewValue);
+    } catch (error) {
+      console.error(`Error preloading street view for ${cacheKey}:`, error);
+      streetViewCache.set(cacheKey, false);
+    }
+  });
+
+  // Execute all preloads in parallel (with a reasonable limit to avoid overwhelming the API)
+  const BATCH_SIZE = 10;
+  for (let i = 0; i < preloadPromises.length; i += BATCH_SIZE) {
+    const batch = preloadPromises.slice(i, i + BATCH_SIZE);
+    await Promise.all(batch);
+  }
+};
+
 const getGridPaint = (
   basedonLength: boolean,
   pointsColor: string,
@@ -281,6 +325,12 @@ export function useMapLayers() {
                 console.error('🗺️ [Map] Invalid GeoJSON structure:', featureCollection);
                 return;
               }
+
+              // Preload street view checks for all features in this collection
+              // This runs in the background and doesn't block layer rendering
+              preloadStreetViewChecks(featureCollection).catch(error => {
+                console.error('Error preloading street view checks:', error);
+              });
 
               const sourceId = `circle-source-${index}`;
               const layerId = `circle-layer-${index}`;

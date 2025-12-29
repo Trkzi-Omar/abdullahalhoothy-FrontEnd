@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import urls from '../../urls.json';
 import { useNavigate } from 'react-router';
+import apiRequest from '../../services/apiRequest';
 
 type Feature = {
   included: boolean;
@@ -28,13 +29,33 @@ const PlansPage: React.FC = () => {
   const [plansData, setPlansData] = useState<Plan[]>([]);
   const [billingCycle, setBillingCycle] = useState<'month' | 'year'>('month');
   const [users, setUsers] = useState<number>(1);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch(`${urls.REACT_APP_API_URL + urls.fetch_plans}`)
-      .then(res => res.json())
-      .then(data => setPlansData(data))
-      .catch(err => console.error('Failed to fetch plans:', err));
+    const fetchPlans = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const res = await apiRequest({
+          url: urls.fetch_plans,
+          method: 'get',
+          isAuthRequest: false,
+        });
+        // Handle both direct data and nested data.data structure
+        const plans = res?.data?.data || res?.data || res || [];
+        setPlansData(Array.isArray(plans) ? plans : []);
+      } catch (err) {
+        console.error('Failed to fetch plans:', err);
+        setError('Failed to load plans. Please try again later.');
+        setPlansData([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPlans();
   }, []);
 
   const decreaseUsers = () => {
@@ -48,6 +69,22 @@ const PlansPage: React.FC = () => {
   const handleClick = () => {
     navigate('/sign-up');
   };
+
+  if (isLoading) {
+    return (
+      <div className="w-full flex flex-col items-center justify-center px-6 py-3 bg-gray-50 min-h-screen">
+        <div className="text-lg text-gray-600">Loading plans...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full flex flex-col items-center justify-center px-6 py-3 bg-gray-50 min-h-screen">
+        <div className="text-lg text-red-600">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col items-center px-6 py-3 bg-gray-50">

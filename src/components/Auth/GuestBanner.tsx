@@ -18,24 +18,31 @@ export default function GuestBanner() {
   }
 
   return (
-    <div className="fixed top-0 left-0 w-full bg-yellow-200 border-b border-yellow-400 text-black text-center px-4 py-3 z-50">
-      <span>
-        You are logged in as a guest user.{' '}
-        <button className="underline font-semibold" onClick={handleSignupClick}>
-          Sign Up
-        </button>{' '}
-        or{' '}
-        <button className="underline font-semibold" onClick={() => navigate('/auth')}>
-          Sign In
-        </button>{' '}
-        to access full features.
-      </span>
+    <div className=' fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-30 z-10'>
+<div className="fixed top-[15vh] sm:top-[20vh] left-1/2 transform -translate-x-1/2 bg-[#E0F2FE] text-[#0369A1] py-3 px-4 sm:px-6 flex justify-between items-center  shadow-lg rounded-md w-[90%] sm:w-[85%] lg:w-full max-w-[90ch]">
+      <div className="flex-1 text-center pr-2">
+        <span className="text-sm sm:text-base">
+          You are logged in as a guest user.{' '}
+          <button className="underline font-semibold" onClick={handleSignupClick}>
+            sign up
+          </button>{' '}
+          or{' '}
+          <button className="underline font-semibold" onClick={() => navigate('/auth')}>
+            sign in
+          </button>{' '}
+          to access full features.
+        </span>
+      </div>
       <button
-        className="absolute right-2 top-2 text-black font-bold"
+        className="flex items-center justify-center w-7 h-7 rounded-full bg-red-500 hover:bg-red-600 transition-colors flex-shrink-0"
         onClick={() => setDismissed(true)}
+        aria-label="Close banner"
       >
-        ✕
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 4L4 12M4 4L12 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
       </button>
+    </div>
     </div>
   );
 }

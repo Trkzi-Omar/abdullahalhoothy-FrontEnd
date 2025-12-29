@@ -5,6 +5,7 @@ export type Report = {
   id: number;
   title: string;
   description: string;
+  bgImage?: string | null;
   options: {
     free_redirect: string;
     custom_redirect: string;

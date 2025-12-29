@@ -288,39 +288,28 @@ const ProfileMain: React.FC = () => {
                 checked={showPrice}
                 onChange={async e => {
                   await setShowPrice(e.target.checked);
-                  if (profile.account_type === 'admin') {
-                    if (!authResponse || !('idToken' in authResponse)) {
-                      setError(new Error('Authentication information is missing.'));
-                      setIsLoading(false);
-                      navigate('/auth');
-                      return;
-                    }
-                    await apiRequest({
-                      url: urls.update_user_profile,
-                      method: 'POST',
-                      isAuthRequest: true,
-                      body: {
-                        user_id: authResponse.localId,
-                        show_price_on_purchase: e.target.checked,
-                        username: profile.username,
-                        email: profile.email,
-                        phone: profile.phone,
-                      },
-                    });
+                  if (!authResponse || !('idToken' in authResponse)) {
+                    setError(new Error('Authentication information is missing.'));
+                    setIsLoading(false);
+                    navigate('/auth');
+                    return;
                   }
+                  await apiRequest({
+                    url: urls.update_user_profile,
+                    method: 'POST',
+                    isAuthRequest: true,
+                    body: {
+                      user_id: authResponse.localId,
+                      show_price_on_purchase: e.target.checked,
+                      username: profile.username,
+                      email: profile.email,
+                      phone: profile.phone,
+                    },
+                  });
                 }}
-                disabled={profile.account_type !== 'admin'}
-                className={`mr-2 h-4 w-4 border-gray-300 rounded focus:ring-green-600 ${
-                  profile.account_type !== 'admin'
-                    ? 'opacity-50 cursor-not-allowed'
-                    : 'text-green-700'
-                }`}
+                className="mr-2 h-4 w-4 border-gray-300 rounded focus:ring-green-600 text-green-700"
               />
-              <span
-                className={`text-gray-700 font-medium ${
-                  profile.account_type !== 'admin' ? 'text-gray-400' : ''
-                }`}
-              >
+              <span className="text-gray-700 font-medium">
                 Show Price
               </span>
             </label>

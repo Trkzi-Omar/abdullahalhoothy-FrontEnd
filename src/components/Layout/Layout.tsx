@@ -29,6 +29,7 @@ import { BillingProvider } from '../../context/BillingContext';
 import Billing from '../../pages/Billing/Billing';
 import SmartSegmentReport from '../SegmentReport';
 import Landing from '../../pages/Landing/Landing';
+import GuestBanner from '../Auth/GuestBanner';
 const Layout = () => {
   const location = useLocation();
 
@@ -89,6 +90,7 @@ const Layout = () => {
 
   return (
     <div className="flex flex-col ">
+      <GuestBanner />
       {!hideLayout && <MobileNavbar />}
 
       <div className="flex-1 flex lg:flex-row flex-col w-screen relative overflow-hidden overflow-y-auto">

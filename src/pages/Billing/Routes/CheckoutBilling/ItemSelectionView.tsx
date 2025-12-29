@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 interface DataVariable {
   key: string;
@@ -7,7 +7,7 @@ interface DataVariable {
 
 interface SelectedItemData {
   name: string;
-  type: 'dataset' | 'intelligence' | 'report';
+  type: "dataset" | "intelligence" | "report";
   description: string;
   dataVariables: DataVariable[];
   price?: number;
@@ -32,7 +32,9 @@ function ItemSelectionView({
   onAddToCart,
   onRemoveFromCart,
 }: ItemSelectionViewProps) {
-  const [activeTab, setActiveTab] = useState<'description' | 'dataVariables'>('description');
+  const [activeTab, setActiveTab] = useState<"description" | "dataVariables">(
+    "description",
+  );
 
   if (!selectedItem) {
     return (
@@ -51,30 +53,39 @@ function ItemSelectionView({
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
           />
         </svg>
-        <h3 className="text-xl font-semibold text-gray-700 mb-2">No Item Selected</h3>
+        <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          No Item Selected
+        </h3>
         <p className="text-sm text-gray-500 max-w-md">
-          Select an item from the left panel to view its description and available data variables.
+          Select an item from the left panel to view its description and
+          available data variables.
         </p>
       </div>
     );
   }
 
   const formatPrice = (value: number) =>
-    `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
     <div className="flex flex-col h-full w-full">
       {/* Header */}
       <div className="border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-2xl font-semibold text-gray-900">{selectedItem.name}</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">
+            {selectedItem.name}
+          </h2>
           {isLoading ? (
-            <span className="text-lg font-bold text-gray-400 animate-pulse">Loading...</span>
+            <span className="text-lg font-bold text-gray-400 animate-pulse">
+              Loading...
+            </span>
           ) : selectedItem.price !== undefined ? (
             <span
-              className={`text-lg font-bold ${selectedItem.price === 0 ? 'text-green-600' : 'text-green-700'}`}
+              className={`text-lg font-bold ${selectedItem.price === 0 ? "text-green-600" : "text-green-700"}`}
             >
-              {selectedItem.price === 0 ? 'Already Owned' : formatPrice(selectedItem.price)}
+              {selectedItem.price === 0
+                ? "Already Owned"
+                : formatPrice(selectedItem.price)}
             </span>
           ) : null}
         </div>
@@ -89,7 +100,9 @@ function ItemSelectionView({
           )}
         </div>
         {selectedItem.explanation && (
-          <p className="mt-2 text-sm text-gray-600 italic">{selectedItem.explanation}</p>
+          <p className="mt-2 text-sm text-gray-600 italic">
+            {selectedItem.explanation}
+          </p>
         )}
         {selectedItem.expiration && (
           <p className="mt-1 text-xs text-gray-500">
@@ -102,21 +115,21 @@ function ItemSelectionView({
       <div className="border-b border-gray-200 px-6">
         <div className="flex gap-6">
           <button
-            onClick={() => setActiveTab('description')}
+            onClick={() => setActiveTab("description")}
             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === 'description'
-                ? 'border-[#115740] text-[#115740]'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              activeTab === "description"
+                ? "border-[#115740] text-[#115740]"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
             }`}
           >
             Description
           </button>
           <button
-            onClick={() => setActiveTab('dataVariables')}
+            onClick={() => setActiveTab("dataVariables")}
             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === 'dataVariables'
-                ? 'border-[#115740] text-[#115740]'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              activeTab === "dataVariables"
+                ? "border-[#115740] text-[#115740]"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
             }`}
           >
             Data Variables ({selectedItem.dataVariables.length})
@@ -131,7 +144,7 @@ function ItemSelectionView({
             <div className="w-8 h-8 border-4 border-[#115740] border-t-transparent rounded-full animate-spin mb-4"></div>
             <p className="text-gray-500">Loading item details...</p>
           </div>
-        ) : activeTab === 'description' ? (
+        ) : activeTab === "description" ? (
           <div className="prose max-w-none">
             <p
               className="text-gray-700 leading-relaxed whitespace-pre-line"
@@ -140,11 +153,16 @@ function ItemSelectionView({
           </div>
         ) : (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Data Variables</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Available Data Variables
+            </h3>
             {selectedItem.dataVariables.length > 0 ? (
               <ul className="space-y-3">
                 {selectedItem.dataVariables.map((variable, index) => (
-                  <li key={index} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <li
+                    key={index}
+                    className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                  >
                     <div className="flex items-start gap-3">
                       <svg
                         className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0"
@@ -160,15 +178,21 @@ function ItemSelectionView({
                         />
                       </svg>
                       <div>
-                        <span className="font-semibold text-gray-900">{variable.key}</span>
-                        <p className="text-sm text-gray-600 mt-1">{variable.description}</p>
+                        <span className="font-semibold text-gray-900">
+                          {variable.key}
+                        </span>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {variable.description}
+                        </p>
                       </div>
                     </div>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-500 italic">No data variables available for this item.</p>
+              <p className="text-gray-500 italic">
+                No data variables available for this item.
+              </p>
             )}
           </div>
         )}
@@ -181,8 +205,14 @@ function ItemSelectionView({
             <button
               onClick={onRemoveFromCart}
               className="w-full py-3 px-6 bg-red-50 border-2 border-red-500 text-red-600 font-semibold rounded-lg hover:bg-red-100 transition-all flex items-center justify-center gap-2"
+              key="remove-from-cart"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -196,8 +226,14 @@ function ItemSelectionView({
             <button
               onClick={onAddToCart}
               className="w-full py-3 px-6 bg-[#115740] text-white font-semibold rounded-lg hover:bg-[#0d4632] transition-all flex items-center justify-center gap-2"
+              key="add-to-cart"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"

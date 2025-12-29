@@ -17,6 +17,7 @@ type CheckoutAction =
   | { type: 'toggleIntelligence'; payload: 'Income' | 'Population' }
   | { type: 'setReport'; payload: ReportTier }
   | { type: 'clearDatasets' }
+  | { type: 'initializeAllItems'; payload: { datasets: string[]; intelligences: string[]; report: ReportTier } }
   | { type: 'reset' };
 
 const initialCheckoutState: CheckoutState = {
@@ -63,6 +64,14 @@ function checkoutReducer(state: CheckoutState, action: CheckoutAction): Checkout
     }
     case 'clearDatasets': {
       return { ...state, datasets: [] };
+    }
+    case 'initializeAllItems': {
+      return {
+        ...state,
+        datasets: action.payload.datasets,
+        intelligences: action.payload.intelligences,
+        report: action.payload.report,
+      };
     }
     case 'reset': {
       return initialCheckoutState;

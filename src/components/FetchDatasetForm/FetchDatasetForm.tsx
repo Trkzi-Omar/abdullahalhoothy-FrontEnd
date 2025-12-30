@@ -19,6 +19,7 @@ import Chat from '../Chat/Chat';
 import { topics } from '../../types';
 import { FaWandMagicSparkles } from 'react-icons/fa6';
 import Modal from '../common/Modal';
+import { useDatasetPrices } from '../../hooks/useDatasetPrices';
 
 import DatasetModalContent from './DatasetModalContent';
 
@@ -161,6 +162,14 @@ const FetchDatasetForm = () => {
 
     return () => clearTimeout(timeoutId);
   }, [datasetsKey, selectedCity, selectedCountry, calculateCartCost]);
+
+  // Use dataset prices hook
+  const { getPrice } = useDatasetPrices({
+    selectedCountry,
+    selectedCity,
+    categories,
+    openedCategories,
+  });
 
   const filteredCategories = Object.entries(categories).reduce((acc, [category, types]) => {
     const filteredTypes = (types as string[]).filter(type =>
@@ -686,6 +695,7 @@ const FetchDatasetForm = () => {
                 onRemoveType={removeTypeFromLayer}
                 onAddToIncluded={handleAddToIncluded}
                 onAddToExcluded={handleAddToExcluded}
+                getPrice={getPrice}
               />
             </div>
           )}

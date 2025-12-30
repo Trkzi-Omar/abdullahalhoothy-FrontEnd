@@ -782,7 +782,10 @@ export interface CategoriesBrowserSubCategoriesProps {
   };
   onRemoveType: (type: string, layerId: number, isExcluded: boolean) => void;
   onAddToIncluded: (type: string) => void;
-  onAddToExcluded: (type: string) => void;
+  onAddToExcluded?: (type: string) => void;
+  getPrice?: (type: string) => string | React.ReactNode;
+  onTypeClick?: (type: string) => void;
+  hideAddRemoveButtons?: boolean;
 }
 
 export interface ColorSelectProps {

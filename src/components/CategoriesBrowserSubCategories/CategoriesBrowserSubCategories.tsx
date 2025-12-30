@@ -10,6 +10,9 @@ const CategoriesBrowserSubCategories = ({
   onRemoveType,
   onAddToIncluded,
   onAddToExcluded,
+  getPrice,
+  onTypeClick,
+  hideAddRemoveButtons = false,
 }: CategoriesBrowserSubCategoriesProps) => {
   return (
     <div className="flex flex-col gap-2.5">
@@ -47,61 +50,74 @@ const CategoriesBrowserSubCategories = ({
                 return (
                   <div
                     key={type}
-                    className={`flex items-center justify-between py-2 px-4 bg-[#f0f0f0] border border-[#ccc] rounded text-[14px] ${colors}`}
+                    className={`flex items-center justify-between py-2 px-4 bg-[#f0f0f0] border border-[#ccc] rounded text-[14px] ${colors} ${hideAddRemoveButtons ? 'cursor-pointer' : ''} transition-colors `}
+                    onClick={() => hideAddRemoveButtons && onTypeClick?.(type)}
                   >
-                    <div className="flex items-center">
-                      {counts.excludedCount.map(layerId => (
+                    {!hideAddRemoveButtons && (
+                      <div className="flex items-center">
+                        {counts.excludedCount.map(layerId => (
+                          <button
+                            key={`excluded-${layerId}`}
+                            onClick={e => {
+                              e.preventDefault();
+                              onRemoveType(type, layerId, true);
+                            }}
+                            className="text-xs opacity-75 hover:opacity-100 mr-1 bg-black/10 px-1.5 rounded-md"
+                          >
+                            {layerId}
+                          </button>
+                        ))}
                         <button
-                          key={`excluded-${layerId}`}
                           onClick={e => {
                             e.preventDefault();
-                            onRemoveType(type, layerId, true);
+                            onAddToExcluded?.(type);
                           }}
-                          className="text-xs opacity-75 hover:opacity-100 mr-1 bg-black/10 px-1.5 rounded-md"
+                          className={`font-bold hover:opacity-75 transition-all cursor-pointer w-6 h-6 flex items-center justify-center rounded ${
+                            included || excluded ? 'bg-black/10' : 'bg-black/5'
+                          }`}
                         >
-                          {layerId}
+                          −
                         </button>
-                      ))}
-                      <button
-                        onClick={e => {
-                          e.preventDefault();
-                          onAddToExcluded(type);
-                        }}
-                        className={`font-bold hover:opacity-75 transition-all cursor-pointer w-6 h-6 flex items-center justify-center rounded ${
-                          included || excluded ? 'bg-black/10' : 'bg-black/5'
-                        }`}
+                      </div>
+                    )}
+
+                    <div className="flex flex-col items-center mx-2">
+                      <span
+                        onClick={() => onTypeClick?.(type)}
+                        className={onTypeClick ? 'cursor-pointer hover:underline' : ''}
                       >
-                        −
-                      </button>
+                        {formatSubcategoryName(type)}
+                      </span>
+                      {getPrice && <span className="text-xs mt-1">{getPrice(type)}</span>}
                     </div>
 
-                    <span className="mx-2">{formatSubcategoryName(type)}</span>
-
-                    <div className="flex items-center">
-                      <button
-                        onClick={e => {
-                          e.preventDefault();
-                          onAddToIncluded(type);
-                        }}
-                        className={`font-bold hover:opacity-75 transition-all cursor-pointer w-6 h-6 flex items-center justify-center rounded ${
-                          included || excluded ? 'bg-black/10' : 'bg-black/5'
-                        }`}
-                      >
-                        +
-                      </button>
-                      {counts.includedCount.map(layerId => (
+                    {!hideAddRemoveButtons && (
+                      <div className="flex items-center">
                         <button
-                          key={`included-${layerId}`}
                           onClick={e => {
                             e.preventDefault();
-                            onRemoveType(type, layerId, false);
+                            onAddToIncluded(type);
                           }}
-                          className="text-xs opacity-75 hover:opacity-100 ml-1 bg-black/10 px-1.5 rounded-md"
+                          className={`font-bold hover:opacity-75 transition-all cursor-pointer w-6 h-6 flex items-center justify-center rounded ${
+                            included || excluded ? 'bg-black/10' : 'bg-black/5'
+                          }`}
                         >
-                          {layerId}
+                          +
                         </button>
-                      ))}
-                    </div>
+                        {counts.includedCount.map(layerId => (
+                          <button
+                            key={`included-${layerId}`}
+                            onClick={e => {
+                              e.preventDefault();
+                              onRemoveType(type, layerId, false);
+                            }}
+                            className="text-xs opacity-75 hover:opacity-100 ml-1 bg-black/10 px-1.5 rounded-md"
+                          >
+                            {layerId}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })}

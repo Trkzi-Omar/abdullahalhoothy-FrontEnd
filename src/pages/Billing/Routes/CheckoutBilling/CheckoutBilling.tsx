@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useCallback } from 'react';
 import { formatSubcategoryName } from '../../../../utils/helperFunctions';
 import urls from '../../../../urls.json';
-import { FaCaretDown, FaCaretRight } from 'react-icons/fa';
 import { useAuth } from '../../../../context/AuthContext';
 import apiRequest from '../../../../services/apiRequest';
 import { MdAttachMoney, MdCheckCircle, MdErrorOutline, MdClose, MdHome } from 'react-icons/md';
@@ -10,6 +9,8 @@ import { useUIContext } from '../../../../context/UIContext';
 import { useBillingContext, type ReportTier } from '../../../../context/BillingContext';
 import ItemSelectionView from './ItemSelectionView';
 import CheckoutModal from './CheckoutModal';
+import CategoriesBrowserSubCategories from '../../../../components/CategoriesBrowserSubCategories/CategoriesBrowserSubCategories';
+import { Skeleton } from '../../../../components/common/Skeleton';
 
 interface DataVariable {
   key: string;
@@ -233,6 +234,14 @@ function CheckoutBilling({ Name }: { Name: string }) {
       `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     []
   );
+
+  const population_intelligence = useMemo(() => {
+    return priceData?.intelligence_purchase_items?.find(i => i.intelligence_name === 'Population');
+  }, [priceData]);
+
+  const income_intelligence = useMemo(() => {
+    return priceData?.intelligence_purchase_items?.find(i => i.intelligence_name === 'Income');
+  }, [priceData]);
 
   const handleDatasetToggle = useCallback(
     (type: string) => {
@@ -705,6 +714,71 @@ function CheckoutBilling({ Name }: { Name: string }) {
     setSearchQuery('');
   }, [dispatch]);
 
+  // Handlers for CategoriesBrowserSubCategories component
+  const handleToggleCategory = useCallback(
+    (category: string) => {
+      if (openedCategories.includes(category)) {
+        setOpenedCategories(openedCategories.filter(x => x !== category));
+      } else {
+        setOpenedCategories([...openedCategories, category]);
+      }
+    },
+    [openedCategories]
+  );
+
+  const getTypeCounts = useCallback(
+    (type: string) => {
+      // For checkout, we only care about "included" (in cart)
+      // Return [1] if in cart, [] if not
+      const isInCart = checkout.datasets.includes(type);
+      return {
+        includedCount: isInCart ? [1] : [],
+        excludedCount: [],
+      };
+    },
+    [checkout.datasets]
+  );
+
+  const handleRemoveType = useCallback(
+    (type: string, _layerId: number, _isExcluded: boolean) => {
+      // Remove from cart
+      if (checkout.datasets.includes(type)) {
+        dispatch({ type: 'toggleDataset', payload: type });
+      }
+    },
+    [checkout.datasets, dispatch]
+  );
+
+  const handleAddToIncluded = useCallback(
+    (type: string) => {
+      // Add to cart
+      if (!checkout.country_name || !checkout.city_name) {
+        openModal(
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <MdErrorOutline className="text-orange-500 text-6xl mb-4" />
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Location Required</h2>
+            <p className="text-gray-600">
+              Please select a country and city before adding datasets.
+            </p>
+          </div>,
+          {
+            darkBackground: true,
+            isSmaller: true,
+            hasAutoSize: true,
+          }
+        );
+        return;
+      }
+      if (!checkout.datasets.includes(type)) {
+        dispatch({ type: 'toggleDataset', payload: type });
+      }
+      // Also select for viewing
+      const formattedName = formatSubcategoryName(type);
+      handleItemSelect(type, 'dataset', formattedName);
+    },
+    [checkout, dispatch, openModal, handleItemSelect]
+  );
+
   // Fetch prices for display - fetch only relevant items based on active view
   useEffect(() => {
     if (!canCalculateCost || !authResponse?.localId) {
@@ -869,23 +943,21 @@ function CheckoutBilling({ Name }: { Name: string }) {
                     </svg>
                     <div className="flex-1">
                       <div className="font-semibold">Population Intelligence</div>
-                      <div className="text-xs text-gray-500 line-clamp-1">
-                        Access comprehensive population demographics...
-                      </div>
+                      {isCalculatingPrices ? (
+                        <Skeleton className="w-full h-4" />
+                      ) : (
+                        <div className="text-xs text-gray-500 line-clamp-1">
+                          {population_intelligence?.description}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="text-xs font-semibold text-blue-600 mt-1">
                     Price:{' '}
                     {isCalculatingPrices ? (
-                      <span className="animate-pulse">Loading...</span>
-                    ) : priceData?.intelligence_purchase_items?.find(
-                        i => i.intelligence_name === 'Population'
-                      ) ? (
-                      formatPrice(
-                        priceData.intelligence_purchase_items.find(
-                          i => i.intelligence_name === 'Population'
-                        )?.cost || 0
-                      )
+                      <Skeleton className="w-10 h-4" />
+                    ) : population_intelligence ? (
+                      formatPrice(population_intelligence?.cost || 0)
                     ) : (
                       'TBD'
                     )}
@@ -918,23 +990,21 @@ function CheckoutBilling({ Name }: { Name: string }) {
                     <MdAttachMoney size={24} />
                     <div className="flex-1">
                       <div className="font-semibold">Income Intelligence</div>
-                      <div className="text-xs text-gray-500 line-clamp-1">
-                        Gain deep insights into income levels and wealth...
-                      </div>
+                      {isCalculatingPrices ? (
+                        <Skeleton className="w-full h-4" />
+                      ) : (
+                        <div className="text-xs text-gray-500 line-clamp-1">
+                          {income_intelligence?.description}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="text-xs font-semibold text-blue-600 mt-1">
+                  <div className="text-xs font-semibold text-blue-600 mt-1 flex">
                     Price:{' '}
                     {isCalculatingPrices ? (
-                      <span className="animate-pulse">Loading...</span>
-                    ) : priceData?.intelligence_purchase_items?.find(
-                        i => i.intelligence_name === 'Income'
-                      ) ? (
-                      formatPrice(
-                        priceData.intelligence_purchase_items.find(
-                          i => i.intelligence_name === 'Income'
-                        )?.cost || 0
-                      )
+                      <Skeleton className="w-10 h-4" />
+                    ) : income_intelligence ? (
+                      formatPrice(income_intelligence?.cost || 0)
                     ) : (
                       'TBD'
                     )}
@@ -1107,7 +1177,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
           </div>
         ) : (
           <>
-            <div className="w-full px-4 sm:px-8 lg:px-24">
+            <div className="w-full px-4 sm:px-8 lg:px-12">
               <div className="flex flex-col my-5 w-full">
                 <div className="flex justify-between mb-4">
                   <label className="font-bold">What are you looking for?</label>
@@ -1131,73 +1201,29 @@ function CheckoutBilling({ Name }: { Name: string }) {
                   />
                 </div>
 
-                <div className="flex flex-wrap gap-5">
-                  {Object.entries(filteredCategories).map(([category, types]) => (
-                    <div key={category} className="flex-1 min-w-full sm:min-w-[200px]">
-                      <button
-                        className="font-semibold cursor-pointer flex justify-start items-center w-full hover:bg-gray-200 transition-all rounded"
-                        onClick={() => {
-                          if (openedCategories.includes(category)) {
-                            setOpenedCategories(openedCategories.filter(x => x !== category));
-                          } else {
-                            setOpenedCategories([...openedCategories, category]);
-                          }
-                        }}
-                      >
-                        <span>
-                          {openedCategories.includes(category) ? <FaCaretDown /> : <FaCaretRight />}
-                        </span>{' '}
-                        {formatSubcategoryName(category)}
-                      </button>
-                      <div
-                        className={`w-full basis-full overflow-hidden transition-all ${!openedCategories.includes(category) ? 'h-0' : ''}`}
-                      >
-                        <div className="flex flex-wrap gap-3 mt-3">
-                          {(types as string[]).map(type => {
-                            const formattedName = formatSubcategoryName(type);
-                            const isSelected = checkout.datasets.includes(type);
-                            return (
-                              <div key={type} className="flex flex-col gap-1">
-                                <button
-                                  type="button"
-                                  className={`px-2 py-0 rounded border transition-all ${
-                                    isSelected
-                                      ? 'bg-green-600 text-white border-green-700'
-                                      : 'bg-gray-100 border-gray-300 hover:bg-gray-200 hover:border-gray-400'
-                                  }`}
-                                  onClick={e => {
-                                    e.preventDefault();
-                                    handleItemSelect(type, 'dataset', formattedName);
-                                  }}
-                                >
-                                  <div>
-                                    {formattedName}
-                                    <span className="ml-2 font-bold">{isSelected ? '✓' : '+'}</span>
-                                  </div>
-                                  <div className="text-[12px] text-left">
-                                    {isCalculatingPrices ? (
-                                      <span className="animate-pulse">Loading...</span>
-                                    ) : priceData?.dataset_purchase_items?.find(
-                                        d => d.dataset_name === type
-                                      ) ? (
-                                      formatPrice(
-                                        priceData.dataset_purchase_items.find(
-                                          d => d.dataset_name === type
-                                        )?.cost || 0
-                                      )
-                                    ) : (
-                                      '$300'
-                                    )}
-                                  </div>
-                                </button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <CategoriesBrowserSubCategories
+                  categories={filteredCategories}
+                  openedCategories={openedCategories}
+                  onToggleCategory={handleToggleCategory}
+                  getTypeCounts={getTypeCounts}
+                  onRemoveType={handleRemoveType}
+                  onAddToIncluded={handleAddToIncluded}
+                  // onAddToExcluded={handleAddToExcluded}
+                  getPrice={(type: string) => {
+                    if (isCalculatingPrices) {
+                      return <Skeleton className="w-10 h-4" />;
+                    }
+                    const priceItem = priceData?.dataset_purchase_items?.find(
+                      d => d.dataset_name === type
+                    );
+                    return priceItem ? formatPrice(priceItem.cost) : 'TBD';
+                  }}
+                  onTypeClick={(type: string) => {
+                    const formattedName = formatSubcategoryName(type);
+                    handleItemSelect(type, 'dataset', formattedName);
+                  }}
+                  hideAddRemoveButtons={true}
+                />
               </div>
             </div>
             <div className="sticky bottom-0 w-full bg-white flex justify-center items-center space-x-4 border-t pt-2 lg:h-[10%]">

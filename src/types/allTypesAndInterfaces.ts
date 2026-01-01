@@ -447,20 +447,6 @@ export interface LayerContextType {
   setIsLoadingDataset: React.Dispatch<React.SetStateAction<boolean>>;
   showErrorMessage: boolean;
   setShowErrorMessage: React.Dispatch<React.SetStateAction<boolean>>;
-  loadGuestSavedLayers: () => Array<{
-    layer_name: string;
-    layer_id: string;
-    bknd_dataset_id: string;
-    points_color: string;
-    layer_legend: string;
-    layer_description: string;
-    city_name: string;
-    user_id: string;
-    layerData: FetchDatasetResponse;
-    layerId: number;
-    savedAt: string;
-  }>;
-  loadGuestLayer: (layerId: string) => Promise<void>;
 }
 
 export interface ReqFetchDataset {

@@ -26,7 +26,7 @@ import {
 } from '../types/allTypesAndInterfaces';
 import urls from '../urls.json';
 import { useCatalogContext } from './CatalogContext';
-import { useAuth, isGuestUser } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { processCityData, getDefaultLayerColor, colorOptions } from '../utils/helperFunctions';
 import apiRequest from '../services/apiRequest';
@@ -164,75 +164,29 @@ export function LayerProvider(props: { children: ReactNode }) {
   }
 
   async function saveSingleLayer(layerData: LayerCustomization) {
-    // Check if user is guest
-    const isGuest = authResponse ? isGuestUser(authResponse) : true;
+    const postData = {
+      layer_name: layerData.name,
+      layer_id: layerDataMap[layerData.layerId]?.layer_id,
+      bknd_dataset_id: layerDataMap[layerData.layerId]?.bknd_dataset_id,
+      points_color: layerData.color,
+      layer_legend: layerData.legend,
+      layer_description: layerData.description,
+      city_name: reqFetchDataset.selectedCity,
+      user_id: authResponse?.localId,
+    };
 
-    if (isGuest) {
-      // Save to localStorage for guest users
-      try {
-        const guestLayerData = {
-          layer_name: layerData.name,
-          layer_id: `guest_${Date.now()}_${layerData.layerId}`, // Generate unique ID for guest
-          bknd_dataset_id: layerDataMap[layerData.layerId]?.bknd_dataset_id || '',
-          points_color: layerData.color,
-          layer_legend: layerData.legend,
-          layer_description: layerData.description,
-          city_name: reqFetchDataset.selectedCity,
-          user_id: 'guest',
-          layerData: layerDataMap[layerData.layerId], // Store the full layer data
-          layerId: layerData.layerId,
-          savedAt: new Date().toISOString(),
-        };
-
-        // Get existing guest layers
-        const existingLayers = localStorage.getItem('guest_saved_layers');
-        const layers = existingLayers ? JSON.parse(existingLayers) : [];
-        
-        // Add new layer
-        layers.push(guestLayerData);
-        
-        // Save back to localStorage
-        localStorage.setItem('guest_saved_layers', JSON.stringify(layers));
-
-        // Create a mock save response
-        const mockSaveResponse = {
-          id: guestLayerData.layer_id,
-          layer_id: guestLayerData.layer_id,
-          message: 'Layer saved locally (guest mode)',
-        };
-
-        setSaveResponse(mockSaveResponse as any);
-        setSaveResponseMsg('Layer saved locally (guest mode)');
-        setSaveReqId(guestLayerData.layer_id);
-      } catch (error) {
-        setIsError(error instanceof Error ? error : new Error(String(error)));
-      }
-    } else {
-      // Save to backend for authenticated users
-      const postData = {
-        layer_name: layerData.name,
-        layer_id: layerDataMap[layerData.layerId]?.layer_id,
-        bknd_dataset_id: layerDataMap[layerData.layerId]?.bknd_dataset_id,
-        points_color: layerData.color,
-        layer_legend: layerData.legend,
-        layer_description: layerData.description,
-        city_name: reqFetchDataset.selectedCity,
-        user_id: authResponse?.localId,
-      };
-
-      try {
-        const res = await apiRequest({
-          url: urls.save_layer,
-          method: 'post',
-          body: postData,
-          isAuthRequest: true,
-        });
-        setSaveResponse(res.data.data);
-        setSaveResponseMsg(res.data.message);
-        setSaveReqId(res.data.id);
-      } catch (error) {
-        setIsError(error instanceof Error ? error : new Error(String(error)));
-      }
+    try {
+      const res = await apiRequest({
+        url: urls.save_layer,
+        method: 'post',
+        body: postData,
+        isAuthRequest: true,
+      });
+      setSaveResponse(res.data.data);
+      setSaveResponseMsg(res.data.message);
+      setSaveReqId(res.data.id);
+    } catch (error) {
+      setIsError(error instanceof Error ? error : new Error(String(error)));
     }
   }
 
@@ -1409,87 +1363,6 @@ export function LayerProvider(props: { children: ReactNode }) {
     };
   }
 
-  // Function to load saved guest layers from localStorage
-  function loadGuestSavedLayers(): Array<{
-    layer_name: string;
-    layer_id: string;
-    bknd_dataset_id: string;
-    points_color: string;
-    layer_legend: string;
-    layer_description: string;
-    city_name: string;
-    user_id: string;
-    layerData: FetchDatasetResponse;
-    layerId: number;
-    savedAt: string;
-  }> {
-    try {
-      const savedLayersStr = localStorage.getItem('guest_saved_layers');
-      if (!savedLayersStr) {
-        return [];
-      }
-      return JSON.parse(savedLayersStr);
-    } catch (error) {
-      console.error('Error loading guest saved layers:', error);
-      return [];
-    }
-  }
-
-  // Function to load a specific guest layer by layer_id
-  async function loadGuestLayer(layerId: string) {
-    try {
-      const savedLayers = loadGuestSavedLayers();
-      const savedLayer = savedLayers.find((layer) => layer.layer_id === layerId);
-      
-      if (!savedLayer) {
-        setIsError(new Error('Layer not found'));
-        return;
-      }
-
-      // Restore the layer data
-      if (savedLayer.layerData) {
-        const layerData = savedLayer.layerData;
-        // Ensure layerId is always a number
-        const originalLayerId = typeof savedLayer.layerId === 'number' 
-          ? savedLayer.layerId 
-          : typeof savedLayer.layerId === 'string' 
-            ? parseInt(savedLayer.layerId, 10) || Date.now()
-            : Date.now();
-
-        // Update layer data map
-        setLayerDataMap(prev => ({
-          ...prev,
-          [originalLayerId]: layerData,
-        }));
-
-        // Restore geo points
-        const layerName = savedLayer.layer_name || 'Guest Layer';
-        updateGeoJSONDataset(layerData, originalLayerId, layerName);
-
-        // Update reqFetchDataset
-        setReqFetchDataset(prev => ({
-          ...prev,
-          selectedCity: savedLayer.city_name || prev.selectedCity,
-          selectedCountry: prev.selectedCountry,
-          layers: [
-            ...prev.layers,
-            {
-              id: originalLayerId,
-              name: layerName,
-              points_color: savedLayer.points_color || getDefaultLayerColor(originalLayerId),
-              excludedTypes: [],
-              includedTypes: [],
-            },
-          ],
-        }));
-
-        setSaveResponseMsg(`Layer "${layerName}" loaded successfully`);
-      }
-    } catch (error) {
-      console.error('Error loading guest layer:', error);
-      setIsError(error instanceof Error ? error : new Error(String(error)));
-    }
-  }
 
   return (
     <LayerContext.Provider
@@ -1572,8 +1445,6 @@ export function LayerProvider(props: { children: ReactNode }) {
         handleFullDataFetchSuccess,
         isLoadingDataset,
         setIsLoadingDataset,
-        loadGuestSavedLayers,
-        loadGuestLayer,
       }}
     >
       {children}

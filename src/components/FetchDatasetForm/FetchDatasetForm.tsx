@@ -667,7 +667,6 @@ const FetchDatasetForm = () => {
           {searchType !== 'keyword_search' && (
             <div className="flex flex-col my-5" ref={categoriesRef}>
               <div className="flex justify-between">
-                data updatd at
                 <label className="mb-4 font-bold">What are you looking for?</label>
                 <button
                   onClick={handleClear}

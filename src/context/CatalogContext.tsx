@@ -28,7 +28,6 @@ import { isIntelligentLayer } from '../utils/layerUtils';
 import { v4 as uuidv4 } from 'uuid';
 import { Descendant } from 'slate';
 import { useIntelligenceViewport } from './IntelligenceViewPortContext';
-import { guestCatalogSampleData } from '../data/guestCatalogSample';
 
 const defaultCaseStudyContent: Descendant[] = [
   {
@@ -124,15 +123,6 @@ const defaultCaseStudyContent: Descendant[] = [
 ];
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
-
-// Guest catalog ID - This should be set to the actual guest catalog ID created in the backend
-// The backend should create a permanent catalog with this ID for guest users.
-// This catalog should include:
-// - A polygon drawn on the map
-// - Sample intelligence data (population, income layers)
-// - Display elements (markers, measurements, case study content)
-// - Properly configured for pharmacy/cafe expansion use case
-const GUEST_CATALOG_ID = 'guest_catalog_pharmacy_cafe_expansion';
 
 export function CatalogProvider(props: { children: ReactNode }) {
   const {
@@ -306,58 +296,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
       return true;
     };
 
-    // Function to load static sample catalog
-    const loadStaticGuestCatalog = () => {
-      try {
-        console.log('📦 Loading static guest catalog sample data...');
-        
-        // Set geo points (layers)
-        setGeoPoints(guestCatalogSampleData.geoPoints);
-        
-        // Set polygon
-        setPolygons(guestCatalogSampleData.polygons);
-        
-        // Set markers
-        setMarkers(guestCatalogSampleData.markers);
-        
-        // Set measurements
-        setMeasurements(guestCatalogSampleData.measurements);
-        
-        // Set case study content
-        setCaseStudyContent(guestCatalogSampleData.caseStudyContent);
-        
-        // Set benchmarks
-        setBenchmarks(guestCatalogSampleData.benchmarks);
-        
-        // Set benchmark control
-        setIsBenchmarkControlOpen(guestCatalogSampleData.isBenchmarkControlOpen);
-        
-        // Set map style
-        setCurrentStyle(guestCatalogSampleData.currentStyle);
-        
-        // Set intelligence viewport
-        if (guestCatalogSampleData.intelligenceViewport) {
-          setViewport(guestCatalogSampleData.intelligenceViewport);
-          setPopulationSample(guestCatalogSampleData.intelligenceViewport.populationSample || false);
-          setIncomeSample(guestCatalogSampleData.intelligenceViewport.incomeSample || false);
-          setPendingActivation(true);
-        }
-        
-        setGuestCatalogLoaded(true);
-        console.log('✅ Static guest catalog loaded successfully!');
-        console.log('📊 Loaded data:', {
-          layers: guestCatalogSampleData.geoPoints.length,
-          polygons: guestCatalogSampleData.polygons.length,
-          markers: guestCatalogSampleData.markers.length,
-          city: guestCatalogSampleData.city,
-          country: guestCatalogSampleData.country,
-        });
-      } catch (error) {
-        console.error('❌ Error loading static catalog:', error);
-        throw error;
-      }
-    };
-
     const findAndLoadGuestCatalog = async () => {
       guestCatalogLoadAttemptedRef.current = true;
       
@@ -378,7 +316,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
           // Look for a catalog with "guest" or "pharmacy" or "cafe" in the name
           const guestCatalog = userCatalogsList.find(
             (cat: any) =>
-              cat.catalog_id === GUEST_CATALOG_ID ||
               cat.catalog_name?.toLowerCase().includes('guest') ||
               cat.catalog_name?.toLowerCase().includes('pharmacy') ||
               cat.catalog_name?.toLowerCase().includes('cafe') ||
@@ -403,7 +340,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
           
           const publicGuestCatalog = catalogCollectionList.find(
             (cat: any) =>
-              cat.id === GUEST_CATALOG_ID ||
               cat.name?.toLowerCase().includes('guest') ||
               cat.name?.toLowerCase().includes('pharmacy') ||
               cat.name?.toLowerCase().includes('cafe') ||
@@ -425,18 +361,11 @@ export function CatalogProvider(props: { children: ReactNode }) {
           }
         }
         
-        // If still not found, try the hardcoded ID
+        // If no catalog found, exit gracefully
         if (!guestCatalogId) {
-          // If no catalogs found at all, load static sample directly
-          if (userCatalogsList.length === 0 && catalogCollectionList.length === 0) {
-            console.log('📦 No catalogs found in backend, loading static sample catalog directly...');
-            loadStaticGuestCatalog();
-            return;
-          }
-          
-          guestCatalogId = GUEST_CATALOG_ID;
-          console.log('⚠️ Using hardcoded guest catalog ID:', guestCatalogId);
-          console.log('⚠️ NOTE: If this fails, will load static sample catalog');
+          console.log('⚠️ No guest catalog found in backend or public catalogs');
+          guestCatalogLoadAttemptedRef.current = false;
+          return;
         }
         
         // Try to load the catalog
@@ -451,24 +380,12 @@ export function CatalogProvider(props: { children: ReactNode }) {
           status: error?.response?.status,
           statusText: error?.response?.statusText,
           data: error?.response?.data,
-          catalogId: GUEST_CATALOG_ID,
           userCatalogsCount: userCatalogsList?.length || 0,
           catalogCollectionCount: catalogCollectionList?.length || 0
         });
         
-        // Load static sample catalog as fallback
-        console.warn(
-          `⚠️ Guest catalog not found in backend!\n` +
-          `Loading static sample catalog instead...`
-        );
-        
-        try {
-          loadStaticGuestCatalog();
-        } catch (staticError) {
-          console.error('❌ Failed to load static catalog:', staticError);
-          // Reset the ref so we can try again later if needed
-          guestCatalogLoadAttemptedRef.current = false;
-        }
+        // Reset the ref so we can try again later if needed
+        guestCatalogLoadAttemptedRef.current = false;
       }
     };
 

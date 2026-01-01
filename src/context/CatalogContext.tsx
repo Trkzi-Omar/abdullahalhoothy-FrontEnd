@@ -19,8 +19,7 @@ import {
 import urls from '../urls.json';
 import userIdData from '../currentUserId.json';
 import { createContext, useContext, useState, ReactNode, useEffect, useRef, useMemo } from 'react';
-import { useAuth, isGuestUser } from '../context/AuthContext';
-import { useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import apiRequest from '../services/apiRequest';
 import html2canvas from 'html2canvas';
 import defaultMapConfig from '../mapConfig.json';
@@ -135,7 +134,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
     setIncomeSample,
   } = useIntelligenceViewport();
   const { authResponse } = useAuth();
-  const location = useLocation();
   const { children } = props;
 
   const [formStage, setFormStage] = useState<'catalog' | 'catalogDetails' | 'save'>('catalog');
@@ -219,185 +217,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
   const [currentStyle, setCurrentStyle] = useState('mapbox://styles/mapbox/streets-v11');
   const [sections, setSections] = useState<Section[] | PolygonData[]>([]);
   const [isDraftSaving, setIsDraftSaving] = useState(false);
-  const [guestCatalogLoaded, setGuestCatalogLoaded] = useState(false);
-
-  // Auto-load guest catalog when guest user first lands on the platform
-  const guestCatalogLoadAttemptedRef = useRef(false);
-  const [userCatalogsList, setUserCatalogsList] = useState<any[]>([]);
-  const [catalogCollectionList, setCatalogCollectionList] = useState<any[]>([]);
-  
-  // Fetch user catalogs and catalog collection to find guest catalog
-  useEffect(() => {
-    const fetchCatalogsForGuest = async () => {
-      if (!authResponse || !isGuestUser(authResponse)) return;
-      
-      try {
-        // Fetch user catalogs
-        const body = { user_id: authResponse.localId };
-        const userRes = await apiRequest({
-          url: urls.user_catalogs,
-          method: 'post',
-          isAuthRequest: true,
-          body: body,
-        });
-        if (userRes?.data?.data) {
-          setUserCatalogsList(userRes.data.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch user catalogs for guest:', error);
-      }
-      
-      try {
-        // Fetch catalog collection (public catalogs)
-        const collectionRes = await apiRequest({
-          url: urls.catlog_collection,
-          method: 'get',
-        });
-        if (collectionRes?.data?.data) {
-          setCatalogCollectionList(collectionRes.data.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch catalog collection for guest:', error);
-      }
-    };
-
-    if (authResponse && isGuestUser(authResponse)) {
-      fetchCatalogsForGuest();
-    }
-  }, [authResponse]);
-  
-  useEffect(() => {
-    const shouldLoadGuestCatalog = () => {
-      // Only load on home page
-      if (location.pathname !== '/' && !location.pathname.startsWith('/?')) {
-        return false;
-      }
-
-      // Check if user is a guest
-      if (!authResponse || !isGuestUser(authResponse)) {
-        return false;
-      }
-
-      // Don't reload if already attempted
-      if (guestCatalogLoadAttemptedRef.current) {
-        return false;
-      }
-
-      // Don't load if there are already geoPoints (catalog already loaded)
-      if (geoPoints.length > 0) {
-        return false;
-      }
-
-      // Don't load if currently loading
-      if (isLoading) {
-        return false;
-      }
-
-      return true;
-    };
-
-    const findAndLoadGuestCatalog = async () => {
-      guestCatalogLoadAttemptedRef.current = true;
-      
-      try {
-        console.log('🔍 Attempting to auto-load guest catalog for pharmacy/cafe expansion');
-        console.log('📋 User catalogs available:', userCatalogsList?.length || 0);
-        
-        // First, try to find guest catalog from user catalogs list
-        let guestCatalogId = null;
-        let catalogType: 'userCatalog' | 'catalog' = 'userCatalog';
-        
-        if (userCatalogsList && userCatalogsList.length > 0) {
-          console.log('📚 Available user catalogs:', userCatalogsList.map((c: any) => ({
-            id: c.catalog_id || c.id,
-            name: c.catalog_name || c.name
-          })));
-          
-          // Look for a catalog with "guest" or "pharmacy" or "cafe" in the name
-          const guestCatalog = userCatalogsList.find(
-            (cat: any) =>
-              cat.catalog_name?.toLowerCase().includes('guest') ||
-              cat.catalog_name?.toLowerCase().includes('pharmacy') ||
-              cat.catalog_name?.toLowerCase().includes('cafe') ||
-              cat.name?.toLowerCase().includes('guest') ||
-              cat.name?.toLowerCase().includes('pharmacy') ||
-              cat.name?.toLowerCase().includes('cafe')
-          );
-          
-          if (guestCatalog) {
-            guestCatalogId = guestCatalog.catalog_id || guestCatalog.id;
-            console.log('✅ Found guest catalog in user catalogs:', guestCatalogId, guestCatalog.catalog_name || guestCatalog.name);
-          }
-        }
-        
-        // If not found in user catalogs, try catalog collection (public catalogs)
-        if (!guestCatalogId && catalogCollectionList && catalogCollectionList.length > 0) {
-          console.log('📚 Checking catalog collection for guest catalog...');
-          console.log('📚 Available public catalogs:', catalogCollectionList.map((c: any) => ({
-            id: c.id || c.catalog_id,
-            name: c.name || c.catalog_name
-          })));
-          
-          const publicGuestCatalog = catalogCollectionList.find(
-            (cat: any) =>
-              cat.name?.toLowerCase().includes('guest') ||
-              cat.name?.toLowerCase().includes('pharmacy') ||
-              cat.name?.toLowerCase().includes('cafe') ||
-              cat.catalog_name?.toLowerCase().includes('guest') ||
-              cat.catalog_name?.toLowerCase().includes('pharmacy') ||
-              cat.catalog_name?.toLowerCase().includes('cafe')
-          );
-          
-          if (publicGuestCatalog) {
-            guestCatalogId = publicGuestCatalog.id || publicGuestCatalog.catalog_id;
-            catalogType = 'catalog'; // Use 'catalog' type for public catalogs
-            console.log('✅ Found guest catalog in public catalogs:', guestCatalogId, publicGuestCatalog.name || publicGuestCatalog.catalog_name);
-          } else if (catalogCollectionList.length > 0) {
-            // Fallback: Load the first available catalog from collection as a demo
-            const firstCatalog = catalogCollectionList[0];
-            guestCatalogId = firstCatalog.id || firstCatalog.catalog_id;
-            catalogType = 'catalog';
-            console.log('📌 No guest catalog found, loading first available catalog as demo:', guestCatalogId, firstCatalog.name || firstCatalog.catalog_name);
-          }
-        }
-        
-        // If no catalog found, exit gracefully
-        if (!guestCatalogId) {
-          console.log('⚠️ No guest catalog found in backend or public catalogs');
-          guestCatalogLoadAttemptedRef.current = false;
-          return;
-        }
-        
-        // Try to load the catalog
-        console.log('🔄 Loading catalog with ID:', guestCatalogId, 'Type:', catalogType);
-        await fetchGeoPoints(guestCatalogId, catalogType);
-        setGuestCatalogLoaded(true);
-        console.log('✅ Successfully loaded guest catalog from backend!');
-      } catch (error: any) {
-        console.error('❌ Failed to load guest catalog from backend:', error);
-        console.error('📊 Error details:', {
-          message: error?.message,
-          status: error?.response?.status,
-          statusText: error?.response?.statusText,
-          data: error?.response?.data,
-          userCatalogsCount: userCatalogsList?.length || 0,
-          catalogCollectionCount: catalogCollectionList?.length || 0
-        });
-        
-        // Reset the ref so we can try again later if needed
-        guestCatalogLoadAttemptedRef.current = false;
-      }
-    };
-
-    if (shouldLoadGuestCatalog()) {
-      // Wait a bit longer to ensure user catalogs are fetched first
-      const timer = setTimeout(() => {
-        findAndLoadGuestCatalog();
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [authResponse, location.pathname, geoPoints.length, isLoading, userCatalogsList, catalogCollectionList]);
 
   
   useEffect(() => {

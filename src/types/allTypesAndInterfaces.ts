@@ -786,6 +786,7 @@ export interface CategoriesBrowserSubCategoriesProps {
   getPrice?: (type: string) => string | React.ReactNode;
   onTypeClick?: (type: string) => void;
   hideAddRemoveButtons?: boolean;
+  selectedType?: string;
 }
 
 export interface ColorSelectProps {

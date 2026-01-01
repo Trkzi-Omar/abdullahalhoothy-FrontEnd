@@ -204,6 +204,7 @@ function CheckoutModal({
           hasAutoSize: true,
         }
       );
+      onClose();
     } finally {
       setIsPurchasing(false);
     }

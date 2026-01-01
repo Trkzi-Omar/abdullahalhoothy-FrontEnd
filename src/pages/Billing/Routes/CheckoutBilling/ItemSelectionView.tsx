@@ -91,11 +91,14 @@ function ItemSelectionView({
         {selectedItem.explanation && (
           <p className="mt-2 text-sm text-gray-600 italic">{selectedItem.explanation}</p>
         )}
-        {selectedItem.expiration && (
-          <p className="mt-1 text-xs text-gray-500">
-            Expires: {new Date(selectedItem.expiration).toLocaleDateString()}
-          </p>
-        )}
+        <div className="flex flex-col gap-1">
+          <p className="text-sm">Data Updated on: </p>
+          {selectedItem.expiration && (
+            <p className="text-xs text-gray-500">
+              Expires: {new Date(selectedItem.expiration).toLocaleDateString()}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}

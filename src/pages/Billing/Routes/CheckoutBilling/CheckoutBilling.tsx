@@ -847,21 +847,17 @@ function CheckoutBilling({ Name }: { Name: string }) {
   ]);
 
   const getAreaCardClasses = useCallback(
-    (isSelected: boolean) =>
-      `border rounded-lg transition-all flex items-center justify-between w-full max-w-md px-3 py-2 sm:px-4 sm:py-3 cursor-pointer ${
-        isSelected
-          ? 'border-green-600 bg-green-50 text-green-800 shadow-lg ring-2 ring-green-200'
+    (intelligenceName: string) => {
+      const isInCart = checkout.intelligences.includes(intelligenceName);
+      const isSelected =
+        selectedItemKey?.key === intelligenceName && selectedItemKey?.type === 'intelligence';
+      return `border rounded-lg transition-all flex items-center justify-between w-full max-w-md px-3 py-2 sm:px-4 sm:py-3 cursor-pointer ${
+        isSelected || isInCart
+          ? 'border-[#115740] bg-green-50 text-green-800 shadow-lg '
           : 'border-gray-300 bg-white text-gray-700 shadow-md hover:shadow-lg hover:border-[#115740] hover:bg-gray-50'
-      }`,
-    []
-  );
-
-  console.log('selectedItem', selectedItem);
-  console.log('checkout.datasets', checkout.datasets);
-  console.log(
-    `include selectedItem?.type === "dataset"
-                ? checkout.datasets.includes(selectedItem.itemKey || "")`,
-    checkout.datasets.includes(selectedItem?.itemKey || '')
+      }`;
+    },
+    [checkout.intelligences, selectedItemKey]
   );
 
   return (
@@ -872,7 +868,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
             <div className="text-2xl pl-6 pt-4 font-semibold mb-4">Area Intelligence</div>
             <div className="flex flex-col items-center space-y-6">
               <div
-                className={getAreaCardClasses(checkout.intelligences.includes('Population'))}
+                className={getAreaCardClasses('Population')}
                 role="button"
                 tabIndex={0}
                 onClick={() => {
@@ -959,7 +955,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                     ) : population_intelligence ? (
                       formatPrice(population_intelligence?.cost || 0)
                     ) : (
-                      'TBD'
+                      '$0'
                     )}
                   </div>
                 </div>
@@ -972,7 +968,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 </div>
               </div>
               <div
-                className={getAreaCardClasses(checkout.intelligences.includes('Income'))}
+                className={getAreaCardClasses('Income')}
                 role="button"
                 tabIndex={0}
                 onClick={() => {
@@ -1006,7 +1002,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                     ) : income_intelligence ? (
                       formatPrice(income_intelligence?.cost || 0)
                     ) : (
-                      'TBD'
+                      '$0'
                     )}
                   </div>
                 </div>
@@ -1044,10 +1040,15 @@ function CheckoutBilling({ Name }: { Name: string }) {
             <div className="text-2xl pl-6 pt-4 font-semibold mb-6">Report</div>
             <div className="flex flex-col lg:flex-row gap-6 flex-wrap">
               {REPORT_TIERS.map(tier => {
+                const isSelected =
+                  selectedItemKey?.key === tier.reportKey && selectedItemKey?.type === 'report';
+                const isInCart = checkout.report === tier.reportKey;
+                const borderClass =
+                  isSelected || isInCart ? 'border-[#115740] ' : 'border-gray-300';
                 return (
                   <details
                     key={tier.id}
-                    className="relative border rounded-xl shadow-md hover:shadow-lg transition-all flex-1 min-w-full sm:min-w-[300px] max-w-full lg:max-w-[400px] bg-white overflow-hidden"
+                    className={`relative border rounded-xl shadow-md hover:shadow-lg transition-all flex-1 min-w-full sm:min-w-[300px] max-w-full lg:max-w-[400px] bg-white overflow-hidden ${borderClass}`}
                   >
                     {tier.isMostPopular && (
                       <div className="absolute top-0 right-0 bg-purple-600 text-white px-4 py-1.5 text-xs font-semibold rounded-bl-lg z-10">
@@ -1216,13 +1217,16 @@ function CheckoutBilling({ Name }: { Name: string }) {
                     const priceItem = priceData?.dataset_purchase_items?.find(
                       d => d.dataset_name === type
                     );
-                    return priceItem ? formatPrice(priceItem.cost) : 'TBD';
+                    return priceItem ? formatPrice(priceItem.cost) : '$0';
                   }}
                   onTypeClick={(type: string) => {
                     const formattedName = formatSubcategoryName(type);
                     handleItemSelect(type, 'dataset', formattedName);
                   }}
                   hideAddRemoveButtons={true}
+                  selectedType={
+                    selectedItemKey?.type === 'dataset' ? selectedItemKey.key : undefined
+                  }
                 />
               </div>
             </div>
@@ -1300,7 +1304,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
               />
             </svg>
-            View Checkout
+            View Cart
             {(() => {
               const itemCount =
                 checkout.datasets.length +

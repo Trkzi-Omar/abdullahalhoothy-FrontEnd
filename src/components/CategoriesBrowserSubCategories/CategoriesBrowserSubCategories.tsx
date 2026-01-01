@@ -13,6 +13,7 @@ const CategoriesBrowserSubCategories = ({
   getPrice,
   onTypeClick,
   hideAddRemoveButtons = false,
+  selectedType,
 }: CategoriesBrowserSubCategoriesProps) => {
   return (
     <div className="flex flex-col gap-2.5">
@@ -38,6 +39,7 @@ const CategoriesBrowserSubCategories = ({
                 const included = counts.includedCount.length > 0;
                 const excluded = counts.excludedCount.length > 0;
                 const isMixed = included && excluded;
+                const isSelected = selectedType === type;
 
                 const colors = isMixed
                   ? 'bg-[#FFE8D6] border-[#C86B31] text-[#CD5C08]'
@@ -47,10 +49,16 @@ const CategoriesBrowserSubCategories = ({
                       ? 'bg-[#ffebee] border-[#f44336] text-[#c62828]'
                       : '';
 
+                const borderClass = isSelected
+                  ? 'border-[#115740]'
+                  : included || excluded
+                    ? ''
+                    : 'border-[#ccc]';
+
                 return (
                   <div
                     key={type}
-                    className={`flex items-center justify-between py-2 px-4 bg-[#f0f0f0] border border-[#ccc] rounded text-[14px] ${colors} ${hideAddRemoveButtons ? 'cursor-pointer' : ''} transition-colors `}
+                    className={`flex items-center justify-between py-2 px-4 bg-[#f0f0f0] border rounded text-[14px] ${colors} ${borderClass} ${hideAddRemoveButtons ? 'cursor-pointer' : ''} transition-colors `}
                     onClick={() => hideAddRemoveButtons && onTypeClick?.(type)}
                   >
                     {!hideAddRemoveButtons && (

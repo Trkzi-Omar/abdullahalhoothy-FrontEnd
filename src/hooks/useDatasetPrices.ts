@@ -157,7 +157,7 @@ export const useDatasetPrices = ({
         return 'Loading...';
       }
       const priceItem = priceData?.dataset_purchase_items?.find(d => d.dataset_name === type);
-      return priceItem ? formatPrice(priceItem.cost) : 'TBD';
+      return priceItem ? formatPrice(priceItem.cost) : '$0';
     },
     [isCalculatingPrices, priceData, formatPrice]
   );

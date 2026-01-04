@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FaWhatsapp } from 'react-icons/fa';
 import { IoClose } from 'react-icons/io5';
+import { handleWhatsAppClick } from '../../utils/helperFunctions';
 
 interface WhatsAppFloatButtonProps {
   phoneNumber?: string;
@@ -11,15 +12,15 @@ interface WhatsAppFloatButtonProps {
   className?: string;
 }
 
-const defaultProps: WhatsAppFloatButtonProps = {    
+const defaultProps: WhatsAppFloatButtonProps = {
   phoneNumber: '966558188632',
-  message: 'Hello! I\'m interested in learning more about S-Locator\'s location intelligence solutions for optimizing distribution routes and supply chain visibility.',
+  message:
+    "Hello! I'm interested in learning more about S-Locator's location intelligence solutions for optimizing distribution routes and supply chain visibility.",
   position: 'fixed lg:bottom-6 lg:right-6',
   size: 'w-16 h-16',
   colors: 'bg-[#25D366]',
   className: '',
 };
-
 
 function WhatsAppFloatButton(props: WhatsAppFloatButtonProps = defaultProps) {
   const { phoneNumber, message, position, size, colors, className } = {
@@ -29,23 +30,15 @@ function WhatsAppFloatButton(props: WhatsAppFloatButtonProps = defaultProps) {
 
   const [isVisible, setIsVisible] = useState(true);
 
-  const handleClick = () => {
-    const encodedMessage = message ? encodeURIComponent(message) : '';
-    
-    const whatsappUrl = `https://wa.me/${phoneNumber}${encodedMessage ? `?text=${encodedMessage}` : ''}`;
-    
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-  };
+  if (!isVisible) return null;
 
   const handleClose = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsVisible(false);
   };
 
-  if (!isVisible) return null;
-
   return (
-    <div 
+    <div
       className={`${position} bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 group`}
       style={{
         paddingBottom: 'env(safe-area-inset-bottom, 0)',
@@ -64,7 +57,12 @@ function WhatsAppFloatButton(props: WhatsAppFloatButtonProps = defaultProps) {
       </button>
 
       <button
-        onClick={handleClick}
+        onClick={() =>
+          handleWhatsAppClick({
+            phoneNumber,
+            message,
+          })
+        }
         className={`${colors} ${size}
           rounded-full shadow-xl flex items-center justify-center 
           transition-all duration-300 hover:scale-110 ease-in-out 

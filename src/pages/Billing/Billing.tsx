@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useUIContext } from '../../context/UIContext';
 import BottomDrawer from '../../components/BottomDrawer/BottomDrawer';
 import { useBillingContext } from '../../context/BillingContext';
-import { processCityData } from '../../utils/helperFunctions';
+import { handleWhatsAppClick, processCityData } from '../../utils/helperFunctions';
 import { City } from '../../types/allTypesAndInterfaces';
 import urls from '../../urls.json';
 import apiRequest from '../../services/apiRequest';
@@ -125,10 +125,10 @@ function BillingContent() {
   );
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full justify-between">
       <div className="text-2xl pl-6 pt-4 font-semibold mb-4">Acquire</div>
 
-      <div className="flex flex-col justify-center items-center gap-3">
+      <div className="flex-1 flex flex-col justify-center items-center gap-3">
         {tabs.map(tab => {
           const isActive = activeTab === tab.id;
           return (
@@ -147,7 +147,68 @@ function BillingContent() {
         })}
       </div>
 
-      <div className="mt-[20vh] px-6 pb-4 pt-6 border-t lg:mt-auto">
+      <div className="flex-1 flex items-center justify-center w-full my-4">
+        <button
+          onClick={() =>
+            handleWhatsAppClick({
+              phoneNumber: '967711111111',
+              message: 'Hello',
+            })
+          }
+          aria-label="Contact us on WhatsApp"
+          title="Chat with us on WhatsApp"
+          className="group relative w-[85%] overflow-hidden rounded-2xl bg-gem-dark p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-secondary/20 ring-1 ring-white/10"
+        >
+          {/* Background Gradient/Pattern */}
+          <div className="absolute top-0 right-0 -mt-8 -mr-8 h-32 w-32 rounded-full bg-secondary/10 blur-3xl transition-all duration-500 group-hover:bg-secondary/20"></div>
+          <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-32 w-32 rounded-full bg-gem/10 blur-3xl transition-all duration-500 group-hover:bg-gem/20"></div>
+
+          <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2 w-2 rounded-full bg-secondary animate-pulse"></span>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-secondary">
+                  Support
+                </p>
+              </div>
+              <p className="text-xs text-gray-400 font-medium text-left">
+                Didn't find what you need?
+              </p>
+            </div>
+
+            <div className="flex items-end justify-between">
+              <div className="max-w-[70%]">
+                <h3 className="text-lg font-bold text-white leading-tight group-hover:text-secondary transition-colors">
+                  How can we help you?
+                </h3>
+                <p className="mt-1 text-[10px] text-gray-500 font-medium group-hover:text-gray-400 transition-colors text-left">
+                  Replies within 24 hours
+                </p>
+              </div>
+
+              {/* Action Button Visual */}
+              <div className="mb-1 rounded-full bg-secondary/10 p-2.5 text-secondary backdrop-blur-sm transition-all duration-300 group-hover:bg-secondary group-hover:text-white group-hover:scale-110">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="transition-transform duration-300 group-hover:rotate-45"
+                >
+                  <path d="M5 12h14" />
+                  <path d="M12 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </button>
+      </div>
+      {/* here */}
+      <div className="flex-1 px-6 border-t flex flex-col justify-center">
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
             {error}

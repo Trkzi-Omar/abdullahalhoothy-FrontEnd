@@ -41,3 +41,18 @@ export function isValidColor(color: string): boolean {
   option.style.color = color;
   return option.style.color !== '';
 }
+
+export const handleWhatsAppClick = ({
+  phoneNumber,
+  message,
+}: {
+  phoneNumber: string | undefined;
+  message: string | undefined;
+}) => {
+  const encodedMessage = message ? encodeURIComponent(message) : '';
+  if (!phoneNumber) throw new Error('Phone number is required');
+
+  const whatsappUrl = `https://wa.me/${phoneNumber}${encodedMessage ? `?text=${encodedMessage}` : ''}`;
+
+  window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+};

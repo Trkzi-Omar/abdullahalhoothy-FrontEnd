@@ -3,6 +3,7 @@ import {
   formatSubcategoryName,
   processCityData,
   getDefaultLayerColor,
+  getYesterdayDate,
 } from '../../utils/helperFunctions';
 import { PiX } from 'react-icons/pi';
 import urls from '../../urls.json';
@@ -677,6 +678,12 @@ const FetchDatasetForm = () => {
               </div>
 
               <div className="pb-3">
+                <div className="flex justify-end mb-1">
+                  <p className="text-[10px] text-gray-500">
+                    Data updated on:{' '}
+                    <span className="text-[#115740] font-medium">{getYesterdayDate()}</span>
+                  </p>
+                </div>
                 <input
                   type="text"
                   id="searchInput"

@@ -5,6 +5,7 @@ import { LiaMapMarkedAltSolid } from 'react-icons/lia';
 import { MdAttachMoney, MdHome } from 'react-icons/md';
 import { useIntelligenceViewport } from '../../context/IntelligenceViewPortContext';
 import { useClickOutside } from '../../hooks/useClickOutside';
+import { getYesterdayDate } from '../../utils/helperFunctions';
 
 export const AreaIntelligeneControl: React.FC = () => {
   const {
@@ -166,6 +167,10 @@ export const AreaIntelligeneControl: React.FC = () => {
                   <p className="text-xs sm:text-sm text-gem/80 mt-1 ">
                     Enable smart population data
                   </p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">
+                    Updated on:{' '}
+                    <span className="text-[#115740] font-medium">{getYesterdayDate()}</span>
+                  </p>
                 </div>
               </div>
 
@@ -283,6 +288,10 @@ export const AreaIntelligeneControl: React.FC = () => {
                     Income Intelligence
                   </label>
                   <p className="text-xs sm:text-sm text-gem/80 mt-1 ">Enable smart income data</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">
+                    Updated on:{' '}
+                    <span className="text-[#115740] font-medium">{getYesterdayDate()}</span>
+                  </p>
                 </div>
               </div>
 

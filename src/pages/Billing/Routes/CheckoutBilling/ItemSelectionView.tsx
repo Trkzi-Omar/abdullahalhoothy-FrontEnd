@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getYesterdayDate } from '../../../../utils/helperFunctions';
 
 interface DataVariable {
   key: string;
@@ -96,6 +97,10 @@ function ItemSelectionView({
             Expires: {new Date(selectedItem.expiration).toLocaleDateString()}
           </p>
         )}
+        <p className="text-xs">
+          <span className="text-gray-500">Updated on:</span>{' '}
+          <span className="text-[#115740] font-medium">{getYesterdayDate()}</span>
+        </p>
       </div>
 
       {/* Tabs */}

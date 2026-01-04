@@ -56,3 +56,9 @@ export const handleWhatsAppClick = ({
 
   window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
 };
+
+export const getYesterdayDate = () => {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return yesterday.toLocaleDateString();
+};

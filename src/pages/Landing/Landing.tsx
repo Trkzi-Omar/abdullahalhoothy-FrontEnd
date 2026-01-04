@@ -5,6 +5,7 @@ import LandingHero from '../../components/Landing/LandingHero';
 import LandingFeatures from '../../components/Landing/LandingFeatures';
 import LandingReportGrid from '../../components/Landing/LandingReportGrid';
 import LandingCaseStudy from '../../components/Landing/LandingCaseStudy';
+import LandingDataSources from '../../components/Landing/LandingDataSources';
 import LandingCTA from '../../components/Landing/LandingCTA';
 import LandingFooter from '../../components/Landing/LandingFooter';
 
@@ -24,6 +25,7 @@ const Landing = () => {
         <LandingFeatures t={t} />
         <LandingReportGrid t={t} />
         <LandingCaseStudy t={t} />
+        <LandingDataSources t={t} />
         <LandingCTA t={t} />
       </main>
       <LandingFooter t={t} />

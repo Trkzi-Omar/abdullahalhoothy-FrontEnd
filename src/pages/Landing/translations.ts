@@ -40,6 +40,11 @@ export interface LandingTranslations {
     pick: string;
     rec: string;
   };
+  dataSources: {
+    title: string;
+    sub: string;
+    andMore: string;
+  };
   cta: {
     title: string;
     sub: string;
@@ -63,7 +68,8 @@ export const translations: Record<'en' | 'ar', LandingTranslations> = {
       title: 'Powerful Features',
       sub: 'Data-driven insights tailored for retail expansion.',
       visualLabel: 'Comprehensive Site Report',
-      visualDesc: 'Get a detailed PDF report containing all critical data points for your decision making.',
+      visualDesc:
+        'Get a detailed PDF report containing all critical data points for your decision making.',
       visualBadge: 'Downloadable PDF',
       visualTag1: 'Executive Summary',
       visualTag2: 'Detailed Analytics',
@@ -73,8 +79,14 @@ export const translations: Record<'en' | 'ar', LandingTranslations> = {
           title: 'AI Scoring Engine',
           desc: 'Instant 0-100 score based on 50+ data points including traffic and cost.',
         },
-        { title: 'Demographics', desc: 'Deep dive into spending power, age groups, and resident behavior.' },
-        { title: 'Traffic Heatmaps', desc: 'Visualize high-footfall zones with real-time mobility data.' },
+        {
+          title: 'Demographics',
+          desc: 'Deep dive into spending power, age groups, and resident behavior.',
+        },
+        {
+          title: 'Traffic Heatmaps',
+          desc: 'Visualize high-footfall zones with real-time mobility data.',
+        },
       ],
     },
     report: {
@@ -100,6 +112,11 @@ export const translations: Record<'en' | 'ar', LandingTranslations> = {
       risk: 'High Saturation',
       pick: 'S-LOC Choice',
       rec: 'High Potential',
+    },
+    dataSources: {
+      title: 'Trusted Data Sources',
+      sub: 'We aggregate data from verified government and private entities.',
+      andMore: 'More data sources',
     },
     cta: {
       title: 'Ready to Expand Confidently?',
@@ -146,14 +163,21 @@ export const translations: Record<'en' | 'ar', LandingTranslations> = {
     caseStudy: {
       label: 'قصة نجاح',
       title: 'نجاح توسع سلسلة مقاهي',
-      text1: 'خططت سلسلة مقاهي مشهورة لفرع في منطقة مرتفعة الإيجار. الحركة بدت جيدة، لكن البيانات الشرائية كانت مفقودة.',
-      text2: 'كشف S-LOC أن المنطقة مشبعة تماماً. حددنا موقعاً بديلاً يبعد ٣ كم بتكلفة أقل وفرصة نمو أعلى.',
+      text1:
+        'خططت سلسلة مقاهي مشهورة لفرع في منطقة مرتفعة الإيجار. الحركة بدت جيدة، لكن البيانات الشرائية كانت مفقودة.',
+      text2:
+        'كشف S-LOC أن المنطقة مشبعة تماماً. حددنا موقعاً بديلاً يبعد ٣ كم بتكلفة أقل وفرصة نمو أعلى.',
       stat1: '٤٠٪ خفض التكاليف',
       stat2: '٢.٥ ضعف العائد',
       orig: 'الموقع المقترح',
       risk: 'تشبع عالي',
       pick: 'توصية S-LOC',
       rec: 'فرصة ذهبية',
+    },
+    dataSources: {
+      title: 'مصادر بيانات موثوقة',
+      sub: 'نجمع البيانات من جهات حكومية وخاصة موثوقة لضمان الدقة.',
+      andMore: 'المزيد من المصادر',
     },
     cta: {
       title: 'جاهز للتوسع بثقة؟',

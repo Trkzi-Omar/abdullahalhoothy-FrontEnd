@@ -22,7 +22,7 @@ export default function GuestBanner() {
   }
 
   return (
-    <div className=' fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-30 z-10'>
+    <div className=' fixed top-0 left-0 z-10'>
 <div className="fixed top-[5vh] sm:top-[2vh] left-1/2 transform -translate-x-1/2 bg-[#E0F2FE] text-[#0369A1] py-3 px-4 sm:px-6 flex justify-between items-center  shadow-lg rounded-md w-[90%] sm:w-[85%] lg:w-full max-w-[90ch]">
       <div className="flex-1 text-center pr-2">
         <span className="text-sm sm:text-base">

@@ -151,9 +151,9 @@ interface PageHeaderProps {
 
 export const PageHeader: React.FC<PageHeaderProps> = ({ title, description }) => {
   return (
-    <div className="text-center mb-8">
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{title}</h1>
-      {description && <p className="text-gray-600 text-sm sm:text-base">{description}</p>}
+    <div className="text-center mb-4">
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{title}</h1>
+      {description && <p className="text-gray-600 text-xs sm:text-sm">{description}</p>}
     </div>
   );
 };

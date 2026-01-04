@@ -24,7 +24,6 @@ export default function CampaignHomePage() {
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [hoveredBg, setHoveredBg] = useState<string | null>(null); // added for hover background
   const [preloadedImages, setPreloadedImages] = useState<Map<string, string>>(new Map()); // cache for preloaded images
 
   const navigate = useNavigate();
@@ -122,7 +121,7 @@ export default function CampaignHomePage() {
   };
 
   return (
-    <div className="flex flex-col w-full h-full p-4 sm:p-6 overflow-y-auto max-h-[85vh]">
+    <div className="flex flex-col w-full h-full p-2 sm:p-4 overflow-y-auto max-h-[75vh]">
       {/* Page Header */}
       {step === 0 && (
         <PageHeader

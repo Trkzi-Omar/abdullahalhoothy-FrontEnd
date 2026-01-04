@@ -9,6 +9,12 @@ import { City } from '../../types/allTypesAndInterfaces';
 import urls from '../../urls.json';
 import apiRequest from '../../services/apiRequest';
 
+const whatsapp = {
+  phoneNumber: '966558188632',
+  message:
+    "Hello! I'm interested in learning more about S-Locator's location intelligence solutions for optimizing distribution routes and supply chain visibility.",
+};
+
 const Billing = () => {
   const { isMobile, setIsDrawerOpen } = useUIContext();
   const { isAuthenticated, authLoading } = useAuth();
@@ -149,12 +155,7 @@ function BillingContent() {
 
       <div className="flex-1 flex items-center justify-center w-full my-4">
         <button
-          onClick={() =>
-            handleWhatsAppClick({
-              phoneNumber: '967711111111',
-              message: 'Hello',
-            })
-          }
+          onClick={() => handleWhatsAppClick(whatsapp)}
           aria-label="Contact us on WhatsApp"
           title="Chat with us on WhatsApp"
           className="group relative w-[85%] overflow-hidden rounded-2xl bg-gem-dark p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-secondary/20 ring-1 ring-white/10"
@@ -177,7 +178,7 @@ function BillingContent() {
             </div>
 
             <div className="flex items-end justify-between">
-              <div className="max-w-[70%]">
+              <div>
                 <h3 className="text-lg font-bold text-white leading-tight group-hover:text-secondary transition-colors">
                   How can we help you?
                 </h3>

@@ -8,8 +8,15 @@ export default function GuestBanner() {
   const { authResponse, sourceLocal } = useAuth();
   const [dismissed, setDismissed] = useState(false);
 
-  // Don't show banner on landing page
-  if (location.pathname === '/landing') return null;
+  // Only show banner on home page (exact "/" or "/:source" pattern like "/en", "/ar", etc.)
+  const pathSegments = location.pathname.split('/').filter(Boolean);
+  const knownRoutes = ['auth', 'sign-up', 'profile', 'organization', 'billing', 'campaign', 'plans', 
+                       'landing', 'marketing-dashboard', 'custom-report', 'static', 'tabularView'];
+  
+  const isHomePage = location.pathname === '/' || 
+    (pathSegments.length === 1 && !knownRoutes.includes(pathSegments[0]));
+
+  if (!isHomePage) return null;
 
   if (!authResponse) return null;
 

@@ -1,5 +1,6 @@
-import { FaChartBar, FaCheck, FaExclamationTriangle, FaStore, FaTruck } from 'react-icons/fa';
+import { FaExclamationTriangle, FaStore, FaTruck } from 'react-icons/fa';
 import { CustomReportData, FormErrors } from '../../../types/allTypesAndInterfaces';
+import '../DeliveryStore.css';
 
 interface DeliveryInStoreStepProps {
   formData: CustomReportData;
@@ -15,175 +16,118 @@ export const DeliveryInStoreStep = ({
   disabled = false,
 }: DeliveryInStoreStepProps) => {
   const deliveryWeight = formData.delivery_weight ?? 0.5;
-  const dineInWeight = formData.dine_in_weight ?? 0.5;
-  const metricsSum = deliveryWeight + dineInWeight;
+  const dineInWeight = 1 - deliveryWeight;
 
-  const isBalanced = Math.abs(metricsSum - 1) < 0.001;
-  const isOver = metricsSum > 1.001;
+  // Colors
+  const deliveryColor = '#115740'; // Primary Green
+  const inStoreColor = '#F59E0B'; // Warm Amber/Orange
 
-  const metrics = [
-    {
-      key: 'delivery_weight',
-      label: 'Delivery',
-      value: deliveryWeight,
-      icon: <FaTruck className="w-4 h-4" />,
-    },
-    {
-      key: 'dine_in_weight',
-      label: 'In-Store',
-      value: dineInWeight,
-      icon: <FaStore className="w-4 h-4" />,
-    },
-  ];
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = Number(e.target.value);
+    onInputChange('delivery_weight', val);
+    // Ensure accurate floating point math for the complement
+    onInputChange('dine_in_weight', Number((1 - val).toFixed(2)));
+  };
 
   return (
-    <div className="space-y-4 animate-fade-in-up">
-      <div className="text-center mb-4">
-        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Delivery vs In-Store</h3>
-        <p className="text-sm text-gray-600">
-          Set the importance weights for delivery and in-store operations (must total 100%)
+    <div className="space-y-6 animate-fade-in-up">
+      <div className="text-center mb-6">
+        <h3 className="text-xl font-bold text-gray-900 mb-2">Delivery vs In-Store</h3>
+        <p className="text-gray-600">
+          How do you expect your revenue to be split between delivery and in-store sales?
         </p>
       </div>
 
-      {/* Progress Indicator */}
-      <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-4 border border-gray-200">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center">
-            <FaChartBar className="w-5 h-5 text-primary mr-2" />
-            <span className="text-base font-semibold text-gray-900">Total Weight</span>
+      <div className="bg-white border text-center border-gray-200 rounded-xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
+        {/* Metric Values Display */}
+        <div className="flex justify-between items-end mb-10">
+          <div className="flex flex-col items-start space-y-2 group">
+            <div
+              className={`flex items-center gap-2 p-2 rounded-lg transition-colors duration-200 ${
+                deliveryWeight > 0.5 ? 'bg-primary/10 text-primary' : 'bg-gray-50 text-gray-500'
+              }`}
+            >
+              <FaTruck className="w-5 h-5" />
+              <span className="font-bold text-sm">Delivery</span>
+            </div>
+            <span
+              className="text-5xl font-extrabold transition-all duration-200"
+              style={{ color: deliveryColor }}
+            >
+              {(deliveryWeight * 100).toFixed(0)}%
+            </span>
           </div>
-          <div
-            className={`flex items-center px-3 py-1.5 rounded-full ${
-              isBalanced
-                ? 'bg-green-100 text-green-800'
-                : isOver
-                  ? 'bg-red-100 text-red-800'
-                  : 'bg-yellow-100 text-yellow-800'
-            }`}
-          >
-            <span className="text-lg font-bold mr-1">{(metricsSum * 100).toFixed(0)}%</span>
-            {isBalanced ? (
-              <FaCheck className="w-4 h-4" />
-            ) : (
-              <FaExclamationTriangle className="w-4 h-4" />
-            )}
+
+          <div className="flex flex-col items-end space-y-2 group">
+            <div
+              className={`flex items-center gap-2 p-2 rounded-lg transition-colors duration-200 ${
+                dineInWeight > 0.5 ? 'bg-amber-100 text-amber-600' : 'bg-gray-50 text-gray-500'
+              }`}
+            >
+              <span className="font-bold text-sm">In-Store</span>
+              <FaStore className="w-5 h-5" />
+            </div>
+            <span
+              className="text-5xl font-extrabold transition-all duration-200"
+              style={{ color: inStoreColor }}
+            >
+              {(dineInWeight * 100).toFixed(0)}%
+            </span>
           </div>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-3">
-          <div
-            className={`h-3 rounded-full progress-bar ${
-              isBalanced ? 'bg-green-500' : isOver ? 'bg-red-500' : 'bg-yellow-500'
+
+        {/* Custom Range Slider Container */}
+        <div className="relative h-14 flex items-center mb-2 px-2">
+          {/* Track Background Visuals - Optional Markers */}
+          <div className="absolute left-0 right-0 h-2 bg-gray-100 rounded-full overflow-hidden pointer-events-none"></div>
+
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={deliveryWeight}
+            onChange={handleSliderChange}
+            disabled={disabled}
+            className={`custom-slider w-full absolute z-10 appearance-none bg-transparent focus:outline-none transition-all duration-200 ${
+              disabled ? 'opacity-60 cursor-not-allowed' : ''
             }`}
-            style={{ width: `${Math.min(metricsSum * 100, 100)}%` }}
+            style={{
+              // @ts-ignore - Custom property for track gradient
+              background: `linear-gradient(to right, ${deliveryColor} 0%, ${deliveryColor} ${
+                deliveryWeight * 100
+              }%, ${inStoreColor} ${deliveryWeight * 100}%, ${inStoreColor} 100%)`,
+              height: '10px',
+              borderRadius: '9999px',
+            }}
           />
         </div>
-        <p className="text-sm text-gray-600 mt-2 text-center">
-          {isBalanced
-            ? 'Perfect! All weights are balanced.'
-            : isOver
-              ? 'Total exceeds 100%. Please reduce some values.'
-              : `${((1 - metricsSum) * 100).toFixed(0)}% remaining to reach 100%`}
-        </p>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {metrics.map(metric => (
-          <div
-            key={metric.key}
-            className="bg-white border-2 border-gray-100 rounded-lg p-4 hover:border-primary/30 transition-all duration-200"
+        <div className="flex justify-between text-xs font-bold text-gray-400 px-1 uppercase tracking-widest mt-2">
+          <span
+            className="transition-colors duration-200"
+            style={{ color: deliveryWeight > 0.5 ? deliveryColor : undefined }}
           >
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor={metric.key}
-                  className="flex items-center text-sm font-semibold text-gray-700 capitalize"
-                >
-                  <span className="text-primary mr-2">{metric.icon}</span>
-                  {metric.label}
-                </label>
-                <span className="text-xl font-bold text-primary">
-                  {(metric.value * 100).toFixed(0)}%
-                </span>
-              </div>
-
-              <input
-                type="range"
-                id={metric.key}
-                value={metric.value}
-                onChange={e => onInputChange(metric.key, Number(e.target.value))}
-                min="0"
-                max="1"
-                step="0.01"
-                disabled={disabled}
-                className={`w-full h-2 bg-gray-200 rounded-lg appearance-none slider form-transition ${
-                  disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                }`}
-                style={{
-                  background: `linear-gradient(to right, #115740 0%, #115740 ${metric.value * 100}%, #e5e7eb ${metric.value * 100}%, #e5e7eb 100%)`,
-                }}
-              />
-
-              <div className="relative">
-                <input
-                  type="number"
-                  value={(metric.value * 100).toFixed(0)}
-                  onChange={e => onInputChange(metric.key, Number(e.target.value) / 100)}
-                  min="0"
-                  max="100"
-                  step="1"
-                  disabled={disabled}
-                  className={`w-full px-3 py-2 pr-8 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
-                    disabled
-                      ? 'bg-gray-100 cursor-not-allowed opacity-60'
-                      : errors[metric.key]
-                        ? 'border-red-300 bg-red-50'
-                        : 'border-gray-200'
-                  }`}
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold pointer-events-none">
-                  %
-                </span>
-              </div>
-
-              {errors[metric.key] && (
-                <p className="text-sm text-red-600 flex items-center">
-                  <svg
-                    className="w-4 h-4 mr-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  {errors[metric.key]}
-                </p>
-              )}
-            </div>
-          </div>
-        ))}
+            More Delivery
+          </span>
+          <span
+            className="transition-colors duration-200"
+            style={{ color: dineInWeight > 0.5 ? inStoreColor : undefined }}
+          >
+            More In-Store
+          </span>
+        </div>
       </div>
 
-      {(errors.delivery_weight || errors.dine_in_weight) &&
-        !errors.delivery_weight?.includes('cannot be negative') && ( // Generic error container
-          <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl">
-            <p className="text-sm font-medium flex items-center">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              Totals must equal 100%
-            </p>
-          </div>
-        )}
+      {/* Error container */}
+      {(errors.delivery_weight || errors.dine_in_weight) && (
+        <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl animate-fade-in">
+          <p className="text-sm font-medium flex items-center">
+            <FaExclamationTriangle className="w-4 h-4 mr-2" />
+            {errors.delivery_weight || errors.dine_in_weight}
+          </p>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import * as Yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -7,6 +7,7 @@ import { Country, FormData, FormErrors } from '../types/auth';
 import { useAuth } from './AuthContext';
 import apiRequest from '../services/apiRequest';
 import urls from '../urls.json';
+import { useOTP } from './OTPContext';
 
 interface SignUpContextType {
   formData: FormData;
@@ -20,12 +21,14 @@ interface SignUpContextType {
   handleSubmit: (e: React.FormEvent) => void;
   isSubmitting: boolean;
   submitError: string | null;
+  isPhoneVerified: boolean;
 }
 
 const SignUpContext = createContext<SignUpContextType | undefined>(undefined);
 
 export const SignUpProvider: React.FC<{ children: React.ReactNode; source?: string }> = ({ children, source }) => {
   const { setAuthResponse } = useAuth();
+  const { openOTPModal } = useOTP();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<FormData>({
@@ -44,6 +47,7 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode; source?: stri
   const [countries, setCountries] = useState<Country[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isPhoneVerified, setIsPhoneVerified] = useState<boolean>(false);
 
   useEffect(() => {
     if (countriesData && countriesData.countries) {
@@ -72,6 +76,11 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode; source?: stri
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+
+    // Reset phone verification status if phone number changes
+    if (name === 'phone') {
+      setIsPhoneVerified(false);
+    }
 
     // Clear error for this field when user types
     if (errors[name]) {
@@ -132,83 +141,106 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode; source?: stri
     setCurrentPage(0);
   };
 
+  // Function to perform the actual registration
+  const performRegistration = useCallback(async () => {
+    setIsSubmitting(true);
+
+    try {
+      const registrationData = {
+        email: formData.email,
+        password: formData.password,
+        username: formData.fullName,
+        fullName: formData.fullName,
+        phone: formData.phone,
+        reason: formData.reason || '',
+        source: formData.source || '',
+        account_type: formData.userType === 'admin' ? 'admin' : 'user',
+        teamId: formData.teamId,
+        show_price_on_purchase: formData.userType === 'admin',
+        user_id: '',
+      };
+
+      const response = await apiRequest({
+        url: urls.create_user_profile,
+        method: 'POST',
+        body: registrationData,
+      });
+
+      if (response && response.data) {
+        const data = response.data;
+
+        if (Array.isArray(data) && data.length > 0) {
+          const userProfileResponse = data[0];
+
+          if (userProfileResponse?.data?.user_id) {
+            setAuthResponse({
+              localId: userProfileResponse.data.user_id,
+              email: formData.email,
+              displayName: formData.fullName,
+              idToken: userProfileResponse.data.token || '',
+              refreshToken: userProfileResponse.data.refresh_token || '',
+              expiresIn: '3600',
+              user: {
+                id: userProfileResponse.data.user_id,
+                email: formData.email,
+                fullName: formData.fullName,
+              },
+            });
+
+            setIsSubmitting(false);
+
+            toast.success('Registration successful! Please verify your e-mail.', {
+              duration: 3000,
+            });
+
+            navigate('/');
+          } else {
+            throw new Error('Invalid registration response');
+          }
+        } else if (data?.detail) {
+          throw new Error(data.detail);
+        } else {
+          throw new Error('Registration failed - invalid response format');
+        }
+      } else {
+        throw new Error('Registration failed - no response data');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed. Please try again.';
+      setSubmitError(errorMessage);
+      setIsSubmitting(false);
+
+      toast.error(errorMessage, {
+        duration: 3000,
+      });
+    }
+  }, [formData, setAuthResponse, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
 
     const isValid = await validateSecondPage();
     if (isValid) {
-      setIsSubmitting(true);
-
-      try {
-        const registrationData = {
-          email: formData.email,
-          password: formData.password,
-          username: formData.fullName,
-          fullName: formData.fullName,
-          phone: formData.phone,
-          reason: formData.reason || '',
-          source: formData.source || '',
-          account_type: formData.userType === 'admin' ? 'admin' : 'user',
-          teamId: formData.teamId,
-          show_price_on_purchase: formData.userType === 'admin',
-          user_id: '',
-        };
-
-        const response = await apiRequest({
-          url: urls.create_user_profile,
-          method: 'POST',
-          body: registrationData,
-        });
-
-        if (response && response.data) {
-          const data = response.data;
-
-          if (Array.isArray(data) && data.length > 0) {
-            const userProfileResponse = data[0];
-
-            if (userProfileResponse?.data?.user_id) {
-              setAuthResponse({
-                localId: userProfileResponse.data.user_id,
-                email: formData.email,
-                displayName: formData.fullName,
-                idToken: userProfileResponse.data.token || '',
-                refreshToken: userProfileResponse.data.refresh_token || '',
-                expiresIn: '3600',
-                user: {
-                  id: userProfileResponse.data.user_id,
-                  email: formData.email,
-                  fullName: formData.fullName,
-                },
-              });
-
-              setIsSubmitting(false);
-
-              toast.success('Registration successful! Please verify your e-mail.', {
-                duration: 3000,
-              });
-
-              navigate('/');
-            } else {
-              throw new Error('Invalid registration response');
-            }
-          } else if (data?.detail) {
-            throw new Error(data.detail);
-          } else {
-            throw new Error('Registration failed - invalid response format');
+      // If phone number is provided and not yet verified, trigger OTP verification first
+      if (formData.phone && formData.phone.trim() !== '' && !isPhoneVerified) {
+        openOTPModal(
+          formData.phone,
+          () => {
+            // On successful OTP verification, proceed with registration
+            setIsPhoneVerified(true);
+            performRegistration();
+          },
+          () => {
+            // On cancel - allow user to skip OTP verification and proceed
+            toast.info('Phone verification skipped. You can verify later in your profile.');
+            performRegistration();
           }
-        } else {
-          throw new Error('Registration failed - no response data');
-        }
-      } catch (error) {
-        console.error('Registration error:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Registration failed. Please try again.';
-        setSubmitError(errorMessage);
-        setIsSubmitting(false);
-
-        toast.error(errorMessage, {
-          duration: 3000,
-        });
+        );
+      } else {
+        // No phone number provided or already verified, proceed with registration
+        performRegistration();
       }
     }
   };
@@ -230,6 +262,7 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode; source?: stri
     handleSubmit,
     isSubmitting,
     submitError,
+    isPhoneVerified,
   };
 
   return <SignUpContext.Provider value={value}>{children}</SignUpContext.Provider>;

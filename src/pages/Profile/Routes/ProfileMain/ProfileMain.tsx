@@ -9,12 +9,15 @@ import {
   FaLayerGroup,
   FaBook,
   FaTrash,
+  FaCheck,
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router';
 import urls from '../../../../urls.json';
 import { useAuth } from '../../../../context/AuthContext';
 import apiRequest from '../../../../services/apiRequest';
 import { UserProfile, PopupInfo } from '../../../../types/allTypesAndInterfaces';
+import { useOTP } from '../../../../context/OTPContext';
+import { toast } from 'sonner';
 
 const ProfileMain: React.FC = () => {
   const [profile, setProfile] = useState<UserProfile>({
@@ -32,6 +35,7 @@ const ProfileMain: React.FC = () => {
   const [phoneInput, setPhoneInput] = useState<string>('');
   const [isSavingPhone, setIsSavingPhone] = useState(false);
   const { isAuthenticated, authResponse, logout } = useAuth();
+  const { openOTPModal } = useOTP();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -246,33 +250,52 @@ const ProfileMain: React.FC = () => {
                 className="flex-1 min-w-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
               />
               <button
-                onClick={async () => {
+                onClick={() => {
                   if (!authResponse || !('idToken' in authResponse)) {
                     setError(new Error('Authentication information is missing.'));
                     return;
                   }
-                  setIsSavingPhone(true);
-                  try {
-                    await apiRequest({
-                      url: urls.update_user_profile,
-                      method: 'POST',
-                      isAuthRequest: true,
-                      body: {
-                        user_id: authResponse.localId,
-                        phone: phoneInput,
-                        username: profile.username,
-                        email: profile.email,
-                        show_price_on_purchase: profile.show_price_on_purchase,
-                      },
-                    });
-                    setProfile(prev => ({ ...prev, phone: phoneInput }));
-                  } catch (error) {
-                    console.error('Failed to update phone number:', error);
-                    // Revert on error
-                    setPhoneInput(profile.phone || '');
-                  } finally {
-                    setIsSavingPhone(false);
+                  
+                  if (!phoneInput || phoneInput.trim() === '') {
+                    toast.error('Please enter a valid phone number');
+                    return;
                   }
+
+                  // Trigger OTP verification before saving
+                  openOTPModal(
+                    phoneInput,
+                    async () => {
+                      // On successful OTP verification, save the phone number
+                      setIsSavingPhone(true);
+                      try {
+                        await apiRequest({
+                          url: urls.update_user_profile,
+                          method: 'POST',
+                          isAuthRequest: true,
+                          body: {
+                            user_id: authResponse.localId,
+                            phone: phoneInput,
+                            username: profile.username,
+                            email: profile.email,
+                            show_price_on_purchase: profile.show_price_on_purchase,
+                          },
+                        });
+                        setProfile(prev => ({ ...prev, phone: phoneInput }));
+                        toast.success('Phone number updated successfully!');
+                      } catch (error) {
+                        console.error('Failed to update phone number:', error);
+                        toast.error('Failed to update phone number');
+                        // Revert on error
+                        setPhoneInput(profile.phone || '');
+                      } finally {
+                        setIsSavingPhone(false);
+                      }
+                    },
+                    () => {
+                      // On cancel, revert phone input
+                      setPhoneInput(profile.phone || '');
+                    }
+                  );
                 }}
                 disabled={isSavingPhone || phoneInput === (profile.phone || '')}
                 className="sm:ml-2 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"

@@ -1,5 +1,5 @@
 {
-  "REACT_APP_API_URL": "http://localhost:8000/fastapi",
+  "REACT_APP_API_URL": "http://37.27.195.216:8000/fastapi",
   "catlog_collection": "/catlog_collection",
   "layer_collection": "/layer_collection",
   "fetch_acknowlg_id": "/fetch_acknowlg_id",
@@ -51,5 +51,7 @@
   "business_category_metrics": "/business_category_metrics",
   "calculate_cart_cost": "/calculate_cart_cost",
   "purchase_items": "/purchase_items",
-  "fetch_smart_segment_report": "/fetch_smart_segment_report"
+  "fetch_smart_segment_report": "/fetch_smart_segment_report",
+  "sms_send_otp": "/sms_send_otp",
+  "sms_verify_otp": "/sms_verify_otp"
 }

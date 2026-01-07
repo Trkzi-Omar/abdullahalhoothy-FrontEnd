@@ -9,15 +9,19 @@ import {
 } from '@stripe/react-stripe-js';
 
 import { loadStripe } from '@stripe/stripe-js';
-import React, { useState, FormEvent, useLayoutEffect } from 'react';
+import React, { useState, FormEvent, useLayoutEffect, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import apiRequest from '../../services/apiRequest';
 import urls from '../../urls.json';
 import clsx from 'clsx';
+import { useOTP } from '../../context/OTPContext';
+import { toast } from 'sonner';
+import { UserProfile } from '../../types/allTypesAndInterfaces';
 
 const PaymentMethodForm: React.FC = () => {
   const { authResponse } = useAuth();
+  const { openOTPModal } = useOTP();
   const navigate = useNavigate();
   const stripe = useStripe();
   const elements = useElements();
@@ -30,6 +34,35 @@ const PaymentMethodForm: React.FC = () => {
   const [cardCvcError, setCardCvcError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [cardholderName, setCardholderName] = useState('');
+  const [userPhone, setUserPhone] = useState<string | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+
+  // Fetch user profile to get phone number
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!authResponse || !('idToken' in authResponse)) {
+        setIsLoadingProfile(false);
+        return;
+      }
+
+      try {
+        const res = await apiRequest({
+          url: urls.user_profile,
+          method: 'POST',
+          isAuthRequest: true,
+          body: { user_id: authResponse.localId },
+        });
+        const profile: UserProfile = res.data.data;
+        setUserPhone(profile.phone || null);
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    fetchProfile();
+  }, [authResponse]);
 
   const handleCardChange = (event: any) => {
     setCardBrand(event.brand); // Update the brand based on user input
@@ -58,8 +91,78 @@ const PaymentMethodForm: React.FC = () => {
     unknown: '/card-brands/credit-card.svg',
   };
 
+  // Function to actually save the payment method
+  const savePaymentMethod = useCallback(async () => {
+    if (!stripe || !elements) {
+      setErrorMessage('Stripe has not loaded correctly.');
+      return;
+    }
+
+    const cardNumberElement = elements.getElement(CardNumberElement);
+    const cardExpiryElement = elements.getElement(CardExpiryElement);
+    const cardCvcElement = elements.getElement(CardCvcElement);
+
+    if (!cardNumberElement || !cardExpiryElement || !cardCvcElement) {
+      setErrorMessage('One or more card fields are not loaded.');
+      return;
+    }
+
+    setErrorMessage(null);
+    setSubmitting(true);
+
+    try {
+      const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: cardNumberElement,
+        billing_details: {
+          name: cardholderName,
+        },
+      });
+
+      if (stripeError) {
+        setErrorMessage(
+          stripeError.message || 'Failed to create the payment method. Please try again.'
+        );
+        return;
+      }
+
+      if (!paymentMethod) {
+        setErrorMessage('No payment method was created.');
+        return;
+      }
+
+      const paymentMethodId = paymentMethod.id;
+
+      await apiRequest({
+        url: urls.attach_stripe_payment_method,
+        method: 'POST',
+        body: {
+          payment_method_id: paymentMethodId,
+          user_id: authResponse?.localId,
+        },
+        isAuthRequest: true,
+      });
+
+      if (authResponse?.localId) {
+        await apiRequest({
+          url: `${urls.set_default_stripe_payment_method}?user_id=${authResponse.localId}&payment_method_id=${paymentMethodId}`,
+          method: 'PUT',
+          isAuthRequest: true,
+        });
+      }
+
+      navigate('/profile/payment-methods?success=true');
+    } catch (error) {
+      console.error('Payment method error:', error);
+      setErrorMessage('An unexpected error occurred. Please try again later.');
+    } finally {
+      setSubmitting(false);
+    }
+  }, [stripe, elements, cardholderName, authResponse, navigate]);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    
     // Check if Stripe and Elements are initialized
     if (!stripe || !elements) {
       setErrorMessage('Stripe has not loaded correctly.');
@@ -77,64 +180,25 @@ const PaymentMethodForm: React.FC = () => {
       return;
     }
 
-    // Clear previous errors and set loading state
-    setErrorMessage(null);
-    setSubmitting(true);
-
-    try {
-      // Step 1: Create the payment method using all card elements
-      const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
-        type: 'card',
-        card: cardNumberElement,
-        billing_details: {
-          name: cardholderName, // Add the cardholder's name here
-        },
-      });
-
-      if (stripeError) {
-        setErrorMessage(
-          stripeError.message || 'Failed to create the payment method. Please try again.'
-        );
-        return;
-      }
-
-      if (!paymentMethod) {
-        setErrorMessage('No payment method was created.');
-        return;
-      }
-      console.log(paymentMethod);
-
-      const paymentMethodId = paymentMethod.id;
-
-      // Step 2: Send payment method ID to the backend
-
-      const response = await apiRequest({
-        url: urls.attach_stripe_payment_method,
-        method: 'POST',
-        body: {
-          payment_method_id: paymentMethodId,
-          user_id: authResponse?.localId,
-        },
-        isAuthRequest: true,
-      });
-
-      // Step 3: Set the newly attached payment method as default
-      if (authResponse?.localId) {
-        await apiRequest({
-          url: `${urls.set_default_stripe_payment_method}?user_id=${authResponse.localId}&payment_method_id=${paymentMethodId}`,
-          method: 'PUT',
-          isAuthRequest: true,
-        });
-      }
-
-      navigate('/profile/payment-methods?success=true');
-    } catch (error) {
-      console.log(error);
-      console.log(error);
-      setErrorMessage('An unexpected error occurred. Please try again later.');
-    } finally {
-      setSubmitting(false);
+    // Check if user has a phone number for OTP verification
+    if (!userPhone) {
+      toast.error('Please add a phone number to your profile before adding a payment method.');
+      navigate('/profile');
+      return;
     }
+
+    // Trigger OTP verification before saving payment method
+    openOTPModal(
+      userPhone,
+      () => {
+        // On successful OTP verification, save the payment method
+        savePaymentMethod();
+      },
+      () => {
+        // On cancel
+        toast.info('Payment method addition cancelled.');
+      }
+    );
   };
 
   // Styling for each Stripe element
@@ -153,12 +217,32 @@ const PaymentMethodForm: React.FC = () => {
       },
     },
   };
+
+  if (isLoadingProfile) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-lg text-primary font-semibold">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full flex items-center ">
       <div className="my-8 border w-full max-w-3xl mx-auto bg-white shadow rounded-lg overflow-hidden">
         <div className="p-4 border-b border-gray-200">
           <h1 className="text-xl font-semibold text-gray-800">Add Payment Method</h1>
           <p className="text-gray-500">Enter your card details to add a new payment method.</p>
+          {!userPhone && (
+            <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">
+              ⚠️ A verified phone number is required to add a payment method. 
+              <button 
+                onClick={() => navigate('/profile')}
+                className="ml-1 text-primary underline hover:no-underline"
+              >
+                Add phone number
+              </button>
+            </div>
+          )}
         </div>
         <form onSubmit={handleSubmit} className="px-4 py-4">
           <div className="space-y-4">

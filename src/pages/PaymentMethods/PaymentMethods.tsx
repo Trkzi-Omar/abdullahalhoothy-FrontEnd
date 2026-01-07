@@ -4,7 +4,9 @@ import { useAuth } from '../../context/AuthContext';
 import urls from '../../urls.json';
 import apiRequest from '../../services/apiRequest';
 import { PiX } from 'react-icons/pi';
-import { PaymentMethod, DialogProps } from '../../types/allTypesAndInterfaces';
+import { PaymentMethod, DialogProps, UserProfile } from '../../types/allTypesAndInterfaces';
+import { useOTP } from '../../context/OTPContext';
+import { toast } from 'sonner';
 
 const paymentBrandIcons = {
   visa: '/card-brands/visa.svg',
@@ -16,6 +18,7 @@ const paymentBrandIcons = {
 
 export default function PaymentMethods() {
   const { isAuthenticated, authResponse } = useAuth();
+  const { openOTPModal } = useOTP();
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [defaultPaymentMethodId, setDefaultPaymentMethodId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
@@ -26,6 +29,7 @@ export default function PaymentMethods() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [methodToRemove, setMethodToRemove] = useState<string | null>(null);
+  const [userPhone, setUserPhone] = useState<string | null>(null);
 
   // Check for success query parameter
   useEffect(() => {
@@ -34,6 +38,30 @@ export default function PaymentMethods() {
       setShowSuccessMessage(true);
     }
   }, [location.search]);
+
+  // Fetch user profile to get phone number
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!authResponse || !('idToken' in authResponse)) {
+        return;
+      }
+
+      try {
+        const res = await apiRequest({
+          url: urls.user_profile,
+          method: 'POST',
+          isAuthRequest: true,
+          body: { user_id: authResponse.localId },
+        });
+        const profile: UserProfile = res.data.data;
+        setUserPhone(profile.phone || null);
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+      }
+    };
+
+    fetchProfile();
+  }, [authResponse]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -83,23 +111,54 @@ export default function PaymentMethods() {
     }
   };
 
-  const handleRemove = async () => {
-    if (!methodToRemove) return;
+  // Function to actually remove the payment method
+  const removePaymentMethod = async (methodId: string) => {
     setSubmitting(true);
     try {
       await apiRequest({
-        url: `${urls.detach_stripe_payment_method}?payment_method_id=${methodToRemove}`,
+        url: `${urls.detach_stripe_payment_method}?payment_method_id=${methodId}`,
         method: 'delete',
         isAuthRequest: true,
       });
-      setPaymentMethods(methods => methods.filter(method => method.id !== methodToRemove));
+      setPaymentMethods(methods => methods.filter(method => method.id !== methodId));
       setDialogOpen(false);
+      toast.success('Payment method removed successfully!');
     } catch (error) {
       console.error('Failed to remove payment method', error);
+      toast.error('Failed to remove payment method');
     } finally {
       setSubmitting(false);
       setMethodToRemove(null);
     }
+  };
+
+  const handleRemove = async () => {
+    if (!methodToRemove) return;
+    
+    // Check if user has a phone number for OTP verification
+    if (!userPhone) {
+      toast.error('Please add a phone number to your profile for verification.');
+      setDialogOpen(false);
+      setMethodToRemove(null);
+      return;
+    }
+
+    // Close the dialog first
+    setDialogOpen(false);
+
+    // Trigger OTP verification before removing payment method
+    openOTPModal(
+      userPhone,
+      () => {
+        // On successful OTP verification, remove the payment method
+        removePaymentMethod(methodToRemove);
+      },
+      () => {
+        // On cancel
+        setMethodToRemove(null);
+        toast.info('Payment method removal cancelled.');
+      }
+    );
   };
 
   const handleSetDefault = async (id: string) => {

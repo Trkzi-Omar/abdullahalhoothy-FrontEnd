@@ -26,6 +26,7 @@ import SetAttributeStep from './components/AttributesStep';
 import ReportTierStep from './components/ReportTierStep';
 import SmartSegmentReport from '../SegmentReport';
 import ReportTypeSelectionStep from './components/ReportTypeSelectionStep';
+import DeliveryInStoreStep from './components/DeliveryInStoreStep';
 
 const CustomReportForm = () => {
   // STEP INDEXING CONVENTION:
@@ -310,6 +311,12 @@ const CustomReportForm = () => {
           newErrors[`metrics_${key}`] = `${key} cannot be negative`;
         }
       });
+
+      // Validate delivery/dine-in weights
+      const deliverySum = (formData.delivery_weight || 0) + (formData.dine_in_weight || 0);
+      if (Math.abs(deliverySum - 1) > 0.001) {
+        newErrors.delivery_weight = `Weights must sum to 100%`;
+      }
     }
 
     // Current location is required for location reports
@@ -356,6 +363,12 @@ const CustomReportForm = () => {
         value => value < 0
       );
       if (hasNegativeMetrics) {
+        return false;
+      }
+
+      // Validate delivery/dine-in weights
+      const deliverySum = (formData.delivery_weight || 0) + (formData.dine_in_weight || 0);
+      if (Math.abs(deliverySum - 1) > 0.001) {
         return false;
       }
     }
@@ -774,6 +787,10 @@ const CustomReportForm = () => {
           Object.values(formData.evaluation_metrics).every(v => v >= 0)
         );
 
+      case 'delivery-in-store':
+        const deliverySum = (formData.delivery_weight || 0) + (formData.dine_in_weight || 0);
+        return Math.abs(deliverySum - 1) < 0.001;
+
       case 'custom-locations':
         return true; // Always optional
 
@@ -890,6 +907,16 @@ const CustomReportForm = () => {
             onMetricsChange={handleMetricsChange}
             businessType={businessType}
             businessConfig={businessConfig}
+            disabled={isSubmitting}
+          />
+        );
+
+      case 'delivery-in-store':
+        return (
+          <DeliveryInStoreStep
+            formData={formData}
+            errors={errors}
+            onInputChange={handleInputChange}
             disabled={isSubmitting}
           />
         );
@@ -1171,41 +1198,48 @@ const CustomReportForm = () => {
 
               {/* Additional Cost Message for Attributes Step */}
               {(() => {
-                const isAttributesStep = getActualStepContent(currentStep, reportType) === 'attributes';
-                return isAttributesStep && additionalCost !== null && additionalCost > 0 && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center justify-center">
-                    {isCalculatingCost ? (
-                      <div className="flex items-center text-blue-700">
-                        <svg
-                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        <span className="text-sm font-medium">Calculating additional cost...</span>
+                const isAttributesStep =
+                  getActualStepContent(currentStep, reportType) === 'attributes';
+                return (
+                  isAttributesStep &&
+                  additionalCost !== null &&
+                  additionalCost > 0 && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center justify-center">
+                        {isCalculatingCost ? (
+                          <div className="flex items-center text-blue-700">
+                            <svg
+                              className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            <span className="text-sm font-medium">
+                              Calculating additional cost...
+                            </span>
+                          </div>
+                        ) : (
+                          <p className="text-sm font-semibold text-blue-800">
+                            +${additionalCost.toFixed(2)} for extra datasets
+                          </p>
+                        )}
                       </div>
-                    ) : (
-                      <p className="text-sm font-semibold text-blue-800">
-                        +${additionalCost.toFixed(2)} for extra datasets
-                      </p>
-                    )}
-                  </div>
-                </div>
+                    </div>
+                  )
                 );
               })()}
 

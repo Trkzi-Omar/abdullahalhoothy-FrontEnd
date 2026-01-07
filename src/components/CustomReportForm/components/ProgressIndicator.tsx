@@ -32,7 +32,7 @@ const ProgressIndicator = ({
       </div>
       <div className="flex items-center justify-between">
         {steps.map((step, index) => {
-          const stepNumber = index + 1; // Order: 1, 2, 3, 4, 5, 6 (or 7 for full)
+          const stepNumber = index + 1; // Order: 1, 2, 3, 4, 5, 6 (or 8 for full)
           return (
             <div key={step.id} className="flex flex-col items-center flex-1">
               <button

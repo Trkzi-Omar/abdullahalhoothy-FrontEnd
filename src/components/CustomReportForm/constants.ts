@@ -53,26 +53,33 @@ export const FULL_REPORT_STEP_DEFINITIONS = [
   },
   {
     id: 4,
+    title: 'Delivery vs In-Store',
+    description: 'Set delivery preferences',
+    content: 'delivery-in-store',
+    isAdvanced: true,
+  },
+  {
+    id: 5,
     title: 'Set Attributes',
     description: 'Set required attributes',
     content: 'attributes',
     isAdvanced: true,
   },
   {
-    id: 5,
+    id: 6,
     title: 'Custom Locations',
     description: 'Add specific locations',
     content: 'custom-locations',
     isAdvanced: true,
   },
   {
-    id: 6,
+    id: 7,
     title: 'Current Location',
     description: 'Set your current position',
     content: 'current-location',
     isAdvanced: true,
   },
-  { id: 7, title: 'Report Tier', description: 'Choose report tier', content: 'report-tier' },
+  { id: 8, title: 'Report Tier', description: 'Choose report tier', content: 'report-tier' },
 ];
 
 export const LOCATION_REPORT_STEP_DEFINITIONS = [
@@ -103,12 +110,19 @@ export const LOCATION_REPORT_STEP_DEFINITIONS = [
   },
   {
     id: 5,
+    title: 'Delivery vs In-Store',
+    description: 'Set delivery preferences',
+    content: 'delivery-in-store',
+    isAdvanced: true,
+  },
+  {
+    id: 6,
     title: 'Set Attributes',
     description: 'Set required attributes',
     content: 'attributes',
     isAdvanced: true,
   },
-  { id: 6, title: 'Report Tier', description: 'Choose report tier', content: 'report-tier' },
+  { id: 7, title: 'Report Tier', description: 'Choose report tier', content: 'report-tier' },
 ];
 
 export const getInitialFormData = (
@@ -136,6 +150,8 @@ export const getInitialFormData = (
     cross_shopping_categories: [],
     competition_categories: [],
     report_tier: 'premium',
+    delivery_weight: 0.5,
+    dine_in_weight: 0.5,
   };
 };
 

@@ -952,6 +952,8 @@ export interface CustomReportData {
   complementary_categories?: string[];
   cross_shopping_categories?: string[];
   competition_categories?: string[];
+  delivery_weight?: number;
+  dine_in_weight?: number;
 }
 
 export interface BusinessCategoryMetrics {

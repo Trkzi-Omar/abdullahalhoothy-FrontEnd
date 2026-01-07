@@ -20,7 +20,7 @@ export const DeliveryInStoreStep = ({
 
   // Colors
   const deliveryColor = '#115740'; // Primary Green
-  const inStoreColor = '#F59E0B'; // Warm Amber/Orange
+  const inStoreColor = '#7D00B8'; // Purple
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = Number(e.target.value);

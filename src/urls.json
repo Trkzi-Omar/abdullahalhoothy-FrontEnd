@@ -43,7 +43,7 @@
   "process_llm_query": "/process_llm_query",
   "recolor_based_llm": "recolor_based_llm",
   "fetch_population_by_viewport": "/fetch_population_by_viewport",
-  "distance_drive_time_polygon": "/distance_drive_time_polygon",
+  "drive_time_polyline": "/drive_time_polyline",
   "fetch_single_catalog": "/fetch_single_catalog",
   "fetch_plans": "/plan-details",
   "fetch_campaigns": "/campaign-details",

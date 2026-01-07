@@ -941,7 +941,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
 
         try {
           const res = await apiRequest({
-            url: urls.distance_drive_time_polygon,
+            url: urls.drive_time_polyline,
             method: 'post',
             isAuthRequest: true,
             body: body,

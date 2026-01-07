@@ -692,13 +692,13 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
         className: 'measure-popup',
       })
         .setLngLat(midpoint)
-        .setHTML(
-          `
+      .setHTML(
+        `
           <div class="p-3 bg-white rounded-lg shadow-md">
             <div class="text-sm">
-              <strong>Distance:</strong> ${apiResult.data?.distance_in_km.toFixed(2)} km
+              <strong>Distance:</strong> ${(apiResult.data?.distance_in_km ?? 0).toFixed(2)} km
               <br />
-              <strong>Drive Time:</strong> ${apiResult.data?.drive_time_in_min.toFixed(0)} min
+              <strong>Drive Time:</strong> ${(apiResult.data?.drive_time_in_min ?? 0).toFixed(0)} min
             </div>
             <div class="mt-3 flex justify-end space-x-2">
               <button
@@ -714,7 +714,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
             </div>
           </div>
         `
-        )
+      )
         .addTo(mapRef.current);
 
       const popupElement = popup.getElement();
@@ -960,29 +960,91 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
             setMeasurementPopup(null);
           }
 
+          // Extract route data from the new API response structure
+          // API returns: data.route[0].distance (meters), data.route[0].duration ("1618s"), data.route[0].polyline
+          const route = apiData.data?.route?.[0];
+          
+          // Convert distance from meters to kilometers
+          const distanceInKm = route?.distance ? route.distance / 1000 : null;
+          
+          // Convert duration from "1618s" string to minutes (number)
+          let durationInMin: number | null = null;
+          if (route?.duration) {
+            const durationStr = String(route.duration).replace(/s$/, ''); // Remove trailing 's'
+            const durationSeconds = parseFloat(durationStr);
+            if (!isNaN(durationSeconds) && durationSeconds > 0) {
+              durationInMin = durationSeconds / 60;
+            }
+          }
+          
+          // Get polyline from route
+          const polyline = route?.polyline || apiData.data?.drive_polygon;
+
+          // Normalize the response structure for backward compatibility
+          const normalizedApiData = {
+            ...apiData,
+            data: {
+              ...apiData.data,
+              distance_in_km: distanceInKm,
+              drive_time_in_min: durationInMin,
+              drive_polygon: polyline,
+            },
+          };
+
           const measurementData = {
             message: apiData.message,
-            polygon: apiData.data?.drive_polygon,
-            distance: apiData.data?.distance_in_km,
-            duration: apiData.data?.drive_time_in_min,
+            polygon: polyline,
+            distance: distanceInKm,
+            duration: durationInMin,
             request_id: apiData.request_id,
           };
 
           setMeasurementResult(measurementData);
 
-          showRouteResult(measureSourcePoint, e.lngLat, apiData);
-
-          if (apiData.data?.drive_polygon) {
+          // Validate that required data exists before showing route result
+          if (
+            normalizedApiData.data &&
+            typeof normalizedApiData.data.distance_in_km === 'number' &&
+            !isNaN(normalizedApiData.data.distance_in_km) &&
+            typeof normalizedApiData.data.drive_time_in_min === 'number' &&
+            !isNaN(normalizedApiData.data.drive_time_in_min)
+          ) {
             try {
-              if (typeof apiData.data.drive_polygon === 'string') {
+              showRouteResult(measureSourcePoint, e.lngLat, normalizedApiData);
+            } catch (routeError) {
+              // If showRouteResult fails, fall back to straight-line distance
+              console.error('Error displaying route result:', routeError);
+              const distance = calculateDistance(measureSourcePoint, e.lngLat);
+              showMeasurementResult(
+                measureSourcePoint,
+                e.lngLat,
+                distance,
+                'API request succeeded but failed to display route. Showing straight-line distance.'
+              );
+            }
+          } else {
+            // If data is missing, fall back to straight-line distance
+            console.warn('API response missing required distance/duration data:', apiData);
+            const distance = calculateDistance(measureSourcePoint, e.lngLat);
+            showMeasurementResult(
+              measureSourcePoint,
+              e.lngLat,
+              distance,
+              'API request succeeded but missing route data. Showing straight-line distance.'
+            );
+          }
+
+          if (polyline) {
+            try {
+              if (typeof polyline === 'string') {
                 try {
-                  const routeData = JSON.parse(apiData.data.drive_polygon);
+                  const routeData = JSON.parse(polyline);
                   displayRouteOnMap(routeData);
                 } catch (parseError) {
                   console.error('Error parsing route data:', parseError);
 
                   try {
-                    const coordinates = decodePolyline(apiData.data.drive_polygon);
+                    const coordinates = decodePolyline(polyline);
                     const lineStringFeature = {
                       type: 'Feature',
                       properties: {},
@@ -997,7 +1059,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                   }
                 }
               } else {
-                displayRouteOnMap(apiData.data.drive_polygon);
+                displayRouteOnMap(polyline);
               }
             } catch (error) {
               console.error('Error processing route data:', error);

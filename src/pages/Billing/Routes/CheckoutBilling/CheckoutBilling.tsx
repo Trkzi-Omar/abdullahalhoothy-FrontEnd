@@ -851,7 +851,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
       const isInCart = checkout.intelligences.includes(intelligenceName);
       const isSelected =
         selectedItemKey?.key === intelligenceName && selectedItemKey?.type === 'intelligence';
-      return `border rounded-lg transition-all flex items-center justify-between w-full max-w-md px-3 py-2 sm:px-4 sm:py-3 cursor-pointer ${
+      return `border rounded-lg transition-all flex items-center justify-between w-full px-3 py-2 sm:px-4 sm:py-3 cursor-pointer ${
         isSelected || isInCart
           ? 'border-[#115740] bg-green-50 text-green-800 shadow-lg '
           : 'border-gray-300 bg-white text-gray-700 shadow-md hover:shadow-lg hover:border-[#115740] hover:bg-gray-50'
@@ -861,12 +861,12 @@ function CheckoutBilling({ Name }: { Name: string }) {
   );
 
   return (
-    <div className="h-full overflow-hidden relative flex flex-col lg:flex-row">
-      <div className="w-full lg:w-1/3 flex flex-col justify-between items-center overflow-y-auto">
+    <div className="h-full overflow-hidden relative flex flex-col lg:flex-row" >
+      <div className="w-full lg:w-1/3 flex flex-col overflow-hidden">
         {Name === 'area' ? (
-          <div className="w-full px-4 sm:px-8 lg:px-24">
-            <div className="text-2xl pl-6 pt-4 font-semibold mb-4">Area Intelligence</div>
-            <div className="flex flex-col items-center space-y-6">
+          <div className="w-full h-full flex flex-col px-4 sm:px-6 lg:px-8 overflow-y-auto">
+            <div className="text-2xl pt-4 font-semibold mb-4 flex-shrink-0">Area Intelligence</div>
+            <div className="flex flex-col items-stretch space-y-6 flex-1 pb-6">
               <div
                 className={getAreaCardClasses('Population')}
                 role="button"
@@ -1015,7 +1015,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 </div>
               </div>
               <div
-                className="border rounded-lg transition-all flex items-center justify-between w-full max-w-md px-3 py-2 sm:px-4 sm:py-3 border-gray-300 bg-gray-100/60 shadow-md cursor-not-allowed relative"
+                className="border rounded-lg transition-all flex items-center justify-between w-full px-3 py-2 sm:px-4 sm:py-3 border-gray-300 bg-gray-100/60 shadow-md cursor-not-allowed relative"
                 role="button"
                 tabIndex={-1}
                 aria-disabled="true"
@@ -1025,7 +1025,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                     Coming next month
                   </span>
                 </div>
-                <div className="flex items-center gap-3 opacity-50 pr-24 sm:pr-28">
+                <div className="flex items-center gap-3 opacity-50">
                   <MdHome size={24} />
                   <div>
                     <div className="font-semibold text-gray-700">Real Estate Intelligence</div>
@@ -1036,9 +1036,9 @@ function CheckoutBilling({ Name }: { Name: string }) {
             </div>
           </div>
         ) : Name === 'reports' ? (
-          <div className="w-full px-4 sm:px-8 lg:px-24">
-            <div className="text-2xl pl-6 pt-4 font-semibold mb-6">Report</div>
-            <div className="flex flex-col lg:flex-row gap-6 flex-wrap">
+          <div className="w-full h-full flex flex-col px-4 sm:px-6 lg:px-8 overflow-y-auto">
+            <div className="text-2xl pt-4 font-semibold mb-6 flex-shrink-0">Report</div>
+            <div className="flex flex-col gap-6 flex-1 pb-6">
               {REPORT_TIERS.map(tier => {
                 const isSelected =
                   selectedItemKey?.key === tier.reportKey && selectedItemKey?.type === 'report';
@@ -1048,7 +1048,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 return (
                   <details
                     key={tier.id}
-                    className={`relative border rounded-xl shadow-md hover:shadow-lg transition-all flex-1 min-w-full sm:min-w-[300px] max-w-full lg:max-w-[400px] bg-white overflow-hidden ${borderClass}`}
+                    className={`relative border rounded-xl shadow-md hover:shadow-lg transition-all w-full bg-white overflow-hidden ${borderClass}`}
                   >
                     {tier.isMostPopular && (
                       <div className="absolute top-0 right-0 bg-purple-600 text-white px-4 py-1.5 text-xs font-semibold rounded-bl-lg z-10">
@@ -1177,8 +1177,8 @@ function CheckoutBilling({ Name }: { Name: string }) {
             </div>
           </div>
         ) : (
-          <>
-            <div className="w-full px-4 sm:px-8 lg:px-12">
+          <div className="w-full h-full flex flex-col overflow-hidden">
+            <div className="w-full flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col my-5 w-full">
                 <div className="flex justify-between mb-4">
                   <label className="font-bold">What are you looking for?</label>
@@ -1230,7 +1230,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 />
               </div>
             </div>
-            <div className="sticky bottom-0 w-full bg-white flex justify-center items-center space-x-4 border-t pt-2 lg:h-[10%]">
+            <div className="sticky bottom-0 w-full bg-white flex justify-center items-center space-x-4 border-t pt-2 lg:h-[10%] flex-shrink-0">
               {/* <button
                 type="button"
                 className={`w-48 lg:h-16 h-12 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg transition-all cursor-pointer ${isCalculatingCost || !canCalculateCost
@@ -1243,7 +1243,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 {isCalculatingCost ? 'Calculating...' : cartCostResponse?.data?.total_cost ? `Total: ${formatPrice(cartCostResponse.data.total_cost)}` : 'Calculate Cost'}
               </button> */}
             </div>
-          </>
+          </div>
         )}
       </div>
 

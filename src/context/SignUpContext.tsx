@@ -15,6 +15,7 @@ interface SignUpContextType {
   countries: Country[];
   currentPage: number;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  handlePhoneChange: (phoneValue: string) => void;
   handleUserTypeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleNext: () => void;
   handlePrevious: () => void;
@@ -60,7 +61,16 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode; source?: stri
     fullName: Yup.string().required('Full name is required'),
     email: Yup.string().email('Invalid email address').required('Email is required'),
     password: Yup.string().required('Password is required'),
-    phone: Yup.string().optional(),
+    phone: Yup.string()
+      .optional()
+      .test('phone-format', 'Please enter a valid phone number', (value) => {
+        if (!value || value.trim() === '') return true; // Optional field
+        // Phone should be in format: +[country code][number] (e.g., "+966501234567")
+        // Validate it starts with + and has country code (1-3 digits) + phone number (at least 7 digits)
+        const phoneRegex = /^\+[1-9]\d{6,14}$/;
+        const cleanedValue = value.replace(/\s/g, '');
+        return phoneRegex.test(cleanedValue);
+      }),
   });
 
   // Second page validation schema
@@ -87,6 +97,23 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode; source?: stri
       setErrors(prev => {
         const newErrors = { ...prev };
         delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  // Handle phone number change from PhoneInput component
+  const handlePhoneChange = (phoneValue: string) => {
+    // react-phone-input-2 returns phone without + prefix, add it for API consistency
+    const formattedPhone = phoneValue ? `+${phoneValue}` : '';
+    setFormData(prev => ({ ...prev, phone: formattedPhone }));
+    setIsPhoneVerified(false);
+
+    // Clear phone error when user types
+    if (errors.phone) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.phone;
         return newErrors;
       });
     }
@@ -256,6 +283,7 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode; source?: stri
     countries,
     currentPage,
     handleInputChange,
+    handlePhoneChange,
     handleUserTypeChange,
     handleNext,
     handlePrevious,

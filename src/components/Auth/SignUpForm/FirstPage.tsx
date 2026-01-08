@@ -1,8 +1,9 @@
 import React from 'react';
 import { useSignUp } from '../../../context/SignUpContext';
+import { PhoneInput } from '../../../components/common/PhoneInput';
 
 const FirstPage: React.FC = () => {
-  const { formData, errors, countries, handleInputChange } = useSignUp();
+  const { formData, errors, countries, handleInputChange, handlePhoneChange } = useSignUp();
 
   return (
     <>
@@ -75,18 +76,11 @@ const FirstPage: React.FC = () => {
         <label htmlFor="phone" className="block text-sm font-medium text-gray-100 mb-1">
           Phone Number (Optional)
         </label>
-        <input
-          type="tel"
-          id="phone"
-          name="phone"
+        <PhoneInput
           value={formData.phone}
-          onChange={handleInputChange}
-          placeholder="E.g. +1 (555) 123-4567"
-          className={`w-full px-3 py-2 border ${
-            errors.phone ? 'border-red-500' : 'border-gray-300'
-          } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-[#333333]`}
+          onChange={handlePhoneChange}
+          error={errors.phone}
         />
-        {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
       </div>
 
       <div>

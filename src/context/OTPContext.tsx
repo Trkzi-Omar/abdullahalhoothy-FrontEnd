@@ -120,11 +120,18 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       startCooldownTimer(DEFAULT_RESEND_COOLDOWN);
       return true;
     } catch (error: any) {
+      // Clear any existing timer on send failure
+      if (cooldownTimerRef.current) {
+        clearInterval(cooldownTimerRef.current);
+        cooldownTimerRef.current = null;
+      }
+      
       const errorMessage = error?.message || 'Failed to send OTP. Please try again.';
       setState(prev => ({
         ...prev,
         status: 'error' as OTPStatus,
         errorMessage,
+        resendCooldown: 0, // Reset cooldown on failure so user can retry immediately
       }));
       toast.error(errorMessage);
       return false;

@@ -253,11 +253,11 @@ function DetailedSegment({
               </div>
 
               <div className="grid grid-cols-1 gap-6">
-                {selectedSegment.attributes.competition_categories &&
-                  selectedSegment.attributes.competition_categories.length > 0 && (
-                    <div className="bg-gradient-to-br from-white to-red-50 border-l-4 border-red-500 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
+                {selectedSegment.attributes.cross_shopping_categories &&
+                  selectedSegment.attributes.cross_shopping_categories.length > 0 && (
+                    <div className="bg-gradient-to-br from-white to-blue-50 border-l-4 border-blue-500 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
+                        <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
                           <svg
                             className="w-6 h-6 text-white"
                             fill="none"
@@ -268,23 +268,23 @@ function DetailedSegment({
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M13 10V3L4 14h7v7l9-11h-7z"
+                              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                             />
                           </svg>
                         </div>
                         <div>
-                          <h4 className="text-red-700 font-bold text-base tracking-wide">
-                            Competition Categories
+                          <h4 className="text-blue-700 font-bold text-base tracking-wide">
+                            Cross Shopping Categories
                           </h4>
-                          <p className="text-xs text-gray-600">Direct competitors in the area</p>
+                          <p className="text-xs text-gray-600">Alternative shopping destinations</p>
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {selectedSegment.attributes.competition_categories.map(
+                        {selectedSegment.attributes.cross_shopping_categories.map(
                           (category, index) => (
                             <span
                               key={index}
-                              className="px-4 py-2 bg-white border border-red-200 text-red-700 rounded-lg text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
+                              className="px-4 py-2 bg-white border border-blue-200 text-blue-700 rounded-lg text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
                             >
                               {category}
                             </span>
@@ -293,7 +293,6 @@ function DetailedSegment({
                       </div>
                     </div>
                   )}
-
                 {selectedSegment.attributes.complementary_categories &&
                   selectedSegment.attributes.complementary_categories.length > 0 && (
                     <div className="bg-gradient-to-br from-white to-green-50 border-l-4 border-green-500 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
@@ -328,47 +327,6 @@ function DetailedSegment({
                             <span
                               key={index}
                               className="px-4 py-2 bg-white border border-green-200 text-green-700 rounded-lg text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
-                            >
-                              {category}
-                            </span>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                {selectedSegment.attributes.cross_shopping_categories &&
-                  selectedSegment.attributes.cross_shopping_categories.length > 0 && (
-                    <div className="bg-gradient-to-br from-white to-blue-50 border-l-4 border-blue-500 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                          <svg
-                            className="w-6 h-6 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <h4 className="text-blue-700 font-bold text-base tracking-wide">
-                            Cross Shopping Categories
-                          </h4>
-                          <p className="text-xs text-gray-600">Alternative shopping destinations</p>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedSegment.attributes.cross_shopping_categories.map(
-                          (category, index) => (
-                            <span
-                              key={index}
-                              className="px-4 py-2 bg-white border border-blue-200 text-blue-700 rounded-lg text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
                             >
                               {category}
                             </span>

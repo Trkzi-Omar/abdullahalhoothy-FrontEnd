@@ -121,6 +121,7 @@ const CustomReportForm = () => {
       // Only store the metrics data, don't automatically populate formData
       // Categories should be selected by user or come from selected segment
       setBusinessMetrics(data);
+      console.log('dataaaaaaaaa', data);
     } catch (error) {
       console.error('Error loading business metrics:', error);
     }

@@ -1,4 +1,4 @@
-import { FaChartBar, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
+import { FaChartBar, FaCheck, FaExclamationTriangle, FaInfoCircle } from 'react-icons/fa';
 import { CustomReportData, FormErrors, MetricKey } from '../../../types/allTypesAndInterfaces';
 import { getMetricIcon } from '../utils/metricIcons';
 import { BusinessTypeConfig } from '../services/businessMetricsService';
@@ -11,6 +11,111 @@ interface EvaluationMetricsStepProps {
   businessConfig?: BusinessTypeConfig | null;
   disabled?: boolean;
 }
+
+interface MetricItemProps {
+  metricKey: string;
+  value: number;
+  onMetricsChange: (metric: MetricKey, value: number) => void;
+  businessType: string;
+  businessConfig?: BusinessTypeConfig | null;
+  disabled?: boolean;
+  error?: string;
+  className?: string;
+}
+
+const MetricItem = ({
+  metricKey,
+  value,
+  onMetricsChange,
+  businessType,
+  businessConfig,
+  disabled = false,
+  error,
+  className = '',
+}: MetricItemProps) => {
+  return (
+    <div
+      className={`bg-white border-2 border-gray-100 rounded-lg p-4 hover:border-primary/30 transition-all duration-200 ${className}`}
+    >
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <label
+            htmlFor={`metrics_${metricKey}`}
+            className="flex items-center text-sm font-semibold text-gray-700 capitalize"
+          >
+            <span className="text-primary mr-2">
+              {getMetricIcon(metricKey, businessType, businessConfig)}
+            </span>
+            <span className="mr-1">{metricKey.replace('_', ' ')}</span>
+            {businessConfig?.metrics?.[metricKey]?.description && (
+              <div className="group relative ml-1">
+                <FaInfoCircle className="text-gray-400 hover:text-primary transition-colors cursor-help w-3.5 h-3.5" />
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-gray-900/90 backdrop-blur-sm text-white text-xs font-normal rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 text-center shadow-lg transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
+                  {businessConfig.metrics[metricKey].description}
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900/90"></div>
+                </div>
+              </div>
+            )}
+          </label>
+          <span className="text-xl font-bold text-primary">{(value * 100).toFixed(0)}%</span>
+        </div>
+
+        <input
+          type="range"
+          id={`metrics_${metricKey}`}
+          value={value}
+          onChange={e => onMetricsChange(metricKey as MetricKey, Number(e.target.value))}
+          min="0"
+          max="1"
+          step="0.01"
+          disabled={disabled}
+          className={`w-full h-2 bg-gray-200 rounded-lg appearance-none slider form-transition ${
+            disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+          }`}
+          style={{
+            background: `linear-gradient(to right, #115740 0%, #115740 ${value * 100}%, #e5e7eb ${value * 100}%, #e5e7eb 100%)`,
+          }}
+        />
+
+        <div className="relative">
+          <input
+            type="number"
+            value={(value * 100).toFixed(0)}
+            onChange={e => onMetricsChange(metricKey as MetricKey, Number(e.target.value) / 100)}
+            min="0"
+            max="100"
+            step="1"
+            disabled={disabled}
+            className={`w-full px-3 py-2 pr-8 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
+              disabled
+                ? 'bg-gray-100 cursor-not-allowed opacity-60'
+                : error
+                  ? 'border-red-300 bg-red-50'
+                  : 'border-gray-200'
+            }`}
+          />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold pointer-events-none">
+            %
+          </span>
+        </div>
+
+        {error && (
+          <p className="text-sm text-red-600 flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            {error}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export const EvaluationMetricsStep = ({
   formData,
@@ -38,6 +143,9 @@ export const EvaluationMetricsStep = ({
         <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Evaluation Metrics</h3>
         <p className="text-sm text-gray-600">
           Set the importance weights for different factors (must total 100%)
+        </p>
+        <p className="text-xs text-gray-600 w-fit bg-gray-50 mt-1 py-2 px-3 rounded mx-auto">
+          your choice of weight indicates how much this factor has an effect on your business
         </p>
       </div>
 
@@ -89,87 +197,16 @@ export const EvaluationMetricsStep = ({
             {Object.entries(formData.evaluation_metrics)
               .slice(0, 3)
               .map(([key, value]) => (
-                <div
+                <MetricItem
                   key={key}
-                  className="bg-white border-2 border-gray-100 rounded-lg p-4 hover:border-primary/30 transition-all duration-200"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label
-                        htmlFor={`metrics_${key}`}
-                        className="flex items-center text-sm font-semibold text-gray-700 capitalize"
-                      >
-                        <span className="text-primary mr-2">
-                          {getMetricIcon(key, businessType, businessConfig)}
-                        </span>
-                        {key.replace('_', ' ')}
-                      </label>
-                      <span className="text-xl font-bold text-primary">
-                        {(value * 100).toFixed(0)}%
-                      </span>
-                    </div>
-
-                    <input
-                      type="range"
-                      id={`metrics_${key}`}
-                      value={value}
-                      onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value))}
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      disabled={disabled}
-                      className={`w-full h-2 bg-gray-200 rounded-lg appearance-none slider form-transition ${
-                        disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                      }`}
-                      style={{
-                        background: `linear-gradient(to right, #115740 0%, #115740 ${value * 100}%, #e5e7eb ${value * 100}%, #e5e7eb 100%)`,
-                      }}
-                    />
-
-                    <div className="relative">
-                      <input
-                        type="number"
-                        value={(value * 100).toFixed(0)}
-                        onChange={e =>
-                          onMetricsChange(key as MetricKey, Number(e.target.value) / 100)
-                        }
-                        min="0"
-                        max="100"
-                        step="1"
-                        disabled={disabled}
-                        className={`w-full px-3 py-2 pr-8 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
-                          disabled
-                            ? 'bg-gray-100 cursor-not-allowed opacity-60'
-                            : errors[`metrics_${key}`]
-                              ? 'border-red-300 bg-red-50'
-                              : 'border-gray-200'
-                        }`}
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold pointer-events-none">
-                        %
-                      </span>
-                    </div>
-
-                    {errors[`metrics_${key}`] && (
-                      <p className="text-sm text-red-600 flex items-center">
-                        <svg
-                          className="w-4 h-4 mr-1"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        {errors[`metrics_${key}`]}
-                      </p>
-                    )}
-                  </div>
-                </div>
+                  metricKey={key}
+                  value={value}
+                  onMetricsChange={onMetricsChange}
+                  businessType={businessType}
+                  businessConfig={businessConfig}
+                  disabled={disabled}
+                  error={errors[`metrics_${key}`]}
+                />
               ))}
           </div>
 
@@ -178,164 +215,33 @@ export const EvaluationMetricsStep = ({
             {Object.entries(formData.evaluation_metrics)
               .slice(3, 5)
               .map(([key, value]) => (
-                <div
+                <MetricItem
                   key={key}
-                  className="bg-white border-2 border-gray-100 rounded-lg p-4 hover:border-primary/30 transition-all duration-200 w-full max-w-sm"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label
-                        htmlFor={`metrics_${key}`}
-                        className="flex items-center text-sm font-semibold text-gray-700 capitalize"
-                      >
-                        <span className="text-primary mr-2">
-                          {getMetricIcon(key, businessType, businessConfig)}
-                        </span>
-                        {key.replace('_', ' ')}
-                      </label>
-                      <span className="text-xl font-bold text-primary">
-                        {(value * 100).toFixed(0)}%
-                      </span>
-                    </div>
-
-                    <input
-                      type="range"
-                      id={`metrics_${key}`}
-                      value={value}
-                      onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value))}
-                      min="0"
-                      max="1"
-                      step="0.01"
-                      disabled={disabled}
-                      className={`w-full h-2 bg-gray-200 rounded-lg appearance-none slider form-transition ${
-                        disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                      }`}
-                      style={{
-                        background: `linear-gradient(to right, #115740 0%, #115740 ${value * 100}%, #e5e7eb ${value * 100}%, #e5e7eb 100%)`,
-                      }}
-                    />
-
-                    <div className="relative">
-                      <input
-                        type="number"
-                        value={(value * 100).toFixed(0)}
-                        onChange={e =>
-                          onMetricsChange(key as MetricKey, Number(e.target.value) / 100)
-                        }
-                        min="0"
-                        max="100"
-                        step="1"
-                        disabled={disabled}
-                        className={`w-full px-3 py-2 pr-8 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
-                          disabled
-                            ? 'bg-gray-100 cursor-not-allowed opacity-60'
-                            : errors[`metrics_${key}`]
-                              ? 'border-red-300 bg-red-50'
-                              : 'border-gray-200'
-                        }`}
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold pointer-events-none">
-                        %
-                      </span>
-                    </div>
-
-                    {errors[`metrics_${key}`] && (
-                      <p className="text-sm text-red-600 flex items-center">
-                        <svg
-                          className="w-4 h-4 mr-1"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        {errors[`metrics_${key}`]}
-                      </p>
-                    )}
-                  </div>
-                </div>
+                  metricKey={key}
+                  value={value}
+                  onMetricsChange={onMetricsChange}
+                  businessType={businessType}
+                  businessConfig={businessConfig}
+                  disabled={disabled}
+                  error={errors[`metrics_${key}`]}
+                  className="w-full max-w-sm"
+                />
               ))}
           </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Object.entries(formData.evaluation_metrics).map(([key, value]) => (
-            <div
+            <MetricItem
               key={key}
-              className="bg-white border-2 border-gray-100 rounded-lg p-4 hover:border-primary/30 transition-all duration-200"
-            >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor={`metrics_${key}`}
-                    className="flex items-center text-sm font-semibold text-gray-700 capitalize"
-                  >
-                    <span className="text-primary mr-2">
-                      {getMetricIcon(key, businessType, businessConfig)}
-                    </span>
-                    {key.replace('_', ' ')}
-                  </label>
-                  <span className="text-xl font-bold text-primary">
-                    {(value * 100).toFixed(0)}%
-                  </span>
-                </div>
-
-                <input
-                  type="range"
-                  id={`metrics_${key}`}
-                  value={value}
-                  onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value))}
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider form-transition"
-                  style={{
-                    background: `linear-gradient(to right, #115740 0%, #115740 ${value * 100}%, #e5e7eb ${value * 100}%, #e5e7eb 100%)`,
-                  }}
-                />
-
-                <div className="relative">
-                  <input
-                    type="number"
-                    value={(value * 100).toFixed(0)}
-                    onChange={e => onMetricsChange(key as MetricKey, Number(e.target.value) / 100)}
-                    min="0"
-                    max="100"
-                    step="1"
-                    className={`w-full px-3 py-2 pr-8 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
-                      errors[`metrics_${key}`] ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                    }`}
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold pointer-events-none">
-                    %
-                  </span>
-                </div>
-
-                {errors[`metrics_${key}`] && (
-                  <p className="text-sm text-red-600 flex items-center">
-                    <svg
-                      className="w-4 h-4 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    {errors[`metrics_${key}`]}
-                  </p>
-                )}
-              </div>
-            </div>
+              metricKey={key}
+              value={value}
+              onMetricsChange={onMetricsChange}
+              businessType={businessType}
+              businessConfig={businessConfig}
+              disabled={disabled}
+              error={errors[`metrics_${key}`]}
+            />
           ))}
         </div>
       )}

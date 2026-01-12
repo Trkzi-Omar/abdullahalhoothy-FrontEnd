@@ -13,7 +13,7 @@ interface SetAttributeStepProps {
   onInputChange: (field: string, value: any) => void;
   disabled?: boolean;
   inputCategories: string[];
-  metricsData: BusinessCategoryMetrics | null;
+  // metricsData: BusinessCategoryMetrics | null;
 }
 
 const INCOME_OPTIONS = ['Low', 'Medium', 'High'];
@@ -24,7 +24,7 @@ const SetAttributeStep = ({
   onInputChange,
   disabled = false,
   inputCategories,
-  metricsData,
+  // metricsData,
 }: SetAttributeStepProps) => {
   const [age, setTargetAge] = useState<number>(formData.target_age || 0);
   const [targetIncome, setTargetIncome] = useState<string>(formData.target_income_level || '');
@@ -37,18 +37,17 @@ const SetAttributeStep = ({
   const [selectedCompetition, setSelectedCompetition] = useState<string[]>([]);
   const [selectedCross, setSelectedCross] = useState<string[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  console.log('selectedComplementary', selectedComplementary);
 
   useEffect(() => {
     if (inputCategories.length > 0) {
       setCategories(inputCategories);
     }
-    if (metricsData) {
-      setSelectedCompetition([...(metricsData?.competition_categories ?? [])]);
-      setSelectedComplementary([...(metricsData?.complementary_categories ?? [])]);
-      setSelectedCross([...(metricsData?.cross_shopping_categories ?? [])]);
+    if (formData) {
+      setSelectedCompetition([...new Set(formData?.competition_categories ?? [])]);
+      setSelectedComplementary([...new Set(formData?.complementary_categories ?? [])]);
+      setSelectedCross([...new Set(formData?.cross_shopping_categories ?? [])]);
     }
-  }, [inputCategories, metricsData]);
+  }, [inputCategories, formData]);
 
   const onAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);

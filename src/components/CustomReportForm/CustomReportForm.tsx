@@ -37,16 +37,8 @@ const CustomReportForm = () => {
 
   const { authResponse } = useAuth();
   const navigate = useNavigate();
-  const businessType = 'pharmacy';
   // TODO: Dynamic business type from URL params - currently disabled
   // const { businessType } = useParams<{ businessType: string }>();
-
-  // Fetch business type configuration from API
-  const {
-    config: businessConfig,
-    loading: configLoading,
-    error: configError,
-  } = useBusinessTypeConfig(businessType);
 
   const [categories, setCategories] = useState<string[]>([]);
 
@@ -60,6 +52,14 @@ const CustomReportForm = () => {
   const [businessMetrics, setBusinessMetrics] = useState<BusinessCategoryMetrics | null>(null);
   const [additionalCost, setAdditionalCost] = useState<number | null>(null);
   const [isCalculatingCost, setIsCalculatingCost] = useState(false);
+  const businessType = formData?.Type || 'pharmacy';
+
+  // Fetch business type configuration from API
+  const {
+    config: businessConfig,
+    loading: configLoading,
+    error: configError,
+  } = useBusinessTypeConfig(businessType);
 
   // New state for report type selection
   const [reportType, setReportType] = useState<'full' | 'location' | null>(null);
@@ -69,6 +69,7 @@ const CustomReportForm = () => {
   const [segmentReportData, setSegmentReport] = useState<CustomSegmentReportResponse | null>(null);
   const [segmentReportLoading, setSegmentReportLoading] = useState(false);
   const [selectedSegment, setSelectedSegment] = useState<CustomSegment | null>(null);
+  const [segmentReportError, setSegmentReportError] = useState<boolean>(false);
 
   // Ref to track previous mode/reportType to prevent race conditions
   const prevModeRef = useRef({ isAdvancedMode, reportType });
@@ -121,17 +122,21 @@ const CustomReportForm = () => {
       // Only store the metrics data, don't automatically populate formData
       // Categories should be selected by user or come from selected segment
       setBusinessMetrics(data);
-      console.log('dataaaaaaaaa', data);
     } catch (error) {
       console.error('Error loading business metrics:', error);
     }
   };
+
   // Initialize form data when business configuration is loaded
   useEffect(() => {
     if (businessConfig) {
       const initialData = getInitialFormData(businessType, businessConfig);
       setFormData(initialData);
-      loadBusinessMetrics(businessType);
+
+      // prevent fetching same type multiple times
+      if (businessType != businessMetrics?.business_type) {
+        loadBusinessMetrics(businessType);
+      }
     }
   }, [businessConfig, businessType]);
 
@@ -139,9 +144,18 @@ const CustomReportForm = () => {
     if (selectedSegment) {
       //  set evolution metrics, categories, and demographics
       // Use ONLY the segment's categories, don't combine with business metrics
-      const segmentCompetition = selectedSegment.attributes.competition_categories || [];
-      const segmentComplementary = selectedSegment.attributes.complementary_categories || [];
-      const segmentCrossShopping = selectedSegment.attributes.cross_shopping_categories || [];
+      const segmentCompetition = [
+        ...(selectedSegment.attributes.competition_categories || []),
+        ...(businessMetrics?.competition_categories || []),
+      ];
+      const segmentComplementary = [
+        ...(selectedSegment.attributes.complementary_categories || []),
+        ...(businessMetrics?.complementary_categories || []),
+      ];
+      const segmentCrossShopping = [
+        ...(selectedSegment.attributes.cross_shopping_categories || []),
+        ...(businessMetrics?.cross_shopping_categories || []),
+      ];
 
       setFormData(prev =>
         prev
@@ -157,16 +171,17 @@ const CustomReportForm = () => {
             }
           : null
       );
-      setBusinessMetrics(prev =>
-        prev
-          ? {
-              ...prev,
-              competition_categories: segmentCompetition,
-              complementary_categories: segmentComplementary,
-              cross_shopping_categories: segmentCrossShopping,
-            }
-          : null
-      );
+
+      // setBusinessMetrics(prev =>
+      //   prev
+      //     ? {
+      //         ...prev,
+      //         competition_categories: segmentCompetition,
+      //         complementary_categories: segmentComplementary,
+      //         cross_shopping_categories: segmentCrossShopping,
+      //       }
+      //     : null
+      // );
     }
   }, [selectedSegment]);
 
@@ -226,6 +241,7 @@ const CustomReportForm = () => {
     if (!formData?.city_name) return;
 
     setSegmentReportLoading(true);
+    setSegmentReportError(false);
     try {
       const res = await apiRequest({
         url: urls.fetch_smart_segment_report,
@@ -233,13 +249,13 @@ const CustomReportForm = () => {
 
       if (res.data.data) {
         setSegmentReport(res.data.data);
-        // Set the first segment as selected by default
         if (res.data.data.length > 0) {
           setSelectedSegment(res.data.data[0]);
         }
       }
     } catch (error) {
       console.error(error);
+      setSegmentReportError(true);
     } finally {
       setSegmentReportLoading(false);
     }
@@ -261,7 +277,12 @@ const CustomReportForm = () => {
     const stepDefinitions = getStepDefinitions(reportType, isAdvancedMode);
     const stepDef = stepDefinitions[currentStep - 1];
 
-    if (stepDef?.content === 'segment-selection' && !segmentReportData && !segmentReportLoading) {
+    if (
+      stepDef?.content === 'segment-selection' &&
+      !segmentReportData &&
+      !segmentReportLoading &&
+      !segmentReportError
+    ) {
       getSegmentReport();
     }
   }, [
@@ -270,7 +291,7 @@ const CustomReportForm = () => {
     segmentReportLoading,
     reportType,
     isAdvancedMode,
-    getSegmentReport,
+    segmentReportError,
   ]);
 
   const validateForm = (): boolean => {
@@ -891,6 +912,22 @@ const CustomReportForm = () => {
         );
 
       case 'segment-selection':
+        if (segmentReportError) {
+          return (
+            <div className="flex flex-col items-center justify-center py-12 px-4">
+              <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-4 flex items-center shadow-sm border border-red-100">
+                <FaExclamationTriangle className="mr-3 h-5 w-5" />
+                <span className="font-medium">Failed to load segment report.</span>
+              </div>
+              <button
+                onClick={getSegmentReport}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium"
+              >
+                Retry
+              </button>
+            </div>
+          );
+        }
         return (
           <SmartSegmentReport
             segmentReportData={segmentReportData}

@@ -131,6 +131,7 @@ const CustomReportForm = () => {
   useEffect(() => {
     if (businessConfig) {
       const initialData = getInitialFormData(businessType, businessConfig);
+
       setFormData(initialData);
 
       // prevent fetching same type multiple times
@@ -145,7 +146,7 @@ const CustomReportForm = () => {
       //  set evolution metrics, categories, and demographics
       // Use ONLY the segment's categories, don't combine with business metrics
       const segmentCompetition = [
-        ...(selectedSegment.attributes.competition_categories || []),
+        // ...(selectedSegment.attributes.competition_categories || []), // this will be removed from api
         ...(businessMetrics?.competition_categories || []),
       ];
       const segmentComplementary = [
@@ -183,7 +184,7 @@ const CustomReportForm = () => {
       //     : null
       // );
     }
-  }, [selectedSegment]);
+  }, [selectedSegment, businessMetrics]);
 
   const handleCategoryLoad = async () => {
     try {
@@ -447,7 +448,6 @@ const CustomReportForm = () => {
   };
 
   const handleAttributeChange = (key: string, value: number) => {
-    // console.log(key, ':', value);
     setFormData(prev =>
       prev
         ? {

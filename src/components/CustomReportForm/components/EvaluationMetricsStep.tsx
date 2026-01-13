@@ -129,7 +129,6 @@ export const EvaluationMetricsStep = ({
     (sum, value) => sum + value,
     0
   );
-
   // Helper to format display value (e.g. 0.5 -> 50%) if needed, or just keep as decimal
   // User requested "change logic... to 1", implying decimal values.
   // We will display as decimal for consistency with the input.
@@ -144,7 +143,7 @@ export const EvaluationMetricsStep = ({
         <p className="text-sm text-gray-600">
           Set the importance weights for different factors (must total 100%)
         </p>
-        <p className="text-xs text-gray-600 w-fit bg-gray-50 mt-1 py-2 px-3 rounded mx-auto">
+        <p className="text-sm text-gray-600">
           your choice of weight indicates how much this factor has an effect on your business
         </p>
       </div>

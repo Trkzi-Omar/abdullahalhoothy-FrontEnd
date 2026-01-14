@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import apiRequest from '../../services/apiRequest';
@@ -14,6 +14,7 @@ import {
 import { CustomSegment, CustomSegmentReportResponse } from '../../types';
 import { getTotalSteps, getInitialFormData, getStepDefinitions } from './constants';
 import { useBusinessTypeConfig } from './hooks/useBusinessTypeConfig';
+import { useAdditionalCost } from './hooks/useReportPricing';
 
 // Import step components
 import BasicInformationStep from './components/BasicInformationStep';
@@ -50,8 +51,6 @@ const CustomReportForm = () => {
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
   const [businessMetrics, setBusinessMetrics] = useState<BusinessCategoryMetrics | null>(null);
-  const [additionalCost, setAdditionalCost] = useState<number | null>(null);
-  const [isCalculatingCost, setIsCalculatingCost] = useState(false);
   const businessType = formData?.Type || 'pharmacy';
 
   // Fetch business type configuration from API
@@ -64,6 +63,7 @@ const CustomReportForm = () => {
   // New state for report type selection
   const [reportType, setReportType] = useState<'full' | 'location' | null>(null);
   const [hasUsedFreeLocationReport, setHasUsedFreeLocationReport] = useState<boolean>(false);
+  const [locationPriceAvailable, setLocationPriceAvailable] = useState<boolean>(true);
 
   // Segment Report State
   const [segmentReportData, setSegmentReport] = useState<CustomSegmentReportResponse | null>(null);
@@ -458,109 +458,44 @@ const CustomReportForm = () => {
     );
   };
 
-  // Calculate cart cost for extra datasets on attributes step
-  const calculateCartCost = useCallback(async () => {
-    // Check if we're on the attributes step by looking at step definitions
-    if (!reportType) {
-      setAdditionalCost(null);
-      return;
+  // Handle location report price loading state changes
+  const handlePriceLoadingChange = useCallback((isLoading: boolean, priceAvailable: boolean) => {
+    setLocationPriceAvailable(priceAvailable);
+  }, []);
+
+  // Determine if we're on the attributes step
+  const stepDefinitions = reportType ? getStepDefinitions(reportType, isAdvancedMode) : [];
+  const stepDef = stepDefinitions[currentStep - 1];
+  const isAttributesStep = stepDef?.content === 'attributes';
+
+  // Collect all selected datasets from categories (memoized to prevent infinite loops)
+  const allDatasets = useMemo(() => {
+    const datasets: string[] = [];
+    if (formData?.complementary_categories) {
+      datasets.push(...formData.complementary_categories);
     }
-
-    const stepDefinitions = getStepDefinitions(reportType, isAdvancedMode);
-    const stepDef = stepDefinitions[currentStep - 1];
-    const isAttributesStep = stepDef?.content === 'attributes';
-
-    if (!formData || !isAttributesStep || !authResponse?.localId) {
-      setAdditionalCost(null);
-      return;
+    if (formData?.competition_categories) {
+      datasets.push(...formData.competition_categories);
     }
-
-    // Collect all selected datasets from categories
-    const allDatasets: string[] = [];
-    if (formData.complementary_categories) {
-      allDatasets.push(...formData.complementary_categories);
+    if (formData?.cross_shopping_categories) {
+      datasets.push(...formData.cross_shopping_categories);
     }
-    if (formData.competition_categories) {
-      allDatasets.push(...formData.competition_categories);
-    }
-    if (formData.cross_shopping_categories) {
-      allDatasets.push(...formData.cross_shopping_categories);
-    }
-
-    // Don't calculate if there are no datasets or missing location
-    if (allDatasets.length === 0 || !formData.city_name || !formData.country_name) {
-      setAdditionalCost(null);
-      return;
-    }
-
-    setIsCalculatingCost(true);
-
-    try {
-      const requestBody = {
-        user_id: authResponse.localId,
-        country_name: formData.country_name,
-        city_name: formData.city_name,
-        datasets: allDatasets,
-        intelligences: [] as string[],
-        displayed_price: 0,
-      };
-
-      // Include report tier if available
-      if (formData.report_tier) {
-        (requestBody as any).report = formData.report_tier;
-      }
-
-      const response = await apiRequest({
-        url: urls.calculate_cart_cost,
-        method: 'POST',
-        body: requestBody,
-        isAuthRequest: true,
-      });
-
-      // Extract additional cost from response
-      // The backend calculates the total cost, and if there are extra datasets, it will be in the response
-      const totalCost = response?.data?.data?.total_cost || 0;
-
-      const additionalCostValue = totalCost > 0 ? totalCost : null;
-      setAdditionalCost(additionalCostValue);
-    } catch (error) {
-      console.error('Error calculating cart cost:', error);
-      setAdditionalCost(null);
-    } finally {
-      setIsCalculatingCost(false);
-    }
-  }, [formData, currentStep, authResponse?.localId, reportType, isAdvancedMode]);
-
-  // Calculate cost when on attributes step and datasets change
-  useEffect(() => {
-    if (!reportType) return;
-
-    const stepDefinitions = getStepDefinitions(reportType, isAdvancedMode);
-    const stepDef = stepDefinitions[currentStep - 1];
-    const isAttributesStep = stepDef?.content === 'attributes';
-
-    if (isAttributesStep) {
-      // Debounce the calculation
-      const timeoutId = setTimeout(() => {
-        calculateCartCost();
-      }, 300);
-
-      return () => clearTimeout(timeoutId);
-    } else {
-      setAdditionalCost(null);
-    }
+    return datasets;
   }, [
-    currentStep,
-    reportType,
-    isAdvancedMode,
     formData?.complementary_categories,
     formData?.competition_categories,
     formData?.cross_shopping_categories,
-    formData?.city_name,
-    formData?.country_name,
-    formData?.report_tier,
-    calculateCartCost,
   ]);
+
+  // Use the new pricing hook for additional cost calculation
+  const { cost: additionalCost, isLoading: isCalculatingCost } = useAdditionalCost({
+    country: formData?.country_name || null,
+    city: formData?.city_name || null,
+    datasets: allDatasets,
+    reportTier:
+      reportType === 'location' ? 'single_location_premium' : formData?.report_tier || 'premium',
+    enabled: isAttributesStep && allDatasets.length > 0,
+  });
 
   const addCustomLocation = () => {
     if (!formData) return;
@@ -664,16 +599,11 @@ const CustomReportForm = () => {
           lat: formData.current_location.lat || 0,
           lng: formData.current_location.lng || 0,
         },
+        single_location: reportType === 'location',
+        report_tier:
+          reportType === 'location' ? 'single_location_premium' : formData.report_tier || 'premium',
       };
 
-      // In simple mode, don't send report_tier - let backend use default
-      // In advanced mode, include the user's selected report_tier
-      if (!isAdvancedMode) {
-        delete submissionData.report_tier;
-      }
-
-      // Use the single endpoint that supports all business types
-      // The backend smart_site_report endpoint handles all business types
       const reportUrl = urls.smart_site_report;
 
       const res = await apiRequest({
@@ -707,74 +637,70 @@ const CustomReportForm = () => {
       if (error && typeof error === 'object' && 'response' in error) {
         const apiError = error as any;
 
-        // Safely extract error message, ensuring we don't display raw JSON
+        // Safely extract error message
         let errorMessage = 'An error occurred while submitting the report';
+        let errorDetail = '';
 
-        if (apiError.response?.data?.detail) {
-          errorMessage = apiError.response.data.detail;
-        } else if (apiError.response?.data?.message) {
-          errorMessage = apiError.response.data.message;
-        } else if (apiError.response?.data?.error) {
-          errorMessage = apiError.response.data.error;
-        } else if (typeof apiError.response?.data === 'string') {
-          errorMessage = apiError.response.data;
-        } else if (apiError.response?.status === 400 && apiError.response?.data) {
-          // For 400 errors, try to extract payment-related messages
-          const data = apiError.response.data;
-          if (typeof data === 'object') {
-            // Look for common payment error patterns
-            const paymentErrorPatterns = [
-              'payment method',
-              'payment',
-              'billing',
-              'subscription',
-              'default payment',
-            ];
-            const dataString = JSON.stringify(data).toLowerCase();
-            const hasPaymentError = paymentErrorPatterns.some(pattern =>
-              dataString.includes(pattern.toLowerCase())
-            );
-            if (hasPaymentError) {
-              // Try to find a user-friendly message in the response
-              if (data.detail) errorMessage = data.detail;
-              else if (data.message) errorMessage = data.message;
-              else if (data.error) errorMessage = data.error;
-              else errorMessage = 'Please attach a default payment method to continue';
+        // Extract error from response
+        const responseData = apiError.response?.data;
+
+        if (responseData) {
+          // Handle string responses
+          if (typeof responseData === 'string') {
+            try {
+              // Try parsing if it's a JSON string
+              const parsed = JSON.parse(responseData);
+              errorMessage = parsed.detail || parsed.message || parsed.error || responseData;
+            } catch {
+              errorMessage = responseData;
             }
           }
-        } else if (apiError.message) {
+          // Handle object responses
+          else if (typeof responseData === 'object') {
+            errorMessage = responseData.detail || responseData.message || responseData.error || errorMessage;
+
+            // Extract additional error details if available
+            if (responseData.errors) {
+              errorDetail = typeof responseData.errors === 'string'
+                ? responseData.errors
+                : JSON.stringify(responseData.errors);
+            }
+          }
+        }
+
+        // Fallback to error message if nothing found in response
+        if (errorMessage === 'An error occurred while submitting the report' && apiError.message) {
           errorMessage = apiError.message;
+        }
+
+        // Add context for specific error types
+        if (errorMessage.toLowerCase().includes('stripe customer not found')) {
+          errorMessage = 'Payment setup required: ' + errorMessage;
+          errorDetail = 'Please ensure you have a valid payment method configured in your account settings.';
+        } else if (errorMessage.toLowerCase().includes('payment') || errorMessage.toLowerCase().includes('billing')) {
+          if (!errorDetail) {
+            errorDetail = 'Please check your payment method and try again.';
+          }
         }
 
         // Special handling for location report payment errors
         if (reportType === 'location') {
           if (!hasUsedFreeLocationReport) {
-            // This shouldn't happen for free reports, but handle gracefully
-            errorMessage = 'Unable to process your free location report. Please try again.';
+            errorDetail = 'Unable to process your free location report. Please try again or contact support.';
           } else {
-            // User has already used free report - check for payment-related errors
             const lowerErrorMsg = errorMessage.toLowerCase();
-            if (lowerErrorMsg.includes('payment') || lowerErrorMsg.includes('billing')) {
-              errorMessage =
-                'Payment required for additional location reports ($150). Please ensure you have a payment method on file.';
+            if (lowerErrorMsg.includes('payment') || lowerErrorMsg.includes('billing') || lowerErrorMsg.includes('stripe')) {
+              errorDetail = 'Payment required for additional location reports ($150). Please ensure you have a payment method on file.';
             }
           }
         }
 
-        // Ensure we don't display raw JSON or object strings
-        if (
-          typeof errorMessage === 'object' ||
-          errorMessage.includes('{') ||
-          errorMessage.includes('[')
-        ) {
-          errorMessage = 'An error occurred while submitting the report';
-        }
-
-        setSubmitError(errorMessage);
+        // Set error with detail
+        setSubmitError(errorDetail ? `${errorMessage}|${errorDetail}` : errorMessage);
       } else {
         // For non-API errors, don't show them to the user
         console.error('Non-API error occurred:', error);
-        setSubmitError(null);
+        setSubmitError('An unexpected error occurred. Please try again.');
       }
     } finally {
       setIsSubmitting(false);
@@ -823,6 +749,10 @@ const CustomReportForm = () => {
         return true; // Always optional
 
       case 'report-tier':
+        // For location reports, ensure pricing is available
+        if (reportType === 'location') {
+          return locationPriceAvailable;
+        }
         // In advanced mode, report tier is required
         // In simple mode, we use backend default, so it's optional
         return isAdvancedMode ? !!formData.report_tier : true;
@@ -1004,6 +934,8 @@ const CustomReportForm = () => {
             disabled={isSubmitting}
             reportType={reportType || undefined}
             hasUsedFreeLocationReport={hasUsedFreeLocationReport}
+            isAdvancedMode={isAdvancedMode}
+            onPriceLoadingChange={handlePriceLoadingChange}
           />
         );
 
@@ -1223,12 +1155,23 @@ const CustomReportForm = () => {
               {/* Submit Error */}
               {submitError && (
                 <div className="p-6 bg-red-50 border border-red-200 text-red-700 rounded-xl">
-                  <div className="flex items-center">
+                  <div className="flex">
                     <div className="flex-shrink-0">
                       <FaExclamationTriangle className="h-6 w-6 text-red-400" />
                     </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium">{submitError}</p>
+                    <div className="ml-3 flex-1">
+                      {submitError.includes('|') ? (
+                        <>
+                          <h3 className="text-sm font-semibold text-red-800 mb-1">
+                            {submitError.split('|')[0]}
+                          </h3>
+                          <p className="text-sm text-red-700">
+                            {submitError.split('|')[1]}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-sm font-medium">{submitError}</p>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -17,6 +17,7 @@ import {
 } from './CampaignComponents';
 import { useUIContext } from '../../context/UIContext';
 import urls from '../../urls.json';
+import { DynamicIcon } from '../../utils/iconUtils';
 
 export default function CampaignHomePage() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -162,8 +163,10 @@ export default function CampaignHomePage() {
                     title={report.title}
                     description={report.description}
                     onClick={() => handleReportClick(report)}
-                    icon={<FaMapMarkedAlt className="w-6 h-6" />}
-                    badge={index === 0 ? 'Popular' : undefined}
+                    icon={<DynamicIcon iconString={report.icon} fallbackIcon={FaMapMarkedAlt} className="w-6 h-6" />}
+                    badge={index === 0 && !report.coming_soon ? 'Popular' : undefined}
+                    comingSoon={report.coming_soon}
+                    bgImage={resolveBgImage(report.bgImage)}
                   />
                 ))}
               </div>

@@ -71,6 +71,7 @@ interface PriceData {
     report_potential_business_type?: string;
     description?: string;
     data_variables?: Record<string, string>;
+    coming_soon?: boolean;
   }>;
 }
 
@@ -1043,8 +1044,45 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 const isSelected =
                   selectedItemKey?.key === tier.reportKey && selectedItemKey?.type === 'report';
                 const isInCart = checkout.report === tier.reportKey;
+                const reportItem = priceData?.report_purchase_items?.find(
+                  r => r.report_tier === tier.reportKey
+                );
+                const isComingSoon = reportItem?.coming_soon === true;
                 const borderClass =
                   isSelected || isInCart ? 'border-[#115740] ' : 'border-gray-300';
+
+                // If coming soon, render a disabled card
+                if (isComingSoon) {
+                  return (
+                    <div
+                      key={tier.id}
+                      className="relative border rounded-xl shadow-md w-full bg-gray-100/60 overflow-hidden border-gray-300 cursor-not-allowed"
+                    >
+                      <div className="absolute top-3 right-3 z-10">
+                        <span className="text-xs bg-purple-500 text-white px-3 py-1.5 rounded-full font-semibold shadow-sm">
+                          Coming soon
+                        </span>
+                      </div>
+                      <div className="p-6 opacity-50">
+                        <div className="w-full flex justify-between items-start mb-4">
+                          <span className="text-xl text-gray-900 font-bold">{tier.name}</span>
+                          <span className="text-3xl font-bold text-gray-600">
+                            {formatPrice(tier.price)}
+                          </span>
+                        </div>
+                        <div className="mb-3">
+                          <span className="bg-purple-100 text-purple-700 rounded-full px-4 py-2 font-medium text-sm inline-block">
+                            Top 10 Locations Ranked
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          This report tier will be available soon.
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
                 return (
                   <details
                     key={tier.id}

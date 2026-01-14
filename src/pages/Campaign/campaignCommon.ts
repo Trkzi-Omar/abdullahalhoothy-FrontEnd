@@ -5,11 +5,13 @@ export type Report = {
   id: number;
   title: string;
   description: string;
+  icon?: string;
   bgImage?: string | null;
   options: {
     free_redirect: string;
     custom_redirect: string;
   };
+  coming_soon: boolean;
 };
 
 // Step definitions for campaign flow

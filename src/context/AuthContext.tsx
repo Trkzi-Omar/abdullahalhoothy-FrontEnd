@@ -19,6 +19,33 @@ export const isGuestUser = (authResponse: AuthResponse | null): boolean => {
   );
 };
 
+export const performGoogleLogin = async (
+  setAuthResponse: (response: AuthResponse) => void,
+  credential: string
+): Promise<AuthResponse> => {
+  return new Promise((resolve, reject) => {
+    HttpReq<AuthResponse>(
+      urls.google_login,
+      (data: AuthResponse) => {
+        if (!data || !('idToken' in data)) {
+          reject(new Error('Google Login Error: Invalid response'));
+          return;
+        }
+        setAuthResponse(data);
+        resolve(data);
+      },
+      () => {},
+      () => {},
+      () => {},
+      (error: any) => {
+        reject(error);
+      },
+      'post',
+      { credential }
+    );
+  });
+};
+
 export const performLogin = async (
   setAuthResponse: (response: AuthResponse) => void,
   options: { isGuest?: boolean; email?: string; password?: string; source?: string } = {}

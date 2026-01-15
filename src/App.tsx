@@ -1,4 +1,5 @@
 import { BrowserRouter } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { CatalogProvider } from './context/CatalogContext';
 import { LayerProvider } from './context/LayerContext';
 import { AuthProvider } from './context/AuthContext';
@@ -14,13 +15,16 @@ import WhatsAppFloatButton from './components/WhatsAppFloatButton/WhatsAppFloatB
 import { OTPProvider } from './context/OTPContext';
 import { OTPModal } from './components/OTPModal';
 
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+
 function App() {
   return (
-    <div className="flex w-screen h-svh">
-      <BrowserRouter>
-        <Toaster position="top-right" richColors />
-        <NavigationSetup>
-          <AuthProvider>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <div className="flex w-screen h-svh">
+        <BrowserRouter>
+          <Toaster position="top-right" richColors />
+          <NavigationSetup>
+            <AuthProvider>
             <OTPProvider>
               <MapProvider>
                 <IntelligenceViewportProvider>
@@ -41,9 +45,10 @@ function App() {
             </OTPProvider>
           </AuthProvider>
         </NavigationSetup>
-        <WhatsAppFloatButton />
-      </BrowserRouter>
-    </div>
+          <WhatsAppFloatButton />
+        </BrowserRouter>
+      </div>
+    </GoogleOAuthProvider>
   );
 }
 

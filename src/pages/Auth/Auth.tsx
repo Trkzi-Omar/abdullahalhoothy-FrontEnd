@@ -1,6 +1,7 @@
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { useAuth } from '../../context/AuthContext';
-import { performLogin, isGuestUser } from '../../context/AuthContext';
+import { performLogin, performGoogleLogin, isGuestUser } from '../../context/AuthContext';
 import { HttpReq } from '../../services/apiService';
 import { useEffect, useState } from 'react';
 import urls from '../../urls.json';
@@ -130,6 +131,40 @@ const Auth = () => {
     }
   };
 
+  const handleGoogleLogin = async (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) {
+      setAuthMessage('Google login failed: No credential received');
+      return;
+    }
+
+    setIsLoading(true);
+    setAuthMessage(null);
+    setError(null);
+
+    try {
+      await performGoogleLogin(setAuthResponse, credentialResponse.credential);
+
+      setTimeout(() => {
+        const params = new URLSearchParams(location.search);
+        const redirectUrl = params.get('redirect_url');
+        if (redirectUrl) {
+          window.location.replace(redirectUrl);
+        } else {
+          nav('/');
+        }
+      }, 100);
+    } catch (e: any) {
+      if (e.response?.status === 401) {
+        setAuthMessage(e.response.data.detail || 'Google login failed');
+      } else {
+        setAuthMessage(e.message || 'Google login failed');
+        setError(e);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthMessage(null);
@@ -238,6 +273,24 @@ const Auth = () => {
             </p>
           )}
           {renderForm()}
+          {isLogin && !isPasswordReset && (
+            <>
+              <div className="flex items-center my-4">
+                <div className="flex-1 border-t border-gray-300"></div>
+                <span className="px-3 text-gray-500 text-sm">or</span>
+                <div className="flex-1 border-t border-gray-300"></div>
+              </div>
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleLogin}
+                  onError={() => setAuthMessage('Google login failed')}
+                  theme="outline"
+                  size="large"
+                  width="100%"
+                />
+              </div>
+            </>
+          )}
           <div className="flex justify-between mt-4">
             <button
               onClick={() => {

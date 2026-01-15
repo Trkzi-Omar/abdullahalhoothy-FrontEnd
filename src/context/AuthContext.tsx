@@ -21,9 +21,14 @@ export const isGuestUser = (authResponse: AuthResponse | null): boolean => {
 
 export const performGoogleLogin = async (
   setAuthResponse: (response: AuthResponse) => void,
-  credential: string
+  credential: string,
+  source?: string | null
 ): Promise<AuthResponse> => {
   return new Promise((resolve, reject) => {
+    const payload: { credential: string; source?: string } = { credential };
+    if (source) {
+      payload.source = source;
+    }
     HttpReq<AuthResponse>(
       urls.google_login,
       (data: AuthResponse) => {
@@ -41,7 +46,7 @@ export const performGoogleLogin = async (
         reject(error);
       },
       'post',
-      { credential }
+      payload
     );
   });
 };

@@ -1,5 +1,6 @@
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
+import { useGoogleLogin } from '@react-oauth/google';
+import { FcGoogle } from 'react-icons/fc';
 import { useAuth } from '../../context/AuthContext';
 import { performLogin, performGoogleLogin, isGuestUser } from '../../context/AuthContext';
 import { HttpReq } from '../../services/apiService';
@@ -12,7 +13,7 @@ import { FaEnvelope, FaLock, FaUser } from 'react-icons/fa';
 const Auth = () => {
   const nav = useNavigate();
   const location = useLocation();
-  const { authLoading, isAuthenticated, setAuthResponse, authResponse } = useAuth();
+  const { authLoading, isAuthenticated, setAuthResponse, authResponse, sourceLocal } = useAuth();
 
   // RENDER STATE
   const [isLogin, setIsLogin] = useState(true);
@@ -131,18 +132,13 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleLogin = async (credentialResponse: CredentialResponse) => {
-    if (!credentialResponse.credential) {
-      setAuthMessage('Google login failed: No credential received');
-      return;
-    }
-
+  const handleGoogleSuccess = async (tokenResponse: { access_token: string }) => {
     setIsLoading(true);
     setAuthMessage(null);
     setError(null);
 
     try {
-      await performGoogleLogin(setAuthResponse, credentialResponse.credential);
+      await performGoogleLogin(setAuthResponse, tokenResponse.access_token, sourceLocal);
 
       setTimeout(() => {
         const params = new URLSearchParams(location.search);
@@ -164,6 +160,11 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: () => setAuthMessage('Google login failed'),
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -280,15 +281,15 @@ const Auth = () => {
                 <span className="px-3 text-gray-500 text-sm">or</span>
                 <div className="flex-1 border-t border-gray-300"></div>
               </div>
-              <div className="flex justify-center">
-                <GoogleLogin
-                  onSuccess={handleGoogleLogin}
-                  onError={() => setAuthMessage('Google login failed')}
-                  theme="outline"
-                  size="large"
-                  width="100%"
-                />
-              </div>
+              <button
+                type="button"
+                onClick={() => googleLogin()}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-3 px-4 py-4 text-lg font-semibold text-gray-800 bg-white border-2 border-gray-400 rounded-lg shadow-sm hover:border-gray-500 hover:shadow-lg transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+              >
+                <FcGoogle className="text-2xl" />
+                Continue with Google
+              </button>
             </>
           )}
           <div className="flex justify-between mt-4">

@@ -1,12 +1,39 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useGoogleLogin } from '@react-oauth/google';
+import { FcGoogle } from 'react-icons/fc';
 import FirstPage from './FirstPage';
 import SecondPage from './SecondPage';
 import { useSignUp } from '../../../context/SignUpContext';
+import { useAuth, performGoogleLogin } from '../../../context/AuthContext';
 
 const SignUpForm: React.FC = () => {
   const { currentPage, handleNext, handlePrevious, handleSubmit, isSubmitting, submitError } =
     useSignUp();
+  const { setAuthResponse, sourceLocal } = useAuth();
+  const navigate = useNavigate();
+
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
+
+  const handleGoogleSuccess = async (tokenResponse: { access_token: string }) => {
+    setGoogleLoading(true);
+    setGoogleError(null);
+
+    try {
+      await performGoogleLogin(setAuthResponse, tokenResponse.access_token, sourceLocal);
+      navigate('/');
+    } catch (e: any) {
+      setGoogleError(e.response?.data?.detail || e.message || 'Google sign up failed');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: () => setGoogleError('Google sign up failed'),
+  });
 
   return (
     <div className="rounded-lg shadow-[0px_0px_10px_0px_rgba(0,0,0,0.5)] p-8 lg:w-1/3">
@@ -21,6 +48,32 @@ const SignUpForm: React.FC = () => {
           </Link>
         </p>
       </div>
+
+      {currentPage === 0 && (
+        <>
+          <button
+            type="button"
+            onClick={() => googleLogin()}
+            disabled={googleLoading || isSubmitting}
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 text-lg font-semibold text-gray-800 bg-white border-2 border-gray-300 rounded-lg shadow-sm hover:border-gray-400 hover:shadow-lg transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+          >
+            <FcGoogle className="text-2xl" />
+            {googleLoading ? 'Signing up...' : 'Continue with Google'}
+          </button>
+
+          {googleError && (
+            <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+              {googleError}
+            </div>
+          )}
+
+          <div className="flex items-center my-4">
+            <div className="flex-1 border-t border-gray-500"></div>
+            <span className="px-3 text-gray-400 text-sm">or sign up with email</span>
+            <div className="flex-1 border-t border-gray-500"></div>
+          </div>
+        </>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {currentPage === 0 ? <FirstPage /> : <SecondPage />}

@@ -54,5 +54,6 @@
   "fetch_smart_segment_report": "/fetch_smart_segment_report",
   "sms_send_otp": "/sms_send_otp",
   "sms_verify_otp": "/sms_verify_otp",
-  "google_login": "google_login"
+  "google_login": "google_login",
+  "report_packages": "/report-packages"
 }

@@ -53,19 +53,20 @@ interface CheckoutModalProps {
   } | null;
   isCalculatingCost: boolean;
   onPurchaseComplete: () => void;
+  reportTiers?: ReportTierInfo[];
 }
 
-const REPORT_TIERS = [
-  { reportKey: 'premium' as ReportTier, name: 'Premium Tier' },
-  { reportKey: 'standard' as ReportTier, name: 'Standard Tier' },
-  { reportKey: 'basic' as ReportTier, name: 'Basic Tier' },
-];
+interface ReportTierInfo {
+  reportKey: ReportTier;
+  name: string;
+}
 
 function CheckoutModal({
   onClose,
   cartCostResponse,
   isCalculatingCost,
   onPurchaseComplete,
+  reportTiers = [],
 }: CheckoutModalProps) {
   const { checkout, dispatch } = useBillingContext();
   const { openModal } = useUIContext();
@@ -228,7 +229,7 @@ function CheckoutModal({
   const checkoutItemCount =
     checkout.datasets.length + checkout.intelligences.length + (checkout.report ? 1 : 0);
   const totalItems = apiItemCount > 0 ? apiItemCount : checkoutItemCount;
-
+console.log(reportTiers , 'reportTiers')
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
       <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -373,7 +374,7 @@ function CheckoutModal({
                     ))}
                   {cartCostResponse?.data?.report_purchase_items?.map((item, index) => {
                     const tierName = item.report_tier
-                      ? REPORT_TIERS.find(t => t.reportKey === item.report_tier)?.name ||
+                      ? reportTiers.find(t => t.reportKey === item.report_tier)?.name ||
                         `${item.report_tier.charAt(0).toUpperCase() + item.report_tier.slice(1)} Tier`
                       : 'Report';
                     return (
@@ -483,7 +484,7 @@ function CheckoutModal({
                   {checkout.report &&
                     (() => {
                       const tierName =
-                        REPORT_TIERS.find(t => t.reportKey === checkout.report)?.name ||
+                        reportTiers.find(t => t.reportKey === checkout.report)?.name ||
                         `${checkout.report.charAt(0).toUpperCase() + checkout.report.slice(1)} Tier`;
                       return (
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border border-gray-100 rounded-lg p-4">

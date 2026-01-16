@@ -75,57 +75,54 @@ interface PriceData {
   }>;
 }
 
-const REPORT_TIERS = [
-  {
-    id: 'report-premium-tier',
-    name: 'Premium Tier',
-    price: 1999,
-    reportKey: 'premium' as ReportTier,
-    perks: ['Custom Scoring', '4x Report Refreshes', 'Full Data Access'],
-    intelligences: {
-      ai: true,
-      income: true,
-      population: true,
-      realEstate: true,
-      competition: true,
-      poi: true,
-    },
-    isMostPopular: true,
-    conciergeService: 'Personal consultant to guide your business expansion.',
-  },
-  {
-    id: 'report-standard-tier',
-    name: 'Standard Tier',
-    price: 1849,
-    reportKey: 'standard' as ReportTier,
-    perks: ['Custom Scoring', '4x Report Refreshes', 'Full Data Access'],
-    intelligences: {
-      ai: false,
-      income: false,
-      population: true,
-      realEstate: true,
-      competition: true,
-      poi: true,
-    },
-    isMostPopular: false,
-  },
-  {
-    id: 'report-basic-tier',
-    name: 'Basic Tier',
-    price: 1559,
-    reportKey: 'basic' as ReportTier,
-    perks: ['Preset Scoring', '1x Report', 'Full Data Access'],
-    intelligences: {
-      ai: false,
-      income: false,
-      population: true,
-      realEstate: true,
-      competition: true,
-      poi: true,
-    },
-    isMostPopular: false,
-  },
-];
+interface ReportPackage {
+  report_tier: string;
+  name: string;
+  // Support both field naming conventions from API
+  price?: number;
+  price_usd?: number;
+  perks?: string[];
+  // New API format: array of intelligence names
+  included_intelligences?: string[];
+  // Old API format: object with boolean flags
+  intelligences?: {
+    ai?: boolean;
+    income?: boolean;
+    population?: boolean;
+    realEstate?: boolean;
+    competition?: boolean;
+    poi?: boolean;
+  };
+  is_most_popular?: boolean;
+  concierge_service?: string;
+  dataset_limit?: number;
+  included_datasets_count?: number;
+  included_report_refreshes?: number;
+  additional_dataset_cost?: number;
+  tag?: string;
+  description?: string;
+}
+
+interface ReportTierData {
+  id: string;
+  name: string;
+  price: number;
+  reportKey: ReportTier;
+  perks: string[];
+  intelligences: {
+    ai: boolean;
+    income: boolean;
+    population: boolean;
+    realEstate: boolean;
+    competition: boolean;
+    poi: boolean;
+  };
+  isMostPopular: boolean;
+  conciergeService?: string;
+  datasetLimit?: number;
+  additionalDatasetCost?: number;
+  tag?: string;
+}
 
 const itemConfig = {
   intelligence: {
@@ -174,6 +171,8 @@ function CheckoutBilling({ Name }: { Name: string }) {
   const [hasInitializedDatasets, setHasInitializedDatasets] = React.useState(false);
   const [hasInitializedReports, setHasInitializedReports] = React.useState(false);
   const [activeView, setActiveView] = React.useState<'area' | 'datasets' | 'reports'>('area');
+  const [reportTiers, setReportTiers] = React.useState<ReportTierData[]>([]);
+  const [isLoadingReportTiers, setIsLoadingReportTiers] = React.useState(false);
 
   const { authResponse } = useAuth();
   const { openModal } = useUIContext();
@@ -190,7 +189,114 @@ function CheckoutBilling({ Name }: { Name: string }) {
     }
   }, [Name]);
 
-  // Fetch categories on mount
+  // Fetch report packages from API
+  const fetchReportPackages = useCallback(async () => {
+    setIsLoadingReportTiers(true);
+    try {
+      const response = await apiRequest({
+        url: urls.report_packages,
+        method: 'GET',
+      });
+      
+      const rawData = response?.data?.data || response?.data || {};
+      
+      // Convert object response to array if needed
+      // API returns { basic: {...}, standard: {...}, premium: {...}, ... }
+      let packages: ReportPackage[];
+      if (Array.isArray(rawData)) {
+        packages = rawData;
+      } else if (typeof rawData === 'object' && rawData !== null) {
+        // Convert object to array, using the key as report_tier
+        packages = Object.entries(rawData).map(([key, value]) => ({
+          report_tier: key,
+          ...(value as Omit<ReportPackage, 'report_tier'>),
+        }));
+      } else {
+        packages = [];
+      }
+      
+      // Transform API data to match our component structure
+      const transformedTiers: ReportTierData[] = packages.map((pkg) => {
+        // Handle included_intelligences array from API
+        const includedIntelligences = pkg.included_intelligences || [];
+        const hasIntelligence = (name: string) => 
+          includedIntelligences.some(i => i.toLowerCase() === name.toLowerCase());
+        
+        // Parse perks from description if not provided directly
+        const extractPerks = (description?: string): string[] => {
+          if (pkg.perks && pkg.perks.length > 0) return pkg.perks;
+          if (!description) return [];
+          
+          const perks: string[] = [];
+          // Extract features from description
+          if (description.includes('Custom Scoring')) perks.push('Custom Scoring');
+          if (description.includes('Preset Scoring')) perks.push('Preset Scoring');
+          if (pkg.included_report_refreshes) {
+            perks.push(`${pkg.included_report_refreshes}x Report Refreshes`);
+          }
+          if (description.includes('Full Data Access')) perks.push('Full Data Access');
+          if (description.includes('Concierge')) perks.push('Personal Concierge Service');
+          return perks;
+        };
+        
+        // Check if premium tier (has concierge mentioned in description)
+        const isPremium = pkg.report_tier === 'premium' || pkg.report_tier === 'single_location_premium';
+        const hasConcierge = pkg.description?.toLowerCase().includes('concierge');
+        
+        return {
+          id: `report-${pkg.report_tier}-tier`,
+          name: pkg.name || `${pkg.report_tier.charAt(0).toUpperCase() + pkg.report_tier.slice(1)} Tier`,
+          price: pkg.price_usd || pkg.price || 0,
+          reportKey: pkg.report_tier as ReportTier,
+          perks: extractPerks(pkg.description),
+          intelligences: pkg.intelligences ? {
+            ai: pkg.intelligences.ai ?? false,
+            income: pkg.intelligences.income ?? false,
+            population: pkg.intelligences.population ?? false,
+            realEstate: pkg.intelligences.realEstate ?? false,
+            competition: pkg.intelligences.competition ?? false,
+            poi: pkg.intelligences.poi ?? false,
+          } : {
+            // Map from included_intelligences array
+            ai: isPremium, // AI is typically included in premium tiers
+            income: hasIntelligence('Income'),
+            population: hasIntelligence('Population'),
+            realEstate: hasIntelligence('Real Estate'),
+            competition: true, // Competition and POI are typically always included
+            poi: true,
+          },
+          isMostPopular: pkg.is_most_popular ?? (pkg.report_tier === 'premium'),
+          conciergeService: pkg.concierge_service || (hasConcierge ? 'Personal consultant to guide your business expansion' : undefined),
+          datasetLimit: pkg.dataset_limit || pkg.included_datasets_count,
+          additionalDatasetCost: pkg.additional_dataset_cost || 300, // Default from API description
+          tag: pkg.tag,
+        };
+      });
+
+      // Sort by tier order: basic, standard, single_location_premium, premium
+      const tierOrder: Record<string, number> = { 
+        basic: 0,
+        standard: 1, 
+        single_location_premium: 2, 
+        premium: 3
+      };
+      transformedTiers.sort((a, b) => {
+        const orderA = tierOrder[a.reportKey] ?? 999;
+        const orderB = tierOrder[b.reportKey] ?? 999;
+        return orderA - orderB;
+      });
+
+      setReportTiers(transformedTiers);
+    } catch (error) {
+      console.error('Error fetching report packages:', error);
+      // Fallback to empty array or default tiers if needed
+      setReportTiers([]);
+    } finally {
+      setIsLoadingReportTiers(false);
+    }
+  }, []);
+
+  // Fetch categories and report packages on mount
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -205,7 +311,8 @@ function CheckoutBilling({ Name }: { Name: string }) {
       }
     };
     fetchInitialData();
-  }, []);
+    fetchReportPackages();
+  }, [fetchReportPackages]);
 
   // Mark views as initialized when they're opened
   useEffect(() => {
@@ -1040,7 +1147,21 @@ function CheckoutBilling({ Name }: { Name: string }) {
           <div className="w-full h-full flex flex-col px-4 sm:px-6 lg:px-8 overflow-y-auto">
             <div className="text-2xl pt-4 font-semibold mb-6 flex-shrink-0">Report</div>
             <div className="flex flex-col gap-6 flex-1 pb-6">
-              {REPORT_TIERS.map(tier => {
+              {isLoadingReportTiers ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="border rounded-xl p-6">
+                      <Skeleton className="w-full h-8 mb-4" />
+                      <Skeleton className="w-32 h-6" />
+                    </div>
+                  ))}
+                </div>
+              ) : reportTiers.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No report packages available
+                </div>
+              ) : (
+                reportTiers.map(tier => {
                 const isSelected =
                   selectedItemKey?.key === tier.reportKey && selectedItemKey?.type === 'report';
                 const isInCart = checkout.report === tier.reportKey;
@@ -1115,11 +1236,13 @@ function CheckoutBilling({ Name }: { Name: string }) {
                       </div>
                     </summary>
                     <div className="p-6 pt-0 space-y-4">
-                      <div className="mb-3">
-                        <span className="bg-purple-100 text-purple-700 rounded-full px-4 py-2 font-medium text-sm inline-block">
-                          Top 10 Locations Ranked
-                        </span>
-                      </div>
+                      {tier.tag && (
+                        <div className="mb-3">
+                          <span className="bg-purple-100 text-purple-700 rounded-full px-4 py-2 font-medium text-sm inline-block">
+                            {tier.tag}
+                          </span>
+                        </div>
+                      )}
                       <ul className="mb-4 text-sm space-y-2">
                         {tier.perks.map(perk => (
                           <li key={perk} className="text-gray-700">
@@ -1180,9 +1303,16 @@ function CheckoutBilling({ Name }: { Name: string }) {
                             )}
                             <span className="text-sm text-gray-700">POI (Point of Interest)</span>
                           </div>
-                          <div className="text-xs text-gray-500 ml-7 mt-1">
-                            Includes up to 5 datasets. Additional datasets starting from $300.
-                          </div>
+                          {(tier.datasetLimit !== undefined || tier.additionalDatasetCost !== undefined) && (
+                            <div className="text-xs text-gray-500 ml-7 mt-1">
+                              {tier.datasetLimit !== undefined && (
+                                <>Includes up to {tier.datasetLimit} dataset{tier.datasetLimit !== 1 ? 's' : ''}. </>
+                              )}
+                              {tier.additionalDatasetCost !== undefined && (
+                                <>Additional datasets starting from {formatPrice(tier.additionalDatasetCost)}.</>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                       {tier.conciergeService && (
@@ -1211,7 +1341,8 @@ function CheckoutBilling({ Name }: { Name: string }) {
                     </div>
                   </details>
                 );
-              })}
+                })
+              )}
             </div>
           </div>
         ) : (
@@ -1368,6 +1499,10 @@ function CheckoutBilling({ Name }: { Name: string }) {
             dispatch({ type: 'reset' });
             setCartCostResponse(null);
           }}
+          reportTiers={reportTiers.map(tier => ({
+            reportKey: tier.reportKey,
+            name: tier.name,
+          }))}
         />
       )}
     </div>

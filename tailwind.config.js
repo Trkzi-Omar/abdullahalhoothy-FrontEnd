@@ -41,6 +41,16 @@ export default {
             transform: 'translateY(0)',
           },
         },
+        'dropdown-in': {
+          '0%': {
+            opacity: '0',
+            transform: 'translateY(-8px) scale(0.96)',
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateY(0) scale(1)',
+          },
+        },
         'gradient-shift': {
           '0%, 100%': {
             'background-position': '0% 50%',
@@ -96,6 +106,7 @@ export default {
       },
       animation: {
         'fade-in-up': 'fade-in-up 0.8s ease-out',
+        'dropdown-in': 'dropdown-in 0.2s ease-out',
         'gradient-shift': 'gradient-shift 60s ease infinite',
         'overlay-show': 'overlay-show 150ms cubic-bezier(0.16, 1, 0.3, 1)',
         'overlay-hide': 'overlay-hide 150ms cubic-bezier(0.16, 1, 0.3, 1)',

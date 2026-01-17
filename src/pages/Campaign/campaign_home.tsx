@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { FaMapMarkedAlt, FaGift, FaFileAlt } from 'react-icons/fa';
 import {
   Report,
   fetchCampaigns,
   isTrySomethingElseReport,
-  createNavigationHandlers,
 } from './campaignCommon';
 import {
   SelectableCard,
@@ -30,10 +29,50 @@ export default function CampaignHomePage() {
   const navigate = useNavigate();
   const { closeModal } = useUIContext();
 
-  const { handleFreeClick, handleCustomClick, handleBack } = createNavigationHandlers(
-    navigate,
-    setStep
-  );
+  // Create stable navigation handlers with useCallback
+  const handleBack = useCallback(() => {
+    setStep(prev => {
+      const newStep = Math.max(prev - 1, 0);
+      // Clear selected report when going back to step 0
+      if (newStep === 0) {
+        setSelectedReport(null);
+      }
+      return newStep;
+    });
+  }, []);
+
+  const handleFreeClick = useCallback((url: string) => {
+    // Normalize the URL to work with React Router
+    // If it's a full URL, extract the path
+    // If it's already a path starting with /static/, use it directly
+    let normalizedUrl = url;
+    
+    try {
+      // If it's a full URL, extract the pathname
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        const urlObj = new URL(url);
+        normalizedUrl = urlObj.pathname;
+      }
+      // If it doesn't start with /, add it
+      if (!normalizedUrl.startsWith('/')) {
+        normalizedUrl = `/${normalizedUrl}`;
+      }
+    } catch (e) {
+      // If URL parsing fails, try to normalize manually
+      if (url.includes('/static/')) {
+        const staticIndex = url.indexOf('/static/');
+        normalizedUrl = url.substring(staticIndex);
+      } else if (!normalizedUrl.startsWith('/')) {
+        normalizedUrl = `/${normalizedUrl}`;
+      }
+    }
+    
+    navigate(normalizedUrl);
+  }, [navigate]);
+
+  const handleCustomClick = useCallback((url: string) => {
+    navigate(url);
+  }, [navigate]);
 
   useEffect(() => {
     setIsLoading(true);

@@ -104,7 +104,7 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode; source?: stri
 
   // Handle phone number change from PhoneInput component
   const handlePhoneChange = (phoneValue: string) => {
-    // react-phone-input-2 returns phone without + prefix, add it for API consistency
+    // react-international-phone returns phone without + prefix, add it for API consistency
     const formattedPhone = phoneValue ? `+${phoneValue}` : '';
     setFormData(prev => ({ ...prev, phone: formattedPhone }));
     setIsPhoneVerified(false);

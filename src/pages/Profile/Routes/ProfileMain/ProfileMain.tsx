@@ -10,6 +10,9 @@ import {
   FaBook,
   FaTrash,
   FaCheck,
+  FaExternalLinkAlt,
+  FaCalendarAlt,
+  FaClock,
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router';
 import urls from '../../../../urls.json';
@@ -77,52 +80,306 @@ const ProfileMain: React.FC = () => {
       setIsLoading(false);
     }
   };
-  const renderValue = (key: string, value: any): JSX.Element => {
+  // Helper to format field labels nicely
+  const formatLabel = (key: string): string => {
+    return key
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, l => l.toUpperCase())
+      .replace('Bknd', 'Backend')
+      .replace('Id', 'ID');
+  };
+
+  // Helper to format dates
+  const formatDate = (dateString: string): { main: string; relative: string } => {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffTime = date.getTime() - now.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      const main = date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      let relative = '';
+      if (diffDays > 0) {
+        relative = `${diffDays} days from now`;
+      } else if (diffDays < 0) {
+        relative = `${Math.abs(diffDays)} days ago`;
+      } else {
+        relative = 'Today';
+      }
+
+      return { main, relative };
+    } catch {
+      return { main: dateString, relative: '' };
+    }
+  };
+
+  // Check if string looks like a date
+  const isDateString = (str: string): boolean => {
+    return /^\d{4}-\d{2}-\d{2}/.test(str);
+  };
+
+  // Check if string looks like a URL or path
+  const isLink = (str: string): boolean => {
+    return str.startsWith('/') || str.startsWith('http');
+  };
+
+  // Check if string looks like a color
+  const isColor = (str: string): boolean => {
+    return /^#[0-9A-Fa-f]{6}$/.test(str);
+  };
+
+  // Render a single field value with smart formatting
+  const renderFieldValue = (key: string, value: any): JSX.Element => {
     if (value === null || value === undefined) {
-      return <span>N/A</span>;
+      return <span className={styles.dataFieldValue}>—</span>;
     }
 
-    if (Array.isArray(value)) {
+    // Boolean values
+    if (typeof value === 'boolean') {
       return (
-        <ul className={styles.nestedList}>
-          {value.map((item, index) => (
-            <li key={index}>{renderValue(`${key}_${index}`, item)}</li>
-          ))}
-        </ul>
+        <span className={`${styles.booleanBadge} ${value ? styles.booleanTrue : styles.booleanFalse}`}>
+          {value ? <FaCheck size={10} /> : <FaTimes size={10} />}
+          {value ? 'Yes' : 'No'}
+        </span>
       );
     }
 
-    if (typeof value === 'object') {
+    // Number values - check for progress
+    if (typeof value === 'number') {
+      if (key.toLowerCase().includes('progress')) {
+        return (
+          <div className={styles.progressContainer}>
+            <div className={styles.progressBar}>
+              <div 
+                className={styles.progressFill} 
+                style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
+              />
+            </div>
+            <span className={styles.progressText}>{value}%</span>
+          </div>
+        );
+      }
+      if (key.toLowerCase().includes('count') || key.toLowerCase().includes('credits')) {
+        return <span className={styles.dataFieldValue}>{value.toLocaleString()}</span>;
+      }
+      return <span className={styles.dataFieldValue}>{value}</span>;
+    }
+
+    // String values
+    if (typeof value === 'string') {
+      // Date strings
+      if (isDateString(value)) {
+        const { main, relative } = formatDate(value);
+        return (
+          <div className={styles.dateValue}>
+            <span className={styles.dateMain}>
+              <FaCalendarAlt size={12} style={{ marginRight: 6, opacity: 0.6 }} />
+              {main}
+            </span>
+            {relative && <span className={styles.dateRelative}>{relative}</span>}
+          </div>
+        );
+      }
+
+      // Color values
+      if (isColor(value)) {
+        return (
+          <span className={styles.colorPreview}>
+            <span className={styles.colorSwatch} style={{ backgroundColor: value }} />
+            <span>{value}</span>
+          </span>
+        );
+      }
+
+      // Links/URLs
+      if (isLink(value)) {
+        return (
+          <a 
+            href={value} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className={styles.linkValue}
+          >
+            View Report <FaExternalLinkAlt size={10} />
+          </a>
+        );
+      }
+
+      return <span className={styles.dataFieldValue}>{value}</span>;
+    }
+
+    return <span className={styles.dataFieldValue}>{String(value)}</span>;
+  };
+
+  // Render nested object data
+  const renderNestedObject = (data: Record<string, any>, title?: string): JSX.Element => {
+    const entries = Object.entries(data);
+    
+    if (entries.length === 0) {
       return (
-        <div className={styles.nestedObject}>
-          {Object.entries(value).map(([nestedKey, nestedValue]) => (
-            <div key={nestedKey} className={styles.nestedItem}>
-              <span className={styles.nestedLabel}>{nestedKey}:</span>
-              {renderValue(nestedKey, nestedValue)}
+        <div className={styles.emptyState}>
+          <div className={styles.emptyStateIcon}>📭</div>
+          <div className={styles.emptyStateText}>No data available</div>
+        </div>
+      );
+    }
+
+    // Check if this is an object with nested report entries (like standard reports)
+    const hasNestedReports = entries.every(([_, v]) => 
+      typeof v === 'object' && v !== null && !Array.isArray(v) && 
+      (v.report_link || v.purchase_date)
+    );
+
+    if (hasNestedReports) {
+      return (
+        <div>
+          {entries.map(([nestedKey, nestedValue], index) => (
+            <div key={nestedKey} className={styles.nestedSection}>
+              <div className={styles.nestedHeader}>
+                <h4 className={styles.nestedTitle}>{formatLabel(nestedKey)}</h4>
+                <span className={styles.nestedBadge}>#{index + 1}</span>
+              </div>
+              <div className={styles.nestedContent}>
+                {renderDataFields(nestedValue as Record<string, any>)}
+              </div>
             </div>
           ))}
         </div>
       );
     }
 
-    return <span>{value.toString()}</span>;
+    return renderDataFields(data);
+  };
+
+  // Render data fields in a clean format
+  const renderDataFields = (data: Record<string, any>): JSX.Element => {
+    // Sort entries to show important fields first
+    const priorityFields = ['layer_name', 'city_name', 'records_count', 'progress', 'purchase_date', 'expiration_date'];
+    const entries = Object.entries(data).sort((a, b) => {
+      const aIndex = priorityFields.indexOf(a[0]);
+      const bIndex = priorityFields.indexOf(b[0]);
+      if (aIndex === -1 && bIndex === -1) return 0;
+      if (aIndex === -1) return 1;
+      if (bIndex === -1) return -1;
+      return aIndex - bIndex;
+    });
+
+    return (
+      <>
+        {entries.map(([key, value]) => {
+          // Skip rendering nested objects here, handle separately
+          if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            return (
+              <div key={key} className={styles.nestedSection}>
+                <div className={styles.nestedHeader}>
+                  <h4 className={styles.nestedTitle}>{formatLabel(key)}</h4>
+                </div>
+                <div className={styles.nestedContent}>
+                  {renderNestedObject(value)}
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div key={key} className={styles.dataField}>
+              <span className={styles.dataFieldLabel}>{formatLabel(key)}</span>
+              {renderFieldValue(key, value)}
+            </div>
+          );
+        })}
+      </>
+    );
+  };
+
+  const renderValue = (key: string, value: any): JSX.Element => {
+    if (value === null || value === undefined) {
+      return (
+        <div className={styles.emptyState}>
+          <div className={styles.emptyStateIcon}>📭</div>
+          <div className={styles.emptyStateText}>No data available</div>
+        </div>
+      );
+    }
+
+    if (Array.isArray(value)) {
+      return (
+        <div>
+          {value.map((item, index) => (
+            <div key={index} className={styles.nestedSection}>
+              <div className={styles.nestedHeader}>
+                <h4 className={styles.nestedTitle}>Item {index + 1}</h4>
+              </div>
+              <div className={styles.nestedContent}>
+                {typeof item === 'object' ? renderNestedObject(item) : renderFieldValue(key, item)}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    if (typeof value === 'object') {
+      return renderNestedObject(value);
+    }
+
+    return (
+      <div className={styles.dataField}>
+        <span className={styles.dataFieldLabel}>{formatLabel(key)}</span>
+        {renderFieldValue(key, value)}
+      </div>
+    );
   };
 
   const handleItemClick = (type: string, name: string, data: any) => {
     setPopupInfo({ type, name, data });
   };
 
+  // Get type icon for modal header
+  const getTypeIcon = (type: string): JSX.Element => {
+    if (type.includes('layer')) return <FaLayerGroup />;
+    if (type.includes('catalog')) return <FaBook />;
+    if (type.includes('report') || type.includes('standard')) return <FaBook />;
+    if (type.includes('dataset')) return <FaDatabase />;
+    return <FaDatabase />;
+  };
+
+  // Get type label for modal subtitle
+  const getTypeLabel = (type: string): string => {
+    if (type.includes('layer')) return 'Layer Details';
+    if (type.includes('catalog')) return 'Catalog Details';
+    if (type.includes('report') || type.includes('standard')) return 'Report Details';
+    if (type.includes('dataset')) return 'Dataset Details';
+    return 'Details';
+  };
+
   const renderPopup = () => {
     if (!popupInfo) return null;
 
     return (
-      <div className={styles.popupOverlay}>
+      <div className={styles.popupOverlay} onClick={(e) => {
+        if (e.target === e.currentTarget) setPopupInfo(null);
+      }}>
         <div className={styles.popup}>
-          <button className={styles.closeButton} onClick={() => setPopupInfo(null)}>
-            <FaTimes />
-          </button>
-          <h3>{popupInfo.name}</h3>
-          <div className={styles.popupContent}>{renderValue(popupInfo.name, popupInfo.data)}</div>
+          <div className={styles.popupHeader}>
+            <button className={styles.closeButton} onClick={() => setPopupInfo(null)}>
+              <FaTimes />
+            </button>
+            <h3 className={styles.popupTitle}>
+              {getTypeIcon(popupInfo.type)} {popupInfo.name}
+            </h3>
+            <p className={styles.popupSubtitle}>{getTypeLabel(popupInfo.type)}</p>
+          </div>
+          <div className={styles.popupContent}>
+            {renderValue(popupInfo.name, popupInfo.data)}
+          </div>
         </div>
       </div>
     );

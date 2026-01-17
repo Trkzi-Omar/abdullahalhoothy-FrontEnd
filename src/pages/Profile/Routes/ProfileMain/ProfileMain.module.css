@@ -106,41 +106,359 @@
   background-color: #d0e8d0;
 }
 
+/* Modal Overlay with smooth animation */
 .popupOverlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease-out;
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Modal Container */
 .popup {
-  background-color: #ffffff;
-  padding: 20px;
-  border-radius: 8px;
-  max-width: 80%;
-  max-height: 80%;
-  overflow-y: auto;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fdf8 100%);
+  padding: 0;
+  border-radius: 16px;
+  max-width: min(600px, 90vw);
+  max-height: 85vh;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(17, 87, 64, 0.1);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Modal Header */
+.popupHeader {
+  background: linear-gradient(135deg, #115740 0%, #1a7a5a 100%);
+  padding: 20px 24px;
+  padding-right: 50px;
   position: relative;
 }
 
-.closeButton {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #006400;
+.popupTitle {
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  word-break: break-word;
+  line-height: 1.4;
 }
 
+.popupSubtitle {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.8rem;
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+/* Close Button */
+.closeButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+.closeButton:active {
+  transform: scale(0.95);
+}
+
+/* Modal Content */
 .popupContent {
-  margin-top: 20px;
+  padding: 24px;
+  overflow-y: auto;
+  max-height: calc(85vh - 80px);
+}
+
+/* Custom Scrollbar for Modal */
+.popupContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.popupContent::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 3px;
+}
+
+.popupContent::-webkit-scrollbar-thumb {
+  background: #115740;
+  border-radius: 3px;
+}
+
+.popupContent::-webkit-scrollbar-thumb:hover {
+  background: #1a7a5a;
+}
+
+/* Data Field Styles */
+.dataField {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  background: #f8faf9;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(17, 87, 64, 0.08);
+  transition: all 0.2s ease;
+}
+
+.dataField:hover {
+  background: #f0f7f4;
+  border-color: rgba(17, 87, 64, 0.15);
+}
+
+.dataFieldLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #115740;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.dataFieldValue {
+  font-size: 0.9rem;
+  color: #2d3748;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+/* Color Preview */
+.colorPreview {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.colorSwatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Progress Bar */
+.progressContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.progressBar {
+  flex: 1;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #115740 0%, #489E46 100%);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.progressText {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #115740;
+  min-width: 45px;
+  text-align: right;
+}
+
+/* Boolean Badge */
+.booleanBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.booleanTrue {
+  background: rgba(72, 158, 70, 0.15);
+  color: #2f7c2d;
+}
+
+.booleanFalse {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+/* Link Field */
+.linkValue {
+  color: #115740;
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.linkValue:hover {
+  color: #489E46;
+  text-decoration: underline;
+}
+
+/* Nested Data Section */
+.nestedSection {
+  background: #ffffff;
+  border: 1px solid rgba(17, 87, 64, 0.12);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.nestedHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #f0f7f4 0%, #e8f5e9 100%);
+  border-bottom: 1px solid rgba(17, 87, 64, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nestedHeader:hover {
+  background: linear-gradient(135deg, #e8f5e9 0%, #dcedc8 100%);
+}
+
+.nestedTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #115740;
+  margin: 0;
+}
+
+.nestedBadge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #ffffff;
+  background: #115740;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+.nestedContent {
+  padding: 16px;
+}
+
+/* Date Display */
+.dateValue {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dateMain {
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.dateRelative {
+  font-size: 0.75rem;
+  color: #718096;
+}
+
+/* Status Indicator */
+.statusIndicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.statusActive {
+  background: #22c55e;
+}
+
+.statusInactive {
+  background: #94a3b8;
+  animation: none;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 32px 16px;
+  color: #718096;
+}
+
+.emptyStateIcon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.emptyStateText {
+  font-size: 0.9rem;
 }
 
 .profileHeader {

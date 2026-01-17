@@ -75,7 +75,7 @@ export const FULL_REPORT_STEP_DEFINITIONS = [
   {
     id: 7,
     title: 'Current Location',
-    description: 'Set your current position',
+    description: 'Set your current position (optional)',
     content: 'current-location',
     isAdvanced: true,
   },
@@ -91,38 +91,44 @@ export const LOCATION_REPORT_STEP_DEFINITIONS = [
   },
   {
     id: 2,
-    title: 'Current Location',
-    description: 'Set your current position',
-    content: 'current-location',
-  },
-  {
-    id: 3,
     title: 'Segment Selection',
     description: 'Select segment type',
     content: 'segment-selection',
   },
   {
-    id: 4,
+    id: 3,
     title: 'Delivery vs In-Store',
     description: 'Set delivery preferences',
     content: 'delivery-in-store',
     isAdvanced: true,
   },
   {
-    id: 5,
+    id: 4,
     title: 'Evaluation Metrics',
     description: 'Set importance weights',
     content: 'evaluation-metrics',
     isAdvanced: true,
   },
   {
-    id: 6,
+    id: 5,
     title: 'Set Attributes',
     description: 'Set required attributes',
     content: 'attributes',
     isAdvanced: true,
   },
-  { id: 7, title: 'Report Tier', description: 'Choose report tier', content: 'report-tier' },
+  {
+    id: 6,
+    title: 'Custom Location',
+    description: 'Location to evaluate (required)',
+    content: 'custom-locations',
+  },
+  {
+    id: 7,
+    title: 'Current Location',
+    description: 'Set your current position (optional)',
+    content: 'current-location',
+  },
+  { id: 8, title: 'Report Tier', description: 'Choose report tier', content: 'report-tier' },
 ];
 
 export const getInitialFormData = (

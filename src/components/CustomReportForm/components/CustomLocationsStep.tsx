@@ -15,6 +15,7 @@ interface CustomLocationsStepProps {
   onCustomLocationSelect: (index: number, newLocation: { lat: number; lng: number }) => void;
   businessConfig?: BusinessTypeConfig | null;
   disabled?: boolean;
+  isRequired?: boolean;
 }
 
 const CustomLocationsStep = ({
@@ -25,6 +26,7 @@ const CustomLocationsStep = ({
   onCustomLocationSelect,
   businessConfig,
   disabled = false,
+  isRequired = false,
 }: CustomLocationsStepProps) => {
   const config = businessConfig ? getBusinessTypeConfig(businessConfig) : null;
 
@@ -36,11 +38,15 @@ const CustomLocationsStep = ({
     <div className="space-y-4 animate-fade-in-up">
       <div className="text-center mb-4">
         <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">
-          Custom Locations <span className="text-sm font-normal text-gray-500">(Optional)</span>
+          {isRequired ? 'Location to Evaluate' : 'Custom Locations'}{' '}
+          <span className={`text-sm font-normal ${isRequired ? 'text-red-500' : 'text-gray-500'}`}>
+            ({isRequired ? 'Required' : 'Optional'})
+          </span>
         </h3>
         <p className="text-sm text-gray-600">
-          Add specific locations you want to analyze for {config.displayName.toLowerCase()}{' '}
-          placement
+          {isRequired
+            ? `Select the location you want to evaluate for ${config.displayName.toLowerCase()} potential`
+            : `Add specific locations you want to analyze for ${config.displayName.toLowerCase()} placement`}
         </p>
       </div>
 

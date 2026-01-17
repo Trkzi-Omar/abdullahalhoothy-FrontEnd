@@ -342,14 +342,17 @@ const CustomReportForm = () => {
       }
     }
 
-    // Current location is required for location reports
+    // Current location is optional for all report types
+
+    // Custom locations are required for location reports, optional for full reports
     if (reportType === 'location') {
-      if (formData.current_location.lat === 0 && formData.current_location.lng === 0) {
-        newErrors.current_location = 'Please select your current location';
+      const hasValidCustomLocation = formData.custom_locations.some(
+        loc => loc.lat !== 0 && loc.lng !== 0
+      );
+      if (!hasValidCustomLocation) {
+        newErrors.custom_locations = 'Please select a location to evaluate';
       }
     }
-
-    // Custom locations are optional for all report types
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -396,9 +399,14 @@ const CustomReportForm = () => {
       }
     }
 
-    // Current location is required for location reports
+    // Current location is optional for all report types
+
+    // Custom locations are required for location reports, optional for full reports
     if (reportType === 'location') {
-      if (formData.current_location.lat === 0 && formData.current_location.lng === 0) {
+      const hasValidCustomLocation = formData.custom_locations.some(
+        loc => loc.lat !== 0 && loc.lng !== 0
+      );
+      if (!hasValidCustomLocation) {
         return false;
       }
     }
@@ -725,12 +733,8 @@ const CustomReportForm = () => {
         return !!formData.city_name;
 
       case 'current-location':
-        // Required for location reports (it's always shown in location reports)
-        // Optional for full reports (only shown in advanced mode)
-        if (reportType === 'location') {
-          return formData.current_location.lat !== 0 && formData.current_location.lng !== 0;
-        }
-        return true; // Optional for full reports
+        // Optional for both report types
+        return true;
 
       case 'evaluation-metrics':
         return (
@@ -743,7 +747,12 @@ const CustomReportForm = () => {
         return Math.abs(deliverySum - 1) < 0.001;
 
       case 'custom-locations':
-        return true; // Always optional
+        // Required for location reports, optional for full reports
+        if (reportType === 'location') {
+          // At least one valid custom location is required
+          return formData.custom_locations.some(loc => loc.lat !== 0 && loc.lng !== 0);
+        }
+        return true; // Optional for full reports
 
       case 'attributes':
         return true; // Always optional
@@ -912,6 +921,7 @@ const CustomReportForm = () => {
             onCustomLocationSelect={handleCustomLocationSelect}
             businessConfig={businessConfig}
             disabled={isSubmitting}
+            isRequired={reportType === 'location'}
           />
         );
 
@@ -924,7 +934,7 @@ const CustomReportForm = () => {
             businessType={businessType}
             businessConfig={businessConfig}
             disabled={isSubmitting}
-            isRequired={reportType === 'location'}
+            isRequired={false}
             reportType={reportType || undefined}
           />
         );

@@ -639,80 +639,8 @@ const CustomReportForm = () => {
         // Fallback to home if no URL at all
         navigate('/');
       }
-    } catch (error) {
-      console.error(`Error submitting ${businessType} report:`, error);
-
-      if (error && typeof error === 'object' && 'response' in error) {
-        const apiError = error as any;
-
-        // Safely extract error message
-        let errorMessage = 'An error occurred while submitting the report';
-        let errorDetail = '';
-
-        // Extract error from response
-        const responseData = apiError.response?.data;
-
-        if (responseData) {
-          // Handle string responses
-          if (typeof responseData === 'string') {
-            try {
-              // Try parsing if it's a JSON string
-              const parsed = JSON.parse(responseData);
-              errorMessage = parsed.detail || parsed.message || parsed.error || responseData;
-            } catch {
-              errorMessage = responseData;
-            }
-          }
-          // Handle object responses
-          else if (typeof responseData === 'object') {
-            errorMessage = responseData.detail || responseData.message || responseData.error || errorMessage;
-
-            // Extract additional error details if available
-            if (responseData.errors) {
-              errorDetail = typeof responseData.errors === 'string'
-                ? responseData.errors
-                : JSON.stringify(responseData.errors);
-            }
-          }
-        }
-
-        // Fallback to error message if nothing found in response
-        if (errorMessage === 'An error occurred while submitting the report' && apiError.message) {
-          errorMessage = apiError.message;
-        }
-
-        // Add context for specific error types
-        if (errorMessage.toLowerCase().includes('stripe customer not found')) {
-          errorMessage = 'Payment setup required: ' + errorMessage;
-          errorDetail = 'Please ensure you have a valid payment method configured in your account settings.';
-        } else if (errorMessage.toLowerCase().includes('payment') || errorMessage.toLowerCase().includes('billing')) {
-          if (!errorDetail) {
-            errorDetail = 'Please check your payment method and try again.';
-          }
-        }
-
-        // Special handling for location report payment errors
-        if (reportType === 'location') {
-          if (!hasUsedFreeLocationReport) {
-            errorDetail = 'Unable to process your free location report. Please try again or contact support.';
-          } else {
-            const lowerErrorMsg = errorMessage.toLowerCase();
-            if (lowerErrorMsg.includes('payment') || lowerErrorMsg.includes('billing') || lowerErrorMsg.includes('stripe')) {
-              errorDetail = 'Payment required for additional location reports ($150). Please ensure you have a payment method on file.';
-            }
-          }
-        }
-
-        // Set error with detail
-        setSubmitError(errorDetail ? `${errorMessage}|${errorDetail}` : errorMessage);
-      } else {
-        // For non-API errors, check if it has a detail property
-        console.error('Non-API error occurred:', error);
-        const errorDetail = error && typeof error === 'object' && 'detail' in error
-          ? (error as { detail: string }).detail
-          : 'An unexpected error occurred. Please try again.';
-        setSubmitError(errorDetail);
-      }
+    } catch (error: any) {
+      setSubmitError(error?.message || 'An unexpected error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

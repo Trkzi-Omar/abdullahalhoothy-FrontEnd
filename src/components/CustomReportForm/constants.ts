@@ -75,7 +75,7 @@ export const FULL_REPORT_STEP_DEFINITIONS = [
   {
     id: 7,
     title: 'Current Location',
-    description: 'Set your current position (optional)',
+    description: 'Set your current position',
     content: 'current-location',
     isAdvanced: true,
   },
@@ -119,13 +119,13 @@ export const LOCATION_REPORT_STEP_DEFINITIONS = [
   {
     id: 6,
     title: 'Custom Location',
-    description: 'Location to evaluate (required)',
+    description: 'Location to evaluate',
     content: 'custom-locations',
   },
   {
     id: 7,
     title: 'Current Location',
-    description: 'Set your current position (optional)',
+    description: 'Set your current position',
     content: 'current-location',
   },
   { id: 8, title: 'Report Tier', description: 'Choose report tier', content: 'report-tier' },

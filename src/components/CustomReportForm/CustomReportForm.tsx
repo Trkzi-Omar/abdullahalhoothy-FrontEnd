@@ -698,9 +698,12 @@ const CustomReportForm = () => {
         // Set error with detail
         setSubmitError(errorDetail ? `${errorMessage}|${errorDetail}` : errorMessage);
       } else {
-        // For non-API errors, don't show them to the user
+        // For non-API errors, check if it has a detail property
         console.error('Non-API error occurred:', error);
-        setSubmitError('An unexpected error occurred. Please try again.');
+        const errorDetail = error && typeof error === 'object' && 'detail' in error
+          ? (error as { detail: string }).detail
+          : 'An unexpected error occurred. Please try again.';
+        setSubmitError(errorDetail);
       }
     } finally {
       setIsSubmitting(false);

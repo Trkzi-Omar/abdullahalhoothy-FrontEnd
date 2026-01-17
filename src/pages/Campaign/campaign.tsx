@@ -1,9 +1,10 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { FaMapMarkedAlt, FaGift, FaFileAlt } from 'react-icons/fa';
 import {
   Report,
   fetchCampaigns,
   isTrySomethingElseReport,
+  createNavigationHandlers,
 } from './campaignCommon';
 import {
   SelectableCard,
@@ -21,58 +22,14 @@ export default function CampaignPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const navigate = useCallback((url: string) => {
-    // Normalize the URL - if it's a static report, use React Router
-    // Otherwise, use window.location.href
-    let normalizedUrl = url;
-    
-    try {
-      // If it's a full URL, extract the pathname
-      if (url.startsWith('http://') || url.startsWith('https://')) {
-        const urlObj = new URL(url);
-        normalizedUrl = urlObj.pathname;
-      }
-      // If it doesn't start with /, add it
-      if (!normalizedUrl.startsWith('/')) {
-        normalizedUrl = `/${normalizedUrl}`;
-      }
-    } catch (e) {
-      // If URL parsing fails, try to normalize manually
-      if (url.includes('/static/')) {
-        const staticIndex = url.indexOf('/static/');
-        normalizedUrl = url.substring(staticIndex);
-      } else if (!normalizedUrl.startsWith('/')) {
-        normalizedUrl = `/${normalizedUrl}`;
-      }
-    }
-    
-    // If it's a static report path, use React Router navigation
-    if (normalizedUrl.startsWith('/static/')) {
-      window.location.href = normalizedUrl;
-    } else {
-      window.location.href = url;
-    }
-  }, []);
+  const navigate = (url: string) => {
+    window.location.href = url;
+  };
 
-  // Create stable navigation handlers with useCallback
-  const handleBack = useCallback(() => {
-    setStep(prev => {
-      const newStep = Math.max(prev - 1, 0);
-      // Clear selected report when going back to step 0
-      if (newStep === 0) {
-        setSelectedReport(null);
-      }
-      return newStep;
-    });
-  }, []);
-
-  const handleFreeClick = useCallback((url: string) => {
-    navigate(url);
-  }, [navigate]);
-
-  const handleCustomClick = useCallback((url: string) => {
-    navigate(url);
-  }, [navigate]);
+  const { handleFreeClick, handleCustomClick, handleBack } = createNavigationHandlers(
+    navigate,
+    setStep
+  );
 
   useEffect(() => {
     setIsLoading(true);

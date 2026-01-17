@@ -55,7 +55,7 @@ function DetailedSegment({
   return (
     <div>
       {/* Header with Navigation */}
-      <div className="flex items-center justify-between py-6 bg-white">
+      <div className="flex items-center justify-between py-2">
         <button
           onClick={handlePrevious}
           disabled={segmentReportData?.findIndex(seg => seg.segment_id === selectedSegmentId) === 0}
@@ -150,7 +150,7 @@ function DetailedSegment({
         </div>
 
         {/* Content */}
-        <div className="py-8 min-h-[300px]">
+        <div className="py-2">
           {activeTab === 'who_they_are' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Left Column - Description */}

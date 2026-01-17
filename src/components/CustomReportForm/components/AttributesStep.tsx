@@ -13,7 +13,6 @@ interface SetAttributeStepProps {
   onInputChange: (field: string, value: any) => void;
   disabled?: boolean;
   inputCategories: string[];
-  // metricsData: BusinessCategoryMetrics | null;
 }
 
 const INCOME_OPTIONS = ['Low', 'Medium', 'High'];
@@ -24,7 +23,6 @@ const SetAttributeStep = ({
   onInputChange,
   disabled = false,
   inputCategories,
-  // metricsData,
 }: SetAttributeStepProps) => {
   const [age, setTargetAge] = useState<number>(formData.target_age || 0);
   const [targetIncome, setTargetIncome] = useState<string>(formData.target_income_level || '');

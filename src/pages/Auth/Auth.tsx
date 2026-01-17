@@ -1,6 +1,5 @@
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { useGoogleLogin } from '@react-oauth/google';
-import { FcGoogle } from 'react-icons/fc';
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { useAuth } from '../../context/AuthContext';
 import { performLogin, performGoogleLogin, isGuestUser } from '../../context/AuthContext';
 import { HttpReq } from '../../services/apiService';
@@ -132,13 +131,17 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleSuccess = async (tokenResponse: { access_token: string }) => {
+  const handleGoogleSuccess = async (response: CredentialResponse) => {
+    if (!response.credential) {
+      setAuthMessage('Google login failed: No credential received');
+      return;
+    }
     setIsLoading(true);
     setAuthMessage(null);
     setError(null);
 
     try {
-      await performGoogleLogin(setAuthResponse, tokenResponse.access_token, sourceLocal);
+      await performGoogleLogin(setAuthResponse, response.credential, sourceLocal);
 
       setTimeout(() => {
         const params = new URLSearchParams(location.search);
@@ -161,10 +164,6 @@ const Auth = () => {
     }
   };
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: handleGoogleSuccess,
-    onError: () => setAuthMessage('Google login failed'),
-  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -281,15 +280,13 @@ const Auth = () => {
                 <span className="px-3 text-gray-500 text-sm">or</span>
                 <div className="flex-1 border-t border-gray-300"></div>
               </div>
-              <button
-                type="button"
-                onClick={() => googleLogin()}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-3 px-4 py-4 text-lg font-semibold text-gray-800 bg-white border-2 border-gray-400 rounded-lg shadow-sm hover:border-gray-500 hover:shadow-lg transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
-              >
-                <FcGoogle className="text-2xl" />
-                Continue with Google
-              </button>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setAuthMessage('Google login failed')}
+                size="large"
+                width="100%"
+                text="continue_with"
+              />
             </>
           )}
           <div className="flex justify-between mt-4">

@@ -265,10 +265,16 @@ const Auth = () => {
       <div className="flex-1 flex items-center justify-center bg-[#115740] py-4 lg:py-0 min-h-0">
         <div className="bg-white p-6 sm:p-10 rounded-lg shadow-lg w-full max-w-md mx-4">
           <h2 className="text-2xl text-[#006400] mb-5 text-center">
-            {isPasswordReset ? 'Reset Password' : isLogin ? 'Login' : 'Register'}
+            {isPasswordReset
+              ? "Reset Password"
+              : isLogin
+                ? "Login"
+                : "Register"}
           </h2>
           {!!authMessage && (
-            <p className={`mb-4 text-center ${isRegistered ? 'text-green-600' : 'text-red-500'}`}>
+            <p
+              className={`mb-4 text-center ${isRegistered ? "text-green-600" : "text-red-500"}`}
+            >
               {authMessage}
             </p>
           )}
@@ -280,20 +286,22 @@ const Auth = () => {
                 <span className="px-3 text-gray-500 text-sm">or</span>
                 <div className="flex-1 border-t border-gray-300"></div>
               </div>
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => setAuthMessage('Google login failed')}
-                size="large"
-                width="100%"
-                text="continue_with"
-              />
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setAuthMessage("Google login failed")}
+                  size="large"
+                  width="100%"
+                  text="continue_with"
+                />
+              </div>
             </>
           )}
           <div className="flex justify-between mt-4">
             <button
               onClick={() => {
                 if (isLogin) {
-                  nav('/sign-up');
+                  nav("/sign-up");
                 } else {
                   setIsLogin(true);
                   setIsPasswordReset(false);
@@ -301,14 +309,14 @@ const Auth = () => {
               }}
               className="text-[#006400] text-sm hover:underline"
             >
-              {isLogin ? 'Need to register?' : 'Already have an account?'}
+              {isLogin ? "Need to register?" : "Already have an account?"}
             </button>
             {isLogin && (
               <button
                 onClick={() => setIsPasswordReset(!isPasswordReset)}
                 className="text-[#006400] text-sm hover:underline"
               >
-                {isPasswordReset ? 'Back to Login' : 'Forgot Password?'}
+                {isPasswordReset ? "Back to Login" : "Forgot Password?"}
               </button>
             )}
           </div>

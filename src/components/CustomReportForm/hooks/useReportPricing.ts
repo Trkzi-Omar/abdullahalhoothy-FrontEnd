@@ -318,7 +318,7 @@ export function useAdditionalCost(params: UseAdditionalCostParams): UseAdditiona
         setIsLoading(false);
       }
     }
-  }, [authResponse?.localId, params.country, params.city, params.reportTier, params.enabled]);
+  }, [authResponse?.localId, params.country, params.city, params.reportTier, params.enabled, params.datasets]);
 
   // Fetch on mount and when dependencies change (debounced)
   useEffect(() => {

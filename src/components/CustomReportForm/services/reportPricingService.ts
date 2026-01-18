@@ -270,7 +270,8 @@ class ReportPricingService {
       };
 
       const data = await this.fetchPrice(request);
-      return data.total_cost > 0 ? data.total_cost : null;
+      const additionalCost = data?.dataset_purchase_items?.reduce((acc, item) => acc + item.cost, 0);
+      return additionalCost && additionalCost > 0 ? additionalCost : null;
     } catch (error) {
       console.error('Error calculating additional cost:', error);
       return null;

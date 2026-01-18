@@ -75,6 +75,7 @@ const FetchDatasetForm = () => {
   const categoriesRef = useRef<HTMLDivElement>(null);
 
   const { backendZoom } = useMapContext();
+console.log("layerszzzzzzzzzzzzzzzzzzzzzzzzzzzzz", layers);
 
   useEffect(() => {
     resetFetchDatasetForm();

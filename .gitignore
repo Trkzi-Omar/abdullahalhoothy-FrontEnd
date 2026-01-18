@@ -30,6 +30,7 @@ dist-ssr
 pc_venv/
 **/.idea/
 **/.env
+*.env
 **/secret*
 src/.env
 mykeys*

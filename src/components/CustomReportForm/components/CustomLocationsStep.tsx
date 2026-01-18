@@ -12,7 +12,7 @@ interface CustomLocationsStepProps {
   errors: FormErrors;
   onAddCustomLocation: () => void;
   onRemoveCustomLocation: (index: number) => void;
-  onCustomLocationSelect: (index: number, newLocation: { lat: number; lng: number }) => void;
+  onCustomLocationSelect: (index: number, newLocation: { lat: number; lng: number } | CustomLocation) => void;
   businessConfig?: BusinessTypeConfig | null;
   disabled?: boolean;
   isRequired?: boolean;
@@ -85,11 +85,52 @@ const CustomLocationsStep = ({
 
             <MapLocationPicker
               city={formData.city_name}
-              onLocationSelect={newLocation => onCustomLocationSelect(index, newLocation)}
-              selectedLocation={location}
+              onLocationSelect={(newLocation) => {
+                // MapLocationPicker only returns lat/lng, so we merge with existing properties
+                onCustomLocationSelect(index, {
+                  ...newLocation,
+                  properties: {
+                    ...location.properties,
+                    price: location.properties?.price || 0,
+                  },
+                });
+              }}
+              selectedLocation={{
+                lat: location.lat || 0,
+                lng: location.lng || 0,
+              }}
               title={`Custom Location ${index + 1}`}
               error={errors[`custom_location_${index}`]}
             />
+
+            {/* Rent Price Input */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Rent Price (SAR)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={location.properties?.price || ''}
+                onChange={e => {
+                  const value = parseFloat(e.target.value) || 0;
+                  onCustomLocationSelect(index, {
+                    ...location,
+                    properties: {
+                      ...location.properties,
+                      price: value,
+                    },
+                  });
+                }}
+                disabled={disabled}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2"
+                placeholder="Enter rent price"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Yearly rent price for this location in Saudi Riyal
+              </p>
+            </div>
           </div>
         ))}
 

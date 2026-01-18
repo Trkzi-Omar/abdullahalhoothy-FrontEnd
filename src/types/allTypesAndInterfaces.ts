@@ -926,11 +926,18 @@ export interface RestaurantMetrics {
 export interface CustomLocation {
   lat: number;
   lng: number;
+  properties: {
+    price: number;
+  }
 }
 
 export interface CurrentLocation {
   lat: number;
   lng: number;
+  properties: {
+    price: number;
+    avg_order_value?: number;
+  }
 }
 
 // Generic interface for all business report types

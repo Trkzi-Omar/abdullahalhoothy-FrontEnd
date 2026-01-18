@@ -11,7 +11,7 @@ interface CurrentLocationStepProps {
   formData: CustomReportData;
   errors: FormErrors;
   onLocationSelect: (location: CurrentLocation) => void;
-  businessType: string;
+  businessType?: string;
   businessConfig?: BusinessTypeConfig | null;
   disabled?: boolean;
   isRequired?: boolean;
@@ -22,12 +22,12 @@ export const CurrentLocationStep = ({
   formData,
   errors,
   onLocationSelect,
-  businessType,
-  businessConfig,
   disabled = false,
   isRequired = false,
   reportType,
 }: CurrentLocationStepProps) => {
+  console.log("formData", formData);
+  
   const title = reportType === 'location' ? 'Your Location' : 'Current Location';
   const helpText = reportType === 'location'
     ? "Select the exact location you want to analyze. We'll compare it to our database."
@@ -62,11 +62,84 @@ export const CurrentLocationStep = ({
 
         <MapLocationPicker
           city={formData.city_name}
-          onLocationSelect={onLocationSelect}
-          selectedLocation={formData.current_location}
+          onLocationSelect={(location) => {
+            // MapLocationPicker only returns lat/lng, so we merge with existing properties
+            onLocationSelect({
+              ...location,
+              properties: {
+                ...formData.current_location?.properties,
+                price: formData.current_location?.properties?.price || 0,
+                avg_order_value: formData.current_location?.properties?.avg_order_value || 30,
+              },
+            });
+          }}
+          selectedLocation={{
+            lat: formData.current_location?.lat || 0,
+            lng: formData.current_location?.lng || 0,
+          }}
           title="Current Location"
           error={errors.current_location}
         />
+
+        {/* Average Order Value Input */}
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Average Order Value (SAR)
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={formData.current_location?.properties?.avg_order_value || 30}
+            onChange={e => {
+              const value = parseFloat(e.target.value) || 30;
+              onLocationSelect({
+                ...formData.current_location,
+                properties: {
+                  ...formData.current_location?.properties,
+                  price: formData.current_location?.properties?.price || 0,
+                  avg_order_value: value,
+                },
+              });
+            }}
+            disabled={disabled}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2"
+            placeholder="30"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            The average price per order in Saudi Riyal.
+          </p>
+        </div>
+
+        {/* Rent Price Input */}
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Rent Price (SAR)
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={formData.current_location?.properties?.price || ''}
+            onChange={e => {
+              const value = parseFloat(e.target.value) || 0;
+              onLocationSelect({
+                ...formData.current_location,
+                properties: {
+                  ...formData.current_location?.properties,
+                  price: value,
+                  avg_order_value: formData.current_location?.properties?.avg_order_value || 30,
+                },
+              });
+            }}
+            disabled={disabled}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
+            placeholder="Enter rent price"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Yearly rent price for this location in Saudi Riyal
+          </p>
+        </div>
       </div>
     </div>
   );

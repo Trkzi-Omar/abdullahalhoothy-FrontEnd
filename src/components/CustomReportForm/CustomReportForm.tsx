@@ -510,7 +510,10 @@ const CustomReportForm = () => {
     if (!formData) return;
     setFormData(prev => ({
       ...prev!,
-      custom_locations: [...prev!.custom_locations, { lat: 0, lng: 0 }],
+      custom_locations: [
+        ...prev!.custom_locations,
+        { lat: 0, lng: 0, properties: { price: 0 } },
+      ],
     }));
   };
 
@@ -524,13 +527,20 @@ const CustomReportForm = () => {
 
   // Memoized callback for custom location selection
   const handleCustomLocationSelect = useCallback(
-    (index: number, newLocation: { lat: number; lng: number }) => {
+    (index: number, newLocation: { lat: number; lng: number } | { lat: number; lng: number; properties?: { price?: number } }) => {
       setFormData(prev =>
         prev
           ? {
               ...prev,
               custom_locations: prev.custom_locations.map((loc, i) =>
-                i === index ? newLocation : loc
+                i === index
+                  ? {
+                      ...newLocation,
+                      properties: {
+                        price: (newLocation as any).properties?.price ?? loc.properties?.price ?? 0,
+                      },
+                    }
+                  : loc
               ),
             }
           : null
@@ -552,12 +562,18 @@ const CustomReportForm = () => {
 
   // Memoized callback for current location selection
   const handleCurrentLocationSelect = useCallback(
-    (newLocation: { lat: number; lng: number }) => {
+    (newLocation: { lat: number; lng: number } | { lat: number; lng: number; properties?: { price?: number; avg_order_value?: number } }) => {
       setFormData(prev =>
         prev
           ? {
               ...prev,
-              current_location: newLocation,
+              current_location: {
+                ...newLocation,
+                properties: {
+                  price: (newLocation as any).properties?.price ?? prev.current_location?.properties?.price ?? 0,
+                  avg_order_value: (newLocation as any).properties?.avg_order_value ?? prev.current_location?.properties?.avg_order_value ?? 30,
+                },
+              },
             }
           : null
       );
@@ -603,10 +619,17 @@ const CustomReportForm = () => {
             : formData.custom_locations.map(loc => ({
                 lat: loc.lat || 0,
                 lng: loc.lng || 0,
+                properties: {
+                  price: loc.properties?.price || 0,
+                },
               })),
         current_location: {
           lat: formData.current_location.lat || 0,
           lng: formData.current_location.lng || 0,
+          properties: {
+            price: formData.current_location.properties?.price || 0,
+            avg_order_value: formData.current_location.properties?.avg_order_value || 30,
+          },
         },
         single_location: reportType === 'location',
         report_tier:

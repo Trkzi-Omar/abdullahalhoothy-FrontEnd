@@ -96,8 +96,9 @@ const CustomReportForm = () => {
       try {
         const response = await apiRequest({
           url: urls.user_profile,
-          method: 'get',
+          method: 'POST',
           isAuthRequest: true,
+          body: { user_id: authResponse.localId },
         });
 
         const hasUsedFree = response?.data?.has_used_free_location_report || false;

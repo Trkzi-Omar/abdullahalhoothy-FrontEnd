@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import styles from './ProfileMain.module.css';
 import {
   FaTimes,
   FaSignOutAlt,
@@ -12,7 +11,6 @@ import {
   FaCheck,
   FaExternalLinkAlt,
   FaCalendarAlt,
-  FaClock,
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router';
 import urls from '../../../../urls.json';
@@ -138,13 +136,17 @@ const ProfileMain: React.FC = () => {
   // Render a single field value with smart formatting
   const renderFieldValue = (key: string, value: any): JSX.Element => {
     if (value === null || value === undefined) {
-      return <span className={styles.dataFieldValue}>—</span>;
+      return <span className="text-sm text-gray-700 break-words leading-relaxed">—</span>;
     }
 
     // Boolean values
     if (typeof value === 'boolean') {
       return (
-        <span className={`${styles.booleanBadge} ${value ? styles.booleanTrue : styles.booleanFalse}`}>
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+          value 
+            ? 'bg-green-100 text-green-800' 
+            : 'bg-red-100 text-red-600'
+        }`}>
           {value ? <FaCheck size={10} /> : <FaTimes size={10} />}
           {value ? 'Yes' : 'No'}
         </span>
@@ -155,21 +157,21 @@ const ProfileMain: React.FC = () => {
     if (typeof value === 'number') {
       if (key.toLowerCase().includes('progress')) {
         return (
-          <div className={styles.progressContainer}>
-            <div className={styles.progressBar}>
+          <div className="flex items-center gap-3 w-full">
+            <div className="flex-1 h-2 bg-gray-200 rounded overflow-hidden">
               <div 
-                className={styles.progressFill} 
+                className="h-full bg-gradient-to-r from-[#115740] to-[#489E46] rounded transition-all duration-500 ease-in-out" 
                 style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
               />
             </div>
-            <span className={styles.progressText}>{value}%</span>
+            <span className="text-sm font-semibold text-[#115740] min-w-[45px] text-right">{value}%</span>
           </div>
         );
       }
       if (key.toLowerCase().includes('count') || key.toLowerCase().includes('credits')) {
-        return <span className={styles.dataFieldValue}>{value.toLocaleString()}</span>;
+        return <span className="text-sm text-gray-700 break-words leading-relaxed">{value.toLocaleString()}</span>;
       }
-      return <span className={styles.dataFieldValue}>{value}</span>;
+      return <span className="text-sm text-gray-700 break-words leading-relaxed">{value}</span>;
     }
 
     // String values
@@ -178,12 +180,12 @@ const ProfileMain: React.FC = () => {
       if (isDateString(value)) {
         const { main, relative } = formatDate(value);
         return (
-          <div className={styles.dateValue}>
-            <span className={styles.dateMain}>
-              <FaCalendarAlt size={12} style={{ marginRight: 6, opacity: 0.6 }} />
+          <div className="flex flex-col gap-0.5">
+            <span className="font-medium text-gray-700">
+              <FaCalendarAlt size={12} className="inline mr-1.5 opacity-60" />
               {main}
             </span>
-            {relative && <span className={styles.dateRelative}>{relative}</span>}
+            {relative && <span className="text-xs text-gray-500">{relative}</span>}
           </div>
         );
       }
@@ -191,8 +193,8 @@ const ProfileMain: React.FC = () => {
       // Color values
       if (isColor(value)) {
         return (
-          <span className={styles.colorPreview}>
-            <span className={styles.colorSwatch} style={{ backgroundColor: value }} />
+          <span className="inline-flex items-center gap-2">
+            <span className="w-5 h-5 rounded border-2 border-black/10 shadow-sm" style={{ backgroundColor: value }} />
             <span>{value}</span>
           </span>
         );
@@ -205,17 +207,17 @@ const ProfileMain: React.FC = () => {
             href={value} 
             target="_blank" 
             rel="noopener noreferrer" 
-            className={styles.linkValue}
+            className="text-[#115740] no-underline font-medium inline-flex items-center gap-1.5 transition-all duration-200 hover:text-[#489E46] hover:underline"
           >
             View Report <FaExternalLinkAlt size={10} />
           </a>
         );
       }
 
-      return <span className={styles.dataFieldValue}>{value}</span>;
+      return <span className="text-sm text-gray-700 break-words leading-relaxed">{value}</span>;
     }
 
-    return <span className={styles.dataFieldValue}>{String(value)}</span>;
+    return <span className="text-sm text-gray-700 break-words leading-relaxed">{String(value)}</span>;
   };
 
   // Render nested object data
@@ -224,9 +226,9 @@ const ProfileMain: React.FC = () => {
     
     if (entries.length === 0) {
       return (
-        <div className={styles.emptyState}>
-          <div className={styles.emptyStateIcon}>📭</div>
-          <div className={styles.emptyStateText}>No data available</div>
+        <div className="text-center py-8 px-4 text-gray-500">
+          <div className="text-4xl mb-3 opacity-50">📭</div>
+          <div className="text-sm">No data available</div>
         </div>
       );
     }
@@ -241,12 +243,12 @@ const ProfileMain: React.FC = () => {
       return (
         <div>
           {entries.map(([nestedKey, nestedValue], index) => (
-            <div key={nestedKey} className={styles.nestedSection}>
-              <div className={styles.nestedHeader}>
-                <h4 className={styles.nestedTitle}>{formatLabel(nestedKey)}</h4>
-                <span className={styles.nestedBadge}>#{index + 1}</span>
+            <div key={nestedKey} className="bg-white border border-[#115740]/12 rounded-xl mb-4 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3.5 bg-gradient-to-r from-[#f0f7f4] to-[#e8f5e9] border-b border-[#115740]/8 cursor-pointer transition-all duration-200 hover:from-[#e8f5e9] hover:to-[#dcedc8]">
+                <h4 className="text-sm font-semibold text-[#115740] m-0">{formatLabel(nestedKey)}</h4>
+                <span className="text-xs font-medium text-white bg-[#115740] px-2.5 py-0.5 rounded-xl">#{index + 1}</span>
               </div>
-              <div className={styles.nestedContent}>
+              <div className="p-4">
                 {renderDataFields(nestedValue as Record<string, any>)}
               </div>
             </div>
@@ -277,11 +279,11 @@ const ProfileMain: React.FC = () => {
           // Skip rendering nested objects here, handle separately
           if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
             return (
-              <div key={key} className={styles.nestedSection}>
-                <div className={styles.nestedHeader}>
-                  <h4 className={styles.nestedTitle}>{formatLabel(key)}</h4>
+              <div key={key} className="bg-white border border-[#115740]/12 rounded-xl mb-4 overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3.5 bg-gradient-to-r from-[#f0f7f4] to-[#e8f5e9] border-b border-[#115740]/8 cursor-pointer transition-all duration-200 hover:from-[#e8f5e9] hover:to-[#dcedc8]">
+                  <h4 className="text-sm font-semibold text-[#115740] m-0">{formatLabel(key)}</h4>
                 </div>
-                <div className={styles.nestedContent}>
+                <div className="p-4">
                   {renderNestedObject(value)}
                 </div>
               </div>
@@ -289,8 +291,8 @@ const ProfileMain: React.FC = () => {
           }
 
           return (
-            <div key={key} className={styles.dataField}>
-              <span className={styles.dataFieldLabel}>{formatLabel(key)}</span>
+            <div key={key} className="flex flex-col px-4 py-3 bg-[#f8faf9] rounded-lg mb-3 border border-[#115740]/8 transition-all duration-200 hover:bg-[#f0f7f4] hover:border-[#115740]/15">
+              <span className="text-[0.7rem] font-semibold text-[#115740] uppercase tracking-wide mb-1.5">{formatLabel(key)}</span>
               {renderFieldValue(key, value)}
             </div>
           );
@@ -302,9 +304,9 @@ const ProfileMain: React.FC = () => {
   const renderValue = (key: string, value: any): JSX.Element => {
     if (value === null || value === undefined) {
       return (
-        <div className={styles.emptyState}>
-          <div className={styles.emptyStateIcon}>📭</div>
-          <div className={styles.emptyStateText}>No data available</div>
+        <div className="text-center py-8 px-4 text-gray-500">
+          <div className="text-4xl mb-3 opacity-50">📭</div>
+          <div className="text-sm">No data available</div>
         </div>
       );
     }
@@ -313,11 +315,11 @@ const ProfileMain: React.FC = () => {
       return (
         <div>
           {value.map((item, index) => (
-            <div key={index} className={styles.nestedSection}>
-              <div className={styles.nestedHeader}>
-                <h4 className={styles.nestedTitle}>Item {index + 1}</h4>
+            <div key={index} className="bg-white border border-[#115740]/12 rounded-xl mb-4 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3.5 bg-gradient-to-r from-[#f0f7f4] to-[#e8f5e9] border-b border-[#115740]/8 cursor-pointer transition-all duration-200 hover:from-[#e8f5e9] hover:to-[#dcedc8]">
+                <h4 className="text-sm font-semibold text-[#115740] m-0">Item {index + 1}</h4>
               </div>
-              <div className={styles.nestedContent}>
+              <div className="p-4">
                 {typeof item === 'object' ? renderNestedObject(item) : renderFieldValue(key, item)}
               </div>
             </div>
@@ -331,8 +333,8 @@ const ProfileMain: React.FC = () => {
     }
 
     return (
-      <div className={styles.dataField}>
-        <span className={styles.dataFieldLabel}>{formatLabel(key)}</span>
+      <div className="flex flex-col px-4 py-3 bg-[#f8faf9] rounded-lg mb-3 border border-[#115740]/8 transition-all duration-200 hover:bg-[#f0f7f4] hover:border-[#115740]/15">
+        <span className="text-[0.7rem] font-semibold text-[#115740] uppercase tracking-wide mb-1.5">{formatLabel(key)}</span>
         {renderFieldValue(key, value)}
       </div>
     );
@@ -364,20 +366,26 @@ const ProfileMain: React.FC = () => {
     if (!popupInfo) return null;
 
     return (
-      <div className={styles.popupOverlay} onClick={(e) => {
-        if (e.target === e.currentTarget) setPopupInfo(null);
-      }}>
-        <div className={styles.popup}>
-          <div className={styles.popupHeader}>
-            <button className={styles.closeButton} onClick={() => setPopupInfo(null)}>
+      <div 
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[9999] animate-fade-in"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setPopupInfo(null);
+        }}
+      >
+        <div className="bg-gradient-to-br from-white to-[#f8fdf8] p-0 rounded-2xl max-w-[min(600px,90vw)] max-h-[85vh] overflow-hidden relative shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),0_0_0_1px_rgba(17,87,64,0.1)] animate-slide-up">
+          <div className="bg-gradient-to-r from-[#115740] to-[#1a7a5a] px-6 py-5 pr-12 relative">
+            <button 
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-white/15 border-none rounded-lg text-base cursor-pointer text-white transition-all duration-200 hover:bg-white/25 hover:scale-105 active:scale-95" 
+              onClick={() => setPopupInfo(null)}
+            >
               <FaTimes />
             </button>
-            <h3 className={styles.popupTitle}>
+            <h3 className="text-white text-lg font-semibold m-0 break-words leading-snug">
               {getTypeIcon(popupInfo.type)} {popupInfo.name}
             </h3>
-            <p className={styles.popupSubtitle}>{getTypeLabel(popupInfo.type)}</p>
+            <p className="text-white/75 text-xs mt-1 font-normal">{getTypeLabel(popupInfo.type)}</p>
           </div>
-          <div className={styles.popupContent}>
+          <div className="p-6 overflow-y-auto max-h-[calc(85vh-80px)] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-track]:rounded [&::-webkit-scrollbar-thumb]:bg-[#115740] [&::-webkit-scrollbar-thumb]:rounded [&::-webkit-scrollbar-thumb:hover]:bg-[#1a7a5a]">
             {renderValue(popupInfo.name, popupInfo.data)}
           </div>
         </div>
@@ -418,26 +426,26 @@ const ProfileMain: React.FC = () => {
     };
 
     return (
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>
+      <div className="mb-5">
+        <h3 className="text-xl text-[#006400] mt-5 mb-2.5">
           {icon} {title}
         </h3>
         {Object.entries(items).length > 0 ? (
-          <ul className={styles.itemList}>
+          <ul className="list-none p-0">
             {Object.entries(items).map(([key, value]) => (
-              <li key={key} className={styles.itemName}>
+              <li key={key} className="flex justify-between items-center px-2.5 py-1.5 mb-1.5 bg-[#f0f8f0] rounded cursor-pointer min-w-0 break-words overflow-wrap-anywhere transition-colors hover:bg-[#d0e8d0]">
                 <span 
                   onClick={() => handleItemClick(type, key, value)}
-                  className={styles.itemText}
+                  className="flex-1 min-w-0 break-words overflow-wrap-anywhere hyphens-auto"
                 >
                   {value.layer_name || value.catalog_name || value.name || key}
                 </span>
                 {/* Conditionally render the delete icon */}
                 {type.includes('layer') || type.includes('catalog') ? (
-                  <div className={styles.iconContainer}>
-                    <div className={styles.verticalDivider} />
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                    <div className="h-5 w-px bg-gray-300" />
                     <FaTrash
-                      className={styles.deleteIcon}
+                      className="cursor-pointer text-[#ff4d4f] hover:text-[#ff7875]"
                       onClick={() => handleDeleteClick(type, key, value)} // Pass type here
                     />
                   </div>
@@ -461,7 +469,7 @@ const ProfileMain: React.FC = () => {
     setTimeout(() => navigate('/auth'), 500);
     return null;
   }
-  if (isLoading) return <div className={styles.loading}>Loading profile...</div>;
+  if (isLoading) return <div className="text-lg text-center mt-12 text-[#006400]">Loading profile...</div>;
 
   if (error) {
     setTimeout(() => navigate('/auth'), 500);
@@ -475,29 +483,29 @@ const ProfileMain: React.FC = () => {
 
   return (
     <div className="w-full h-full overflow-y-auto lg:px-10 px-4 text-sm">
-      <div className="m-5 mx-auto p-5 bg-[#f0f8f0] rounded-lg lg:shadow-md shadow-sm">
+      <div className="m-5 mx-auto p-5 bg-[#f0f8f0] rounded-lg shadow-md">
         <div className="flex justify-between items-center mb-5">
-          <h2 className="lg:text-2xl text-lg text-[#006400] mb-5 text-center">User Profile</h2>
+          <h2 className="text-2xl text-[#006400] mb-5 text-center">User Profile</h2>
           <button
             onClick={handleLogout}
-            className="flex items-center px-4 h-9 lg:text-lg text-base bg-red-600 text-white rounded cursor-pointer  hover:bg-red-700"
+            className="flex items-center px-4 py-2 bg-[#f44336] text-white border-none rounded cursor-pointer text-base hover:bg-[#d32f2f]"
           >
             <FaSignOutAlt className="mr-2" /> Logout
           </button>
         </div>
         <div className="bg-white p-5 rounded-lg mb-5">
-          <div className="flex items-start mb-2">
-            <FaUser className="mr-2 text-[#006400]" />
-            <span className="font-bold mr-1 min-w-[100px]">Username:</span>
+          <div className="flex items-start mb-2.5">
+            <FaUser className="mr-2.5 text-[#006400]" />
+            <span className="font-bold mr-1.5 min-w-[100px]">Username:</span>
             {profile.username}
           </div>
-          <div className="flex items-start mb-2">
-            <FaEnvelope className="mr-2 text-[#006400]" />
-            <span className="font-bold mr-1 min-w-[100px]">Email:</span>
+          <div className="flex items-start mb-2.5">
+            <FaEnvelope className="mr-2.5 text-[#006400]" />
+            <span className="font-bold mr-1.5 min-w-[100px]">Email:</span>
             {profile.email}
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-start items-start mb-2 gap-2">
-            <span className="font-bold mr-1 min-w-[100px]">Phone:</span>
+          <div className="flex items-start mb-2.5">
+            <span className="font-bold mr-1.5 min-w-[100px]">Phone:</span>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center flex-1 gap-2 w-full sm:w-auto">
               <input
                 type="tel"
@@ -561,7 +569,7 @@ const ProfileMain: React.FC = () => {
               </button>
             </div>
           </div>
-          <div className="flex items-start mb-2">
+          <div className="flex items-start mb-2.5">
             <label className="flex items-center mb-4 cursor-pointer">
               <input
                 type="checkbox"
@@ -595,8 +603,8 @@ const ProfileMain: React.FC = () => {
             </label>
           </div>
           {profile.maker && Object.keys(profile.maker).length > 0 && (
-            <div>
-              <h3 className="text-lg text-[#006400] mt-5 mb-2">Maker Information</h3>
+            <div className="mb-5">
+              <h3 className="text-xl text-[#006400] mt-5 mb-2.5">Maker Information</h3>
               {Object.entries(profile.maker).map(([key, value]) => {
                 const title = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 let icon = <FaDatabase />;

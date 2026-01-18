@@ -229,7 +229,6 @@ function CheckoutModal({
   const checkoutItemCount =
     checkout.datasets.length + checkout.intelligences.length + (checkout.report ? 1 : 0);
   const totalItems = apiItemCount > 0 ? apiItemCount : checkoutItemCount;
-console.log(reportTiers , 'reportTiers')
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
       <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">

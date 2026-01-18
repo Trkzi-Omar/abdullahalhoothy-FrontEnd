@@ -7,6 +7,13 @@ import {
   CountryIso2
 } from 'react-international-phone';
 import 'react-international-phone/style.css';
+import { 
+  MdKeyboardArrowDown, 
+  MdSearch, 
+  MdSentimentDissatisfied, 
+  MdErrorOutline, 
+  MdCheckCircle 
+} from 'react-icons/md';
 
 interface PhoneInputProps {
   value: string;
@@ -198,14 +205,9 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
               <span className="text-gray-600 text-sm font-medium">
                 +{currentCountry.dialCode}
               </span>
-              <svg 
+              <MdKeyboardArrowDown 
                 className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              />
             </>
           )}
         </button>
@@ -242,14 +244,9 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           {/* Search Input */}
           <div className="p-3 border-b border-gray-100 bg-gray-50/50">
             <div className="relative">
-              <svg 
+              <MdSearch 
                 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              />
               <input
                 ref={searchInputRef}
                 type="text"
@@ -310,9 +307,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
             {/* No Results */}
             {filteredCountries.preferred.length === 0 && filteredCountries.rest.length === 0 && (
               <div className="px-4 py-8 text-center text-gray-500 text-sm">
-                <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <MdSentimentDissatisfied className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                 No countries found
               </div>
             )}
@@ -323,9 +318,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
       {/* Error Message */}
       {error && (
         <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
+          <MdErrorOutline className="w-4 h-4" />
           {error}
         </p>
       )}
@@ -363,9 +356,7 @@ const CountryOption: React.FC<CountryOptionProps> = ({ country, isSelected, onCl
         +{country.dialCode}
       </span>
       {isSelected && (
-        <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-        </svg>
+        <MdCheckCircle className="w-4 h-4 text-blue-600 flex-shrink-0" />
       )}
     </button>
   );

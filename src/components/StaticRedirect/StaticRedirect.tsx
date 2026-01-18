@@ -18,20 +18,9 @@ const StaticRedirect = () => {
       const baseUrl = apiUrl.replace('/fastapi', '');
       const urlObj = new URL(baseUrl);
       backendHost = `${urlObj.protocol}//${urlObj.host}`;
-    } catch (e) {
-      // Fallback: Determine the backend URL based on the current hostname
-      const currentHost = window.location.hostname;
-      
-      if (currentHost === 'localhost') {
-        backendHost = 'http://localhost:8000';
-      } else if (currentHost === '37.27.195.216') {
-        backendHost = 'http://37.27.195.216:8000';
-      } else if (currentHost === 's-locator.northernacs.com') {
-        backendHost = 'http://s-locator.northernacs.com:8000';
-      } else {
-        // Fallback to localhost
-        backendHost = 'http://localhost:8000';
-      }
+    } catch {
+      // Fallback: Use current protocol and hostname with backend port
+      backendHost = `${window.location.protocol}//${window.location.hostname}:8000`;
     }
 
     // Ensure filePath doesn't already include /static/

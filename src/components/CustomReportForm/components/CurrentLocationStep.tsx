@@ -26,7 +26,6 @@ export const CurrentLocationStep = ({
   isRequired = false,
   reportType,
 }: CurrentLocationStepProps) => {
-  console.log("formData", formData);
   
   const title = reportType === 'location' ? 'Your Location' : 'Current Location';
   const helpText = reportType === 'location'

@@ -50,7 +50,7 @@ const StaticRedirect = () => {
         className="w-full h-full border-none"
         title="Static Content"
         allow="fullscreen"
-        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
+        sandbox="allow-same-origin allow-forms allow-popups allow-modals"
       />
     </div>
   );

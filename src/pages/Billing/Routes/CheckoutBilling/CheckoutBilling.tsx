@@ -250,12 +250,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
           reportKey: pkg.report_tier as ReportTier,
           perks: extractPerks(pkg.description),
           intelligences: pkg.intelligences ? {
-            ai: pkg.intelligences.ai ?? false,
-            income: pkg.intelligences.income ?? false,
-            population: pkg.intelligences.population ?? false,
-            realEstate: pkg.intelligences.realEstate ?? false,
-            competition: pkg.intelligences.competition ?? false,
-            poi: pkg.intelligences.poi ?? false,
+            ...pkg.intelligences
           } : {
             // Map from included_intelligences array
             ai: isPremium, // AI is typically included in premium tiers

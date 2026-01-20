@@ -1,5 +1,5 @@
 import SideBar from '../SideBar/SideBar';
-import { Route, Routes, useLocation } from 'react-router';
+import { Route, Routes, useLocation, Navigate } from 'react-router';
 import NotFound from '../../pages/NotFound/NotFound';
 import Dataview from '../../pages/Dataview/Dataview';
 import Auth from '../../pages/Auth/Auth';
@@ -19,7 +19,6 @@ import PaymentMethod from '../../pages/PaymentMethod/PaymentMethod';
 import MobileNavbar from '../MobileNavbar/MobileNavbar';
 import Wallet from '../../pages/Wallet/Wallet';
 import AddFunds from '../../pages/AddFunds/AddFunds';
-import SignUp from '../../pages/Auth/SignUp';
 import CampaignPage from '../../pages/Campaign/campaign';
 import PlansPage from '../../pages/Plans/Plans';
 import StaticRedirect from '../StaticRedirect/StaticRedirect';
@@ -48,8 +47,8 @@ const Layout = () => {
         <Route path="*" element={<NotFound />} />
         <Route path={'/tabularView'} element={<></>} />
         <Route path="/auth" element={<Auth />} />
-        <Route path="/sign-up" element={<SignUp />} />
-        <Route path="/sign-up/:source" element={<SignUp />} />
+        <Route path="/sign-up" element={<Navigate to="/auth?mode=register" replace />} />
+        <Route path="/sign-up/:source" element={<Navigate to="/auth?mode=register" replace />} />
         <Route path="/" element={<Home />} />
         <Route path="/:source" element={<Home />} />
         <Route path={'/profile/*'} element={<Profile />} />

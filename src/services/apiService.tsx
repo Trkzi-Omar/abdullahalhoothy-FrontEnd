@@ -9,6 +9,9 @@ export const apiClient: AxiosInstance = axios.create({
   },
 });
 
+/**
+ * @deprecated Use apiClient instead
+ */
 export async function HttpReq<T>(
   end_point: string,
   setResData: (data: T) => void,

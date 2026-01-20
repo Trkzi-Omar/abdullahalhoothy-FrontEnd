@@ -14,10 +14,6 @@ export interface FormData {
   source?: string;
 }
 
-export interface FormErrors {
-  [key: string]: string;
-}
-
 export interface SignUpProps {
   onSubmit?: (formData: FormData) => void;
 }

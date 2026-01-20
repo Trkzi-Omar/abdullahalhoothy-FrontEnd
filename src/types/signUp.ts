@@ -13,7 +13,3 @@ export interface FormData {
   userType?: string;
   teamId?: string;
 }
-
-export interface FormErrors {
-  [key: string]: string;
-}

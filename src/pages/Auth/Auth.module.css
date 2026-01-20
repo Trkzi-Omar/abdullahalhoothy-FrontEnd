@@ -38,9 +38,15 @@
 .inputGroup {
   display: flex;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   background-color: #f0f8f0;
   border-radius: 4px;
+}
+
+@media (min-width: 640px) {
+  .inputGroup {
+    margin-bottom: 15px;
+  }
 }
 
 .icon {
@@ -50,15 +56,21 @@
 
 .authInput {
   flex: 1;
-  padding: 10px;
+  padding: 8px 10px;
   font-size: 16px;
   border: none;
   background-color: transparent;
   outline: none;
 }
 
+@media (min-width: 640px) {
+  .authInput {
+    padding: 10px;
+  }
+}
+
 .authButton {
-  padding: 12px;
+  padding: 10px 12px;
   font-size: 16px;
   color: #ffffff;
   background-color: #155315;
@@ -66,6 +78,12 @@
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s;
+}
+
+@media (min-width: 640px) {
+  .authButton {
+    padding: 12px;
+  }
 }
 
 .authButton:hover {

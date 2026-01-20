@@ -1,324 +1,192 @@
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
-import { useAuth } from '../../context/AuthContext';
-import { performLogin, performGoogleLogin, isGuestUser } from '../../context/AuthContext';
-import { HttpReq } from '../../services/apiService';
+import { useGoogleLogin } from '@react-oauth/google';
+import { useAuth, performGoogleLogin, isGuestUser } from '../../context/AuthContext';
 import { useEffect, useState } from 'react';
-import urls from '../../urls.json';
-import { AuthResponse } from '../../types/allTypesAndInterfaces';
-import styles from './Auth.module.css';
-import { FaEnvelope, FaLock, FaUser } from 'react-icons/fa';
+import { FcGoogle } from 'react-icons/fc';
+import MarketingContent from '../../components/Auth/MarketingContent';
+import LoginForm from '../../components/Auth/LoginForm';
+import RegisterForm from '../../components/Auth/RegisterForm';
+import ResetPasswordForm from '../../components/Auth/ResetPasswordForm';
+
+type AuthMode = 'login' | 'register' | 'reset';
 
 const Auth = () => {
   const nav = useNavigate();
   const location = useLocation();
   const { authLoading, isAuthenticated, setAuthResponse, authResponse, sourceLocal } = useAuth();
-
-  // RENDER STATE
-  const [isLogin, setIsLogin] = useState(true);
-  const [isPasswordReset, setIsPasswordReset] = useState(false);
-
-  // INPUT
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [username, setName] = useState('');
-
-  // MESSAGES
-  const [authMessage, setAuthMessage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [requestId, setRequestId] = useState<string>('');
-  const [error, setError] = useState<Error | null>(null);
-
-  const [isRegistered, setIsRegistered] = useState(false);
-  const [isAuthorized, setIsAuthorized] = useState(false);
-
   const [searchParams] = useSearchParams();
-  const authQuery = searchParams.get('auth');
+  const modeQuery = searchParams.get('mode');
 
-  const handleLogin = async (email: string, password: string) => {
-    try {
-      await performLogin(setAuthResponse, { isGuest: false, email, password });
-
-      setTimeout(() => {
-        const params = new URLSearchParams(location.search);
-        const redirectUrl = params.get('redirect_url');
-        if (redirectUrl) {
-          window.location.replace(redirectUrl);
-        } else {
-          nav('/');
-        }
-      }, 100);
-    } catch (e: any) {
-      // Handle errors
-      if (e.response?.status === 401) {
-        setIsAuthorized(false);
-        setAuthMessage(e.response.data.detail || 'Unauthorized access');
-      } else {
-        setError(e);
-      }
-    }
+  const getInitialMode = (): AuthMode => {
+    if (modeQuery === 'register' || modeQuery === 'reset') return modeQuery;
+    return 'login';
   };
 
-  const handleRegistration = async (email: string, password: string, username: string) => {
-    await HttpReq(
-      urls.create_user_profile,
-      (data: any) => {
-        if (Array.isArray(data) && data.length > 0) {
-          const userProfileResponse = data[0];
+  const [mode, setMode] = useState<AuthMode>(getInitialMode);
+  const [googleError, setGoogleError] = useState<string | null>(null);
 
-          if (userProfileResponse?.data?.user_id) {
-            setAuthResponse({
-              localId: userProfileResponse.data.user_id,
-              email: email,
-              displayName: username,
-            } as AuthResponse);
-            setAuthMessage(
-              'Registration successful! Please check your email to verify your account.'
-            );
-            setIsRegistered(true);
-          } else {
-            setError(new Error('Invalid registration response'));
-            setAuthMessage('Registration failed. Please try again.');
-          }
-        } else if (data?.detail) {
-          setError(new Error(data.detail));
-          setAuthMessage(data.detail);
-        } else {
-          setError(new Error('Registration failed - invalid response format'));
-          setAuthMessage('Registration failed. Please try again.');
-        }
-      },
-      () => {},
-      setRequestId,
-      setIsLoading,
-      (error: any) => {
-        if (!error) return;
-        if (error.response?.data?.detail) {
-          setError(new Error(error.response.data.detail));
-          setAuthMessage(error.response.data.detail);
-        }
-      },
-      'post',
-      { email, password, username }
-    );
-  };
-
+  // Redirect if already authenticated (non-guest users go to home)
   useEffect(() => {
-    if (isRegistered && !error) {
-      setIsLogin(true);
-      setTimeout(() => {
-        setAuthMessage(null);
-        setIsRegistered(false);
-      }, 5000);
-    }
-  }, [isRegistered]);
-
-  const handlePasswordReset = async (email: string) => {
-    await HttpReq(
-      urls.reset_password,
-      setAuthResponse,
-      setAuthMessage,
-      setRequestId,
-      setIsLoading,
-      setError,
-      'post',
-      { email }
-    );
-
-    if (!error) {
-      setAuthMessage('Password reset email sent. Please check your inbox.');
-      setIsPasswordReset(false);
-    }
-  };
-
-  const handleGoogleSuccess = async (response: CredentialResponse) => {
-    if (!response.credential) {
-      setAuthMessage('Google login failed: No credential received');
-      return;
-    }
-    setIsLoading(true);
-    setAuthMessage(null);
-    setError(null);
-
-    try {
-      await performGoogleLogin(setAuthResponse, response.credential, sourceLocal);
-
-      setTimeout(() => {
-        const params = new URLSearchParams(location.search);
-        const redirectUrl = params.get('redirect_url');
-        if (redirectUrl) {
-          window.location.replace(redirectUrl);
-        } else {
-          nav('/');
-        }
-      }, 100);
-    } catch (e: any) {
-      if (e.response?.status === 401) {
-        setAuthMessage(e.response.data.detail || 'Google login failed');
-      } else {
-        setAuthMessage(e.message || 'Google login failed');
-        setError(e);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthMessage(null);
-    setError(null);
-
-    if (isPasswordReset) {
-      await handlePasswordReset(email);
-    } else if (isLogin) {
-      await handleLogin(email, password);
-    } else {
-      await handleRegistration(email, password, username);
-    }
-  };
-
-  useEffect(() => {
-    if (!authLoading && isAuthenticated && authResponse) {
-      // If "auth=auto" IS present, it means the user was sent here automatically
-      // because a protected request required real credentials(You should add this query manually like fetchDatasetForm) — so allow redirect.
-      if (isGuestUser(authResponse) && authQuery !== 'auto') {
-        return;
-      }
+    if (!authLoading && isAuthenticated && authResponse && !isGuestUser(authResponse)) {
       nav('/');
     }
   }, [authLoading, isAuthenticated, authResponse, nav]);
 
-  const renderForm = () => {
-    if (isPasswordReset) {
-      return (
-        <form onSubmit={handleSubmit} className="flex flex-col">
-          <div className={styles.inputGroup}>
-            <FaEnvelope className={styles.icon} />
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              className={styles.authInput}
-            />
-          </div>
-          <button type="submit" className={styles.authButton} disabled={isLoading}>
-            Reset Password
-          </button>
-        </form>
-      );
+  const handleRedirect = () => {
+    const params = new URLSearchParams(location.search);
+    const redirectUrl = params.get('redirect_url');
+    setTimeout(() => {
+      redirectUrl ? window.location.replace(redirectUrl) : nav('/');
+    }, 100);
+  };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setGoogleError(null);
+      try {
+        await performGoogleLogin(setAuthResponse, tokenResponse.access_token, sourceLocal);
+        handleRedirect();
+      } catch (e: any) {
+        setGoogleError(e.response?.data?.detail || e.message || 'Google login failed');
+      }
+    },
+    onError: () => {
+      setGoogleError('Google login failed');
+    },
+  });
+
+  const switchMode = (newMode: AuthMode) => {
+    setGoogleError(null);
+    setMode(newMode);
+  };
+
+  const getTitle = () => {
+    if (mode === 'reset') return 'Reset Password';
+    if (mode === 'login') return 'Log in';
+    return 'Sign up';
+  };
+
+  const getSubtitle = () => {
+    if (mode === 'register') {
+      return 'Get started for free. No credit card required.';
     }
+    return null;
+  };
+
+  const showGoogleLogin = mode !== 'reset';
+
+  const renderGoogleLogin = () => {
+    if (!showGoogleLogin) return null;
 
     return (
-      <form onSubmit={handleSubmit} className="flex flex-col">
-        {!isLogin && (
-          <div className="flex items-center mb-4 bg-[#f0f8f0] rounded-md">
-            <FaUser className="text-[#006400] ml-3" />
-            <input
-              type="text"
-              placeholder="Name"
-              value={username}
-              onChange={e => setName(e.target.value)}
-              required
-              className="flex-1 px-3 py-2 text-lg bg-transparent outline-none"
-            />
-          </div>
-        )}
-        <div className={styles.inputGroup}>
-          <FaEnvelope className={styles.icon} />
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
-            className={styles.authInput}
-          />
-        </div>
-        <div className={styles.inputGroup}>
-          <FaLock className={styles.icon} />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            className={styles.authInput}
-          />
-        </div>
+      <>
+        {googleError && <p className="mb-4 text-center text-red-500">{googleError}</p>}
         <button
-          type="submit"
-          className="px-4 py-3 text-lg text-white bg-[#155315] rounded-md hover:bg-[#1a651a] disabled:bg-gray-400 disabled:cursor-not-allowed"
-          disabled={isLoading}
+          type="button"
+          onClick={() => googleLogin()}
+          className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors duration-200"
         >
-          {isLogin ? 'Login' : 'Register'}
+          <FcGoogle className="text-xl" />
+          <span className="text-gray-700 font-medium">Google</span>
         </button>
-      </form>
+        <div className="flex items-center my-4">
+          <div className="flex-1 border-t border-gray-300" />
+          <span className="px-3 text-gray-500 text-sm">Or with email and password</span>
+          <div className="flex-1 border-t border-gray-300" />
+        </div>
+      </>
     );
   };
 
-  return (
-    <div className="w-full h-full lg:border-l overflow-hidden flex flex-col">
-      <div className="flex-1 flex items-center justify-center bg-[#115740] py-4 lg:py-0 min-h-0">
-        <div className="bg-white p-6 sm:p-10 rounded-lg shadow-lg w-full max-w-md mx-4">
-          <h2 className="text-2xl text-[#006400] mb-5 text-center">
-            {isPasswordReset
-              ? "Reset Password"
-              : isLogin
-                ? "Login"
-                : "Register"}
-          </h2>
-          {!!authMessage && (
-            <p
-              className={`mb-4 text-center ${isRegistered ? "text-green-600" : "text-red-500"}`}
-            >
-              {authMessage}
-            </p>
-          )}
-          {renderForm()}
-          {isLogin && !isPasswordReset && (
-            <>
-              <div className="flex items-center my-4">
-                <div className="flex-1 border-t border-gray-300"></div>
-                <span className="px-3 text-gray-500 text-sm">or</span>
-                <div className="flex-1 border-t border-gray-300"></div>
+  const renderForm = () => {
+    switch (mode) {
+      case 'login':
+        return (
+          <LoginForm
+            onSuccess={handleRedirect}
+            onForgotPassword={() => switchMode('reset')}
+          />
+        );
+      case 'register':
+        return (
+          <RegisterForm
+            onSuccess={handleRedirect}
+            source={sourceLocal}
+          />
+        );
+      case 'reset':
+        return (
+          <ResetPasswordForm
+            onSuccess={() => switchMode('login')}
+            onBackToLogin={() => switchMode('login')}
+          />
+        );
+    }
+  };
+
+  // Login and Reset: Centered layout
+  if (mode === 'login' || mode === 'reset') {
+    return (
+      <div className="w-full h-screen overflow-hidden flex flex-col bg-primary">
+        <div className="flex-1 flex items-center justify-center p-4 min-h-0 overflow-hidden">
+          <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-md">
+            <h2 className="text-xl sm:text-2xl font-semibold text-[#006400] mb-6 text-center">
+              {getTitle()}
+            </h2>
+
+            {renderGoogleLogin()}
+            {renderForm()}
+
+            {mode === 'login' && (
+              <div className="text-center mt-4 text-gray-600 text-sm">
+                Don't have an account?{' '}
+                <button
+                  onClick={() => switchMode('register')}
+                  className="text-[#006400] hover:underline"
+                >
+                  Sign up
+                </button>
               </div>
-              <div className="flex justify-center">
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => setAuthMessage("Google login failed")}
-                  size="large"
-                  width="100%"
-                  text="continue_with"
-                />
-              </div>
-            </>
-          )}
-          <div className="flex justify-between mt-4">
-            <button
-              onClick={() => {
-                if (isLogin) {
-                  nav("/sign-up");
-                } else {
-                  setIsLogin(true);
-                  setIsPasswordReset(false);
-                }
-              }}
-              className="text-[#006400] text-sm hover:underline"
-            >
-              {isLogin ? "Need to register?" : "Already have an account?"}
-            </button>
-            {isLogin && (
-              <button
-                onClick={() => setIsPasswordReset(!isPasswordReset)}
-                className="text-[#006400] text-sm hover:underline"
-              >
-                {isPasswordReset ? "Back to Login" : "Forgot Password?"}
-              </button>
             )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Register: Split layout with marketing content
+  return (
+    <div className="w-full h-screen overflow-hidden flex flex-col lg:flex-row">
+      {/* Left side - Marketing Content */}
+      <div className="hidden lg:flex lg:w-1/2 bg-primary overflow-hidden">
+        <MarketingContent />
+      </div>
+
+      {/* Right side - Sign up form */}
+      <div className="flex-1 flex items-center justify-center bg-white p-4 lg:p-8 min-h-0 overflow-hidden">
+        <div className="w-full max-w-md">
+          {/* Mobile-only headline */}
+          <h1 className="lg:hidden text-2xl font-bold text-primary mb-6 text-center">
+            Get started with <span className="whitespace-nowrap">S-Locator</span>
+          </h1>
+          <h2 className="text-xl sm:text-2xl font-semibold text-[#006400] mb-2 text-center">
+            {getTitle()}
+          </h2>
+          {getSubtitle() && (
+            <p className="text-gray-500 text-center mb-6">{getSubtitle()}</p>
+          )}
+
+          {renderGoogleLogin()}
+          {renderForm()}
+
+          <div className="text-center mt-6 text-gray-600 text-sm">
+            Already using S-Locator?{' '}
+            <button
+              onClick={() => switchMode('login')}
+              className="text-[#006400] hover:underline"
+            >
+              Log in
+            </button>
           </div>
         </div>
       </div>

@@ -55,7 +55,7 @@ const FetchDatasetForm = () => {
     setCitiesData,
   } = useLayerContext();
   // AUTH CONTEXT
-  const { authResponse, logout } = useAuth();
+  const { authResponse, authLoading } = useAuth();
   const [isPriceVisible, setIsPriceVisible] = useState<boolean>(false);
   // FETCHED DATA
   const [layers, setLayers] = useState<Layer[]>([]);
@@ -79,11 +79,16 @@ const FetchDatasetForm = () => {
   useEffect(() => {
     resetFetchDatasetForm();
     handleGetCountryCityCategory();
-    fetchProfile();
   }, []);
+
+  useEffect(() => {
+    if (!authLoading) {
+      fetchProfile();
+    }
+  }, [authLoading]);
+
   const fetchProfile = async () => {
     if (!authResponse || !('idToken' in authResponse)) {
-      nav('/auth?auth=auto');
       return;
     }
 
@@ -96,9 +101,7 @@ const FetchDatasetForm = () => {
       });
       await setIsPriceVisible(res.data.data.show_price_on_purchase);
     } catch (err) {
-      console.error('Unexpected error:', err);
-      logout();
-      nav('/auth');
+      console.error('Failed to fetch profile:', err);
     }
   };
   // Get all unique datasets from all layers (only included types)

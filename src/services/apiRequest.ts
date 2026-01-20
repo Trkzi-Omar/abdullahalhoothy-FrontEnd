@@ -281,6 +281,9 @@ const apiRequest = async ({
     return response;
   } catch (err: any) {
     if (err?.response?.status === 403) {
+      if (isGuest) {
+        throw new Error('Access denied for guest user');
+      }
       localStorage.removeItem('authResponse');
       handleAuthError();
       throw new Error('Access forbidden');

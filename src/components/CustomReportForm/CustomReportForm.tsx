@@ -11,6 +11,7 @@ import {
   FormErrors,
   MetricKey,
 } from '../../types/allTypesAndInterfaces';
+import { ReportSubmissionRequestBody } from '../../types/reportSubmission';
 import { CustomSegment, CustomSegmentReportResponse } from '../../types';
 import { getTotalSteps, getInitialFormData, getStepDefinitions } from './constants';
 import { useBusinessTypeConfig } from './hooks/useBusinessTypeConfig';
@@ -608,11 +609,18 @@ const CustomReportForm = () => {
 
     try {
       // Prepare form data with default values for optional locations
-      const submissionData = {
-        ...formData,
-        report_type: reportType, // Add report type
+      const submissionData: ReportSubmissionRequestBody = {
+        user_id: formData.user_id,
+        city_name: formData.city_name,
+        country_name: formData.country_name,
         potential_business_type: formData.potential_business_type || businessType,
-        ecosystem_string_name: formData.ecosystem_string_name || '',
+        target_income_level: formData.target_income_level,
+        target_age: formData.target_age,
+        complementary_categories: formData.complementary_categories,
+        cross_shopping_categories: formData.cross_shopping_categories,
+        competition_categories: formData.competition_categories,
+        delivery_weight: formData.delivery_weight,
+        dine_in_weight: formData.dine_in_weight,
         custom_locations:
           reportType === 'location'
             ? [] // Don't send custom locations for location reports

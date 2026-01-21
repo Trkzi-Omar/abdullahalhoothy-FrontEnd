@@ -79,7 +79,7 @@ export const performLogin = async (
     body: credentials,
   });
 
-  const data = response?.data as AuthResponse;
+  const data = (response?.data?.data || response?.data) as AuthResponse;
   if (!data || !('idToken' in data)) {
     throw new Error('Login Error: Invalid response');
   }
@@ -122,7 +122,7 @@ export const performRegistration = async (
     },
   });
 
-  const responseData = response?.data;
+  const responseData = response?.data?.data || response?.data;
   if (Array.isArray(responseData) && responseData[0]?.data?.user_id) {
     const userData = responseData[0].data;
     const authData: AuthResponse = {

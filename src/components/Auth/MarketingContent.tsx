@@ -1,4 +1,6 @@
 import { FC } from 'react';
+import touchLogo from '../../assets/images/touch.png';
+import cityBabyLogo from '../../assets/images/city-baby.png';
 
 const MarketingContent: FC = () => {
   return (
@@ -56,16 +58,8 @@ const MarketingContent: FC = () => {
       <div className="mt-4">
         <p className="text-gray-300 text-lg font-medium mb-6">Trusted by</p>
         <div className="flex flex-wrap items-center gap-10">
-          <img
-            src="/src/assets/images/touch.png"
-            alt="Touch"
-            className="h-14 w-auto"
-          />
-          <img
-            src="/src/assets/images/city-baby.png"
-            alt="City Baby"
-            className="h-14 w-auto"
-          />
+          <img src={touchLogo} alt="Touch" className="h-14 w-auto" />
+          <img src={cityBabyLogo} alt="City Baby" className="h-14 w-auto" />
         </div>
       </div>
     </div>

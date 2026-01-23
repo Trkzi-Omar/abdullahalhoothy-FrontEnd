@@ -63,10 +63,16 @@ export function useAuthForm({ mode, registerStep = 1 }: UseAuthFormOptions) {
         if (touchedFields.has('name') && form.name && form.name.length < 2) {
           errors.name = 'Name must be at least 2 characters';
         }
+        // Only validate phone if it's provided and has actual digits (not just country code)
+        // Country codes are typically 1-3 digits, so a complete phone should have more
         if (touchedFields.has('phone') && form.phone) {
-          if (!isValidPhone(form.phone)) {
+          const phoneWithoutPlus = form.phone.replace(/^\+/, '').replace(/\s/g, '');
+          // Only validate if phone has more than just country code (at least 7 digits total)
+          // This ensures we're validating a complete number, not just "+966"
+          if (phoneWithoutPlus.length >= 7 && !isValidPhone(form.phone)) {
             errors.phone = 'Please enter a valid phone number';
           }
+          // If phone is empty or just country code, don't set error (it's optional)
         }
       }
 
@@ -119,9 +125,13 @@ export function useAuthForm({ mode, registerStep = 1 }: UseAuthFormOptions) {
 
   // Handle phone input change (PhoneInput returns value without + prefix)
   const handlePhoneChange = useCallback((phoneValue: string) => {
-    const formattedPhone = phoneValue ? `+${phoneValue}` : '';
+    // Only set phone if there's an actual number (not just country code)
+    // If phoneValue is empty or just country code, set to empty string
+    const phoneWithoutPlus = phoneValue.replace(/^\+/, '');
+    const formattedPhone = phoneWithoutPlus.length > 3 ? `+${phoneWithoutPlus}` : '';
     setForm(prev => ({ ...prev, phone: formattedPhone }));
     setTouchedFields(prev => new Set(prev).add('phone'));
+    // Clear error when user is typing
     setFieldErrors(prev => {
       if (prev.phone) {
         return { ...prev, phone: undefined };

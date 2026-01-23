@@ -8,6 +8,7 @@ interface ProgressIndicatorProps {
   disabled?: boolean;
   reportType?: 'full' | 'location';
   isAdvancedMode?: boolean;
+  needsPhoneVerification?: boolean;
 }
 
 const ProgressIndicator = ({
@@ -17,53 +18,100 @@ const ProgressIndicator = ({
   disabled = false,
   reportType,
   isAdvancedMode = true,
+  needsPhoneVerification = false,
 }: ProgressIndicatorProps) => {
   // Get filtered step definitions based on report type and advanced mode
-  const steps = getStepDefinitions(reportType || 'full', isAdvancedMode);
-  const totalSteps = steps.length;
+  const allSteps = getStepDefinitions(reportType || 'full', isAdvancedMode, needsPhoneVerification);
+  
+  // Filter out phone verification step from display (but keep it in the flow)
+  const visibleSteps = allSteps.filter(step => step.content !== 'phone-verification');
+  const totalSteps = allSteps.length; // Total includes hidden step for counter
+
+  // Create a mapping: visual step index -> actual step number
+  // This accounts for the hidden phone verification step
+  const getActualStepNumber = (visualIndex: number): number => {
+    let visualCount = 0;
+    
+    for (let i = 0; i < allSteps.length; i++) {
+      if (allSteps[i].content !== 'phone-verification') {
+        visualCount++;
+        if (visualCount === visualIndex + 1) {
+          return i + 1; // Convert to 1-indexed
+        }
+      }
+    }
+    
+    return visualIndex + 1; // Fallback
+  };
+
+  // Get visual step number from actual step number
+  const getVisualStepNumber = (actualStep: number): number => {
+    let visualCount = 0;
+    for (let i = 0; i < actualStep && i < allSteps.length; i++) {
+      if (allSteps[i].content !== 'phone-verification') {
+        visualCount++;
+      }
+    }
+    return visualCount;
+  };
+
+  // Get visual step number, but if current step is phone verification, show the previous visible step
+  const getCurrentVisualStep = (): number => {
+    const currentStepContent = allSteps[currentStep - 1]?.content;
+    if (currentStepContent === 'phone-verification') {
+      // If on phone verification step, show the last visible step as current
+      return getVisualStepNumber(currentStep - 1);
+    }
+    return getVisualStepNumber(currentStep);
+  };
+
+  const currentVisualStep = getCurrentVisualStep();
 
   return (
     <div className="px-4 sm:px-6 py-3 bg-gray-50 border-b border-gray-200">
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-sm font-semibold text-gray-900">Progress</h2>
         <span className="text-xs text-gray-600">
-          Step {currentStep} of {totalSteps}
+          Step {currentVisualStep || currentStep} of {visibleSteps.length}
         </span>
       </div>
       <div className="flex items-center justify-between">
-        {steps.map((step, index) => {
-          const stepNumber = index + 1; // Order: 1, 2, 3, 4, 5, 6 (or 8 for full)
+        {visibleSteps.map((step, index) => {
+          const visualStepNumber = index + 1;
+          const actualStepNumber = getActualStepNumber(index);
+          const isCompleted = completedSteps.includes(actualStepNumber);
+          // Check if current step is phone verification - if so, don't highlight any step as current
+          const currentStepContent = allSteps[currentStep - 1]?.content;
+          const isCurrent = actualStepNumber === currentStep && currentStepContent !== 'phone-verification';
+          const isAccessible = actualStepNumber <= currentStep || completedSteps.includes(actualStepNumber - 1);
+          
           return (
             <div key={step.id} className="flex flex-col items-center flex-1">
               <button
-                onClick={() => onStepClick(stepNumber)}
-                disabled={
-                  disabled || (stepNumber > currentStep && !completedSteps.includes(stepNumber - 1))
-                }
+                onClick={() => onStepClick(actualStepNumber)}
+                disabled={disabled || !isAccessible}
                 className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 transition-all duration-200 ${
-                  disabled
+                  disabled || !isAccessible
                     ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed opacity-60'
-                    : completedSteps.includes(stepNumber)
+                    : isCompleted
                       ? 'bg-green-500 border-green-500 text-white'
-                      : stepNumber === currentStep
+                      : isCurrent
                         ? 'bg-primary border-primary text-white'
-                        : stepNumber < currentStep || completedSteps.includes(stepNumber - 1)
-                          ? 'bg-blue-100 border-blue-300 text-blue-600 hover:bg-blue-200'
-                          : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'
+                        : 'bg-blue-100 border-blue-300 text-blue-600 hover:bg-blue-200'
                 }`}
               >
-                {completedSteps.includes(stepNumber) ? (
+                {isCompleted ? (
                   <FaCheck className="w-3 h-3" />
                 ) : (
-                  <span className="text-xs font-semibold">{stepNumber}</span>
+                  <span className="text-xs font-semibold">{visualStepNumber}</span>
                 )}
               </button>
               <div className="mt-1 text-center">
                 <p
                   className={`text-xs font-medium ${
-                    stepNumber === currentStep
+                    isCurrent
                       ? 'text-primary'
-                      : completedSteps.includes(stepNumber)
+                      : isCompleted
                         ? 'text-green-600'
                         : 'text-gray-600'
                   }`}

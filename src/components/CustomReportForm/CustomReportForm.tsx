@@ -10,12 +10,16 @@ import {
   CustomReportData,
   FormErrors,
   MetricKey,
+  UserProfile,
 } from '../../types/allTypesAndInterfaces';
 import { ReportSubmissionRequestBody } from '../../types/reportSubmission';
 import { CustomSegment, CustomSegmentReportResponse } from '../../types';
 import { getTotalSteps, getInitialFormData, getStepDefinitions } from './constants';
 import { useBusinessTypeConfig } from './hooks/useBusinessTypeConfig';
 import { useAdditionalCost } from './hooks/useReportPricing';
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import InlinePaymentMethod from './components/InlinePaymentMethod';
 
 // Import step components
 import BasicInformationStep from './components/BasicInformationStep';
@@ -29,6 +33,9 @@ import ReportTierStep from './components/ReportTierStep';
 import SmartSegmentReport from '../SegmentReport';
 import ReportTypeSelectionStep from './components/ReportTypeSelectionStep';
 import DeliveryInStoreStep from './components/DeliveryInStoreStep';
+import PhoneVerificationStep from './components/PhoneVerificationStep';
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 const CustomReportForm = () => {
   // STEP INDEXING CONVENTION:
@@ -72,6 +79,15 @@ const CustomReportForm = () => {
   const [selectedSegment, setSelectedSegment] = useState<CustomSegment | null>(null);
   const [segmentReportError, setSegmentReportError] = useState<boolean>(false);
 
+  // Payment method state
+  const [showPaymentMethodForm, setShowPaymentMethodForm] = useState(false);
+  const [userPhone, setUserPhone] = useState<string | null>(null);
+  const [pendingSubmission, setPendingSubmission] = useState<ReportSubmissionRequestBody | null>(null);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  // Track if phone verification was needed at the start (to prevent dynamic step changes)
+  const [needsPhoneVerificationInitial, setNeedsPhoneVerificationInitial] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
   // Ref to track previous mode/reportType to prevent race conditions
   const prevModeRef = useRef({ isAdvancedMode, reportType });
 
@@ -89,7 +105,7 @@ const CustomReportForm = () => {
     }
   }, [authResponse, formData?.user_id]);
 
-  // Fetch user profile to check free location report status
+  // Fetch user profile to check free location report status and get phone number
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!authResponse?.localId) return;
@@ -102,12 +118,24 @@ const CustomReportForm = () => {
           body: { user_id: authResponse.localId },
         });
 
-        const hasUsedFree = response?.data?.has_used_free_location_report || false;
+        const profile: UserProfile = response?.data?.data || response?.data;
+        const hasUsedFree = profile?.has_used_free_location_report || false;
         setHasUsedFreeLocationReport(hasUsedFree);
+        const phone = profile?.phone || null;
+        setUserPhone(phone);
+        
+        // Set phone verification need based on whether phone exists
+        // Check if phone is null, undefined, empty string, or just whitespace
+        const needsVerification = !phone || (phone && typeof phone === 'string' && phone.trim() === '');
+        setNeedsPhoneVerificationInitial(needsVerification);
+        setProfileLoaded(true);
       } catch (error) {
         console.error('Error fetching user profile:', error);
         // Default to false if error (user can still try to claim free report)
         setHasUsedFreeLocationReport(false);
+        // If profile fetch fails, assume phone verification is needed to be safe
+        setNeedsPhoneVerificationInitial(true);
+        setProfileLoaded(true);
       }
     };
 
@@ -215,6 +243,12 @@ const CustomReportForm = () => {
     handleCategoryLoad();
   }, []);
 
+  // Calculate if phone verification is needed (for display purposes)
+  const needsPhoneVerification = useMemo(() => {
+    // Check if user doesn't have a phone number
+    return !userPhone || userPhone.trim() === '';
+  }, [userPhone]);
+
   // Handle advanced mode toggle - adjust steps if needed
   useEffect(() => {
     if (!reportType) return;
@@ -226,7 +260,8 @@ const CustomReportForm = () => {
 
     prevModeRef.current = { isAdvancedMode, reportType };
 
-    const totalSteps = getTotalSteps(reportType, isAdvancedMode);
+    // Use initial phone verification need to prevent step count changes mid-flow
+    const totalSteps = getTotalSteps(reportType, isAdvancedMode, needsPhoneVerificationInitial);
 
     // Adjust current step if it exceeds new total
     setCurrentStep(current => {
@@ -238,7 +273,32 @@ const CustomReportForm = () => {
 
     // Filter completed steps to only include valid steps
     setCompletedSteps(prev => prev.filter(step => step <= totalSteps));
-  }, [isAdvancedMode, reportType]);
+  }, [isAdvancedMode, reportType, needsPhoneVerificationInitial]);
+
+  // Redirect to phone verification step if needed when profile loads
+  useEffect(() => {
+    if (!profileLoaded || !reportType || !needsPhoneVerificationInitial || phoneVerified) return;
+    
+    // Get step definitions to find where phone verification step is
+    const stepDefinitions = getStepDefinitions(reportType, isAdvancedMode, needsPhoneVerificationInitial);
+    const phoneVerificationStepIndex = stepDefinitions.findIndex(step => step.content === 'phone-verification');
+    const reportTierStepIndex = stepDefinitions.findIndex(step => step.content === 'report-tier');
+    
+    if (phoneVerificationStepIndex === -1) return; // Phone verification step not found
+    
+    const phoneVerificationStepNumber = phoneVerificationStepIndex + 1; // Convert to 1-indexed
+    
+    // Get current step content using the updated step definitions
+    const currentStepDef = stepDefinitions[currentStep - 1];
+    const currentStepContent = currentStepDef?.content || '';
+    
+    // If user is at Report Tier step or past phone verification step but hasn't verified, redirect them
+    if (currentStepContent === 'report-tier' || 
+        (currentStep >= phoneVerificationStepNumber && currentStepContent !== 'phone-verification' && reportTierStepIndex !== -1 && currentStep > reportTierStepIndex)) {
+      // Redirect to phone verification step
+      setCurrentStep(phoneVerificationStepNumber);
+    }
+  }, [profileLoaded, needsPhoneVerificationInitial, reportType, isAdvancedMode, currentStep, phoneVerified]);
 
   const getSegmentReport = useCallback(async () => {
     if (!formData?.city_name) return;
@@ -681,11 +741,116 @@ const CustomReportForm = () => {
         navigate('/');
       }
     } catch (error: any) {
-      setSubmitError(error?.message || 'An unexpected error occurred. Please try again.');
+      // Extract error message from various error formats
+      let errorMessage = 'An unexpected error occurred. Please try again.';
+      
+      if (error && typeof error === 'object' && 'response' in error) {
+        const apiError = error as {
+          response?: { data?: { message?: string; detail?: string; error?: string } | string };
+        };
+        const errorData = apiError.response?.data;
+        
+        if (errorData && typeof errorData === 'object') {
+          errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+        } else if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message.replace(/\s*\(Status:\s*\d+\)/g, '');
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      // Check if error is related to PaymentIntent missing payment method
+      // This handles various error message formats
+      const isPaymentIntentError = 
+        (errorMessage.includes('PaymentIntent') || errorMessage.includes('payment method')) && 
+        (errorMessage.includes('missing a payment method') || 
+         errorMessage.includes('missing payment method') ||
+         errorMessage.includes('You cannot confirm this PaymentIntent'));
+      
+      if (isPaymentIntentError) {
+        // Store submission data for retry after payment method is added
+        setPendingSubmission(submissionData);
+        // Show payment method form instead of error
+        setShowPaymentMethodForm(true);
+        setSubmitError(null);
+      } else {
+        setSubmitError(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Retry submission after payment method is added
+  const retrySubmission = useCallback(async () => {
+    if (!pendingSubmission) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+    setShowPaymentMethodForm(false);
+
+    try {
+      const res = await apiRequest({
+        url: urls.smart_site_report,
+        method: 'Post',
+        body: pendingSubmission,
+      });
+
+      const reportUrlResponse = res?.data?.data?.html_file_path;
+
+      // Update free report status for location reports
+      if (reportType === 'location' && !hasUsedFreeLocationReport) {
+        setHasUsedFreeLocationReport(true);
+      }
+
+      // Redirect to the report URL immediately
+      if (reportUrlResponse) {
+        navigate(`/${reportUrlResponse.replace(/^\/+/, '')}`);
+      } else {
+        navigate('/');
+      }
+    } catch (error: any) {
+      // Extract error message from various error formats
+      let errorMessage = 'An unexpected error occurred. Please try again.';
+      
+      if (error && typeof error === 'object' && 'response' in error) {
+        const apiError = error as {
+          response?: { data?: { message?: string; detail?: string; error?: string } | string };
+        };
+        const errorData = apiError.response?.data;
+        
+        if (errorData && typeof errorData === 'object') {
+          errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+        } else if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message.replace(/\s*\(Status:\s*\d+\)/g, '');
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      // Check if error is still related to PaymentIntent
+      const isPaymentIntentError = 
+        (errorMessage.includes('PaymentIntent') || errorMessage.includes('payment method')) && 
+        (errorMessage.includes('missing a payment method') || 
+         errorMessage.includes('missing payment method') ||
+         errorMessage.includes('You cannot confirm this PaymentIntent'));
+      
+      if (isPaymentIntentError) {
+        // Keep payment method form visible
+        setShowPaymentMethodForm(true);
+        setSubmitError(null);
+      } else {
+        setSubmitError(errorMessage);
+        setShowPaymentMethodForm(false);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [pendingSubmission, reportType, hasUsedFreeLocationReport, navigate]);
 
   const metricsSum = formData
     ? Object.values(formData.evaluation_metrics).reduce((sum, value) => sum + value, 0)
@@ -729,6 +894,10 @@ const CustomReportForm = () => {
       case 'segment-selection':
         return true; // Always optional
 
+      case 'phone-verification':
+        // Phone verification step is valid only if phone has been verified
+        return phoneVerified;
+
       case 'report-tier':
         // For location reports, ensure pricing is available
         if (reportType === 'location') {
@@ -751,8 +920,33 @@ const CustomReportForm = () => {
     }
 
     if (validateCurrentStep(currentStep)) {
+      const nextStep = currentStep + 1;
+      const totalSteps = getTotalSteps(reportType, isAdvancedMode, needsPhoneVerificationInitial);
+      
+      // If profile hasn't loaded yet and we're about to go to what might be the last step, wait
+      if (!profileLoaded && nextStep >= totalSteps - 1) {
+        // Don't advance yet, wait for profile to load
+        return;
+      }
+      
+      // Check if next step would be Report Tier and phone verification is needed but not completed
+      if (needsPhoneVerificationInitial && !phoneVerified) {
+        const stepDefinitions = getStepDefinitions(reportType, isAdvancedMode, needsPhoneVerificationInitial);
+        const nextStepDef = stepDefinitions[nextStep - 1]; // nextStep is 1-indexed, array is 0-indexed
+        const reportTierStepDef = stepDefinitions.find(step => step.content === 'report-tier');
+        
+        // If next step is Report Tier and phone isn't verified, redirect to phone verification
+        if (nextStepDef?.content === 'report-tier' || (reportTierStepDef && nextStep > stepDefinitions.indexOf(reportTierStepDef) + 1)) {
+          const phoneVerificationStepIndex = stepDefinitions.findIndex(step => step.content === 'phone-verification');
+          if (phoneVerificationStepIndex !== -1) {
+            setCurrentStep(phoneVerificationStepIndex + 1); // Convert to 1-indexed
+            return;
+          }
+        }
+      }
+      
       setCompletedSteps(prev => [...prev.filter(s => s !== currentStep), currentStep]);
-      setCurrentStep(prev => Math.min(prev + 1, getTotalSteps(reportType, isAdvancedMode)));
+      setCurrentStep(prev => Math.min(prev + 1, totalSteps));
     }
   };
 
@@ -768,6 +962,22 @@ const CustomReportForm = () => {
   };
 
   const goToStep = (step: number) => {
+    // Prevent navigating to Report Tier if phone verification is needed but not completed
+    if (needsPhoneVerificationInitial && !phoneVerified && reportType) {
+      const stepDefinitions = getStepDefinitions(reportType, isAdvancedMode, needsPhoneVerificationInitial);
+      const targetStepDef = stepDefinitions[step - 1]; // step is 1-indexed, array is 0-indexed
+      const reportTierStepDef = stepDefinitions.find(s => s.content === 'report-tier');
+      
+      // If trying to navigate to Report Tier or past it, redirect to phone verification
+      if (targetStepDef?.content === 'report-tier' || (reportTierStepDef && step > stepDefinitions.indexOf(reportTierStepDef) + 1)) {
+        const phoneVerificationStepIndex = stepDefinitions.findIndex(s => s.content === 'phone-verification');
+        if (phoneVerificationStepIndex !== -1) {
+          setCurrentStep(phoneVerificationStepIndex + 1); // Convert to 1-indexed
+          return;
+        }
+      }
+    }
+    
     if (step <= currentStep || completedSteps.includes(step - 1)) {
       setCurrentStep(step);
     }
@@ -786,8 +996,9 @@ const CustomReportForm = () => {
     if (step === 0) return 'report-type-selection';
     if (!reportType) return '';
 
-    // Get filtered step definitions based on advanced mode
-    const stepDefinitions = getStepDefinitions(reportType, isAdvancedMode);
+    // Get filtered step definitions based on advanced mode and phone verification needs
+    // Use initial phone verification need to prevent step changes mid-flow
+    const stepDefinitions = getStepDefinitions(reportType, isAdvancedMode, needsPhoneVerificationInitial);
     const stepDef = stepDefinitions[step - 1]; // Convert 1-indexed step to 0-indexed array
 
     return stepDef?.content || '';
@@ -904,6 +1115,63 @@ const CustomReportForm = () => {
             disabled={isSubmitting}
             isRequired={false}
             reportType={reportType || undefined}
+          />
+        );
+
+      case 'phone-verification':
+        return (
+          <PhoneVerificationStep
+            onVerificationSuccess={async (verifiedPhoneNumber: string) => {
+              // Update user phone in profile after successful verification
+              if (!authResponse?.localId) return;
+              
+              try {
+                // First fetch current profile to get all required fields
+                const profileResponse = await apiRequest({
+                  url: urls.user_profile,
+                  method: 'POST',
+                  isAuthRequest: true,
+                  body: { user_id: authResponse.localId },
+                });
+                
+                const currentProfile: UserProfile = profileResponse?.data?.data || profileResponse?.data;
+                
+                // Save the verified phone number to user profile with all required fields
+                await apiRequest({
+                  url: urls.update_user_profile,
+                  method: 'POST',
+                  isAuthRequest: true,
+                  body: {
+                    user_id: authResponse.localId,
+                    phone: verifiedPhoneNumber,
+                    username: currentProfile.username || '',
+                    email: currentProfile.email || '',
+                    show_price_on_purchase: currentProfile.show_price_on_purchase || false,
+                  },
+                });
+                
+                // Update local state
+                setUserPhone(verifiedPhoneNumber);
+                setPhoneVerified(true);
+                
+                // Mark current step as completed
+                setCompletedSteps(prev => [...prev.filter(s => s !== currentStep), currentStep]);
+                
+                // Automatically proceed to next step (use a small delay to ensure state updates)
+                setTimeout(() => {
+                  goToNextStep();
+                }, 300);
+              } catch (error) {
+                console.error('Error updating user profile with phone number:', error);
+                // Still mark as verified and proceed, as OTP verification succeeded
+                setPhoneVerified(true);
+                setUserPhone(verifiedPhoneNumber);
+                setTimeout(() => {
+                  goToNextStep();
+                }, 500);
+              }
+            }}
+            disabled={isSubmitting}
           />
         );
 
@@ -1082,6 +1350,7 @@ const CustomReportForm = () => {
                 disabled={isSubmitting}
                 reportType={reportType || undefined}
                 isAdvancedMode={isAdvancedMode}
+                needsPhoneVerification={needsPhoneVerificationInitial}
               />
             </div>
           )}
@@ -1136,8 +1405,25 @@ const CustomReportForm = () => {
                 </div>
               )}
 
-              {/* Submit Error */}
-              {submitError && (
+              {/* Payment Method Form - Show when PaymentIntent error detected */}
+              {showPaymentMethodForm && (
+                <div className="mb-4">
+                  <Elements stripe={stripePromise}>
+                    <InlinePaymentMethod
+                      onPaymentMethodAdded={retrySubmission}
+                      onCancel={() => {
+                        setShowPaymentMethodForm(false);
+                        setPendingSubmission(null);
+                        setSubmitError(null);
+                      }}
+                      userPhone={userPhone}
+                    />
+                  </Elements>
+                </div>
+              )}
+
+              {/* Submit Error - Only show if not showing payment method form */}
+              {submitError && !showPaymentMethodForm && (
                 <div className="p-6 bg-red-50 border border-red-200 text-red-700 rounded-xl">
                   <div className="flex">
                     <div className="flex-shrink-0">
@@ -1222,6 +1508,7 @@ const CustomReportForm = () => {
                 formData={formData}
                 reportType={reportType || undefined}
                 isAdvancedMode={isAdvancedMode}
+                needsPhoneVerification={needsPhoneVerificationInitial}
               />
             </div>
           )}

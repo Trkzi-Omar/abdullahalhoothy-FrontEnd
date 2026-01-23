@@ -15,6 +15,7 @@ interface FormNavigationProps {
   };
   reportType?: 'full' | 'location';
   isAdvancedMode?: boolean;
+  needsPhoneVerification?: boolean;
 }
 
 const FormNavigation = ({
@@ -28,8 +29,9 @@ const FormNavigation = ({
   formData,
   reportType,
   isAdvancedMode = true,
+  needsPhoneVerification = false,
 }: FormNavigationProps) => {
-  const totalSteps = getTotalSteps(reportType || null, isAdvancedMode);
+  const totalSteps = getTotalSteps(reportType || null, isAdvancedMode, needsPhoneVerification);
 
   // Check if we're on the last step
   const isLastStep = currentStep >= totalSteps;
@@ -37,7 +39,7 @@ const FormNavigation = ({
   // Helper function to get step content
   const getStepContent = (step: number): string => {
     if (!reportType) return '';
-    const stepDefinitions = getStepDefinitions(reportType, isAdvancedMode);
+    const stepDefinitions = getStepDefinitions(reportType, isAdvancedMode, needsPhoneVerification);
     const stepDef = stepDefinitions[step - 1]; // step is 1-indexed, array is 0-indexed
     return stepDef?.content || '';
   };

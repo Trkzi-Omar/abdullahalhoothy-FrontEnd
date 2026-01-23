@@ -6,7 +6,8 @@ export const CITY_OPTIONS = ['Riyadh', 'Mecca', 'Jeddah'];
 
 export const getTotalSteps = (
   reportType: 'full' | 'location' | null,
-  isAdvancedMode: boolean = true
+  isAdvancedMode: boolean = true,
+  needsPhoneVerification: boolean = false
 ): number => {
   if (!reportType) return 1; // Step 0 only
 
@@ -16,18 +17,36 @@ export const getTotalSteps = (
     ? stepDefinitions
     : stepDefinitions.filter(step => !step.isAdvanced);
 
-  return filteredSteps.length;
+  return filteredSteps.length + (needsPhoneVerification ? 1 : 0);
 };
 
 export const getStepDefinitions = (
   reportType: 'full' | 'location' | null,
-  isAdvancedMode: boolean = true
+  isAdvancedMode: boolean = true,
+  needsPhoneVerification: boolean = false
 ) => {
   if (!reportType) return [];
 
-  const stepDefinitions =
+  const baseSteps =
     reportType === 'full' ? FULL_REPORT_STEP_DEFINITIONS : LOCATION_REPORT_STEP_DEFINITIONS;
-  return isAdvancedMode ? stepDefinitions : stepDefinitions.filter(step => !step.isAdvanced);
+  
+  let steps = isAdvancedMode ? [...baseSteps] : baseSteps.filter(step => !step.isAdvanced);
+
+  if (needsPhoneVerification) {
+    // Insert Phone Verification step before the last step (Report Tier)
+    const lastStepIndex = steps.length - 1;
+    const phoneStep = {
+        id: steps.length + 100, // Temporary ID to avoid conflict, will be re-indexed if needed, but display logic relies on index
+        title: 'Phone Verification',
+        description: 'Verify your phone number',
+        content: 'phone-verification',
+    };
+    
+    // Insert before Report Tier (which is usually the last one)
+    steps.splice(lastStepIndex, 0, phoneStep);
+  }
+
+  return steps;
 };
 
 // Step definitions for progress indicator and form rendering

@@ -31,7 +31,19 @@ export const registerStep2Schema = yup.object({
   phone: yup
     .string()
     .optional()
-    .test('phone', 'Please enter a valid phone number', isValidPhone),
+    .test('phone', 'Please enter a valid phone number', function(value) {
+      // Only validate if phone is provided
+      if (!value || value === '' || value === '+') {
+        return true;
+      }
+      // Treat country-code-only values (1-3 digits after +) as empty/optional
+      const phoneWithoutPlus = value.replace(/^\+/, '').replace(/\s/g, '');
+      if (phoneWithoutPlus.length <= 3) {
+        return true; // Just country code, treat as optional
+      }
+      // Validate complete phone numbers
+      return isValidPhone(value);
+    }),
 });
 
 export const resetSchema = yup.object({

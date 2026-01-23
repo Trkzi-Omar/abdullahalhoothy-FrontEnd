@@ -83,8 +83,13 @@ export const RegisterForm = ({ onSuccess, source }: RegisterFormProps) => {
     });
     if (!isValid) return;
 
-    // If phone number is provided and not yet verified, trigger OTP verification
-    if (form.phone && form.phone.trim() !== '' && form.phone !== '+' && !isPhoneVerified) {
+    // Check if phone is a complete number (not just country code)
+    // Country codes are 1-3 digits, so a complete phone should have 7+ digits total
+    const phoneWithoutPlus = form.phone ? form.phone.replace(/^\+/, '').replace(/\s/g, '') : '';
+    const hasCompletePhone = phoneWithoutPlus.length >= 7;
+
+    // If complete phone number is provided and not yet verified, trigger OTP verification
+    if (hasCompletePhone && !isPhoneVerified) {
       openOTPModal(
         form.phone,
         () => {
@@ -97,6 +102,7 @@ export const RegisterForm = ({ onSuccess, source }: RegisterFormProps) => {
         }
       );
     } else {
+      // No phone or incomplete phone - proceed with registration
       doRegistration();
     }
   };

@@ -8,12 +8,18 @@ interface Location {
   lng: number;
 }
 
+interface LocationWithPrice extends Location {
+  price?: number;
+}
+
 interface MapLocationPickerProps {
   city: string;
-  onLocationSelect: (location: Location) => void;
+  onChange: (data: Partial<LocationWithPrice>) => void;
   selectedLocation?: Location;
   title: string;
   error?: string;
+  rentPrice?: number;
+  disabled?: boolean;
 }
 
 const CITY_CONFIG = {
@@ -45,17 +51,19 @@ const CITY_CONFIG = {
 
 const MapLocationPicker = ({
   city,
-  onLocationSelect,
+  onChange,
   selectedLocation,
   title,
   error,
+  rentPrice,
+  disabled = false,
 }: MapLocationPickerProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const memoizedOnLocationSelect = useCallback(onLocationSelect, [onLocationSelect]);
+  const memoizedOnChange = useCallback(onChange, [onChange]);
 
   useEffect(() => {
     if (import.meta.env.VITE_MAPBOX_KEY) {
@@ -103,13 +111,13 @@ const MapLocationPicker = ({
         const handleMarkerDragEnd = () => {
           if (marker.current) {
             const lngLat = marker.current.getLngLat();
-            memoizedOnLocationSelect({ lat: lngLat.lat, lng: lngLat.lng });
+            memoizedOnChange({ lat: lngLat.lat, lng: lngLat.lng });
           }
         };
         marker.current.on('dragend', handleMarkerDragEnd);
       }
 
-      memoizedOnLocationSelect({ lat, lng });
+      memoizedOnChange({ lat, lng });
     };
 
     map.current.on('click', handleMapClick);
@@ -142,13 +150,13 @@ const MapLocationPicker = ({
         const handleMarkerDragEnd = () => {
           if (marker.current) {
             const lngLat = marker.current.getLngLat();
-            memoizedOnLocationSelect({ lat: lngLat.lat, lng: lngLat.lng });
+            memoizedOnChange({ lat: lngLat.lat, lng: lngLat.lng });
           }
         };
         marker.current.on('dragend', handleMarkerDragEnd);
       }
     }
-  }, [selectedLocation, memoizedOnLocationSelect]);
+  }, [selectedLocation, memoizedOnChange]);
 
   const centerOnCity = () => {
     if (!map.current) return;
@@ -193,17 +201,48 @@ const MapLocationPicker = ({
           style={{ minHeight: '256px' }}
         />
 
-        {selectedLocation && selectedLocation.lat !== 0 && selectedLocation.lng !== 0 && (
-          <div className="text-sm text-gray-600">
-            Selected: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Map Info Section */}
+          <div className="space-y-2">
+            {selectedLocation && selectedLocation.lat !== 0 && selectedLocation.lng !== 0 && (
+              <div className="text-sm text-gray-600">
+                Selected: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
+              </div>
+            )}
+
+            {error && <p className="text-sm text-red-600">{error}</p>}
+
+            <p className="text-sm text-gray-500">
+              Click on the map to select a location. You can drag the marker to fine-tune the
+              position.
+            </p>
           </div>
-        )}
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
-
-        <p className="text-sm text-gray-500">
-          Click on the map to select a location. You can drag the marker to fine-tune the position.
-        </p>
+          {/* Rent Price Input Section */}
+          {rentPrice !== undefined && (
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Rent Price (SAR)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={rentPrice || ''}
+                onChange={e => {
+                  const value = parseFloat(e.target.value) || 0;
+                  onChange({ price: value });
+                }}
+                disabled={disabled}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2"
+                placeholder="Enter rent price"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Yearly rent price for this location in Saudi Riyal
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -46,11 +46,25 @@ export interface DatasetItem {
   data_variables?: Record<string, string>;
 }
 
+export interface IntelligenceItem {
+  user_id: string;
+  city_name: string;
+  country_name: string;
+  cost: number;
+  expiration: string | null;
+  explanation: string;
+  is_currently_owned: boolean;
+  free_as_part_of_package: boolean | null;
+  intelligence_name: string;
+  description: string;
+  data_variables: Record<string, string>;
+}
+
 export interface PriceData {
   total_cost: number;
   report_purchase_items?: ReportItem[];
   dataset_purchase_items?: DatasetItem[];
-  intelligence_purchase_items?: any[];
+  intelligence_purchase_items?: IntelligenceItem[];
 }
 
 export interface TierPricingResponse {
@@ -270,7 +284,10 @@ class ReportPricingService {
       };
 
       const data = await this.fetchPrice(request);
-      const additionalCost = data?.dataset_purchase_items?.reduce((acc, item) => acc + item.cost, 0);
+      const additionalCost = data?.dataset_purchase_items?.reduce(
+        (acc, item) => acc + item.cost,
+        0
+      );
       return additionalCost && additionalCost > 0 ? additionalCost : null;
     } catch (error) {
       console.error('Error calculating additional cost:', error);

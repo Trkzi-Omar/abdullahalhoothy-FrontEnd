@@ -17,7 +17,10 @@ type CheckoutAction =
   | { type: 'toggleIntelligence'; payload: 'Income' | 'Population' }
   | { type: 'setReport'; payload: ReportTier }
   | { type: 'clearDatasets' }
-  | { type: 'initializeAllItems'; payload: { datasets: string[]; intelligences: string[]; report: ReportTier } }
+  | {
+      type: 'initializeAllItems';
+      payload: { datasets: string[]; intelligences: string[]; report: ReportTier };
+    }
   | { type: 'reset' };
 
 const initialCheckoutState: CheckoutState = {
@@ -44,9 +47,7 @@ function checkoutReducer(state: CheckoutState, action: CheckoutAction): Checkout
       const exists = state.datasets.includes(dataset);
       return {
         ...state,
-        datasets: exists
-          ? state.datasets.filter(d => d !== dataset)
-          : [...state.datasets, dataset],
+        datasets: exists ? state.datasets.filter(d => d !== dataset) : [...state.datasets, dataset],
       };
     }
     case 'toggleIntelligence': {
@@ -74,7 +75,12 @@ function checkoutReducer(state: CheckoutState, action: CheckoutAction): Checkout
       };
     }
     case 'reset': {
-      return initialCheckoutState;
+      return {
+        ...initialCheckoutState,
+        // city and country won't be reset
+        city_name: state.city_name,
+        country_name: state.country_name,
+      };
     }
     default:
       return state;
@@ -92,9 +98,7 @@ export function BillingProvider({ children }: { children: ReactNode }) {
   const [checkout, dispatch] = useReducer(checkoutReducer, initialCheckoutState);
 
   return (
-    <BillingContext.Provider value={{ checkout, dispatch }}>
-      {children}
-    </BillingContext.Provider>
+    <BillingContext.Provider value={{ checkout, dispatch }}>{children}</BillingContext.Provider>
   );
 }
 
@@ -105,4 +109,3 @@ export function useBillingContext() {
   }
   return context;
 }
-

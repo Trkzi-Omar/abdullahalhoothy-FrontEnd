@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, lazy, Suspense } from 'react';
 import { MdClose, MdCheckCircleOutline, MdErrorOutline } from 'react-icons/md';
 import { formatSubcategoryName } from '../../../../utils/helperFunctions';
 import { useBillingContext, type ReportTier } from '../../../../context/BillingContext';
@@ -6,6 +6,8 @@ import { useUIContext } from '../../../../context/UIContext';
 import { useAuth } from '../../../../context/AuthContext';
 import apiRequest from '../../../../services/apiRequest';
 import urls from '../../../../urls.json';
+
+const PurchaseSuccessModal = lazy(() => import('./PurchaseSuccessModal'));
 
 interface CheckoutModalProps {
   onClose: () => void;
@@ -149,15 +151,20 @@ function CheckoutModal({
         isAuthRequest: true,
       });
 
-      const successMessage =
-        response?.data?.message || 'Your purchase has been completed successfully.';
+      const purchaseData = response?.data?.data;
 
       openModal(
-        <div className="flex flex-col items-center justify-center p-8 text-center">
-          <MdCheckCircleOutline className="text-green-500 text-6xl mb-4" />
-          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Payment Successful!</h2>
-          <p className="text-gray-600">{successMessage}</p>
-        </div>,
+        <Suspense
+          fallback={
+            <div className="flex flex-col items-center justify-center p-8 text-center">
+              <MdCheckCircleOutline className="text-green-500 text-6xl mb-4" />
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2">Payment Successful!</h2>
+              <p className="text-gray-600">Loading details...</p>
+            </div>
+          }
+        >
+          <PurchaseSuccessModal purchaseData={purchaseData} />
+        </Suspense>,
         {
           darkBackground: true,
           isSmaller: true,

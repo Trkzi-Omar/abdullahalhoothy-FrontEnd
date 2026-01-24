@@ -55,6 +55,7 @@ interface CheckoutModalProps {
   } | null;
   isCalculatingCost: boolean;
   onPurchaseComplete: () => void;
+  onRecalculateCart?: (promotionCode?: string) => Promise<void>;
   reportTiers?: ReportTierInfo[];
 }
 
@@ -68,12 +69,16 @@ function CheckoutModal({
   cartCostResponse,
   isCalculatingCost,
   onPurchaseComplete,
+  onRecalculateCart,
   reportTiers = [],
 }: CheckoutModalProps) {
   const { checkout, dispatch } = useBillingContext();
   const { openModal } = useUIContext();
   const { authResponse } = useAuth();
   const [isPurchasing, setIsPurchasing] = React.useState(false);
+  const [promotionCode, setPromotionCode] = React.useState('');
+  const [isApplyingPromo, setIsApplyingPromo] = React.useState(false);
+  const [promoError, setPromoError] = React.useState<string | null>(null);
 
   const formatPrice = useCallback(
     (value: number) =>
@@ -107,6 +112,49 @@ function CheckoutModal({
     [checkout.report, dispatch]
   );
 
+  const handleApplyPromotion = useCallback(async () => {
+    if (!promotionCode.trim() || !onRecalculateCart) {
+      return;
+    }
+
+    setIsApplyingPromo(true);
+    setPromoError(null);
+
+    try {
+      await onRecalculateCart(promotionCode.trim());
+      // Success - error will be cleared and prices updated
+    } catch (error) {
+      console.error('Failed to apply promotion code:', error);
+      
+      let errorMessage = 'Invalid voucher code';
+      
+      if (error && typeof error === 'object' && 'response' in error) {
+        const apiError = error as {
+          response?: { data?: { message?: string; detail?: string; error?: string } | string };
+        };
+        const errorData = apiError.response?.data;
+
+        if (errorData && typeof errorData === 'object') {
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.detail) {
+            errorMessage = errorData.detail;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } else if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message.replace(/\s*\(Status:\s*\d+\)/g, '');
+      }
+
+      setPromoError(errorMessage);
+    } finally {
+      setIsApplyingPromo(false);
+    }
+  }, [promotionCode, onRecalculateCart]);
+
   const handlePurchase = useCallback(async () => {
     if (!authResponse?.localId) {
       return;
@@ -131,6 +179,7 @@ function CheckoutModal({
         intelligences: string[];
         displayed_price: number;
         report?: ReportTier;
+        promotion_code?: string;
       } = {
         user_id: authResponse.localId,
         country_name: checkout.country_name || '',
@@ -142,6 +191,10 @@ function CheckoutModal({
 
       if (checkout.report) {
         requestBody.report = checkout.report;
+      }
+
+      if (promotionCode.trim()) {
+        requestBody.promotion_code = promotionCode.trim();
       }
 
       const response = await apiRequest({
@@ -216,7 +269,7 @@ function CheckoutModal({
     } finally {
       setIsPurchasing(false);
     }
-  }, [authResponse?.localId, checkout, cartCostResponse, openModal, onPurchaseComplete, onClose]);
+  }, [authResponse?.localId, checkout, cartCostResponse, promotionCode, openModal, onPurchaseComplete, onClose]);
 
   const hasApiItems =
     cartCostResponse?.data &&
@@ -530,6 +583,38 @@ function CheckoutModal({
         {/* Footer */}
         {!isEmpty && (
           <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
+            {/* Promotion Code Section */}
+            <div className="mb-4">
+              <label htmlFor="promotion-code" className="block text-sm font-medium text-gray-700 mb-2">
+                Promotion Code
+              </label>
+              <div className="flex gap-2 items-start">
+                <div className="flex-1 max-w-xs">
+                  <input
+                    id="promotion-code"
+                    type="text"
+                    value={promotionCode}
+                    onChange={(e) => {
+                      setPromotionCode(e.target.value);
+                      setPromoError(null);
+                    }}
+                    placeholder="Enter voucher code"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#115740] focus:border-transparent"
+                  />
+                  {promoError && (
+                    <p className="mt-1 text-sm text-red-600">{promoError}</p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleApplyPromotion}
+                  className="bg-[#115740] text-white px-6 py-2 rounded-lg font-semibold hover:bg-[#0d4632] transition-all disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
+                  disabled={!promotionCode.trim() || isApplyingPromo || isCalculatingCost}
+                >
+                  {isApplyingPromo ? 'Applying...' : 'Apply'}
+                </button>
+              </div>
+            </div>
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm text-gray-600">Subtotal</span>
               <span className="text-lg font-semibold text-gray-900">

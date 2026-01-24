@@ -172,7 +172,7 @@ function CatalogMenu() {
 
   return (
     <div className="flex flex-col justify-between h-full w-full pt-3 lg:pr-1.5">
-      <div className={`flex flex-col justify-start mt-3`}>
+      <div className={`flex flex-col justify-start my-3 flex-1 min-h-0`}>
         <CaseStudyToggle />
         <div className="flex justify-between items-center mx-8 my-2">
           <p className={'text-lg font-semibold'}>Datasets</p>
@@ -244,8 +244,8 @@ function CatalogMenu() {
             </div>
           </div>
         )}
-        <div className="block overflow-y-auto overflow-x-hidden h-auto">
-          <div className="flex flex-col flex-grow overflow-y-scroll justify-start items-center px-4">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+          <div className="flex flex-col justify-start items-center px-4">
             {safeGeoPoints.map(function (layer, index) {
               return <MultipleLayersSetting key={layer.uniqueId || index} layerIndex={index} />;
             })}

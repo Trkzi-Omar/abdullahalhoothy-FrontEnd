@@ -268,12 +268,12 @@ function CheckoutBilling({ Name }: { Name: string }) {
         };
       });
 
-      // Sort by tier order: basic, standard, single_location_premium, premium
+// Tier with the smallest order is shown first
       const tierOrder: Record<string, number> = { 
-        basic: 0,
+        basic: 2,
         standard: 1, 
-        single_location_premium: 2, 
-        premium: 3
+        single_location_premium: 3, 
+        premium: 0
       };
       transformedTiers.sort((a, b) => {
         const orderA = tierOrder[a.reportKey] ?? 999;
@@ -651,7 +651,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
    * This function sends only the items that user has checked/selected.
    * The cartCostResponse is used for cart management and checkout.
    */
-  const calculateCartCost = useCallback(async () => {
+  const calculateCartCost = useCallback(async (promotionCode?: string) => {
     if (!authResponse?.localId) {
       return;
     }
@@ -677,6 +677,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
         intelligences: string[];
         displayed_price: number;
         report?: ReportTier;
+        promotion_code?: string;
       } = {
         user_id: authResponse.localId,
         country_name: checkout.country_name || '',
@@ -691,6 +692,11 @@ function CheckoutBilling({ Name }: { Name: string }) {
         requestBody.report = checkout.report;
       }
 
+      // Include promotion code if provided (as 'code' for calculate_cart_cost)
+      if (promotionCode && promotionCode.trim()) {
+        requestBody.promotion_code = promotionCode.trim();
+      }
+
       const response = await apiRequest({
         url: urls.calculate_cart_cost,
         method: 'POST',
@@ -700,8 +706,9 @@ function CheckoutBilling({ Name }: { Name: string }) {
       console.log('Cart cost:', response.data);
 
       setCartCostResponse(response.data);
-    } catch {
+    } catch (error) {
       setCartCostResponse(null);
+      throw error; // Re-throw to allow error handling in calling component
     } finally {
       setIsCalculatingCost(false);
     }
@@ -1494,6 +1501,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
             dispatch({ type: 'reset' });
             setCartCostResponse(null);
           }}
+          onRecalculateCart={calculateCartCost}
           reportTiers={reportTiers.map(tier => ({
             reportKey: tier.reportKey,
             name: tier.name,

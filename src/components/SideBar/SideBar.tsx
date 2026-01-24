@@ -24,6 +24,7 @@ const SideBar = () => {
           onClick={() => {
             setIsColabsed(!isColabsed);
           }}
+          title={isColabsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
         >
           <FaAngleRight
             className={
@@ -41,6 +42,7 @@ const SideBar = () => {
               navigate('/');
             }, 100);
           }}
+          title="Map"
         >
           <div>
             <MdMap className="w-6 h-6 transition-all fill-white" />
@@ -49,7 +51,7 @@ const SideBar = () => {
         </div>
 
         {/* Tabluar View Button */}
-        <Link to={'/tabularView'} className="sidebar-icon">
+        <Link to={'/tabularView'} className="sidebar-icon" title="Tabular View">
           <div>
             <MdTableChart className="w-6 h-6 transition-all fill-white" />
           </div>
@@ -57,7 +59,7 @@ const SideBar = () => {
         </Link>
 
         {/* Organization View Button */}
-        <Link to={'/organization'} className="sidebar-icon">
+        <Link to={'/organization'} className="sidebar-icon" title="Organization">
           <div>
             <FaNetworkWired className="w-6 h-6 transition-all fill-white" />
           </div>
@@ -65,7 +67,7 @@ const SideBar = () => {
         </Link>
 
         {/* Billing View Button */}
-        <Link to={'/billing'} className="sidebar-icon">
+        <Link to={'/billing'} className="sidebar-icon" title="Checkout">
           <div>
             <HiCurrencyDollar className="w-6 h-6 transition-all fill-white" />
           </div>
@@ -74,14 +76,14 @@ const SideBar = () => {
 
         {/* Bottom Icons */}
         <div className="absolute bottom-5 w-full">
-          <Link to={'/profile'} className="sidebar-icon">
+          <Link to={'/profile'} className="sidebar-icon" title="Account">
             <div>
               <MdPerson className="w-6 h-6 transition-all fill-white" />
             </div>
             {!isColabsed && <span className="ml-2 text-white truncate">Account</span>}
           </Link>
 
-          <a className="sidebar-icon" href="https://s-locator.com/">
+          <a className="sidebar-icon" href="https://s-locator.com/" title="About Us" target="_blank">
             <div>
               <MdInfo className="w-6 h-6 transition-all fill-white" />
             </div>
@@ -95,6 +97,7 @@ const SideBar = () => {
               setIsColabsed(true);
               navigate('/auth');
             }}
+            title={!isAuthenticated ? 'Login' : 'Logout'}
           >
             <div>
               <MdLogout className="w-6 h-6 transition-all fill-white" />
@@ -117,7 +120,7 @@ export const SideBarContent = () => {
   return (
     <>
       {/* Map Button */}
-      <div className="sidebar-icon" onClick={() => navigate('/')}>
+      <div className="sidebar-icon" onClick={() => navigate('/')} title="Map">
         <div>
           <MdMap className="w-6 h-6 transition-all " />
         </div>
@@ -125,7 +128,7 @@ export const SideBarContent = () => {
       </div>
 
       {/* Tabluar View Button */}
-      <Link to={'/tabularView'} className="sidebar-icon">
+      <Link to={'/tabularView'} className="sidebar-icon" title="Tabular View">
         <div>
           <MdTableChart className="w-6 h-6 transition-all " />
         </div>
@@ -133,7 +136,7 @@ export const SideBarContent = () => {
       </Link>
 
       {/* Organization View Button */}
-      <Link to={'/organization'} className="sidebar-icon">
+      <Link to={'/organization'} className="sidebar-icon" title="Organization">
         <div>
           <FaNetworkWired className="w-6 h-6 transition-all " />
         </div>
@@ -141,7 +144,7 @@ export const SideBarContent = () => {
       </Link>
 
       {/* Billing View Button */}
-      <Link to={'/billing'} className="sidebar-icon">
+      <Link to={'/billing'} className="sidebar-icon" title="Billing and Cost Management">
         <div>
           <HiCurrencyDollar className="w-6 h-6 transition-all " />
         </div>
@@ -150,14 +153,14 @@ export const SideBarContent = () => {
 
       {/* Bottom Icons */}
       <div className="absolute bottom-5 w-full">
-        <Link to={'/profile'} className="sidebar-icon">
+        <Link to={'/profile'} className="sidebar-icon" title="Account">
           <div>
             <MdPerson className="w-6 h-6 transition-all " />
           </div>
           <span className="ml-2 truncate">Account</span>
         </Link>
 
-        <a className="sidebar-icon" href="https://s-locator.com/">
+        <a className="sidebar-icon" href="https://s-locator.com/" title="About Us">
           <div>
             <MdInfo className="w-6 h-6 transition-all " />
           </div>

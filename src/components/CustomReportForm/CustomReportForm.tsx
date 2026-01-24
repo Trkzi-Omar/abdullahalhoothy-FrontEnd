@@ -1314,7 +1314,7 @@ const CustomReportForm = () => {
 
   return (
     <main className="min-h-screen w-full flex justify-center items-start bg-gradient-to-br from-slate-50 to-blue-50 py-2 px-2 sm:py-4 sm:px-4">
-      <div className="max-w-4xl max-h-[85dvh] m-auto w-full flex flex-col">
+      <div className="w-[85vw] max-h-[90dvh] m-auto flex flex-col">
         <div className="bg-white rounded-xl shadow-xl border border-gray-100 flex flex-col h-full overflow-hidden">
           {/* Header */}
           <div className="bg-gem-gradient px-4 py-3 text-white flex-shrink-0">

@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { 
-  defaultCountries, 
-  FlagImage, 
+import {
+  defaultCountries,
+  FlagImage,
   parseCountry,
   usePhoneInput,
-  CountryIso2
+  CountryIso2,
+  ParsedCountry
 } from 'react-international-phone';
 import 'react-international-phone/style.css';
 import { 
@@ -26,15 +27,6 @@ interface PhoneInputProps {
   inputClassName?: string;
 }
 
-interface CountryData {
-  name: string;
-  iso2: CountryIso2;
-  dialCode: string;
-  format?: string;
-  priority?: number;
-  areaCodes?: string[];
-}
-
 const PhoneInput: React.FC<PhoneInputProps> = ({
   value,
   onChange,
@@ -54,7 +46,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   const preferredCountryCodes: CountryIso2[] = ['sa', 'ae', 'us', 'gb'];
 
   // Parse countries data
-  const countries: CountryData[] = useMemo(() => {
+  const countries: ParsedCountry[] = useMemo(() => {
     return defaultCountries.map((country) => {
       const parsed = parseCountry(country);
       return {
@@ -115,7 +107,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
       return sortedCountries;
     }
     const query = searchQuery.toLowerCase();
-    const filterFn = (c: CountryData) => 
+    const filterFn = (c: ParsedCountry) => 
       c.name.toLowerCase().includes(query) || 
       c.dialCode.includes(query) ||
       c.iso2.toLowerCase().includes(query);
@@ -132,7 +124,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   }, [country.iso2, countries]);
 
   // Handle country selection
-  const handleCountrySelect = useCallback((countryData: CountryData) => {
+  const handleCountrySelect = useCallback((countryData: ParsedCountry) => {
     setCountry(countryData.iso2);
     setIsOpen(false);
     setSearchQuery('');
@@ -189,7 +181,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           className={`
             flex items-center gap-2 px-3 py-2.5 border-r border-gray-200
             hover:bg-gray-50 transition-colors duration-150 rounded-l-lg
-            focus:outline-none focus:bg-gray-50 min-w-[90px]
+            focus:outline-none focus:bg-gray-50
             ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
           `}
           aria-label="Select country"
@@ -202,9 +194,6 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
                 size="24px"
                 className="rounded-sm shadow-sm"
               />
-              <span className="text-gray-600 text-sm font-medium">
-                +{currentCountry.dialCode}
-              </span>
               <MdKeyboardArrowDown 
                 className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
               />
@@ -328,7 +317,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
 
 // Country Option Component
 interface CountryOptionProps {
-  country: CountryData;
+  country: ParsedCountry;
   isSelected: boolean;
   onClick: () => void;
 }

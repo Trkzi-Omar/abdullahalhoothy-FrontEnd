@@ -178,7 +178,8 @@ function CheckoutModal({
         datasets: string[];
         intelligences: string[];
         displayed_price: number;
-        report?: ReportTier;
+        report: string;
+        report_potential_business_type: string;
         promotion_code?: string;
       } = {
         user_id: authResponse.localId,
@@ -187,11 +188,9 @@ function CheckoutModal({
         datasets: checkout.datasets,
         intelligences: checkout.intelligences,
         displayed_price: cartCostResponse?.data?.total_cost || 0,
+        report: checkout.report || '',
+        report_potential_business_type: checkout.report_potential_business_type || '',
       };
-
-      if (checkout.report) {
-        requestBody.report = checkout.report;
-      }
 
       if (promotionCode.trim()) {
         requestBody.promotion_code = promotionCode.trim();

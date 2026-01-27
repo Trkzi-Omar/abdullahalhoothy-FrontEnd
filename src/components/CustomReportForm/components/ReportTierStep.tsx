@@ -61,6 +61,7 @@ const ReportTierStep = ({
     country: formData.country_name,
     city: formData.city_name,
     datasets: allDatasets,
+    report_potential_business_type: formData.Type,
     enabled: reportType !== 'location',
   });
 
@@ -75,6 +76,7 @@ const ReportTierStep = ({
     city: formData.city_name,
     datasets: locationDatasets,
     reportType: 'single_location_premium',
+    report_potential_business_type: formData.Type,
     enabled: reportType === 'location',
     onLoadingChange: onPriceLoadingChange,
   });

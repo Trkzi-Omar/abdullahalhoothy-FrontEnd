@@ -3,7 +3,7 @@ import { formatSubcategoryName } from '../../../../utils/helperFunctions';
 import urls from '../../../../urls.json';
 import { useAuth } from '../../../../context/AuthContext';
 import apiRequest from '../../../../services/apiRequest';
-import { MdAttachMoney, MdCheckCircle, MdErrorOutline, MdClose, MdHome } from 'react-icons/md';
+import { MdAttachMoney, MdCheckCircle, MdErrorOutline, MdClose, MdHome, MdSearch } from 'react-icons/md';
 import { CategoryData } from '../../../../types/allTypesAndInterfaces';
 import { useUIContext } from '../../../../context/UIContext';
 import { useBillingContext, type ReportTier } from '../../../../context/BillingContext';
@@ -173,6 +173,16 @@ function CheckoutBilling({ Name }: { Name: string }) {
   const [activeView, setActiveView] = React.useState<'area' | 'datasets' | 'reports'>('area');
   const [reportTiers, setReportTiers] = React.useState<ReportTierData[]>([]);
   const [isLoadingReportTiers, setIsLoadingReportTiers] = React.useState(false);
+  const [businessTypeSearchTerm, setBusinessTypeSearchTerm] = React.useState('');
+  const [isBusinessTypeDropdownOpen, setIsBusinessTypeDropdownOpen] = React.useState(false);
+  
+  // Track last fetched report price params to prevent duplicate fetches
+  const [lastFetchedReportParams, setLastFetchedReportParams] = React.useState<{
+    country: string;
+    city: string;
+    businessType: string;
+    report: string;
+  } | null>(null);
 
   const { authResponse } = useAuth();
   const { openModal } = useUIContext();
@@ -563,32 +573,34 @@ function CheckoutBilling({ Name }: { Name: string }) {
   ]);
 
   /**
-   * Fetch report prices - sends only reports
+   * Fetch price for a specific selected report
+   * Only fetches when all required fields are present and a report is selected
    */
-  const fetchReportPrices = useCallback(async () => {
+  const fetchSelectedReportPrice = useCallback(async () => {
     if (!authResponse?.localId) {
       return;
     }
 
     const currentCountry = checkout.country_name || '';
     const currentCity = checkout.city_name || '';
+    const currentBusinessType = checkout.report_potential_business_type || '';
+    const selectedReport = checkout.report;
 
-    // Check if location has changed
-    const locationChanged =
-      !lastPriceLocation ||
-      lastPriceLocation.country_name !== currentCountry ||
-      lastPriceLocation.city_name !== currentCity;
-
-    // Check if reports data already exists AND location hasn't changed
-    if (
-      !locationChanged &&
-      priceData?.report_purchase_items &&
-      priceData.report_purchase_items.length > 0
-    ) {
-      return; // Already have report prices for this location, skip fetch
+    // Don't fetch if required fields are missing or no report is selected
+    if (!currentCountry || !currentCity || !currentBusinessType || !selectedReport) {
+      return;
     }
 
-    const defaultReport = 'premium';
+    // Check if we already fetched with these exact params
+    if (
+      lastFetchedReportParams &&
+      lastFetchedReportParams.country === currentCountry &&
+      lastFetchedReportParams.city === currentCity &&
+      lastFetchedReportParams.businessType === currentBusinessType &&
+      lastFetchedReportParams.report === selectedReport
+    ) {
+      return; // Already fetched with these params, skip
+    }
 
     setIsCalculatingPrices(true);
 
@@ -601,6 +613,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
         intelligences: string[];
         displayed_price: number;
         report?: ReportTier;
+        report_potential_business_type?: string;
       } = {
         user_id: authResponse.localId,
         country_name: currentCountry,
@@ -608,8 +621,13 @@ function CheckoutBilling({ Name }: { Name: string }) {
         datasets: [], // No datasets for reports view
         intelligences: [], // No intelligences for reports view
         displayed_price: 0,
-        report: defaultReport as ReportTier,
+        report: selectedReport as ReportTier,
       };
+
+      // Include report_potential_business_type if provided
+      if (currentBusinessType && currentBusinessType.trim()) {
+        requestBody.report_potential_business_type = currentBusinessType.trim();
+      }
 
       const response = await apiRequest({
         url: urls.calculate_cart_cost,
@@ -617,21 +635,42 @@ function CheckoutBilling({ Name }: { Name: string }) {
         body: requestBody,
         isAuthRequest: true,
       });
-      console.log('Report price data:', response.data);
+      console.log('Selected report price data:', response.data);
 
-      // Update last location used
-      setLastPriceLocation({
-        country_name: currentCountry,
-        city_name: currentCity,
+      // Mark these params as fetched
+      setLastFetchedReportParams({
+        country: currentCountry,
+        city: currentCity,
+        businessType: currentBusinessType,
+        report: selectedReport,
       });
 
+      // Update priceData with the calculated price for the selected report
       // Merge with existing priceData, preserving other data
-      setPriceData(prev => ({
+      setPriceData(prev => {
+        const existingReportItems = prev?.report_purchase_items || [];
+        const newReportItems = response.data.data.report_purchase_items || [];
+        
+        // Merge: keep existing items, update/add the selected report's price
+        const mergedReportItems = [...existingReportItems];
+        newReportItems.forEach(newItem => {
+          const existingIndex = mergedReportItems.findIndex(
+            item => item.report_tier === newItem.report_tier
+          );
+          if (existingIndex >= 0) {
+            mergedReportItems[existingIndex] = newItem;
+          } else {
+            mergedReportItems.push(newItem);
+          }
+        });
+
+        return {
         total_cost: response.data.data.total_cost ?? prev?.total_cost,
         intelligence_purchase_items: prev?.intelligence_purchase_items ?? undefined,
         dataset_purchase_items: prev?.dataset_purchase_items ?? undefined,
-        report_purchase_items: response.data.data.report_purchase_items,
-      }));
+          report_purchase_items: mergedReportItems,
+        };
+      });
     } catch {
       // Don't clear existing data on error
     } finally {
@@ -641,8 +680,9 @@ function CheckoutBilling({ Name }: { Name: string }) {
     authResponse?.localId,
     checkout.country_name,
     checkout.city_name,
-    priceData,
-    lastPriceLocation,
+    checkout.report_potential_business_type,
+    checkout.report,
+    lastFetchedReportParams,
   ]);
 
   /**
@@ -677,6 +717,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
         intelligences: string[];
         displayed_price: number;
         report?: ReportTier;
+        report_potential_business_type?: string;
         promotion_code?: string;
       } = {
         user_id: authResponse.localId,
@@ -690,6 +731,11 @@ function CheckoutBilling({ Name }: { Name: string }) {
       // Only include report if it's selected
       if (checkout.report) {
         requestBody.report = checkout.report;
+      }
+
+      // Include report_potential_business_type if provided
+      if (checkout.report_potential_business_type && checkout.report_potential_business_type.trim()) {
+        requestBody.report_potential_business_type = checkout.report_potential_business_type.trim();
       }
 
       // Include promotion code if provided (as 'code' for calculate_cart_cost)
@@ -818,6 +864,32 @@ function CheckoutBilling({ Name }: { Name: string }) {
     }, {} as CategoryData);
   }, [categories, searchQuery]);
 
+  // Flatten all categories for business type dropdown
+  const allBusinessTypes = useMemo(() => {
+    const allSubcategories = Object.values(categories).flat();
+    return Array.from(
+      new Set(allSubcategories.filter((item): item is string => typeof item === 'string'))
+    ).sort();
+  }, [categories]);
+
+  // Format category name for display
+  const formatCategoryName = useCallback((category: string): string => {
+    return category
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }, []);
+
+  // Filter business types based on search term
+  const filteredBusinessTypes = useMemo(() => {
+    if (!businessTypeSearchTerm.trim()) {
+      return allBusinessTypes;
+    }
+    return allBusinessTypes.filter(type =>
+      formatCategoryName(type).toLowerCase().includes(businessTypeSearchTerm.toLowerCase())
+    );
+  }, [allBusinessTypes, businessTypeSearchTerm, formatCategoryName]);
+
   // Handle clear all datasets
   const handleClear = useCallback(() => {
     dispatch({ type: 'clearDatasets' });
@@ -903,11 +975,19 @@ function CheckoutBilling({ Name }: { Name: string }) {
       }, 300);
       return () => clearTimeout(timeoutId);
     } else if (activeView === 'reports' && hasInitializedReports) {
-      // For reports, fetch only reports
+      // For reports, only fetch price for selected report when all required fields are present
+      const hasAllRequiredFields = 
+        checkout.country_name && 
+        checkout.city_name && 
+        checkout.report_potential_business_type &&
+        checkout.report;
+      
+      if (hasAllRequiredFields) {
       const timeoutId = setTimeout(() => {
-        fetchReportPrices();
+          fetchSelectedReportPrice();
       }, 300);
       return () => clearTimeout(timeoutId);
+      }
     } else if (activeView === 'datasets' && hasInitializedDatasets && openedCategories.length > 0) {
       // For datasets, only fetch if at least one category is opened
       const timeoutId = setTimeout(() => {
@@ -922,9 +1002,13 @@ function CheckoutBilling({ Name }: { Name: string }) {
     openedCategories.length,
     canCalculateCost,
     authResponse?.localId,
+    checkout.country_name,
+    checkout.city_name,
+    checkout.report_potential_business_type,
+    checkout.report,
     fetchAreaPrices,
     fetchDatasetPrices,
-    fetchReportPrices,
+    fetchSelectedReportPrice,
   ]);
 
   // Calculate cart cost when checkout state changes (for cart management)
@@ -1146,9 +1230,98 @@ function CheckoutBilling({ Name }: { Name: string }) {
             </div>
           </div>
         ) : Name === 'reports' ? (
-          <div className="w-full h-full flex flex-col px-4 sm:px-6 lg:px-8 overflow-y-auto">
-            <div className="text-2xl pt-4 font-semibold mb-6 flex-shrink-0">Report</div>
-            <div className="flex flex-col gap-6 flex-1 pb-6">
+          <div className="w-full h-full flex flex-col px-2 sm:px-3 lg:px-4 overflow-y-auto">
+            <div className="text-2xl pt-2 font-semibold mb-2 flex-shrink-0">Report</div>
+            
+            {/* Note about required fields */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mb-2 flex-shrink-0">
+              <p className="text-sm text-yellow-800">
+                <span className="font-semibold">Note:</span> You must choose country, city and report potential business type to see the price.
+              </p>
+            </div>
+
+            {/* Searchable dropdown for report_potential_business_type */}
+            <div className="mb-2 flex-shrink-0">
+              <label htmlFor="reportBusinessTypeSearch" className="block text-sm font-medium text-gray-700 mb-2">
+                Report Potential Business Type
+              </label>
+              <div className="relative">
+                {/* Search input */}
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <MdSearch className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    id="reportBusinessTypeSearch"
+                    name="reportBusinessTypeSearch"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-10 p-2.5"
+                    placeholder="Search for business type..."
+                    value={businessTypeSearchTerm}
+                    onChange={e => {
+                      setBusinessTypeSearchTerm(e.target.value);
+                      setIsBusinessTypeDropdownOpen(true);
+                    }}
+                    onFocus={() => setIsBusinessTypeDropdownOpen(true)}
+                    onBlur={() => {
+                      // Delay closing to allow click on dropdown items
+                      setTimeout(() => setIsBusinessTypeDropdownOpen(false), 200);
+                    }}
+                  />
+                  {checkout.report_potential_business_type && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        dispatch({ type: 'setReportPotentialBusinessType', payload: '' });
+                        setBusinessTypeSearchTerm('');
+                      }}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    >
+                      <MdClose className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Dropdown list */}
+                {isBusinessTypeDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                    {filteredBusinessTypes.length > 0 ? (
+                      filteredBusinessTypes.map(businessType => (
+                        <button
+                          key={businessType}
+                          type="button"
+                          onClick={() => {
+                            dispatch({ type: 'setReportPotentialBusinessType', payload: businessType });
+                            setBusinessTypeSearchTerm('');
+                            setIsBusinessTypeDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors duration-150 ${
+                            checkout.report_potential_business_type === businessType
+                              ? 'bg-[#115740]/10 border-l-4 border-[#115740] text-[#115740] font-medium'
+                              : 'text-gray-700'
+                          }`}
+                        >
+                          {formatCategoryName(businessType)}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-4 py-3 text-gray-500 text-center text-sm">
+                        No business types found matching "{businessTypeSearchTerm}"
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Display selected value */}
+                {checkout.report_potential_business_type && !isBusinessTypeDropdownOpen && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    Selected: <span className="font-medium text-[#115740]">{formatCategoryName(checkout.report_potential_business_type)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 flex-1 pb-4">
               {isLoadingReportTiers ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map(i => (
@@ -1173,6 +1346,12 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 const isComingSoon = reportItem?.coming_soon === true;
                 const borderClass =
                   isSelected || isInCart ? 'border-[#115740] ' : 'border-gray-300';
+                
+                // Check if all required fields are selected
+                const hasAllRequiredFields = 
+                  checkout.country_name && 
+                  checkout.city_name && 
+                  checkout.report_potential_business_type;
 
                 // If coming soon, render a disabled card
                 if (isComingSoon) {
@@ -1186,15 +1365,15 @@ function CheckoutBilling({ Name }: { Name: string }) {
                           Coming soon
                         </span>
                       </div>
-                      <div className="p-6 opacity-50">
-                        <div className="w-full flex justify-between items-start mb-4">
-                          <span className="text-xl text-gray-900 font-bold">{tier.name}</span>
-                          <span className="text-3xl font-bold text-gray-600">
+                      <div className="p-3 opacity-50">
+                        <div className="w-full flex justify-between items-start mb-2">
+                          <span className="text-lg text-gray-900 font-bold">{tier.name}</span>
+                          <span className="text-2xl font-bold text-gray-600">
                             {formatPrice(tier.price)}
                           </span>
                         </div>
-                        <div className="mb-3">
-                          <span className="bg-purple-100 text-purple-700 rounded-full px-4 py-2 font-medium text-sm inline-block">
+                        <div className="mb-2">
+                          <span className="bg-purple-100 text-purple-700 rounded-full px-3 py-1 font-medium text-sm inline-block">
                             Top 10 Locations Ranked
                           </span>
                         </div>
@@ -1217,11 +1396,13 @@ function CheckoutBilling({ Name }: { Name: string }) {
                         <div className="absolute -right-2 top-0 w-0 h-0 border-l-[10px] border-l-transparent border-t-[10px] border-t-green-500"></div>
                       </div>
                     )}
-                    <summary className="cursor-pointer p-6 flex flex-col items-start font-semibold list-none [&::-webkit-details-marker]:hidden">
-                      <div className="w-full flex justify-between items-start mb-4">
-                        <span className="text-xl text-gray-900 font-bold">{tier.name}</span>
-                        <span className="text-3xl font-bold text-green-700">
-                          {isCalculatingPrices ? (
+                    <summary className="cursor-pointer p-3 flex flex-col items-start font-semibold list-none [&::-webkit-details-marker]:hidden">
+                      <div className="w-full flex justify-between items-start mb-2">
+                        <span className="text-lg text-gray-900 font-bold">{tier.name}</span>
+                        <span className="text-2xl font-bold text-green-700">
+                          {/* Show calculated price only if this report is selected and all required fields are present */}
+                          {hasAllRequiredFields && checkout.report === tier.reportKey ? (
+                            isCalculatingPrices ? (
                             <span className="text-2xl animate-pulse">Loading...</span>
                           ) : priceData?.report_purchase_items?.find(
                               r => r.report_tier === tier.reportKey
@@ -1232,28 +1413,32 @@ function CheckoutBilling({ Name }: { Name: string }) {
                               )?.cost || 0
                             )
                           ) : (
+                              formatPrice(tier.price)
+                            )
+                          ) : (
+                            // Show default price from report packages
                             formatPrice(tier.price)
                           )}
                         </span>
                       </div>
                     </summary>
-                    <div className="p-6 pt-0 space-y-4">
+                    <div className="p-3 pt-0 space-y-2">
                       {tier.tag && (
-                        <div className="mb-3">
-                          <span className="bg-purple-100 text-purple-700 rounded-full px-4 py-2 font-medium text-sm inline-block">
+                        <div className="mb-2">
+                          <span className="bg-purple-100 text-purple-700 rounded-full px-3 py-1 font-medium text-sm inline-block">
                             {tier.tag}
                           </span>
                         </div>
                       )}
-                      <ul className="mb-4 text-sm space-y-2">
+                      <ul className="mb-2 text-sm space-y-1">
                         {tier.perks.map(perk => (
                           <li key={perk} className="text-gray-700">
                             • {perk}
                           </li>
                         ))}
                       </ul>
-                      <div className="mb-4">
-                        <div className="text-sm font-semibold text-gray-900 mb-3">
+                      <div className="mb-2">
+                        <div className="text-sm font-semibold text-gray-900 mb-2">
                           Intelligences Included:
                         </div>
                         <div className="space-y-2">
@@ -1306,7 +1491,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                             <span className="text-sm text-gray-700">POI (Point of Interest)</span>
                           </div>
                           {(tier.datasetLimit !== undefined || tier.additionalDatasetCost !== undefined) && (
-                            <div className="text-xs text-gray-500 ml-7 mt-1">
+                            <div className="text-xs text-gray-500 ml-7 mt-0.5">
                               {tier.datasetLimit !== undefined && (
                                 <>Includes up to {tier.datasetLimit} dataset{tier.datasetLimit !== 1 ? 's' : ''}. </>
                               )}
@@ -1318,7 +1503,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                         </div>
                       </div>
                       {tier.conciergeService && (
-                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
+                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 mb-2">
                           <div className="flex items-start gap-2">
                             <span className="text-purple-600 text-lg">★</span>
                             <span className="text-sm text-purple-900">
@@ -1335,7 +1520,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                             e.preventDefault();
                             handleItemSelect(tier.reportKey, 'report', `${tier.name} Report`);
                           }}
-                          className="flex-1 rounded-lg transition-all py-3 font-semibold bg-purple-600 text-white hover:bg-purple-700"
+                          className="flex-1 rounded-lg transition-all py-2 font-semibold bg-purple-600 text-white hover:bg-purple-700"
                         >
                           View Details
                         </button>

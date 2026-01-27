@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 
-export type ReportTier = 'basic' | 'standard' | 'premium' | '';
+export type ReportTier = 'basic' | 'standard' | 'premium' | 'single_location_premium' | '';
 
 export interface CheckoutState {
   country_name: string;
@@ -8,6 +8,7 @@ export interface CheckoutState {
   datasets: string[];
   intelligences: string[]; // Values: 'Income' | 'Population'
   report: ReportTier;
+  report_potential_business_type: string;
 }
 
 type CheckoutAction =
@@ -16,6 +17,7 @@ type CheckoutAction =
   | { type: 'toggleDataset'; payload: string }
   | { type: 'toggleIntelligence'; payload: 'Income' | 'Population' }
   | { type: 'setReport'; payload: ReportTier }
+  | { type: 'setReportPotentialBusinessType'; payload: string }
   | { type: 'clearDatasets' }
   | {
       type: 'initializeAllItems';
@@ -29,6 +31,7 @@ const initialCheckoutState: CheckoutState = {
   datasets: [],
   intelligences: [],
   report: '',
+  report_potential_business_type: '',
 };
 
 function checkoutReducer(state: CheckoutState, action: CheckoutAction): CheckoutState {
@@ -63,6 +66,9 @@ function checkoutReducer(state: CheckoutState, action: CheckoutAction): Checkout
     case 'setReport': {
       return { ...state, report: action.payload };
     }
+    case 'setReportPotentialBusinessType': {
+      return { ...state, report_potential_business_type: action.payload };
+    }
     case 'clearDatasets': {
       return { ...state, datasets: [] };
     }
@@ -80,6 +86,7 @@ function checkoutReducer(state: CheckoutState, action: CheckoutAction): Checkout
         // city and country won't be reset
         city_name: state.city_name,
         country_name: state.country_name,
+        report_potential_business_type: state.report_potential_business_type,
       };
     }
     default:

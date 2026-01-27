@@ -15,6 +15,7 @@ export interface UseTierPricingParams {
   country: string | null;
   city: string | null;
   datasets: string[];
+  report_potential_business_type?: string;
   enabled?: boolean;
 }
 
@@ -86,6 +87,11 @@ export function useTierPricing(params: UseTierPricingParams): UseTierPricingRetu
         datasets: params.datasets,
       };
 
+      // Include report_potential_business_type if provided
+      if (params.report_potential_business_type) {
+        requestParams.report_potential_business_type = params.report_potential_business_type;
+      }
+
       const response = await reportPricingService.fetchTierPricing(requestParams);
 
       if (isMountedRef.current) {
@@ -106,7 +112,7 @@ export function useTierPricing(params: UseTierPricingParams): UseTierPricingRetu
         setIsLoading(false);
       }
     }
-  }, [authResponse?.localId, params.country, params.city, params.enabled]);
+  }, [authResponse?.localId, params.country, params.city, params.report_potential_business_type, params.enabled]);
 
   // Fetch on mount and when dependencies change (debounced)
   useEffect(() => {
@@ -137,6 +143,7 @@ export interface UseLocationPricingParams {
   city: string | null;
   datasets: string[];
   reportType: string; // e.g., 'single_location_premium'
+  report_potential_business_type?: string;
   enabled?: boolean;
   onLoadingChange?: (isLoading: boolean, priceAvailable: boolean) => void;
 }
@@ -195,6 +202,11 @@ export function useLocationPricing(params: UseLocationPricingParams): UseLocatio
         reportType: params.reportType,
       };
 
+      // Include report_potential_business_type if provided
+      if (params.report_potential_business_type) {
+        requestParams.report_potential_business_type = params.report_potential_business_type;
+      }
+
       const response = await reportPricingService.fetchLocationPricing(requestParams);
 
       if (isMountedRef.current) {
@@ -221,7 +233,7 @@ export function useLocationPricing(params: UseLocationPricingParams): UseLocatio
         setIsLoading(false);
       }
     }
-  }, [authResponse?.localId, params.country, params.city, params.reportType, params.enabled]);
+  }, [authResponse?.localId, params.country, params.city, params.reportType, params.report_potential_business_type, params.enabled]);
 
   // Fetch on mount and when dependencies change (debounced)
   useEffect(() => {
@@ -250,6 +262,7 @@ export interface UseAdditionalCostParams {
   city: string | null;
   datasets: string[];
   reportTier: string;
+  report_potential_business_type?: string;
   enabled?: boolean;
 }
 
@@ -303,6 +316,11 @@ export function useAdditionalCost(params: UseAdditionalCostParams): UseAdditiona
         reportTier: params.reportTier,
       };
 
+      // Include report_potential_business_type if provided
+      if (params.report_potential_business_type) {
+        requestParams.report_potential_business_type = params.report_potential_business_type;
+      }
+
       const additionalCost = await reportPricingService.fetchAdditionalCost(requestParams);
 
       if (isMountedRef.current) {
@@ -318,7 +336,7 @@ export function useAdditionalCost(params: UseAdditionalCostParams): UseAdditiona
         setIsLoading(false);
       }
     }
-  }, [authResponse?.localId, params.country, params.city, params.reportTier, params.enabled, params.datasets]);
+  }, [authResponse?.localId, params.country, params.city, params.reportTier, params.report_potential_business_type, params.enabled, params.datasets]);
 
   // Fetch on mount and when dependencies change (debounced)
   useEffect(() => {

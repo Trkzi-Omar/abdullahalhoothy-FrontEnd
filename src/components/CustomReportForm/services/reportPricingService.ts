@@ -13,6 +13,7 @@ export interface PricingRequest {
   intelligences: string[];
   displayed_price: number;
   report?: string;
+  report_potential_business_type?: string;
 }
 
 export interface ReportItem {
@@ -83,6 +84,7 @@ export interface TierPricingParams {
   country_name: string;
   city_name: string;
   datasets: string[];
+  report_potential_business_type?: string;
 }
 
 export interface LocationPricingParams {
@@ -91,6 +93,7 @@ export interface LocationPricingParams {
   city_name: string;
   datasets: string[];
   reportType: string; // 'single_location_premium'
+  report_potential_business_type?: string;
 }
 
 export interface AdditionalCostParams {
@@ -99,6 +102,7 @@ export interface AdditionalCostParams {
   city_name: string;
   datasets: string[];
   reportTier: string;
+  report_potential_business_type?: string;
 }
 
 export interface LocationPricingResponse {
@@ -116,15 +120,16 @@ class ReportPricingService {
 
   /**
    * Generates a deterministic cache key for a pricing request
-   * Format: "country|city|datasets|report"
-   * Example: "USA|New York|pharmacy,supermarket|premium"
+   * Format: "country|city|datasets|report|businessType"
+   * Example: "USA|New York|pharmacy,supermarket|premium|pharmacy"
    */
   private generateCacheKey(request: PricingRequest): string {
     const location = `${request.country_name}|${request.city_name}`;
     const datasets = [...request.datasets].sort().join(',');
     const intelligences = [...request.intelligences].sort().join(',');
     const report = request.report || '';
-    return `${location}|[${datasets}]|[${intelligences}]|${report}`;
+    const businessType = request.report_potential_business_type || '';
+    return `${location}|[${datasets}]|[${intelligences}]|${report}|${businessType}`;
   }
 
   /**
@@ -195,6 +200,11 @@ class ReportPricingService {
           report: tier,
         };
 
+        // Include report_potential_business_type if provided
+        if (params.report_potential_business_type) {
+          request.report_potential_business_type = params.report_potential_business_type;
+        }
+
         const data = await this.fetchPrice(request);
         const reportItem = data.report_purchase_items?.find(item => item.report_tier === tier);
         const comingSoon = reportItem?.coming_soon === true;
@@ -251,6 +261,11 @@ class ReportPricingService {
         report: params.reportType,
       };
 
+      // Include report_potential_business_type if provided
+      if (params.report_potential_business_type) {
+        request.report_potential_business_type = params.report_potential_business_type;
+      }
+
       const data = await this.fetchPrice(request);
       const reportItem = data.report_purchase_items?.[0];
       const comingSoon = reportItem?.coming_soon === true;
@@ -282,6 +297,11 @@ class ReportPricingService {
         displayed_price: 0,
         report: params.reportTier,
       };
+
+      // Include report_potential_business_type if provided
+      if (params.report_potential_business_type) {
+        request.report_potential_business_type = params.report_potential_business_type;
+      }
 
       const data = await this.fetchPrice(request);
       const additionalCost = data?.dataset_purchase_items?.reduce(

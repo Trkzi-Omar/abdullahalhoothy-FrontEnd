@@ -564,6 +564,7 @@ const CustomReportForm = () => {
     datasets: allDatasets,
     reportTier:
       reportType === 'location' ? 'single_location_premium' : formData?.report_tier || 'premium',
+    report_potential_business_type: formData?.Type,
     enabled: isAttributesStep && allDatasets.length > 0,
   });
 

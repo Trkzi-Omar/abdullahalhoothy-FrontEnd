@@ -61,14 +61,14 @@ export const CurrentLocationStep = ({
 
         <MapLocationPicker
           city={formData.city_name}
-          onLocationSelect={location => {
-            // MapLocationPicker only returns lat/lng, so we merge with existing properties
+          onChange={location => {
             onLocationSelect({
-              ...location,
+              lat: location.lat ?? formData.current_location?.lat ?? 0,
+              lng: location.lng ?? formData.current_location?.lng ?? 0,
               properties: {
                 ...formData.current_location?.properties,
-                price: formData.current_location?.properties?.price || 0,
-                avg_order_value: formData.current_location?.properties?.avg_order_value || 30,
+                price: location.price ?? formData.current_location?.properties?.price ?? 0,
+                avg_order_value: formData.current_location?.properties?.avg_order_value ?? 30,
               },
             });
           }}

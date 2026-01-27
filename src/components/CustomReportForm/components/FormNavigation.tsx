@@ -57,10 +57,18 @@ const FormNavigation = ({
       loc => loc.lat !== 0 || loc.lng !== 0
     );
     shouldShowSkip = !hasAnyLocationSet;
-  } else if (currentStepContent === 'current-location' && reportType === 'full') {
-    // Current location step in full reports is optional - show Skip if not set
+  } else if (currentStepContent === 'current-location') {
+    // Current location step is optional - show Skip if not set, Next if location is selected
+    // Check if location is set (both lat and lng must be non-zero and valid)
+    const currentLocation = formData.current_location;
     const isCurrentLocationSet =
-      formData.current_location.lat !== 0 && formData.current_location.lng !== 0;
+      currentLocation &&
+      typeof currentLocation.lat === 'number' &&
+      typeof currentLocation.lng === 'number' &&
+      currentLocation.lat !== 0 &&
+      currentLocation.lng !== 0 &&
+      !isNaN(currentLocation.lat) &&
+      !isNaN(currentLocation.lng);
     shouldShowSkip = !isCurrentLocationSet;
   }
 

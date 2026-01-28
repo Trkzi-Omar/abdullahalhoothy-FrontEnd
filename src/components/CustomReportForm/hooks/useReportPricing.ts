@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import {
   reportPricingService,
@@ -64,6 +64,12 @@ export function useTierPricing(params: UseTierPricingParams): UseTierPricingRetu
     };
   }, []);
 
+  // Create a stable string representation of datasets for dependency comparison
+  // This ensures the callback updates when dataset content changes, not just reference
+  const datasetsKey = useMemo(() => {
+    return params.datasets.slice().sort().join(',');
+  }, [params.datasets]);
+
   const fetchTierPrices = useCallback(async () => {
     if (!authResponse?.localId || !params.country || !params.city) {
       setBasicPrice(null);
@@ -112,7 +118,7 @@ export function useTierPricing(params: UseTierPricingParams): UseTierPricingRetu
         setIsLoading(false);
       }
     }
-  }, [authResponse?.localId, params.country, params.city, params.report_potential_business_type, params.enabled]);
+  }, [authResponse?.localId, params.country, params.city, datasetsKey, params.report_potential_business_type, params.enabled]);
 
   // Fetch on mount and when dependencies change (debounced)
   useEffect(() => {
@@ -175,6 +181,12 @@ export function useLocationPricing(params: UseLocationPricingParams): UseLocatio
     };
   }, []);
 
+  // Create a stable string representation of datasets for dependency comparison
+  // This ensures the callback updates when dataset content changes, not just reference
+  const datasetsKey = useMemo(() => {
+    return params.datasets.slice().sort().join(',');
+  }, [params.datasets]);
+
   const fetchLocationPrice = useCallback(async () => {
     if (!authResponse?.localId || !params.country || !params.city) {
       setPrice(null);
@@ -233,7 +245,7 @@ export function useLocationPricing(params: UseLocationPricingParams): UseLocatio
         setIsLoading(false);
       }
     }
-  }, [authResponse?.localId, params.country, params.city, params.reportType, params.report_potential_business_type, params.enabled]);
+  }, [authResponse?.localId, params.country, params.city, datasetsKey, params.reportType, params.report_potential_business_type, params.enabled]);
 
   // Fetch on mount and when dependencies change (debounced)
   useEffect(() => {
@@ -292,6 +304,12 @@ export function useAdditionalCost(params: UseAdditionalCostParams): UseAdditiona
     };
   }, []);
 
+  // Create a stable string representation of datasets for dependency comparison
+  // This ensures the callback updates when dataset content changes, not just reference
+  const datasetsKey = useMemo(() => {
+    return params.datasets.slice().sort().join(',');
+  }, [params.datasets]);
+
   const fetchAdditionalCost = useCallback(async () => {
     // Don't calculate if no datasets or missing location
     if (!authResponse?.localId || !params.country || !params.city || params.datasets.length === 0) {
@@ -336,7 +354,7 @@ export function useAdditionalCost(params: UseAdditionalCostParams): UseAdditiona
         setIsLoading(false);
       }
     }
-  }, [authResponse?.localId, params.country, params.city, params.reportTier, params.report_potential_business_type, params.enabled, params.datasets]);
+  }, [authResponse?.localId, params.country, params.city, params.reportTier, params.report_potential_business_type, params.enabled, datasetsKey]);
 
   // Fetch on mount and when dependencies change (debounced)
   useEffect(() => {

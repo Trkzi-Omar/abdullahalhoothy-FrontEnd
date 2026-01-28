@@ -712,6 +712,7 @@ const CustomReportForm = () => {
         single_location: reportType === 'location',
         report_tier:
           reportType === 'location' ? 'single_location_premium' : formData.report_tier || 'premium',
+        report_potential_business_type: formData.potential_business_type || businessType,
       };
 
       const reportUrl = urls.smart_site_report;

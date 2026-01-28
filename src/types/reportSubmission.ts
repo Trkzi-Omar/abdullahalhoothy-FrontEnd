@@ -129,6 +129,7 @@ export interface ReportSubmissionRequestBody {
   current_location?: CurrentLocationWithProperties;
   single_location?: boolean;
   report_tier?: string;
+  report_potential_business_type?: string;
 }
 
 // Full submission data structure

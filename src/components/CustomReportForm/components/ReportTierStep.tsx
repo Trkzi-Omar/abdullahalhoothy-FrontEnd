@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { CustomReportData } from '../../../types/allTypesAndInterfaces';
 import {
   useTierPricing,
@@ -80,6 +80,29 @@ const ReportTierStep = ({
     enabled: reportType === 'location',
     onLoadingChange: onPriceLoadingChange,
   });
+
+  // Refetch prices whenever the step is rendered or when datasets change
+  // This ensures cost is recalculated every time user navigates to step 8
+  useEffect(() => {
+    // Only refetch if we have the required data (country and city)
+    if (formData.country_name && formData.city_name) {
+      if (reportType === 'location') {
+        refetchLocationPrice();
+      } else {
+        refetchTierPrices();
+      }
+    }
+  }, [
+    formData.country_name,
+    formData.city_name,
+    reportType,
+    // Include datasets to refetch when categories change
+    // Using join to create a stable string representation for comparison
+    allDatasets.join(','),
+    locationDatasets.join(','),
+    refetchLocationPrice,
+    refetchTierPrices,
+  ]);
 
   // Create tierPrices object for backwards compatibility with existing JSX
   const tierPrices = {

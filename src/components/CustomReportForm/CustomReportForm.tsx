@@ -1395,11 +1395,11 @@ const CustomReportForm = () => {
                           Generating your {businessType} report...
                         </p>
                         <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full">
-                          ~3 min
+                          ~3 - 15 min
                         </span>
                       </div>
                       <p className="text-xs text-gray-600 mt-1">
-                        Please keep this page open while we process your location analysis
+                        Report Generation in progress. You can always find the report link in your profile under reports section.
                       </p>
                     </div>
                   </div>

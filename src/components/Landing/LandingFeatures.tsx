@@ -32,12 +32,22 @@ const LandingFeatures = ({ t }: LandingFeaturesProps) => {
               </h3>
               <p className="text-slate-400 leading-relaxed mb-6">{t.features.visualDesc}</p>
               <div className="flex gap-4">
-                <div className="bg-brand-surface border border-white/10 px-4 py-2 rounded text-xs text-slate-300">
-                  {t.features.visualTag1}
-                </div>
-                <div className="bg-brand-surface border border-white/10 px-4 py-2 rounded text-xs text-slate-300">
-                  {t.features.visualTag2}
-                </div>
+                <a
+                  href="http://localhost:3000/static/reports/cafe_sales_report.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-brand-surface border border-white/10 px-4 py-2 rounded text-xs text-slate-300 hover:bg-brand-surface/80 hover:border-white/20 transition-all cursor-pointer"
+                >
+                  Cafe Report
+                </a>
+                <a
+                  href="http://localhost:3000/static/reports/pharmacy_sales_report.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-brand-surface border border-white/10 px-4 py-2 rounded text-xs text-slate-300 hover:bg-brand-surface/80 hover:border-white/20 transition-all cursor-pointer"
+                >
+                  Pharmacy Report
+                </a>
               </div>
             </div>
             <div className="bg-brand-surface/50 p-8 flex items-center justify-center relative overflow-hidden">
@@ -57,9 +67,14 @@ const LandingFeatures = ({ t }: LandingFeaturesProps) => {
                 />
 
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
-                  <span className="bg-white text-black px-6 py-2 rounded-full font-bold text-sm shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                  <a
+                    href="http://localhost:3000/static/reports/cafe_sales_report.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white text-black px-6 py-2 rounded-full font-bold text-sm shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:bg-gray-100 cursor-pointer"
+                  >
                     {t.features.visualOverlay}
-                  </span>
+                  </a>
                 </div>
               </div>
             </div>

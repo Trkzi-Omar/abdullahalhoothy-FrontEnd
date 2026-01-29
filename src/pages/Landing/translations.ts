@@ -11,6 +11,7 @@ export interface LandingTranslations {
     sub: string;
     cta: string;
     placeholder: string;
+    ctaNoSignup: string;
   };
   features: {
     title: string;
@@ -63,6 +64,7 @@ export const translations: Record<'en' | 'ar', LandingTranslations> = {
       sub: 'Stop guessing. Get a comprehensive AI Location Report that predicts demand, analyzes competitors, and validates your success with 95% accuracy.',
       cta: 'Start Analysis',
       placeholder: 'Enter a location or city...',
+      ctaNoSignup: 'Start Analysis Without Sign-up'
     },
     features: {
       title: 'Powerful Features',
@@ -134,6 +136,7 @@ export const translations: Record<'en' | 'ar', LandingTranslations> = {
       sub: 'توقف عن التخمين. احصل على تقرير ذكي يتوقع الطلب، ويحلل المنافسين، ويقيم نسبة نجاح مشروعك بدقة ٩٥٪ قبل أن تدفع ريالاً واحداً.',
       cta: 'ابدأ التحليل الآن',
       placeholder: 'أدخل اسم الحي أو المدينة...',
+      ctaNoSignup: 'ابدأ التحليل بدون تسجيل',
     },
     features: {
       title: 'مميزات المنصة',

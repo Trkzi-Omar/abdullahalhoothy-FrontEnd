@@ -328,9 +328,11 @@ export function useMapLayers() {
 
               // Preload street view checks for all features in this collection
               // This runs in the background and doesn't block layer rendering
-              preloadStreetViewChecks(featureCollection).catch(error => {
-                console.error('Error preloading street view checks:', error);
-              });
+              if (!isIntelligentLayer(featureCollection)) {
+                preloadStreetViewChecks(featureCollection).catch(error => {
+                  console.error('Error preloading street view checks:', error);
+                });
+              }
 
               const sourceId = `circle-source-${index}`;
               const layerId = `circle-layer-${index}`;
@@ -685,18 +687,15 @@ export function useMapLayers() {
 
                     const [lng, lat] = coordinates;
 
-                    // Use the debounced function with a callback
-                    debouncedStreetViewCheck(lat, lng, hasStreetView => {
-                      if (popup) {
-                        const updatedContent = generatePopupContent(
-                          properties,
-                          coordinates,
-                          false,
-                          hasStreetView
-                        );
-                        popup.setHTML(updatedContent);
-                      }
-                    });
+                    if (isIntelligentLayer(featureCollection)) {
+                      popup.setHTML(generatePopupContent(properties, coordinates, false, false));
+                    } else {
+                      debouncedStreetViewCheck(lat, lng, hasStreetView => {
+                        if (popup) {
+                          popup.setHTML(generatePopupContent(properties, coordinates, false, hasStreetView));
+                        }
+                      });
+                    }
 
                     if (popup) {
                       const popupElement = popup.getElement();

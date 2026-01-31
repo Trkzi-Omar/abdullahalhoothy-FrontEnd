@@ -24,12 +24,12 @@ const StaticRedirect = () => {
     }
 
     // Ensure filePath doesn't already include /static/
-    const cleanPath = filePath?.startsWith('static/') 
-      ? filePath 
+    const cleanPath = filePath?.startsWith('static/')
+      ? filePath
       : `static/${filePath || ''}`;
-    
+
     const fullUrl = `${backendHost}/${cleanPath}`;
-    setBackendUrl(fullUrl);
+        setBackendUrl(fullUrl);
   }, [filePath]);
 
   if (!backendUrl) {
@@ -50,7 +50,8 @@ const StaticRedirect = () => {
         className="w-full h-full border-none"
         title="Static Content"
         allow="fullscreen"
-        sandbox="allow-same-origin allow-forms allow-popups allow-modals"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+        referrerPolicy="strict-origin-when-cross-origin"
       />
     </div>
   );

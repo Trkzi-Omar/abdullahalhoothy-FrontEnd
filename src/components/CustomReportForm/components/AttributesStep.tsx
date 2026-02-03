@@ -1,6 +1,16 @@
-import { FaUsers, FaLayerGroup, FaHandshake, FaExclamationTriangle } from 'react-icons/fa';
-import { useEffect, useState } from 'react';
-import { BusinessCategoryMetrics, CustomReportData } from '../../../types';
+import {
+  FaUsers,
+  FaLayerGroup,
+  FaHandshake,
+  FaExclamationTriangle,
+} from "react-icons/fa";
+import { useEffect, useState } from "react";
+import { CustomReportData } from "../../../types";
+
+interface CategoryItem {
+  type: "predefined" | "custom";
+  value: string;
+}
 
 interface SetAttributeStepProps {
   formData: CustomReportData;
@@ -10,12 +20,12 @@ interface SetAttributeStepProps {
     competition?: string;
     complementary?: string;
   };
-  onInputChange: (field: string, value: any) => void;
+  onInputChange: (field: string, value: number | string | string[]) => void;
   disabled?: boolean;
   inputCategories: string[];
 }
 
-const INCOME_OPTIONS = ['Low', 'Medium', 'High'];
+const INCOME_OPTIONS = ["Low", "Medium", "High"];
 
 const SetAttributeStep = ({
   formData,
@@ -25,69 +35,218 @@ const SetAttributeStep = ({
   inputCategories,
 }: SetAttributeStepProps) => {
   const [age, setTargetAge] = useState<number>(formData.target_age || 0);
-  const [targetIncome, setTargetIncome] = useState<string>(formData.target_income_level || '');
+  const [targetIncome, setTargetIncome] = useState<string>(
+    formData.target_income_level || "",
+  );
 
-  const [searchComplementary, setSearchComplementary] = useState('');
-  const [searchCompetition, setSearchCompetition] = useState('');
-  const [searchCross, setSearchCross] = useState('');
+  const [searchComplementary, setSearchComplementary] = useState("");
+  const [searchCompetition, setSearchCompetition] = useState("");
+  const [searchCross, setSearchCross] = useState("");
 
-  const [selectedComplementary, setSelectedComplementary] = useState<string[]>([]);
-  const [selectedCompetition, setSelectedCompetition] = useState<string[]>([]);
-  const [selectedCross, setSelectedCross] = useState<string[]>([]);
+  const [selectedComplementary, setSelectedComplementary] = useState<
+    CategoryItem[]
+  >([]);
+  const [selectedCompetition, setSelectedCompetition] = useState<
+    CategoryItem[]
+  >([]);
+  const [selectedCross, setSelectedCross] = useState<CategoryItem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+
+  const [complementaryError, setComplementaryError] = useState<string | null>(
+    null,
+  );
+  const [competitionError, setCompetitionError] = useState<string | null>(null);
+  const [crossError, setCrossError] = useState<string | null>(null);
+
+  // Helper: Parse API format to internal CategoryItem format
+  const parseFromApiFormat = (categories: string[]): CategoryItem[] => {
+    return categories.map((cat) => {
+      // Check if it's a custom keyword (wrapped with @)
+      if (cat.startsWith("@") && cat.endsWith("@") && cat.length > 2) {
+        const cleanValue = cat.slice(1, -1)
+        return {
+          type: "custom",
+          value: cleanValue,
+        };
+      }
+      return {
+        type: "predefined",
+        value: cat,
+      };
+    });
+  };
+
+  // Helper: Transform internal format to API format
+  const transformToApiFormat = (items: CategoryItem[]): string[] => {
+    return items.map((item) => {
+      if (item.type === "custom") {
+        return `@${item.value}@`;
+      }
+      return item.value;
+    });
+  };
+
+  const validateKeywordInput = (
+    value: string,
+  ): { valid: boolean; error?: string } => {
+    const trimmed = value.trim();
+
+    if (trimmed.length < 2) {
+      return { valid: false, error: "Keyword must be at least 2 characters" };
+    }
+
+    if (trimmed.length > 50) {
+      return { valid: false, error: "Keyword must be at most 50 characters" };
+    }
+
+    return { valid: true };
+  };
+
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    searchValue: string,
+    sectionKey: string,
+    selectedItems: CategoryItem[],
+    setSelectedItems: React.Dispatch<React.SetStateAction<CategoryItem[]>>,
+    setSearchValue: React.Dispatch<React.SetStateAction<string>>,
+    setError: React.Dispatch<React.SetStateAction<string | null>>,
+  ) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    setError(null);
+
+    const sanitized = searchValue.trim().replace(/^@+|@+$/g, "");
+
+    if (!sanitized) {
+      setError("Please enter a keyword");
+      return;
+    }
+
+    const validation = validateKeywordInput(sanitized);
+    if (!validation.valid) {
+      setError(validation.error || "Invalid keyword");
+      return;
+    }
+
+    const isDuplicate = selectedItems.some(
+      (item) => item.value.toLowerCase() === sanitized.toLowerCase(),
+    );
+
+    if (isDuplicate) {
+      setError("This keyword is already added");
+      return;
+    }
+
+    const matchedCategory = categories.find(
+      (cat) => cat.toLowerCase() === sanitized.toLowerCase(),
+    );
+
+    let newItem: CategoryItem;
+
+    if (matchedCategory) {
+      // Add as predefined category
+      newItem = {
+        type: "predefined",
+        value: matchedCategory,
+      };
+    } else {
+      // Add as custom keyword
+      newItem = {
+        type: "custom",
+        value: sanitized,
+      };
+    }
+
+    // Update state
+    const updatedItems = [...selectedItems, newItem];
+    setSelectedItems(updatedItems);
+
+    // Transform and send to parent
+    onInputChange(sectionKey, transformToApiFormat(updatedItems));
+
+    // Clear search input
+    setSearchValue("");
+  };
 
   useEffect(() => {
     if (inputCategories.length > 0) {
       setCategories(inputCategories);
     }
     if (formData) {
-      setSelectedCompetition([...new Set(formData?.competition_categories ?? [])]);
-      setSelectedComplementary([...new Set(formData?.complementary_categories ?? [])]);
-      setSelectedCross([...new Set(formData?.cross_shopping_categories ?? [])]);
+      setSelectedCompetition(
+        parseFromApiFormat([
+          ...new Set(formData?.competition_categories ?? []),
+        ]),
+      );
+      setSelectedComplementary(
+        parseFromApiFormat([
+          ...new Set(formData?.complementary_categories ?? []),
+        ]),
+      );
+      setSelectedCross(
+        parseFromApiFormat([
+          ...new Set(formData?.cross_shopping_categories ?? []),
+        ]),
+      );
     }
   }, [inputCategories, formData]);
 
   const onAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
-    onInputChange('target_age', value);
+    onInputChange("target_age", value);
     setTargetAge(value);
   };
-
-  const filterCategories = (query: string) =>
-    categories.filter(c => c.toLowerCase().includes(query.toLowerCase()));
 
   const getOrderedCategories = (
     query: string,
     categories: string[],
-    selected: string[]
-  ): string[] => {
-    const filtered = categories.filter(cat => cat.toLowerCase().includes(query.toLowerCase()));
+    selected: CategoryItem[],
+  ): CategoryItem[] => {
+    const filtered = categories.filter((cat) =>
+      cat.toLowerCase().includes(query.toLowerCase()),
+    );
 
-    const selectedFiltered = selected.filter(cat => filtered.includes(cat));
+    const predefinedItems: CategoryItem[] = filtered.map((cat) => ({
+      type: "predefined",
+      value: cat,
+    }));
 
-    const unselected = filtered.filter(cat => !selected.includes(cat));
+    const selectedPredefined = predefinedItems.filter((item) =>
+      selected.some((s) => s.value === item.value && s.type === "predefined"),
+    );
+    const unselectedPredefined = predefinedItems.filter(
+      (item) =>
+        !selected.some(
+          (s) => s.value === item.value && s.type === "predefined",
+        ),
+    );
 
-    return [...selectedFiltered, ...unselected];
+    const customKeywords = selected.filter((item) => item.type === "custom");
+    return  [...customKeywords, ...selectedPredefined, ...unselectedPredefined];
   };
+
   const toggleSelection = (
     key: string,
-    category: string,
-    setSelected: React.Dispatch<React.SetStateAction<string[]>>,
-    selected: string[]
+    item: CategoryItem,
+    setSelected: React.Dispatch<React.SetStateAction<CategoryItem[]>>,
+    selected: CategoryItem[],
   ) => {
-    const updated = selected.includes(category)
-      ? selected.filter(item => item !== category)
-      : [...selected, category];
+    const isSelected = selected.some((s) => s.value === item.value);
+
+    const updated = isSelected
+      ? selected.filter((s) => s.value !== item.value)
+      : [...selected, item];
 
     setSelected(updated);
-    onInputChange(key, updated);
+    onInputChange(key, transformToApiFormat(updated));
   };
 
   // Chip selector handler
   const handleTagSelect = (
     setSelected: React.Dispatch<React.SetStateAction<string>>,
     field: string,
-    value: string
+    value: string,
   ) => {
     const updated = value;
 
@@ -100,10 +259,10 @@ const SetAttributeStep = ({
     options: string[],
     selected: string,
     setSelected: React.Dispatch<React.SetStateAction<string>>,
-    field: string
+    field: string,
   ) => (
     <div className="flex flex-wrap gap-2 mt-3">
-      {options.map(option => {
+      {options.map((option) => {
         const value = option.toLowerCase();
         return (
           <button
@@ -113,9 +272,9 @@ const SetAttributeStep = ({
             onClick={() => handleTagSelect(setSelected, field, value)}
             className={`px-3 py-1.5 rounded-full border-2 text-sm font-medium transition-all duration-200 ${
               selected.includes(value)
-                ? 'bg-primary text-white border-primary shadow-sm'
-                : 'bg-white text-gray-700 border-gray-200 hover:border-primary hover:text-primary'
-            } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                ? "bg-primary text-white border-primary shadow-sm"
+                : "bg-white text-gray-700 border-gray-200 hover:border-primary hover:text-primary"
+            } ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
           >
             {option}
           </button>
@@ -130,7 +289,8 @@ const SetAttributeStep = ({
       <div className="text-center mb-4">
         <h3 className="text-lg font-bold text-gray-900 mb-1">Set Attributes</h3>
         <p className="text-sm text-gray-600">
-          Define demographics, competition, and complementary business attributes.
+          Define demographics, competition, and complementary business
+          attributes.
         </p>
       </div>
 
@@ -162,7 +322,12 @@ const SetAttributeStep = ({
           <label className="block text-sm font-semibold text-gray-700 mb-1">
             Target Income Range
           </label>
-          {renderChipSelect(INCOME_OPTIONS, targetIncome, setTargetIncome, 'target_income_level')}
+          {renderChipSelect(
+            INCOME_OPTIONS,
+            targetIncome,
+            setTargetIncome,
+            "target_income_level",
+          )}
           {errors.target_income && (
             <p className="mt-2 text-sm text-red-600 flex items-center">
               <FaExclamationTriangle className="w-4 h-4 mr-1" />
@@ -186,43 +351,80 @@ const SetAttributeStep = ({
 
           <input
             type="text"
-            placeholder="Search categories..."
+            placeholder="Search categories or add custom keyword..."
             value={searchComplementary}
-            onChange={e => setSearchComplementary(e.target.value)}
+            onChange={(e) => setSearchComplementary(e.target.value)}
+            onKeyDown={(e) =>
+              handleKeyDown(
+                e,
+                searchComplementary,
+                "complementary_categories",
+                selectedComplementary,
+                setSelectedComplementary,
+                setSearchComplementary,
+                setComplementaryError,
+              )
+            }
             disabled={disabled}
-            className={`w-full border-2 rounded-xl px-3 py-2 mb-4 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 outline-none ${
+            className={`w-full border-2 rounded-xl px-3 py-2 mb-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 outline-none ${
               disabled
-                ? 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60'
-                : 'border-gray-200 hover:border-gray-300'
+                ? "bg-gray-100 border-gray-200 cursor-not-allowed opacity-60"
+                : "border-gray-200 hover:border-gray-300"
             }`}
           />
+
+          {searchComplementary.trim() &&
+            !categories.some(
+              (cat) =>
+                cat.toLowerCase() === searchComplementary.trim().toLowerCase(),
+            ) && (
+              <div className="text-xs text-blue-600 mb-2 px-3">
+                Press Enter to add '
+                {searchComplementary.trim().replace(/^@+|@+$/g, "")}' as custom
+                keyword
+              </div>
+            )}
+
+          {complementaryError && (
+            <div className="text-xs text-red-600 mb-2 px-3 flex items-center">
+              <FaExclamationTriangle className="mr-1" />
+              {complementaryError}
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-1 max-h-52 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {getOrderedCategories(
               searchComplementary,
-              inputCategories, // your full list of category strings
-              selectedComplementary
-            ).map((cat: string) => {
-              const isSelected = selectedComplementary.includes(cat);
+              inputCategories,
+              selectedComplementary,
+            ).map((item: CategoryItem) => {
+              const isSelected = selectedComplementary.some(
+                (s) => s.value === item.value,
+              );
 
               return (
                 <span
-                  key={cat}
+                  key={item.value}
                   onClick={() =>
+                    !disabled &&
                     toggleSelection(
-                      'complementary_categories',
-                      cat,
+                      "complementary_categories",
+                      item,
                       setSelectedComplementary,
-                      selectedComplementary
+                      selectedComplementary,
                     )
                   }
                   className={`px-3 py-1 text-sm rounded-full cursor-pointer border-2 transition-all ${
-                    isSelected
-                      ? 'bg-primary text-white border-primary'
-                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-primary hover:text-primary'
-                  } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    item.type === "custom"
+                      ? isSelected
+                        ? "bg-purple-600 text-white border-purple-600"
+                        : "bg-purple-50 text-purple-700 border-purple-200 hover:border-purple-400"
+                      : isSelected
+                        ? "bg-primary text-white border-primary"
+                        : "bg-gray-50 text-gray-700 border-gray-200 hover:border-primary hover:text-primary"
+                  } ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
                 >
-                  {cat}
+                  {item.value}
                 </span>
               );
             })}
@@ -240,43 +442,80 @@ const SetAttributeStep = ({
 
           <input
             type="text"
-            placeholder="Search categories..."
+            placeholder="Search categories or add custom keyword..."
             value={searchCompetition}
-            onChange={e => setSearchCompetition(e.target.value)}
+            onChange={(e) => setSearchCompetition(e.target.value)}
+            onKeyDown={(e) =>
+              handleKeyDown(
+                e,
+                searchCompetition,
+                "competition_categories",
+                selectedCompetition,
+                setSelectedCompetition,
+                setSearchCompetition,
+                setCompetitionError,
+              )
+            }
             disabled={disabled}
-            className={`w-full border-2 rounded-xl px-3 py-2 mb-4 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 outline-none ${
+            className={`w-full border-2 rounded-xl px-3 py-2 mb-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 outline-none ${
               disabled
-                ? 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60'
-                : 'border-gray-200 hover:border-gray-300'
+                ? "bg-gray-100 border-gray-200 cursor-not-allowed opacity-60"
+                : "border-gray-200 hover:border-gray-300"
             }`}
           />
+
+          {searchCompetition.trim() &&
+            !categories.some(
+              (cat) =>
+                cat.toLowerCase() === searchCompetition.trim().toLowerCase(),
+            ) && (
+              <div className="text-xs text-blue-600 mb-2 px-3">
+                Press Enter to add '
+                {searchCompetition.trim().replace(/^@+|@+$/g, "")}' as custom
+                keyword
+              </div>
+            )}
+
+          {competitionError && (
+            <div className="text-xs text-red-600 mb-2 px-3 flex items-center">
+              <FaExclamationTriangle className="mr-1" />
+              {competitionError}
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {getOrderedCategories(
               searchCompetition,
-              inputCategories, // same source categories as Complementary
-              selectedCompetition
-            ).map((cat: string) => {
-              const isSelected = selectedCompetition.includes(cat);
+              inputCategories,
+              selectedCompetition,
+            ).map((item: CategoryItem) => {
+              const isSelected = selectedCompetition.some(
+                (s) => s.value === item.value,
+              );
 
               return (
                 <span
-                  key={cat}
+                  key={item.value}
                   onClick={() =>
+                    !disabled &&
                     toggleSelection(
-                      'competition_categories',
-                      cat,
+                      "competition_categories",
+                      item,
                       setSelectedCompetition,
-                      selectedCompetition
+                      selectedCompetition,
                     )
                   }
                   className={`px-3 py-1 text-sm rounded-full cursor-pointer border-2 transition-all ${
-                    isSelected
-                      ? 'bg-primary text-white border-primary'
-                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-primary hover:text-primary'
-                  } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    item.type === "custom"
+                      ? isSelected
+                        ? "bg-purple-600 text-white border-purple-600"
+                        : "bg-purple-50 text-purple-700 border-purple-200 hover:border-purple-400"
+                      : isSelected
+                        ? "bg-primary text-white border-primary"
+                        : "bg-gray-50 text-gray-700 border-gray-200 hover:border-primary hover:text-primary"
+                  } ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
                 >
-                  {cat}
+                  {item.value}
                 </span>
               );
             })}
@@ -294,43 +533,78 @@ const SetAttributeStep = ({
 
           <input
             type="text"
-            placeholder="Search categories..."
+            placeholder="Search categories or add custom keyword..."
             value={searchCross}
-            onChange={e => setSearchCross(e.target.value)}
+            onChange={(e) => setSearchCross(e.target.value)}
+            onKeyDown={(e) =>
+              handleKeyDown(
+                e,
+                searchCross,
+                "cross_shopping_categories",
+                selectedCross,
+                setSelectedCross,
+                setSearchCross,
+                setCrossError,
+              )
+            }
             disabled={disabled}
-            className={`w-full border-2 rounded-xl px-3 py-2 mb-4 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 outline-none ${
+            className={`w-full border-2 rounded-xl px-3 py-2 mb-2 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 outline-none ${
               disabled
-                ? 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60'
-                : 'border-gray-200 hover:border-gray-300'
+                ? "bg-gray-100 border-gray-200 cursor-not-allowed opacity-60"
+                : "border-gray-200 hover:border-gray-300"
             }`}
           />
+
+          {searchCross.trim() &&
+            !categories.some(
+              (cat) => cat.toLowerCase() === searchCross.trim().toLowerCase(),
+            ) && (
+              <div className="text-xs text-blue-600 mb-2 px-3">
+                Press Enter to add '{searchCross.trim().replace(/^@+|@+$/g, "")}
+                ' as custom keyword
+              </div>
+            )}
+
+          {crossError && (
+            <div className="text-xs text-red-600 mb-2 px-3 flex items-center">
+              <FaExclamationTriangle className="mr-1" />
+              {crossError}
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {getOrderedCategories(
               searchCross,
-              inputCategories, // same main list of categories
-              selectedCross
-            ).map((cat: string) => {
-              const isSelected = selectedCross.includes(cat);
+              inputCategories,
+              selectedCross,
+            ).map((item: CategoryItem) => {
+              const isSelected = selectedCross.some(
+                (s) => s.value === item.value,
+              );
 
               return (
                 <span
-                  key={cat}
+                  key={item.value}
                   onClick={() =>
+                    !disabled &&
                     toggleSelection(
-                      'cross_shopping_categories',
-                      cat,
+                      "cross_shopping_categories",
+                      item,
                       setSelectedCross,
-                      selectedCross
+                      selectedCross,
                     )
                   }
                   className={`px-3 py-1 text-sm rounded-full cursor-pointer border-2 transition-all ${
-                    isSelected
-                      ? 'bg-primary text-white border-primary'
-                      : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-primary hover:text-primary'
-                  } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    item.type === "custom"
+                      ? isSelected
+                        ? "bg-purple-600 text-white border-purple-600"
+                        : "bg-purple-50 text-purple-700 border-purple-200 hover:border-purple-400"
+                      : isSelected
+                        ? "bg-primary text-white border-primary"
+                        : "bg-gray-50 text-gray-700 border-gray-200 hover:border-primary hover:text-primary"
+                  } ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
                 >
-                  {cat}
+                  {item.value}
                 </span>
               );
             })}

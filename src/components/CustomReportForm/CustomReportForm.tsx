@@ -689,6 +689,7 @@ const CustomReportForm = () => {
         potential_business_type: formData.potential_business_type || businessType,
         target_income_level: formData.target_income_level,
         target_age: formData.target_age,
+        avg_order_value: formData.current_location.properties?.avg_order_value || 30,
         complementary_categories: formData.complementary_categories,
         cross_shopping_categories: formData.cross_shopping_categories,
         competition_categories: formData.competition_categories,
@@ -706,7 +707,6 @@ const CustomReportForm = () => {
           lng: formData.current_location.lng || 0,
           properties: {
             price: formData.current_location.properties?.price || 0,
-            avg_order_value: formData.current_location.properties?.avg_order_value || 30,
           },
         },
         single_location: reportType === 'location',

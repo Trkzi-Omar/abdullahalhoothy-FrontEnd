@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { MdSearch, MdCheckCircleOutline, MdInfo } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import type { LandingTranslations } from '../../pages/Landing/translations';
@@ -9,6 +10,54 @@ interface LandingHeroProps {
 
 const LandingHero = ({ t }: LandingHeroProps) => {
   const navigate = useNavigate();
+  const playerRef = useRef<HTMLDivElement>(null);
+  const ytPlayerRef = useRef<YT.Player | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const initPlayer = () => {
+      if (!isMounted || !playerRef.current || ytPlayerRef.current) return;
+
+      ytPlayerRef.current = new window.YT.Player(playerRef.current, {
+        videoId: LANDING_VIDEO.videoId,
+        playerVars: {
+          autoplay: 1,
+          rel: 0,
+          modestbranding: 1,
+        },
+        events: {
+          onReady: (event) => {
+            event.target.setVolume(LANDING_VIDEO.volume);
+            event.target.playVideo();
+          },
+        },
+      });
+    };
+
+    if (window.YT && window.YT.Player) {
+      initPlayer();
+    } else {
+      const existingScript = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
+      if (!existingScript) {
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        document.head.appendChild(tag);
+      }
+
+      const prevCallback = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        prevCallback?.();
+        initPlayer();
+      };
+    }
+
+    return () => {
+      isMounted = false;
+      ytPlayerRef.current?.destroy();
+      ytPlayerRef.current = null;
+    };
+  }, []);
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,15 +129,9 @@ const LandingHero = ({ t }: LandingHeroProps) => {
             style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}
           >
             <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black aspect-video">
-              <iframe
-                width={LANDING_VIDEO.width}
-                height={LANDING_VIDEO.height}
-                src={LANDING_VIDEO.embedUrl}
+              <div
+                ref={playerRef}
                 title={LANDING_VIDEO.title}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
                 className="w-full h-full"
               />
             </div>

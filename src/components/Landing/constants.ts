@@ -2,8 +2,7 @@
 
 // YouTube Video Configuration
 export const LANDING_VIDEO = {
-  embedUrl: 'https://www.youtube.com/embed/9FqAEjLYSZI',
+  videoId: '9FqAEjLYSZI',
   title: 'S-locator landing video',
-  width: '560',
-  height: '315',
+  volume: 25, // 0-100
 };

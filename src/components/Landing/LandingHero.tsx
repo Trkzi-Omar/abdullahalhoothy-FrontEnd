@@ -4,12 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import type { LandingTranslations } from '../../pages/Landing/translations';
 import { LANDING_VIDEO } from './constants';
 
-declare global {
-  interface Window {
-    onYouTubeIframeAPIReady?: () => void;
-  }
-}
-
 interface LandingHeroProps {
   t: LandingTranslations;
 }

@@ -6,8 +6,7 @@ import { LANDING_VIDEO } from './constants';
 
 declare global {
   interface Window {
-    YT: typeof YT;
-    onYouTubeIframeAPIReady: () => void;
+    onYouTubeIframeAPIReady?: () => void;
   }
 }
 

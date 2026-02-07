@@ -446,7 +446,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         }
       } else {
         let defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${textSearchInput?.trim()}`;
-        
+
         // Get viewport bounds for sample action
         let viewportBounds = null;
         if (action === 'sample' && mapRef.current) {
@@ -615,11 +615,8 @@ export function LayerProvider(props: { children: ReactNode }) {
       console.error('handleFetchDataset error:', error);
       setIsError(error instanceof Error ? error : new Error(String(error)));
     } finally {
-      console.log('handleFetchDataset finally block - pageToken:', pageToken, 'layerId:', layerId);
       setShowLoaderTopup(false);
-      // Only clear loading state for initial requests (not pagination)
-      if (!pageToken && !layerId) {
-        console.log('Setting isLoadingDataset to false');
+      if (!pageToken) {
         setIsLoadingDataset(false);
       }
     }

@@ -56,7 +56,7 @@ export interface LandingTranslations {
 
 export const translations: Record<'en' | 'ar', LandingTranslations> = {
   en: {
-    nav: { features: 'Features', caseStudy: 'Success Story', tryFree: 'Launch App' },
+    nav: { features: 'Features', caseStudy: 'Success Story', tryFree: 'Get Report' },
     hero: {
       badge: 'AI-Powered Location Intelligence',
       alert: '60% of retail businesses fail due to location.',
@@ -64,7 +64,7 @@ export const translations: Record<'en' | 'ar', LandingTranslations> = {
       sub: 'Stop guessing. Get a comprehensive AI Location Report that predicts demand, analyzes competitors, and validates your success with 95% accuracy.',
       cta: 'Start Analysis',
       placeholder: 'Enter a location or city...',
-      ctaNoSignup: 'Start Analysis Without Sign-up'
+      ctaNoSignup: 'Expansion report Without Sign-up'
     },
     features: {
       title: 'Powerful Features',
@@ -122,7 +122,7 @@ export const translations: Record<'en' | 'ar', LandingTranslations> = {
     },
     cta: {
       title: 'Ready to Expand Confidently?',
-      sub: 'Join leading Saudi businesses using S-LOC to validate their next branch.',
+      sub: 'Join leading Saudi businesses using S-LOC to find their next branch location.',
       btn: 'Try Without Sign-up',
     },
     footer: '© 2025 S-LOC Intelligence. All rights reserved.',
@@ -184,8 +184,8 @@ export const translations: Record<'en' | 'ar', LandingTranslations> = {
     },
     cta: {
       title: 'جاهز للتوسع بثقة؟',
-      sub: 'انضم لكبرى الشركات السعودية التي تستخدم S-LOC للتحقق من فروعها.',
-      btn: 'جرب بدون تسجيل',
+      sub: 'انضم إلى نخبة الشركات السعودية التي تعتمد على S-LOC لتحديد مواقع فروعها القادمة.',
+      btn: 'تقرير التوسع بدون تسجيل',
     },
     footer: '© ٢٠٢٥ S-LOC. جميع الحقوق محفوظة.',
   },

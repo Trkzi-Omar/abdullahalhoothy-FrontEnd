@@ -53,15 +53,19 @@ const LandingFeatures = ({ t }: LandingFeaturesProps) => {
             <div className="bg-brand-surface/50 p-8 flex items-center justify-center relative overflow-hidden">
               <div className="w-full aspect-[4/5] md:aspect-[4/3] relative rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-brand-card flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-500">
                 <img
-                  src="/images/landing/report.png"
+                  src="/images/landing/report.webp"
                   alt="Report Sample"
                   className="w-full h-full object-contain"
+                  loading="lazy"
+                  decoding="async"
+                  width={800}
+                  height={1000}
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     const parent = e.currentTarget.parentNode as HTMLElement;
                     if (parent) {
                       parent.innerHTML =
-                        '<div class="text-center p-4"><span class="block text-brand-purple mb-2 text-4xl">📄</span><span class="text-white font-bold">Image Missing</span><br/><span class="text-xs text-gray-500">Please add report.png</span></div>';
+                        '<div class="text-center p-4"><span class="block text-brand-purple mb-2 text-4xl">📄</span><span class="text-white font-bold">Image Missing</span><br/><span class="text-xs text-slate-400">Please add report.png</span></div>';
                     }
                   }}
                 />

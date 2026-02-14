@@ -22,6 +22,10 @@ const LandingDataSources = ({ t }: LandingDataSourcesProps) => {
                 src={logo.src}
                 alt={logo.name}
                 className="h-20 w-auto object-contain transition-all duration-300"
+                loading="lazy"
+                decoding="async"
+                height={80}
+                width={200}
               />
             </div>
           ))}
@@ -29,7 +33,7 @@ const LandingDataSources = ({ t }: LandingDataSourcesProps) => {
 
         {/* Separator Text */}
         <div className="text-center mb-10">
-          <span className="text-slate-500 font-semibold text-lg">{t.dataSources.andMore}</span>
+          <span className="text-slate-400 font-semibold text-lg">{t.dataSources.andMore}</span>
         </div>
 
         {/* More Logos - Tier 2 */}
@@ -40,6 +44,10 @@ const LandingDataSources = ({ t }: LandingDataSourcesProps) => {
                 src={logo.src}
                 alt={logo.name}
                 className={`${logo.width} h-auto object-contain transition-all duration-300`}
+                loading="lazy"
+                decoding="async"
+                height={60}
+                width={200}
               />
             </div>
           ))}

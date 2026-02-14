@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /landing
+Disallow: /
+Sitemap: https://s-locator.northernacs.com/sitemap.xml

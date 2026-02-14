@@ -12,7 +12,7 @@ const LandingFooter = ({ t }: LandingFooterProps) => {
         <div className="opacity-70 scale-75 origin-left">
           <LandingLogo />
         </div>
-        <p className="text-slate-600 text-sm">{t.footer}</p>
+        <p className="text-slate-400 text-sm">{t.footer}</p>
       </div>
     </footer>
   );

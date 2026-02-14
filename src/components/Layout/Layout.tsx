@@ -1,48 +1,49 @@
+import { lazy, Suspense } from 'react';
 import SideBar from '../SideBar/SideBar';
 import { Route, Routes, useLocation, Navigate } from 'react-router';
-import NotFound from '../../pages/NotFound/NotFound';
-import Dataview from '../../pages/Dataview/Dataview';
-import Auth from '../../pages/Auth/Auth';
-import MapContainer from '../../pages/MapContainer/MapContainer';
-import Home from '../../pages/Home/Home';
-import Profile from '../../pages/Profile/Profile';
-import ProfileLayout from '../../pages/Profile/ProfileLayout';
-import OrganizationLayout from '../../pages/Organization/OrganizationLayout';
-import Organization from '../../pages/Organization/Organization';
-import BillingLayout from '../../pages/Billing/BillingLayout';
-import ProfileMain from '../../pages/Profile/Routes/ProfileMain/ProfileMain';
-import CheckoutBilling from '../../pages/Billing/Routes/CheckoutBilling/CheckoutBilling';
-import ChangeEmail from '../../pages/ChangeEmail/ChangeEmail';
-import ChangePassword from '../../pages/ChangePassword/ChangePassword';
-import PaymentMethods from '../../pages/PaymentMethods/PaymentMethods';
-import PaymentMethod from '../../pages/PaymentMethod/PaymentMethod';
 import MobileNavbar from '../MobileNavbar/MobileNavbar';
-import Wallet from '../../pages/Wallet/Wallet';
-import AddFunds from '../../pages/AddFunds/AddFunds';
-import CampaignPage from '../../pages/Campaign/campaign';
-import PlansPage from '../../pages/Plans/Plans';
-import StaticRedirect from '../StaticRedirect/StaticRedirect';
-import CustomReportForm from '../CustomReportForm';
-import MarketingDashboard from '../../pages/MarketingDashboard/MarketingDashboard';
 import { BillingProvider } from '../../context/BillingContext';
-import Billing from '../../pages/Billing/Billing';
-import SmartSegmentReport from '../SegmentReport';
-import Landing from '../../pages/Landing/Landing';
 import GuestBanner from '../Auth/GuestBanner';
+
+const NotFound = lazy(() => import('../../pages/NotFound/NotFound'));
+const Dataview = lazy(() => import('../../pages/Dataview/Dataview'));
+const Auth = lazy(() => import('../../pages/Auth/Auth'));
+const MapContainer = lazy(() => import('../../pages/MapContainer/MapContainer'));
+const Home = lazy(() => import('../../pages/Home/Home'));
+const Profile = lazy(() => import('../../pages/Profile/Profile'));
+const ProfileLayout = lazy(() => import('../../pages/Profile/ProfileLayout'));
+const OrganizationLayout = lazy(() => import('../../pages/Organization/OrganizationLayout'));
+const Organization = lazy(() => import('../../pages/Organization/Organization'));
+const BillingLayout = lazy(() => import('../../pages/Billing/BillingLayout'));
+const ProfileMain = lazy(() => import('../../pages/Profile/Routes/ProfileMain/ProfileMain'));
+const CheckoutBilling = lazy(() => import('../../pages/Billing/Routes/CheckoutBilling/CheckoutBilling'));
+const ChangeEmail = lazy(() => import('../../pages/ChangeEmail/ChangeEmail'));
+const ChangePassword = lazy(() => import('../../pages/ChangePassword/ChangePassword'));
+const PaymentMethods = lazy(() => import('../../pages/PaymentMethods/PaymentMethods'));
+const PaymentMethod = lazy(() => import('../../pages/PaymentMethod/PaymentMethod'));
+const Wallet = lazy(() => import('../../pages/Wallet/Wallet'));
+const AddFunds = lazy(() => import('../../pages/AddFunds/AddFunds'));
+const CampaignPage = lazy(() => import('../../pages/Campaign/campaign'));
+const PlansPage = lazy(() => import('../../pages/Plans/Plans'));
+const StaticRedirect = lazy(() => import('../StaticRedirect/StaticRedirect'));
+const CustomReportForm = lazy(() => import('../CustomReportForm'));
+const MarketingDashboard = lazy(() => import('../../pages/MarketingDashboard/MarketingDashboard'));
+const Billing = lazy(() => import('../../pages/Billing/Billing'));
+const SmartSegmentReport = lazy(() => import('../SegmentReport'));
+
 const Layout = () => {
   const location = useLocation();
 
-  // Hide sidebar & navbar only on /campaign, /plans, /custom-report, or /landing
+  // Hide sidebar & navbar only on /campaign, /plans, or /custom-report
   const hideLayout =
     location.pathname.startsWith('/campaign') ||
     location.pathname.startsWith('/plans') ||
-    location.pathname.startsWith('/custom-report') ||
-    location.pathname.startsWith('/landing');
+    location.pathname.startsWith('/custom-report');
 
   const isBillingRoute = location.pathname.startsWith('/billing');
 
   const routesContent = (
-    <>
+    <Suspense fallback={<div className="flex w-screen h-svh items-center justify-center" />}>
       <Routes>
         <Route path="*" element={<NotFound />} />
         <Route path={'/tabularView'} element={<></>} />
@@ -56,7 +57,6 @@ const Layout = () => {
         <Route path={'/billing/*'} element={<Billing />} />
         <Route path="/campaign" element={<CampaignPage />} />
         <Route path="/plans" element={<PlansPage />} />
-        <Route path="/landing" element={<Landing />} />
         <Route path="/marketing-dashboard" element={<MarketingDashboard />} />
         <Route path="/custom-report" element={<CustomReportForm />} />
         <Route path="/static/*" element={<StaticRedirect />} />
@@ -84,7 +84,7 @@ const Layout = () => {
           <Route path="reports" element={<CheckoutBilling Name="reports" />} />
         </Route>
       </Routes>
-    </>
+    </Suspense>
   );
 
   return (

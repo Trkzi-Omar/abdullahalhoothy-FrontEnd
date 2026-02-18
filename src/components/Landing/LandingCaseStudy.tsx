@@ -32,13 +32,13 @@ const LandingCaseStudy = ({ t }: LandingCaseStudyProps) => {
               <div className="flex gap-10 border-t border-white/10 pt-6">
                 <div>
                   <div className="text-3xl font-bold text-brand-green mb-1">40%</div>
-                  <div className="text-xs text-slate-500 uppercase font-semibold">
+                  <div className="text-xs text-slate-400 uppercase font-semibold">
                     {t.caseStudy.stat1}
                   </div>
                 </div>
                 <div>
                   <div className="text-3xl font-bold text-brand-purple mb-1">2.5x</div>
-                  <div className="text-xs text-slate-500 uppercase font-semibold">
+                  <div className="text-xs text-slate-400 uppercase font-semibold">
                     {t.caseStudy.stat2}
                   </div>
                 </div>
@@ -58,7 +58,7 @@ const LandingCaseStudy = ({ t }: LandingCaseStudyProps) => {
                   </div>
                   <MdWarning size={16} className="text-red-500" />
                 </div>
-                <div className="flex justify-center text-slate-600">
+                <div className="flex justify-center text-slate-400">
                   <div className="h-8 w-px bg-white/10"></div>
                 </div>
                 <div className="bg-brand-green/10 border border-brand-green/40 p-5 rounded-xl flex items-center justify-between scale-105 shadow-xl shadow-brand-green/5">

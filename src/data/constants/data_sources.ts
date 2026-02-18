@@ -7,7 +7,7 @@ export const MAIN_LOGOS = [
 export const MORE_LOGOS = [
   {
     name: 'Ministry of Housing',
-    src: '/data-sources-logos/more-sources-logos/housing_ministry_logo.png',
+    src: '/data-sources-logos/more-sources-logos/housing_ministry_logo.webp',
     width: 'w-52',
   },
   {

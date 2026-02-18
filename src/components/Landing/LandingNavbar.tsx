@@ -68,7 +68,7 @@ const LandingNavbar = ({ lang, setLang, t }: LandingNavbarProps) => {
           <button onClick={toggleLang} className="text-slate-300 font-bold text-xs">
             {lang === 'en' ? 'AR' : 'EN'}
           </button>
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white p-1">
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white p-1" aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}>
             {mobileMenuOpen ? <MdClose size={24} /> : <MdMenu size={24} />}
           </button>
         </div>

@@ -28,7 +28,7 @@ const LandingReportGrid = ({ t }: LandingReportGridProps) => {
                   <Icon size={32} strokeWidth={1.5} />
                 </div>
                 <h3 className="text-white font-bold mb-2 text-lg">{card.title}</h3>
-                <p className="text-slate-500 text-sm">{card.desc}</p>
+                <p className="text-slate-400 text-sm">{card.desc}</p>
               </div>
             );
           })}

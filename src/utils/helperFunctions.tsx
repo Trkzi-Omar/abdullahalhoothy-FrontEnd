@@ -57,6 +57,12 @@ export const handleWhatsAppClick = ({
   window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
 };
 
+export const getPriceNumber = (price: number | null, isLoading: boolean = false): string => {
+  if (price === null) return 'N/A';
+  if (isLoading) return '...';
+  return price.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+};
+
 export const getYesterdayDate = () => {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);

@@ -53,293 +53,291 @@ function DetailedSegment({
   };
 
   return (
-    <div>
-      {/* Header with Navigation */}
-      <div className="flex items-center justify-between py-2">
-        <button
-          onClick={handlePrevious}
-          disabled={segmentReportData?.findIndex(seg => seg.segment_id === selectedSegmentId) === 0}
-          className="p-3 rounded-full border-2 border-[#582c83] disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-[#582c83] hover:bg-[#582c83] hover:text-white"
-          type="button"
-        >
-          <FiChevronLeft className="w-6 h-6 " />
-        </button>
+    <div className="flex items-start gap-4">
+      {/* Left Navigation Button */}
+      <button
+        onClick={handlePrevious}
+        disabled={segmentReportData?.findIndex(seg => seg.segment_id === selectedSegmentId) === 0}
+        className="w-[52px] h-[52px] p-3 rounded-full border-2 border-[#582c83] disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-[#582c83] hover:bg-[#582c83] hover:text-white flex-shrink-0 mt-2"
+        type="button"
+      >
+        <FiChevronLeft className="w-6 h-6" />
+      </button>
 
-        <div className="text-center flex-1 px-8">
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <div className="flex items-center justify-center bg-[#582c83] text-white font-normal text-2xl  py-1.5 px-2">
+      {/* Main Content Container - Row Layout */}
+      <div className="flex-1 flex gap-6">
+        {/* Left Section - Header (1/3 of space) */}
+        <div className="w-1/3 flex flex-col px-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center justify-center bg-[#582c83] text-white font-normal text-2xl py-1.5 px-2 flex-shrink-0">
               {(
                 (segmentReportData?.findIndex(seg => seg.segment_id === selectedSegmentId) ?? 0) + 1
               )
                 .toString()
                 .padStart(2, '0')}
             </div>
-            <h2 className="text-3xl font-bold text-[#582c83] flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-[#582c83]">
               {selectedSegment.name}
             </h2>
           </div>
-          <p className="text-gray-700 text-base mb-2">{selectedSegment.description}</p>
+          <p className="text-gray-700 text-sm leading-relaxed">{selectedSegment.description}</p>
         </div>
 
-        <button
-          onClick={handleNext}
-          disabled={
-            segmentReportData?.findIndex(seg => seg.segment_id === selectedSegmentId) ===
-            (segmentReportData?.length ?? 0) - 1
-          }
-          className="p-3 rounded-full border-2 border-[#582c83] disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-[#582c83] hover:bg-[#582c83] hover:text-white"
-          type="button"
-        >
-          <FiChevronRight className="w-6 h-6 " />
-        </button>
-      </div>
-      <div className="overflow-hidden max-w-3xl mx-auto">
-        {/* Tabs */}
-        <div className="bg-[#f5f5f5]">
-          <div className="grid grid-cols-3 border-b-2 border-gray-100">
-            <button
-              onClick={() => setActiveTab('who_they_are')}
-              className={`px-2 relative font-semibold text-sm py-6 border-r-[1px] border-gray-300 ${
-                activeTab === 'who_they_are'
-                  ? 'text-[#582c83] bg-[#e3dbea]'
-                  : 'text-gray-600 hover:text-[#582c83]'
-              }`}
-              type="button"
-            >
-              WHO THEY ARE
-              <div
-                className={`absolute bottom-0 left-0 right-0 h-1 bg-[#582c83] transition-transform duration-300 ${
-                  activeTab === 'who_they_are' ? 'scale-100' : 'scale-0'
-                }`}
-              ></div>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('evaluation_metrics')}
-              className={`relative group px-2 font-semibold text-sm py-6 border-r-[1px] border-gray-300 ${
-                activeTab === 'evaluation_metrics'
-                  ? 'text-[#582c83] bg-[#e3dbea]'
-                  : 'text-gray-600 hover:text-[#582c83]'
-              }`}
-            >
-              Evaluation Metrics
-              <div
-                className={`absolute bottom-0 left-0 right-0 h-1 bg-[#582c83] transition-transform duration-300 ${
-                  activeTab === 'evaluation_metrics' ? 'scale-100' : 'scale-0 group-hover:scale-100'
-                }`}
-              ></div>
-            </button>
+        {/* Right Section - Tabs and Content (2/3 of space) */}
+        <div className="w-2/3 flex flex-col">
+          {/* Tabs */}
+          <div className="bg-[#f5f5f5] rounded-t-lg overflow-hidden">
+            <div className="flex border-b-2 border-gray-100">
+              <button
+                onClick={() => setActiveTab('who_they_are')}
+                className={`flex-1 relative font-semibold text-sm py-4 px-4 border-r-[1px] border-gray-300 transition-all duration-200 ${activeTab === 'who_they_are'
+                    ? 'text-[#582c83] bg-[#e3dbea]'
+                    : 'text-gray-600 hover:text-[#582c83] hover:bg-gray-50'
+                  }`}
+                type="button"
+              >
+                <span className="block">WHO THEY ARE</span>
+                <div
+                  className={`absolute bottom-0 left-0 right-0 h-1 bg-[#582c83] transition-transform duration-300 ${activeTab === 'who_they_are' ? 'scale-100' : 'scale-0'
+                    }`}
+                ></div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('evaluation_metrics')}
+                className={`flex-1 relative group font-semibold text-sm py-4 px-4 border-r-[1px] border-gray-300 transition-all duration-200 ${activeTab === 'evaluation_metrics'
+                    ? 'text-[#582c83] bg-[#e3dbea]'
+                    : 'text-gray-600 hover:text-[#582c83] hover:bg-gray-50'
+                  }`}
+              >
+                <span className="block">Evaluation Metrics</span>
+                <div
+                  className={`absolute bottom-0 left-0 right-0 h-1 bg-[#582c83] transition-transform duration-300 ${activeTab === 'evaluation_metrics' ? 'scale-100' : 'scale-0 group-hover:scale-100'
+                    }`}
+                ></div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('how_they_live')}
+                className={`flex-1 relative group font-semibold text-sm py-4 px-4 transition-all duration-200 ${activeTab === 'how_they_live'
+                    ? 'text-[#582c83] bg-[#e3dbea]'
+                    : 'text-gray-600 hover:text-[#582c83] hover:bg-gray-50'
+                  }`}
+              >
+                <span className="block">HOW THEY LIVE</span>
+                <div
+                  className={`absolute bottom-0 left-0 right-0 h-1 bg-[#582c83] transition-transform duration-300 ${activeTab === 'how_they_live' ? 'scale-100' : 'scale-0 group-hover:scale-100'
+                    }`}
+                ></div>
+              </button>
+            </div>
+          </div>
 
-            <button
-              type="button"
-              onClick={() => setActiveTab('how_they_live')}
-              className={`relative group px-2 font-semibold text-sm py-6 ${
-                activeTab === 'how_they_live'
-                  ? 'text-[#582c83] bg-[#e3dbea]'
-                  : 'text-gray-600 hover:text-[#582c83]'
-              }`}
-            >
-              HOW THEY LIVE
-              <div
-                className={`absolute bottom-0 left-0 right-0 h-1 bg-[#582c83] transition-transform duration-300 ${
-                  activeTab === 'how_they_live' ? 'scale-100' : 'scale-0 group-hover:scale-100'
-                }`}
-              ></div>
-            </button>
+          {/* Content */}
+          <div className="py-2 bg-white rounded-b-lg">
+            {activeTab === 'who_they_are' && (
+              <div>
+                {/* Description Section */}
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <p className="leading-relaxed text-gray-700">
+                    {selectedSegment.description}. This group typically falls within the{' '}
+                    <span className="font-semibold text-gray-900">
+                      {selectedSegment.demographic_profile.age_range}
+                    </span>{' '}
+                    age range with a household size of{' '}
+                    <span className="font-semibold text-gray-900">
+                      {selectedSegment.demographic_profile.household_size}
+                    </span>
+                    . Their lifestyle is described as{' '}
+                    <span className="font-semibold text-gray-900">
+                      {selectedSegment.demographic_profile.lifestyle}
+                    </span>
+                    , and they tend to spend on{' '}
+                    <span className="font-semibold text-gray-900">
+                      {selectedSegment.demographic_profile.spending_habits}
+                    </span>
+                    .
+                  </p>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Average Household Income */}
+                  <div className="bg-gradient-to-br from-white to-purple-50 border border-purple-100 rounded-lg p-4">
+                    <div className="text-[#582c83] text-xs font-semibold mb-2 tracking-wide uppercase">
+                      AVERAGE INCOME
+                    </div>
+                    <div className="text-gray-900 font-bold text-lg capitalize">
+                      {selectedSegment.demographic_profile.income}
+                    </div>
+                  </div>
+
+                  {/* Family Size */}
+                  <div className="bg-gradient-to-br from-white to-purple-50 border border-purple-100 rounded-lg p-4">
+                    <div className="text-[#582c83] text-xs font-semibold mb-2 tracking-wide uppercase">
+                      FAMILY SIZE
+                    </div>
+                    <div className="text-gray-900 font-bold text-lg">
+                      {selectedSegment.demographic_profile.household_size}
+                    </div>
+                  </div>
+
+                  {/* Average Age */}
+                  <div className="bg-gradient-to-br from-white to-purple-50 border border-purple-100 rounded-lg p-4">
+                    <div className="text-[#582c83] text-xs font-semibold mb-2 tracking-wide uppercase">
+                      AVERAGE AGE
+                    </div>
+                    <div className="text-gray-900 font-bold text-lg">
+                      {selectedSegment.demographic_profile.age_range}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'evaluation_metrics' && (
+              <div>
+                <div className="flex gap-2">
+                  {Object.entries(selectedSegment.attributes.evaluation_metrics).map(
+                    ([key, value]) => (
+                      <div
+                        key={key}
+                        className="relative bg-gradient-to-br from-white to-gray-50 border border-gray-200 p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 group"
+                      >
+                        <div className="relative">
+                          <div className="text-[#582c83] text-xs font-bold mb-3 tracking-wider uppercase">
+                            {key.replace(/_/g, ' ')}
+                          </div>
+                          <div className="flex items-baseline gap-2">
+                            <div className="text-4xl font-bold text-gray-900 group-hover:text-[#582c83] transition-colors">
+                              {(value * 100).toFixed(0)}
+                            </div>
+                            <div className="text-sm text-gray-500 font-medium">/ 100</div>
+                          </div>
+                          <div className="mt-3 w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                            <div
+                              className="bg-gradient-to-r from-[#582c83] to-[#7a3fa8] h-full rounded-full transition-all duration-500"
+                              style={{ width: `${(value * 100).toFixed(0)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'how_they_live' && (
+              <div>
+                <div className="text-center mb-8">
+                  <h3 className="text-xl font-bold text-[#582c83] mb-2">
+                    Lifestyle & Shopping Patterns
+                  </h3>
+                </div>
+
+                <div className="flex gap-2">
+                  {selectedSegment.attributes.cross_shopping_categories &&
+                    selectedSegment.attributes.cross_shopping_categories.length > 0 && (
+                      <div className="bg-gradient-to-br from-white to-blue-50 border-l-4 border-blue-500 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                            <svg
+                              className="w-6 h-6 text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                              />
+                            </svg>
+                          </div>
+                          <div>
+                            <h4 className="text-blue-700 font-bold text-base tracking-wide">
+                              Cross Shopping Categories
+                            </h4>
+                            <p className="text-xs text-gray-600">Alternative shopping destinations</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedSegment.attributes.cross_shopping_categories.map(
+                            (category, index) => (
+                              <span
+                                key={index}
+                                className="px-4 py-2 bg-white border border-blue-200 text-blue-700 rounded-lg text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
+                              >
+                                {category}
+                              </span>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  {selectedSegment.attributes.complementary_categories &&
+                    selectedSegment.attributes.complementary_categories.length > 0 && (
+                      <div className="bg-gradient-to-br from-white to-green-50 border-l-4 border-green-500 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                            <svg
+                              className="w-6 h-6 text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                              />
+                            </svg>
+                          </div>
+                          <div>
+                            <h4 className="text-green-700 font-bold text-base tracking-wide">
+                              Complementary Categories
+                            </h4>
+                            <p className="text-xs text-gray-600">
+                              Businesses that enhance the experience
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedSegment.attributes.complementary_categories.map(
+                            (category, index) => (
+                              <span
+                                key={index}
+                                className="px-4 py-2 bg-white border border-green-200 text-green-700 rounded-lg text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
+                              >
+                                {category}
+                              </span>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Content */}
-        <div className="py-2">
-          {activeTab === 'who_they_are' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Left Column - Description */}
-              <div className="">
-                <p className="leading-relaxed">
-                  {selectedSegment.description}. This group typically falls within the{' '}
-                  <span className="font-semibold">
-                    {selectedSegment.demographic_profile.age_range}
-                  </span>{' '}
-                  age range with a household size of{' '}
-                  <span className="font-semibold">
-                    {selectedSegment.demographic_profile.household_size}
-                  </span>
-                  . Their lifestyle is described as{' '}
-                  <span className="font-semibold">
-                    {selectedSegment.demographic_profile.lifestyle}
-                  </span>
-                  , and they tend to spend on{' '}
-                  <span className="font-semibold">
-                    {selectedSegment.demographic_profile.spending_habits}
-                  </span>
-                  .
-                </p>
-              </div>
-
-              {/* Right Column - Stats Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-6">
-                {/* Average Household Income */}
-                <div>
-                  <div className="text-[#582c83] text-xs font-semibold mb-2 tracking-wide">
-                    AVERAGE INCOME
-                  </div>
-                  <div className="text-gray-900 font-semibold text-base capitalize">
-                    {selectedSegment.demographic_profile.income}
-                  </div>
-                </div>
-
-                {/* Family Life */}
-                <div>
-                  <div className="text-[#582c83] text-xs font-semibold mb-2 tracking-wide">
-                    FAMILY SIZE
-                  </div>
-                  <div className="text-gray-900 font-semibold text-base">
-                    {selectedSegment.demographic_profile.household_size}
-                  </div>
-                </div>
-
-                {/* Home Type */}
-                <div>
-                  <div className="text-[#582c83] text-xs font-semibold mb-2 tracking-wide">
-                    AVERAGE AGE
-                  </div>
-                  <div className="text-gray-900 font-semibold text-base">
-                    {selectedSegment.demographic_profile.age_range}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'evaluation_metrics' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Object.entries(selectedSegment.attributes.evaluation_metrics).map(
-                  ([key, value]) => (
-                    <div
-                      key={key}
-                      className="relative bg-gradient-to-br from-white to-gray-50 border border-gray-200 p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 group"
-                    >
-                      <div className="relative">
-                        <div className="text-[#582c83] text-xs font-bold mb-3 tracking-wider uppercase">
-                          {key.replace(/_/g, ' ')}
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                          <div className="text-4xl font-bold text-gray-900 group-hover:text-[#582c83] transition-colors">
-                            {(value * 100).toFixed(0)}
-                          </div>
-                          <div className="text-sm text-gray-500 font-medium">/ 100</div>
-                        </div>
-                        <div className="mt-3 w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                          <div
-                            className="bg-gradient-to-r from-[#582c83] to-[#7a3fa8] h-full rounded-full transition-all duration-500"
-                            style={{ width: `${(value * 100).toFixed(0)}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                )}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'how_they_live' && (
-            <div className="space-y-6">
-              <div className="text-center mb-8">
-                <h3 className="text-xl font-bold text-[#582c83] mb-2">
-                  Lifestyle & Shopping Patterns
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 gap-6">
-                {selectedSegment.attributes.cross_shopping_categories &&
-                  selectedSegment.attributes.cross_shopping_categories.length > 0 && (
-                    <div className="bg-gradient-to-br from-white to-blue-50 border-l-4 border-blue-500 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                          <svg
-                            className="w-6 h-6 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <h4 className="text-blue-700 font-bold text-base tracking-wide">
-                            Cross Shopping Categories
-                          </h4>
-                          <p className="text-xs text-gray-600">Alternative shopping destinations</p>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedSegment.attributes.cross_shopping_categories.map(
-                          (category, index) => (
-                            <span
-                              key={index}
-                              className="px-4 py-2 bg-white border border-blue-200 text-blue-700 rounded-lg text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
-                            >
-                              {category}
-                            </span>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )}
-                {selectedSegment.attributes.complementary_categories &&
-                  selectedSegment.attributes.complementary_categories.length > 0 && (
-                    <div className="bg-gradient-to-br from-white to-green-50 border-l-4 border-green-500 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
-                          <svg
-                            className="w-6 h-6 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <h4 className="text-green-700 font-bold text-base tracking-wide">
-                            Complementary Categories
-                          </h4>
-                          <p className="text-xs text-gray-600">
-                            Businesses that enhance the experience
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedSegment.attributes.complementary_categories.map(
-                          (category, index) => (
-                            <span
-                              key={index}
-                              className="px-4 py-2 bg-white border border-green-200 text-green-700 rounded-lg text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
-                            >
-                              {category}
-                            </span>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  )}
-              </div>
-            </div>
-          )}
-        </div>
       </div>
+
+      {/* Right Navigation Button */}
+      <button
+        onClick={handleNext}
+        disabled={
+          segmentReportData?.findIndex(seg => seg.segment_id === selectedSegmentId) ===
+          (segmentReportData?.length ?? 0) - 1
+        }
+        className="w-[52px] h-[52px] p-3 rounded-full border-2 border-[#582c83] disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-[#582c83] hover:bg-[#582c83] hover:text-white flex-shrink-0 mt-2"
+        type="button"
+      >
+        <FiChevronRight className="w-6 h-6" />
+      </button>
     </div>
   );
 }

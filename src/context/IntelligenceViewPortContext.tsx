@@ -10,6 +10,8 @@ interface IntelligenceViewportContextType {
   setPopulationSample: (v: boolean) => void;
   incomeSample: boolean;
   setIncomeSample: (v: boolean) => void;
+  realEstateSample: boolean;
+  setRealEstateSample: (v: boolean) => void;
 }
 
 const IntelligenceViewportContext = createContext<IntelligenceViewportContextType | undefined>(
@@ -21,6 +23,7 @@ export const IntelligenceViewportProvider = ({ children }: { children: ReactNode
   const [pendingActivation, setPendingActivation] = useState(false);
   const [populationSample, setPopulationSample] = useState(false);
   const [incomeSample, setIncomeSample] = useState(false);
+  const [realEstateSample, setRealEstateSample] = useState(false);
 
   return (
     <IntelligenceViewportContext.Provider value={{ 
@@ -31,7 +34,9 @@ export const IntelligenceViewportProvider = ({ children }: { children: ReactNode
       populationSample, 
       setPopulationSample,
       incomeSample,
-      setIncomeSample
+      setIncomeSample,
+      realEstateSample,
+      setRealEstateSample
     }}>
       {children}
     </IntelligenceViewportContext.Provider>

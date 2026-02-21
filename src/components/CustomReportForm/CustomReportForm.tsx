@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import apiRequest from '../../services/apiRequest';
 import urls from '../../urls.json';
-import './CustomReportForm.css';
+
 import { FaArrowLeft, FaExclamationTriangle } from 'react-icons/fa';
 import {
   BusinessCategoryMetrics,
@@ -243,11 +243,6 @@ const CustomReportForm = () => {
     handleCategoryLoad();
   }, []);
 
-  // Calculate if phone verification is needed (for display purposes)
-  const needsPhoneVerification = useMemo(() => {
-    // Check if user doesn't have a phone number
-    return !userPhone || userPhone.trim() === '';
-  }, [userPhone]);
 
   // Handle advanced mode toggle - adjust steps if needed
   useEffect(() => {
@@ -689,7 +684,6 @@ const CustomReportForm = () => {
         potential_business_type: formData.potential_business_type || businessType,
         target_income_level: formData.target_income_level,
         target_age: formData.target_age,
-        avg_order_value: formData.current_location.properties?.avg_order_value || 30,
         complementary_categories: formData.complementary_categories,
         cross_shopping_categories: formData.cross_shopping_categories,
         competition_categories: formData.competition_categories,
@@ -707,6 +701,7 @@ const CustomReportForm = () => {
           lng: formData.current_location.lng || 0,
           properties: {
             price: formData.current_location.properties?.price || 0,
+            avg_order_value: formData.current_location.properties?.avg_order_value || 30,
           },
         },
         single_location: reportType === 'location',
@@ -1314,208 +1309,214 @@ const CustomReportForm = () => {
     );
   }
 
-  return (
-    <main className="min-h-screen w-full flex justify-center items-start bg-gradient-to-br from-slate-50 to-blue-50 py-2 px-2 sm:py-4 sm:px-4">
-      <div className="w-[85vw] max-h-[90dvh] m-auto flex flex-col">
-        <div className="bg-white rounded-xl shadow-xl border border-gray-100 flex flex-col h-full overflow-hidden">
-          {/* Header */}
-          <div className="bg-gem-gradient px-4 py-3 text-white flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="flex items-center px-2 py-1.5 text-xs font-medium text-white bg-white/20 backdrop-blur-sm border border-white/30 rounded-md hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-transparent transition-all duration-200"
-              >
-                <FaArrowLeft className="w-3 h-3 mr-1" />
-                <span className="hidden sm:inline">Back</span>
-              </button>
-              <div className="text-center flex-1">
-                <h1 className="text-lg font-bold">
-                  {reportType === 'location'
-                    ? 'Evaluate Your Location'
-                    : reportType === 'full'
-                      ? 'Full Expansion Report'
-                      : 'Location Expansion Report'}
-                </h1>
-              </div>
-              <div className="w-16"></div> {/* Spacer for centering */}
-            </div>
-          </div>
+  // Check if we're on the last step (report-tier)
+  const isLastStep = reportType && currentStep > 0 && getActualStepContent(currentStep, reportType) === 'report-tier';
 
-          {/* Progress Indicator - Show when user has selected a report type (step 1+) */}
-          {currentStep > 0 && reportType && (
-            <div className="flex-shrink-0">
-              <ProgressIndicator
-                currentStep={currentStep}
-                completedSteps={completedSteps}
-                onStepClick={goToStep}
-                disabled={isSubmitting}
-                reportType={reportType || undefined}
-                isAdvancedMode={isAdvancedMode}
-                needsPhoneVerification={needsPhoneVerificationInitial}
-              />
+  return (
+    <main className="fixed inset-0 w-full h-full flex flex-col bg-white overflow-hidden">
+      {/* Header - No background, hide title on last step */}
+      <div className="px-4 pt-2 pb-1 text-gray-900 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex items-center px-2 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-200"
+          >
+            <FaArrowLeft className="w-3 h-3 mr-1" />
+            <span>Back</span>
+          </button>
+          {!isLastStep && (
+            <div className="text-center flex-1">
+              <h1 className="text-lg font-bold text-gray-900">
+                {reportType === 'location'
+                  ? 'Evaluate Your Location'
+                  : reportType === 'full'
+                    ? 'Full Expansion Report'
+                    : 'Location Expansion Report'}
+              </h1>
             </div>
           )}
+          {!isLastStep && <div className="w-16"></div>} {/* Spacer for centering */}
+        </div>
+      </div>
 
-          {/* Scrollable Content Area */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-5">
-            <form className="space-y-4">
-              {/* Current Step Content */}
+      {/* Progress Indicator - Show when user has selected a report type (step 1+) */}
+      {currentStep > 0 && reportType && (
+        <div className="flex-shrink-0">
+          <ProgressIndicator
+            currentStep={currentStep}
+            completedSteps={completedSteps}
+            onStepClick={goToStep}
+            disabled={isSubmitting}
+            reportType={reportType || undefined}
+            isAdvancedMode={isAdvancedMode}
+            needsPhoneVerification={needsPhoneVerificationInitial}
+            hideLabels={isLastStep || false}
+          />
+        </div>
+      )}
+
+      {/* Content Area - No scrolling, fits viewport */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <div className={`flex-1 ${isLastStep ? 'overflow-hidden' : 'overflow-y-auto'} px-4 sm:px-6 py-4 ${formData && currentStep > 0 && !isLastStep ? 'pb-24' : ''}`}>
+          <form className="h-full flex flex-col">
+            {/* Current Step Content */}
+            <div className={`flex-1 flex flex-col ${isLastStep ? 'overflow-hidden' : ''}`}>
               {renderCurrentStep()}
+            </div>
 
-              {/* Processing Status */}
-              {isSubmitting && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <svg
-                          className="w-4 h-4 text-blue-600 animate-spin"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="ml-3 flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-900">
-                          Generating your {businessType} report...
-                        </p>
-                        <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full">
-                          ~3 - 15 min
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-600 mt-1">
-                        Report Generation in progress. You can always find the report link in your profile under reports section.
-                      </p>
+            {/* Processing Status */}
+            {isSubmitting && (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mt-4">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 text-blue-600 animate-spin"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
                     </div>
                   </div>
-                </div>
-              )}
-
-              {/* Payment Method Form - Show when PaymentIntent error detected */}
-              {showPaymentMethodForm && (
-                <div className="mb-4">
-                  <Elements stripe={stripePromise}>
-                    <InlinePaymentMethod
-                      onPaymentMethodAdded={retrySubmission}
-                      onCancel={() => {
-                        setShowPaymentMethodForm(false);
-                        setPendingSubmission(null);
-                        setSubmitError(null);
-                      }}
-                      userPhone={userPhone}
-                    />
-                  </Elements>
-                </div>
-              )}
-
-              {/* Submit Error - Only show if not showing payment method form */}
-              {submitError && !showPaymentMethodForm && (
-                <div className="p-6 bg-red-50 border border-red-200 text-red-700 rounded-xl">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <FaExclamationTriangle className="h-6 w-6 text-red-400" />
+                  <div className="ml-3 flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-gray-900">
+                        Generating your {businessType} report...
+                      </p>
+                      <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full">
+                        ~3 - 15 min
+                      </span>
                     </div>
-                    <div className="ml-3 flex-1">
-                      {submitError.includes('|') ? (
-                        <>
-                          <h3 className="text-sm font-semibold text-red-800 mb-1">
-                            {submitError.split('|')[0]}
-                          </h3>
-                          <p className="text-sm text-red-700">{submitError.split('|')[1]}</p>
-                        </>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Report Generation in progress. You can always find the report link in your profile under reports section.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Payment Method Form - Show when PaymentIntent error detected */}
+            {showPaymentMethodForm && (
+              <div className="mt-4">
+                <Elements stripe={stripePromise}>
+                  <InlinePaymentMethod
+                    onPaymentMethodAdded={retrySubmission}
+                    onCancel={() => {
+                      setShowPaymentMethodForm(false);
+                      setPendingSubmission(null);
+                      setSubmitError(null);
+                    }}
+                    userPhone={userPhone}
+                  />
+                </Elements>
+              </div>
+            )}
+
+            {/* Submit Error - Only show if not showing payment method form */}
+            {submitError && !showPaymentMethodForm && (
+              <div className="p-6 bg-red-50 border border-red-200 text-red-700 rounded-xl mt-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <FaExclamationTriangle className="h-6 w-6 text-red-400" />
+                  </div>
+                  <div className="ml-3 flex-1">
+                    {submitError.includes('|') ? (
+                      <>
+                        <h3 className="text-sm font-semibold text-red-800 mb-1">
+                          {submitError.split('|')[0]}
+                        </h3>
+                        <p className="text-sm text-red-700">{submitError.split('|')[1]}</p>
+                      </>
+                    ) : (
+                      <p className="text-sm font-medium">{submitError}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Additional Cost Message for Attributes Step */}
+            {(() => {
+              const isAttributesStep =
+                getActualStepContent(currentStep, reportType) === 'attributes';
+              return (
+                isAttributesStep &&
+                additionalCost !== null &&
+                additionalCost > 0 && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                    <div className="flex items-center justify-center">
+                      {isCalculatingCost ? (
+                        <div className="flex items-center text-blue-700">
+                          <svg
+                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          <span className="text-sm font-medium">
+                            Calculating additional cost...
+                          </span>
+                        </div>
                       ) : (
-                        <p className="text-sm font-medium">{submitError}</p>
+                        <p className="text-sm font-semibold text-blue-800">
+                          +${additionalCost.toFixed(2)} for extra datasets
+                        </p>
                       )}
                     </div>
                   </div>
-                </div>
-              )}
-
-              {/* Additional Cost Message for Attributes Step */}
-              {(() => {
-                const isAttributesStep =
-                  getActualStepContent(currentStep, reportType) === 'attributes';
-                return (
-                  isAttributesStep &&
-                  additionalCost !== null &&
-                  additionalCost > 0 && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <div className="flex items-center justify-center">
-                        {isCalculatingCost ? (
-                          <div className="flex items-center text-blue-700">
-                            <svg
-                              className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              ></circle>
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              ></path>
-                            </svg>
-                            <span className="text-sm font-medium">
-                              Calculating additional cost...
-                            </span>
-                          </div>
-                        ) : (
-                          <p className="text-sm font-semibold text-blue-800">
-                            +${additionalCost.toFixed(2)} for extra datasets
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )
-                );
-              })()}
-            </form>
-          </div>
-
-          {/* Footer with Navigation Buttons - Hide at Step 0 (report type selection) */}
-          {formData && currentStep > 0 && (
-            <div className="flex-shrink-0 border-t border-gray-200 p-4 bg-gray-50">
-              <FormNavigation
-                currentStep={currentStep}
-                isSubmitting={isSubmitting}
-                onPreviousStep={goToPreviousStep}
-                onNextStep={goToNextStep}
-                onSubmit={handleSubmit}
-                validateCurrentStep={validateCurrentStep}
-                validateForm={validateFormWithoutStateUpdate}
-                formData={formData}
-                reportType={reportType || undefined}
-                isAdvancedMode={isAdvancedMode}
-                needsPhoneVerification={needsPhoneVerificationInitial}
-              />
-            </div>
-          )}
+                )
+              );
+            })()}
+          </form>
         </div>
       </div>
+
+      {/* Floating Navigation Buttons at Bottom - Hide at Step 0 (report type selection) and last step */}
+      {formData && currentStep > 0 && !isLastStep && (
+        <div className=" bg-white border-t border-gray-200  shadow-lg z-10 py-1" >
+          <FormNavigation
+            currentStep={currentStep}
+            isSubmitting={isSubmitting}
+            onPreviousStep={goToPreviousStep}
+            onNextStep={goToNextStep}
+            onSubmit={handleSubmit}
+            validateCurrentStep={validateCurrentStep}
+            validateForm={validateFormWithoutStateUpdate}
+            formData={formData}
+            reportType={reportType || undefined}
+            isAdvancedMode={isAdvancedMode}
+            needsPhoneVerification={needsPhoneVerificationInitial}
+          />
+        </div>
+      )}
     </main>
   );
 };

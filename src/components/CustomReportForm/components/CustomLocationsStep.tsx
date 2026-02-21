@@ -38,8 +38,8 @@ const CustomLocationsStep = ({
   }
 
   return (
-    <div className="space-y-4 animate-fade-in-up">
-      <div className="text-center mb-4">
+    <div className="space-y-4 mb-4 animate-fade-in-up">
+      <div className="text-center">
         <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">
           {isRequired ? 'Location to Evaluate' : 'Custom Locations'}{' '}
           <span className={`text-sm font-normal ${isRequired ? 'text-red-500' : 'text-gray-500'}`}>
@@ -52,12 +52,25 @@ const CustomLocationsStep = ({
             : `Add specific locations you want to analyze for ${config.displayName.toLowerCase()} placement`}
         </p>
       </div>
-
-      <div className="space-y-4">
+      <div>
+        <button
+          type="button"
+          onClick={onAddCustomLocation}
+          disabled={disabled}
+          className={`w-full flex items-center justify-center px-4 py-3 border-2 border-dashed rounded-lg transition-all duration-200 group ${disabled
+            ? 'border-gray-200 text-gray-400 cursor-not-allowed opacity-60'
+            : 'border-gray-300 text-gray-600 hover:border-primary hover:text-primary'
+            }`}
+        >
+          <FaPlus className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
+          Add Another Location
+        </button>
+      </div>
+      <div className=" flex  gap-4 flex-wrap justify-center">
         {formData.custom_locations.map((location, index) => (
           <div
             key={index}
-            className="bg-white border-2 border-gray-100 rounded-lg p-4 hover:border-primary/30 transition-all duration-200"
+            className="bg-white border-2 border-gray-100 rounded-lg p-4 hover:border-primary/30 transition-all duration-200 w-[47vw]"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
@@ -74,11 +87,10 @@ const CustomLocationsStep = ({
                   type="button"
                   onClick={() => onRemoveCustomLocation(index)}
                   disabled={disabled}
-                  className={`flex items-center px-3 py-1.5 text-xs rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 ${
-                    disabled
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
-                      : 'bg-red-100 text-red-700 hover:bg-red-200'
-                  }`}
+                  className={`flex items-center px-3 py-1.5 text-xs rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 ${disabled
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
+                    : 'bg-red-100 text-red-700 hover:bg-red-200'
+                    }`}
                 >
                   <FaTrash className="w-3 h-3 mr-1" />
                   Remove
@@ -111,19 +123,8 @@ const CustomLocationsStep = ({
           </div>
         ))}
 
-        <button
-          type="button"
-          onClick={onAddCustomLocation}
-          disabled={disabled}
-          className={`w-full flex items-center justify-center px-4 py-3 border-2 border-dashed rounded-lg transition-all duration-200 group ${
-            disabled
-              ? 'border-gray-200 text-gray-400 cursor-not-allowed opacity-60'
-              : 'border-gray-300 text-gray-600 hover:border-primary hover:text-primary'
-          }`}
-        >
-          <FaPlus className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
-          Add Another Location
-        </button>
+
+
       </div>
     </div>
   );

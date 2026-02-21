@@ -170,9 +170,6 @@ const SetAttributeStep = ({
   };
 
   useEffect(() => {
-    if (inputCategories.length > 0) {
-      setCategories(inputCategories);
-    }
     if (formData) {
       setSelectedCompetition(
         parseFromApiFormat([
@@ -190,7 +187,11 @@ const SetAttributeStep = ({
         ]),
       );
     }
-  }, [inputCategories, formData]);
+  }, [formData]);
+
+  useEffect(() => {
+    setCategories(inputCategories);
+  }, [inputCategories]);
 
   const onAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
@@ -254,39 +255,10 @@ const SetAttributeStep = ({
     onInputChange(field, updated.toLowerCase());
   };
 
-  // Render selectable chips
-  const renderChipSelect = (
-    options: string[],
-    selected: string,
-    setSelected: React.Dispatch<React.SetStateAction<string>>,
-    field: string,
-  ) => (
-    <div className="flex flex-wrap gap-2 mt-3">
-      {options.map((option) => {
-        const value = option.toLowerCase();
-        return (
-          <button
-            key={option}
-            type="button"
-            disabled={disabled}
-            onClick={() => handleTagSelect(setSelected, field, value)}
-            className={`px-3 py-1.5 rounded-full border-2 text-sm font-medium transition-all duration-200 ${
-              selected.includes(value)
-                ? "bg-primary text-white border-primary shadow-sm"
-                : "bg-white text-gray-700 border-gray-200 hover:border-primary hover:text-primary"
-            } ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
-          >
-            {option}
-          </button>
-        );
-      })}
-    </div>
-  );
-
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="animate-fade-in-up h-full flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="text-center mb-4">
+      <div className="mb-4 flex-shrink-0">
         <h3 className="text-lg font-bold text-gray-900 mb-1">Set Attributes</h3>
         <p className="text-sm text-gray-600">
           Define demographics, competition, and complementary business
@@ -294,19 +266,20 @@ const SetAttributeStep = ({
         </p>
       </div>
 
-      {/* Demographics Section */}
-      <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-6">
-        <h4 className="text-base font-semibold text-gray-800 mb-4 flex items-center">
-          <FaUsers className="w-4 h-4 mr-2 text-primary" />
-          Demographics
-        </h4>
-        {/* Population Counter */}
-        <div>
-          <div className="flex items-center mb-3">
-            <label htmlFor="age" className="text-gray-900 font-semibold">
-              Age
-            </label>
-            <span className="ml-3 w-full flex">
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-4 gap-4 flex-1 min-h-0 overflow-hidden">
+        {/* Demographics Section */}
+        <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-4 flex flex-col overflow-hidden max-h-[60vh]">
+          <h4 className="text-base font-semibold text-gray-800 mb-3 flex items-center flex-shrink-0">
+            <FaUsers className="w-4 h-4 mr-2 text-primary" />
+            Demographics
+          </h4>
+          {/* Population Counter */}
+          <div className="mb-3 flex-shrink-0">
+            <div className="flex flex-col">
+              <label htmlFor="age" className="text-gray-900 font-semibold text-sm mb-2">
+                Age
+              </label>
               <input
                 type="number"
                 id="age"
@@ -314,37 +287,44 @@ const SetAttributeStep = ({
                 onChange={onAgeChange}
                 className="w-full px-3 py-2 border-2 rounded-lg text-center font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary border-gray-200"
               />
-            </span>
+            </div>
+          </div>
+          {/* Income Chips */}
+          <div className="flex flex-col flex-shrink-0">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Target Income Range
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {INCOME_OPTIONS.map(option => {
+                const value = option.toLowerCase();
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => handleTagSelect(setTargetIncome, 'target_income_level', value)}
+                    className={`px-3 py-1.5 rounded-full border-2 text-sm font-medium transition-all duration-200 ${targetIncome.includes(value)
+                        ? 'bg-primary text-white border-primary shadow-sm'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-primary hover:text-primary'
+                      } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  >
+                    {option}
+                  </button>
+                );
+              })}
+            </div>
+            {errors.target_income && (
+              <p className="mt-2 text-sm text-red-600 flex items-center">
+                <FaExclamationTriangle className="w-4 h-4 mr-1" />
+                {errors.target_income}
+              </p>
+            )}
           </div>
         </div>
-        {/* Income Chips */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-1">
-            Target Income Range
-          </label>
-          {renderChipSelect(
-            INCOME_OPTIONS,
-            targetIncome,
-            setTargetIncome,
-            "target_income_level",
-          )}
-          {errors.target_income && (
-            <p className="mt-2 text-sm text-red-600 flex items-center">
-              <FaExclamationTriangle className="w-4 h-4 mr-1" />
-              {errors.target_income}
-            </p>
-          )}
-        </div>
-      </div>
 
-      {/* Complementary / Competition / Cross Shopping */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Complementary*/}
-        <div
-          key="Complementary"
-          className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-5"
-        >
-          <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center">
+        {/* Complementary Section */}
+        <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-4 flex flex-col overflow-hidden max-h-[60vh]">
+          <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center flex-shrink-0">
             <FaHandshake className="w-4 h-4 mr-2 text-primary" />
             Complementary
           </h3>
@@ -414,7 +394,7 @@ const SetAttributeStep = ({
                       selectedComplementary,
                     )
                   }
-                  className={`px-3 py-1 text-sm rounded-full cursor-pointer border-2 transition-all ${
+                  className={`px-2.5 py-1 text-sm rounded-full cursor-pointer border-2 transition-all ${
                     item.type === "custom"
                       ? isSelected
                         ? "bg-purple-600 text-white border-purple-600"
@@ -430,12 +410,10 @@ const SetAttributeStep = ({
             })}
           </div>
         </div>
-        {/*Competition*/}
-        <div
-          key="Competition"
-          className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-5"
-        >
-          <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center">
+
+        {/* Competition Section */}
+        <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-4 flex flex-col overflow-hidden max-h-[60vh]">
+          <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center flex-shrink-0">
             <FaLayerGroup className="w-4 h-4 mr-2 text-primary" />
             Competition
           </h3>
@@ -521,12 +499,10 @@ const SetAttributeStep = ({
             })}
           </div>
         </div>
-        {/* Cross Shopping */}
-        <div
-          key="Cross Shopping"
-          className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-5"
-        >
-          <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center">
+
+        {/* Cross Shopping Section */}
+        <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-4 flex flex-col overflow-hidden max-h-[60vh]">
+          <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center flex-shrink-0">
             <FaUsers className="w-4 h-4 mr-2 text-primary" />
             Cross Shopping
           </h3>

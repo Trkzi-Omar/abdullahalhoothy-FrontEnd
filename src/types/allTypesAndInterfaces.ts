@@ -439,6 +439,10 @@ export interface LayerContextType {
   setIncludeIncome: React.Dispatch<React.SetStateAction<boolean>>;
   switchIncomeLayer: () => Promise<void>;
   refetchIncomeLayer: () => Promise<void>;
+  includeRealEstate: boolean;
+  setIncludeRealEstate: React.Dispatch<React.SetStateAction<boolean>>;
+  switchRealEstateLayer: () => Promise<void>;
+  refetchRealEstateLayer: () => Promise<void>;
   currentViewportInsights: Insights | null;
   layerDataMap: LayerDataMap;
   setLayerDataMap: React.Dispatch<React.SetStateAction<LayerDataMap>>;
@@ -1017,9 +1021,11 @@ export interface IntelligenceViewport {
   bottom_lat: number;
   population: boolean;
   income: boolean;
+  real_estate: boolean;
   zoom_level: number;
   populationSample: boolean;
   incomeSample: boolean;
+  realEstateSample: boolean;
   sample?: boolean;
 }
 

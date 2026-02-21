@@ -11,17 +11,21 @@ export const AreaIntelligeneControl: React.FC = () => {
   const {
     switchPopulationLayer,
     switchIncomeLayer,
+    switchRealEstateLayer,
     refetchPopulationLayer,
     refetchIncomeLayer,
+    refetchRealEstateLayer,
     includePopulation,
     includeIncome,
+    includeRealEstate,
   } = useLayerContext();
-  const { populationSample, setPopulationSample, incomeSample, setIncomeSample } =
+  const { populationSample, setPopulationSample, incomeSample, setIncomeSample, realEstateSample, setRealEstateSample } =
     useIntelligenceViewport();
   const [isOpen, setIsOpen] = useState(false);
   const { selectedContainerType } = useCatalogContext();
   const [isPopulationRefetching, setIsPopulationRefetching] = useState(false);
   const [isIncomeRefetching, setIsIncomeRefetching] = useState(false);
+  const [isRealEstateRefetching, setIsRealEstateRefetching] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const close = () => setIsOpen(false);
@@ -55,6 +59,15 @@ export const AreaIntelligeneControl: React.FC = () => {
     }
   };
 
+  const handleRealEstateRefetch = async () => {
+    setIsRealEstateRefetching(true);
+    try {
+      await refetchRealEstateLayer();
+    } finally {
+      setTimeout(() => setIsRealEstateRefetching(false), 1000);
+    }
+  };
+
   return (
     <div ref={containerRef} className="relative z-[101]">
       <button
@@ -65,7 +78,7 @@ export const AreaIntelligeneControl: React.FC = () => {
           bg-gem-gradient border text-gray-200 border-gem/20 
           shadow-lg transition-all duration-200
           hover:bg-gray-100 min-w-[44px] sm:min-w-0
-          ${includeIncome || includePopulation ? 'bg-gem-green text-white hover:bg-[#0d4432]' : ''}
+          ${includeIncome || includePopulation || includeRealEstate ? 'bg-gem-green text-white hover:bg-[#0d4432]' : ''}
         `}
         title={'Area Intelligence'}
       >
@@ -74,7 +87,7 @@ export const AreaIntelligeneControl: React.FC = () => {
             size={20}
             className={`
               text-current sm:w-[22px] sm:h-[22px]
-              ${includePopulation || includeIncome ? 'text-white' : ''}
+              ${includePopulation || includeIncome || includeRealEstate ? 'text-white' : ''}
               m-0.5 sm:m-2
             `}
           />
@@ -391,73 +404,126 @@ export const AreaIntelligeneControl: React.FC = () => {
               </div>
             </label>
 
-            <div
-              className="border-t border-gem/20 mt-2 pt-2 bg-gray-100/80 p-2 sm:p-3 rounded-md cursor-not-allowed relative"
-              aria-disabled="true"
+            <label
+              htmlFor="real-estate-toggle-map"
+              className={`
+                flex items-center justify-between 
+                border-t border-gem/20 mt-2 pt-2
+                bg-white/95 p-2 sm:p-3 rounded-md cursor-pointer
+                gap-1.5 sm:gap-0
+              `}
             >
-              <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
-                <span className="text-[9px] sm:text-[10px] bg-purple-500 text-white px-2 py-1 rounded-full font-semibold shadow-sm">
-                  Coming next month
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-1.5 sm:gap-0 opacity-50">
-                <div
-                  className="flex items-center gap-1.5 sm:gap-2 flex-1 pr-20 sm:pr-24"
-                  style={{ minWidth: '7em' }}
-                >
-                  <div className="text-gem flex-shrink-0">
-                    <MdHome size={20} className="sm:w-6 sm:h-6" />
-                  </div>
-                  <div className="flex flex-col" style={{ minWidth: '7em' }}>
-                    <label className="font-medium text-gem text-xs sm:text-sm">
-                      Real Estate Intelligence
-                    </label>
-                    <p className="text-xs sm:text-sm text-gem/80 mt-1">
-                      Enable smart real estate data
-                    </p>
-                  </div>
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+                <div className="text-gem flex-shrink-0">
+                  <MdHome size={20} className="sm:w-6 sm:h-6" />
                 </div>
+                <div className="flex flex-col min-w-0">
+                  <label className="font-medium text-gem text-xs sm:text-sm">
+                    Real Estate Intelligence
+                  </label>
+                  <p className="text-xs sm:text-sm text-gem/80 mt-1">Enable smart real estate data</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">
+                    Updated on:{' '}
+                    <span className="text-[#115740] font-medium">{getYesterdayDate()}</span>
+                  </p>
+                </div>
+              </div>
 
-                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                  <button
-                    className="text-gem-green p-1 cursor-not-allowed"
-                    title="Not available yet"
-                    disabled
+              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                <button
+                  onClick={handleRealEstateRefetch}
+                  className="text-gem-green hover:text-gem-green/80 p-1"
+                  title="Refresh real estate data"
+                  disabled={isRealEstateRefetching}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={isRealEstateRefetching ? 'animate-spin' : ''}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
-                    </svg>
+                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+                  </svg>
+                </button>
+                <div
+                  className="flex bg-gray-100 rounded p-0.5 border border-gray-200 flex-shrink-0"
+                  onClick={e => e.preventDefault()}
+                >
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      setRealEstateSample(true);
+                    }}
+                    className={`
+                      px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs rounded transition-all duration-200
+                      ${
+                        realEstateSample
+                          ? 'bg-white shadow-sm text-gem-green font-medium'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }
+                    `}
+                  >
+                    Sample
                   </button>
-                  <div className="flex bg-gray-100 rounded p-0.5 border border-gray-200 flex-shrink-0">
-                    <button
-                      className="px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs rounded text-gray-500 cursor-not-allowed"
-                      disabled
-                    >
-                      Sample
-                    </button>
-                    <button
-                      className="px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs rounded text-gray-500 cursor-not-allowed"
-                      disabled
-                    >
-                      Full
-                    </button>
-                  </div>
-                  <div className="relative flex-shrink-0 ml-1 sm:ml-0">
-                    <div className="w-12 h-6 sm:w-14 sm:h-7 bg-gray-200 rounded-full cursor-not-allowed after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5" />
-                  </div>
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      setRealEstateSample(false);
+                    }}
+                    className={`
+                      px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs rounded transition-all duration-200
+                      ${
+                        !realEstateSample
+                          ? 'bg-white shadow-sm text-gem-green font-medium'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }
+                    `}
+                  >
+                    Full
+                  </button>
+                </div>
+                <div className="relative flex-shrink-0 ml-1 sm:ml-0">
+                  <input
+                    id="real-estate-toggle-map"
+                    type="checkbox"
+                    checked={includeRealEstate}
+                    onChange={() => {
+                      switchRealEstateLayer();
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div
+                    className={`
+                      cursor-pointer
+                      w-12 h-6 sm:w-14 sm:h-7 bg-gray-200
+                      peer-focus:outline-none peer-focus:ring-4
+                      peer-focus:ring-gem-green/20
+                      rounded-full peer
+                      peer-checked:bg-gem-green
+                      after:content-['']
+                      after:absolute
+                      after:top-[2px]
+                      after:left-[2px]
+                      after:bg-white
+                      after:border-gray-300
+                      after:border
+                      after:rounded-full
+                      after:h-5
+                      after:w-5
+                      after:transition-all
+                      peer-checked:after:translate-x-[24px] sm:peer-checked:after:translate-x-[28px]
+                      peer-checked:after:border-white
+                    `}
+                  />
                 </div>
               </div>
-            </div>
+            </label>
           </div>
         </div>
       )}

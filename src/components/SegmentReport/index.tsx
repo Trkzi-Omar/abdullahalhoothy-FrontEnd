@@ -28,7 +28,7 @@ function SmartSegmentReport({
   }
 
   return (
-    <div className="px-4 py-6 space-y-6 w-full min-w-0 animate-fade-in-up">
+    <div className="px-4  space-y-2 w-full min-w-0 animate-fade-in-up">
       {/* Scrollable Segments */}
       <ScrollableSegments
         segments={lite_segments}

@@ -62,7 +62,8 @@ export function LayerProvider(props: { children: ReactNode }) {
     pendingActivation, 
     setPendingActivation,
     populationSample,
-    incomeSample
+    incomeSample,
+    realEstateSample
   } = useIntelligenceViewport(); // get the shared state
   const navigate = useNavigate();
   const { authResponse } = useAuth();
@@ -140,6 +141,7 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   const [includePopulation, setIncludePopulation] = useState(false);
   const [includeIncome, setIncludeIncome] = useState(false);
+  const [includeRealEstate, setIncludeRealEstate] = useState(false);
 
   const [isLoadingDataset, setIsLoadingDataset] = useState(false);
 
@@ -836,11 +838,13 @@ export function LayerProvider(props: { children: ReactNode }) {
     async ({
       withPopulation,
       withIncome,
+      withRealEstate = false,
       shouldReturnFeatures = false,
       sample = false,
     }: {
       withPopulation: boolean;
       withIncome: boolean;
+      withRealEstate?: boolean;
       shouldReturnFeatures?: boolean;
       sample?: boolean;
     }): Promise<any> => {
@@ -858,6 +862,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         top_lat: bounds.getNorth(),
         population: withPopulation,
         income: withIncome,
+        real_estate: withRealEstate,
         zoom_level: 7 + currentZoomLevel,
         user_id: authResponse?.localId,
         sample: sample,
@@ -870,9 +875,11 @@ export function LayerProvider(props: { children: ReactNode }) {
   top_lat: bounds.getNorth(),
   population: withPopulation,
   income: withIncome,
+  real_estate: withRealEstate,
   zoom_level: 7 + currentZoomLevel,
   populationSample: populationSample,
   incomeSample: incomeSample,
+  realEstateSample: realEstateSample,
 });
       const res = await apiRequest({
         url: urls.fetch_population_by_viewport,
@@ -911,6 +918,14 @@ export function LayerProvider(props: { children: ReactNode }) {
       shouldReturnFeatures,
       sample: incomeSample,
     });
+  const fetchRealEstateByViewport = (shouldReturnFeatures: boolean = false) =>
+    fetchAreaIntelligenceByViewport({
+      withPopulation: false,
+      withIncome: false,
+      withRealEstate: true,
+      shouldReturnFeatures,
+      sample: realEstateSample,
+    });
 
   useEffect(() => {
     resetAreaIntelligence();
@@ -918,6 +933,7 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   async function switchPopulationLayer() {
     if (!includePopulation && includeIncome) handleIncomeLayer(false);
+    if (!includePopulation && includeRealEstate) handleRealEstateLayer(false);
     const shouldInclude = !includePopulation;
     handlePopulationLayer(shouldInclude);
   }
@@ -1065,8 +1081,8 @@ export function LayerProvider(props: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    console.debug('includePopulation', includePopulation, 'includeIncome', includeIncome);
-  }, [includePopulation, includeIncome]);
+    console.debug('includePopulation', includePopulation, 'includeIncome', includeIncome, 'includeRealEstate', includeRealEstate);
+  }, [includePopulation, includeIncome, includeRealEstate]);
 
   // Trigger refetch when population sample toggle changes
   useEffect(() => {
@@ -1228,6 +1244,7 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   async function switchIncomeLayer() {
     if (!includeIncome && includePopulation) handlePopulationLayer(false);
+    if (!includeIncome && includeRealEstate) handleRealEstateLayer(false);
     const shouldInclude = !includeIncome;
     handleIncomeLayer(shouldInclude);
   }
@@ -1236,6 +1253,129 @@ export function LayerProvider(props: { children: ReactNode }) {
     await handleIncomeLayer(false);
     await handleIncomeLayer(true, true);
   }
+
+  const _handleRealEstateLayer = useCallback(
+    async (shouldInclude: boolean, isRefetch: boolean = false) => {
+      const map = mapRef.current;
+
+      if (!shouldInitializeFeatures || !map) {
+        console.warn('Map not initialized');
+        return;
+      }
+      try {
+        await waitForMapReady();
+
+        // Check authentication
+        if (!authResponse?.localId || !authResponse?.idToken) {
+          const message = 'Authentication required. Please log in to use this feature.';
+          console.error(message);
+          setIsError(new Error(message));
+          setShowLoaderTopup(false);
+          return;
+        }
+
+        setIncludeRealEstate(shouldInclude);
+
+        if (shouldInclude) {
+          setShowLoaderTopup(true);
+          try {
+            const features = await fetchRealEstateByViewport(true);
+
+            setGeoPoints(prevPoints => {
+              const realEstateLayer = {
+                layerId: 1005, // Special ID for real estate layer
+                type: 'FeatureCollection',
+                features: features,
+                display: true,
+                points_color: colorOptions[5]?.hex || colorOptions[0].hex,
+                layer_legend: `Real Estate Intelligence (${features?.length})`,
+                is_grid: true,
+                is_intelligent: true,
+                is_fake: false,
+                is_refetch: isRefetch,
+                basedon: 'real_estate',
+                visualization_mode: 'grid',
+              };
+
+              const filteredPoints = prevPoints.filter(
+                point => point.layerId !== realEstateLayer.layerId
+              );
+              return [...filteredPoints, realEstateLayer];
+            });
+
+            setLayerDataMap(prev => ({
+              ...prev,
+              1005: features,
+            }));
+
+            // Update viewport to reflect real estate layer is active
+            setViewport(prev => prev ? { ...prev, real_estate: true } : prev);
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : 'Failed to fetch real estate data';
+            console.error('Real estate layer error:', error);
+            setIsError(new Error(message));
+          } finally {
+            setShowLoaderTopup(false);
+          }
+        } else {
+          // Remove real estate layer
+          setGeoPoints(prev =>
+            prev.filter(point => !(point.is_intelligent && point.basedon === 'real_estate'))
+          );
+
+          // Clean up layer data map
+          setLayerDataMap(prev => {
+            const newMap = { ...prev };
+            delete newMap[1005];
+            return newMap;
+          });
+
+          // Update viewport to reflect real estate layer is inactive
+          setViewport(prev => prev ? { ...prev, real_estate: false } : prev);
+        }
+      } catch (error) {
+        console.error('Error updating real estate layer:', error);
+        setIsError(new Error('Failed to update real estate layer'));
+        setShowLoaderTopup(false);
+      }
+    },
+    [
+      mapRef,
+      shouldInitializeFeatures,
+      authResponse,
+      fetchRealEstateByViewport,
+      setGeoPoints,
+      setLayerDataMap,
+      setIsError,
+      setShowLoaderTopup,
+      setIncludeRealEstate,
+    ]
+  );
+
+  const handleRealEstateLayer = useMemo(
+    () => _.debounce(_handleRealEstateLayer, 300),
+    [_handleRealEstateLayer]
+  );
+
+  async function switchRealEstateLayer() {
+    if (!includeRealEstate && includePopulation) handlePopulationLayer(false);
+    if (!includeRealEstate && includeIncome) handleIncomeLayer(false);
+    const shouldInclude = !includeRealEstate;
+    handleRealEstateLayer(shouldInclude);
+  }
+
+  async function refetchRealEstateLayer() {
+    await handleRealEstateLayer(false);
+    await handleRealEstateLayer(true, true);
+  }
+
+  // Trigger refetch when real estate sample toggle changes
+  useEffect(() => {
+    if (includeRealEstate) {
+      handleRealEstateLayer(true);
+    }
+  }, [realEstateSample]);
 
   async function refetchIntelligenceLayers() {
     if (includeIncome) {
@@ -1437,6 +1577,10 @@ export function LayerProvider(props: { children: ReactNode }) {
         handleIncomeLayer,
         switchIncomeLayer,
         refetchIncomeLayer,
+        includeRealEstate,
+        setIncludeRealEstate,
+        switchRealEstateLayer,
+        refetchRealEstateLayer,
         handleSubmitFetchDataset,
         currentViewportInsights,
         handleFullDataFetchSuccess,

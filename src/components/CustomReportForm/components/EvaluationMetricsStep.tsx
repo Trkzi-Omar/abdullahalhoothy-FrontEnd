@@ -1,4 +1,5 @@
 import { FaChartBar, FaCheck, FaExclamationTriangle, FaInfoCircle } from 'react-icons/fa';
+import './EvaluationMetricsStep.css';
 import { CustomReportData, FormErrors, MetricKey } from '../../../types/allTypesAndInterfaces';
 import { getMetricIcon } from '../utils/metricIcons';
 import { BusinessTypeConfig } from '../services/businessMetricsService';
@@ -69,7 +70,7 @@ const MetricItem = ({
           max="1"
           step="0.01"
           disabled={disabled}
-          className={`w-full h-2 bg-gray-200 rounded-lg appearance-none slider form-transition ${
+          className={`w-full h-2 bg-gray-200 rounded-lg appearance-none slider-thumb-primary transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
           }`}
           style={{
@@ -174,7 +175,7 @@ export const EvaluationMetricsStep = ({
         </div>
         <div className="w-full bg-gray-200 rounded-full h-3">
           <div
-            className={`h-3 rounded-full progress-bar ${
+            className={`h-3 rounded-full transition-[width] duration-500 ease-in-out ${
               isBalanced ? 'bg-green-500' : isOver ? 'bg-red-500' : 'bg-yellow-500'
             }`}
             style={{ width: `${Math.min(metricsSum * 100, 100)}%` }}

@@ -32,10 +32,10 @@ function ScrollableSegments({
   }, [selectedSegmentId]);
 
   return (
-    <div className="w-full max-w-full overflow-hidden">
+    <div className="w-full max-w-full overflow-hidden ">
       <ScrollContainer
         innerRef={scrollContainerRef}
-        className="flex gap-8 cursor-grab active:cursor-grabbing scrollbar-hide p-5"
+        className="flex gap-8 cursor-grab active:cursor-grabbing scrollbar-hide p-5 "
         hideScrollbars={true}
         style={{
           overflowX: 'auto',
@@ -52,15 +52,13 @@ function ScrollableSegments({
               key={segment.id}
               ref={isSelected ? selectedCardRef : null}
               onClick={() => onSegmentSelect(segment.id)}
-              className={`flex-shrink-0 size-[180px] relative group cursor-pointer transition-all shadow-[0_3px_14px_#31045e99]  ${
-                isSelected ? 'scale-[1.03] hover:scale-110' : 'hover:scale-[1.03]'
-              }`}
+              className={`flex-shrink-0 size-[180px] relative group cursor-pointer transition-all shadow-[0_3px_14px_#31045e99]  ${isSelected ? 'scale-[1.03] hover:scale-110' : 'hover:scale-[1.03]'
+                }`}
             >
               {/* Card Container */}
               <div
-                className={`relative w-full  overflow-hidden shadow-md hover:shadow-xl transition-all ${
-                  isSelected ? ' outline-[4px] outline-[#582c83] outline' : ''
-                }`}
+                className={`relative w-full  overflow-hidden shadow-md hover:shadow-xl transition-all ${isSelected ? ' outline-[4px] outline-[#582c83] outline' : ''
+                  }`}
               >
                 {/* Segment Image */}
                 <div className="relative bg-gradient-to-br from-purple-600 to-purple-800 w-full">

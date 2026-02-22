@@ -1282,12 +1282,12 @@ export function LayerProvider(props: { children: ReactNode }) {
             const features = await fetchRealEstateByViewport(true);
 
             setGeoPoints(prevPoints => {
-              const realEstateLayer = {
+              const realEstateLayer: MapFeatures = {
                 layerId: 1005, // Special ID for real estate layer
                 type: 'FeatureCollection',
                 features: features,
                 display: true,
-                points_color: colorOptions[5]?.hex || colorOptions[0].hex,
+                points_color: colorOptions[2].hex,
                 layer_legend: `Real Estate Intelligence (${features?.length})`,
                 is_grid: true,
                 is_intelligent: true,
@@ -1295,6 +1295,10 @@ export function LayerProvider(props: { children: ReactNode }) {
                 is_refetch: isRefetch,
                 basedon: 'real_estate',
                 visualization_mode: 'grid',
+                bknd_dataset_id: '',
+                layer_id: '',
+                records_count: features?.length ?? 0,
+                next_page_token: '',
               };
 
               const filteredPoints = prevPoints.filter(

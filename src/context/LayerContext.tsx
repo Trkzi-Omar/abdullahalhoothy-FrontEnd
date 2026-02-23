@@ -1293,7 +1293,7 @@ export function LayerProvider(props: { children: ReactNode }) {
                 is_intelligent: true,
                 is_fake: false,
                 is_refetch: isRefetch,
-                basedon: 'real_estate',
+                basedon: 'total_category_listings',
                 visualization_mode: 'grid',
                 bknd_dataset_id: '',
                 layer_id: '',

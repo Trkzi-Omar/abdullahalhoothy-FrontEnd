@@ -529,11 +529,17 @@ export function useMapLayers() {
 
                   // Calculate density values for styling
                   const allDensityValues = grid.features.map(f => f.properties?.density || 0);
-                  const maxDensity = Math.max(...allDensityValues, 1);
-
-                  const p25 = maxDensity * 0.25;
-                  const p50 = maxDensity * 0.5;
-                  const p75 = maxDensity * 0.75;
+                  const nonZeroDensities = allDensityValues
+                    .filter(v => v > 0)
+                    .sort((a, b) => a - b);
+                  const pick = (pct: number) => {
+                    if (nonZeroDensities.length === 0) return 1;
+                    const idx = Math.floor(pct * (nonZeroDensities.length - 1));
+                    return nonZeroDensities[idx];
+                  };
+                  const p25 = pick(0.25);
+                  const p50 = pick(0.5);
+                  const p75 = pick(0.75);
 
                   // Add grid layer with interactive settings
                   map.addLayer({

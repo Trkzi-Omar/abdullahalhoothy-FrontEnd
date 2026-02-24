@@ -1325,7 +1325,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         } else {
           // Remove real estate layer (identified by layerId 1005; basedon is 'total_category_listings')
           setGeoPoints(prev =>
-            prev.filter(point => point.layerId !== 1005)
+            prev.filter(point => !point.is_intelligent)
           );
 
           // Clean up layer data map

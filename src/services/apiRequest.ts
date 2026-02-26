@@ -282,7 +282,14 @@ const apiRequest = async ({
   } catch (err: any) {
     if (err?.response?.status === 403) {
       if (isGuest) {
-        throw new Error('Access denied for guest user');
+        const apiMessage = err?.response?.data?.detail;
+        const message =
+          typeof apiMessage === 'string'
+            ? apiMessage
+            : Array.isArray(apiMessage)
+              ? apiMessage[0]
+              : apiMessage;
+        throw new Error(message || 'Access denied for guest user');
       }
       localStorage.removeItem('authResponse');
       handleAuthError();
@@ -291,7 +298,14 @@ const apiRequest = async ({
 
     if (err?.response?.status === 401) {
       if (isGuest) {
-        throw new Error('Access denied for guest user');
+        const apiMessage = err?.response?.data?.detail;
+        const message =
+          typeof apiMessage === 'string'
+            ? apiMessage
+            : Array.isArray(apiMessage)
+              ? apiMessage[0]
+              : apiMessage;
+        throw new Error(message || 'Access denied for guest user');
       }
 
       localStorage.removeItem('authResponse');

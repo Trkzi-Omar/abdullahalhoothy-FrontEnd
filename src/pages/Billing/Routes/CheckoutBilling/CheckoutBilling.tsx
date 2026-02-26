@@ -356,6 +356,10 @@ function CheckoutBilling({ Name }: { Name: string }) {
     return priceData?.intelligence_purchase_items?.find(i => i.intelligence_name === 'Income');
   }, [priceData]);
 
+  const real_estate_intelligence = useMemo(() => {
+    return priceData?.intelligence_purchase_items?.find(i => i.intelligence_name === 'Real Estate');
+  }, [priceData]);
+
   const handleDatasetToggle = useCallback(
     (type: string) => {
       if (!checkout.country_name || !checkout.city_name) {
@@ -381,8 +385,9 @@ function CheckoutBilling({ Name }: { Name: string }) {
   );
 
   const handleIntelligenceToggle = useCallback(
-    (service: 'population' | 'income') => {
-      const formatted = service === 'population' ? 'Population' : 'Income';
+    (service: 'population' | 'income' | 'real_estate') => {
+      const formatted =
+        service === 'population' ? 'Population' : service === 'income' ? 'Income' : 'Real Estate';
       dispatch({ type: 'toggleIntelligence', payload: formatted });
     },
     [dispatch]
@@ -425,7 +430,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
       return; // Already have intelligence prices for this location, skip fetch
     }
 
-    const allIntelligences = ['Income', 'Population'];
+    const allIntelligences = ['Income', 'Population', 'Real Estate'];
 
     setIsCalculatingPrices(true);
 
@@ -1209,22 +1214,50 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 </div>
               </div>
               <div
-                className="border rounded-lg transition-all flex items-center justify-between w-full px-3 py-2 sm:px-4 sm:py-3 border-gray-300 bg-gray-100/60 shadow-md cursor-not-allowed relative"
+                className={getAreaCardClasses('Real Estate')}
                 role="button"
-                tabIndex={-1}
-                aria-disabled="true"
+                tabIndex={0}
+                onClick={() => {
+                  handleItemSelect('Real Estate', 'intelligence', 'Real Estate Intelligence');
+                }}
+                onKeyDown={event => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    handleItemSelect('Real Estate', 'intelligence', 'Real Estate Intelligence');
+                  }
+                }}
               >
-                <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
-                  <span className="text-[10px] sm:text-xs bg-purple-500 text-white px-2 py-1 rounded-full font-semibold shadow-sm">
-                    Coming next month
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 opacity-50">
-                  <MdHome size={24} />
-                  <div>
-                    <div className="font-semibold text-gray-700">Real Estate Intelligence</div>
-                    <div className="text-xs text-gray-500">Enable smart real estate data</div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <MdHome size={24} />
+                    <div className="flex-1">
+                      <div className="font-semibold">Real Estate Intelligence</div>
+                      {isCalculatingPrices ? (
+                        <Skeleton className="w-full h-4" />
+                      ) : (
+                        <div className="text-xs text-gray-500 line-clamp-1">
+                          {real_estate_intelligence?.description}
+                        </div>
+                      )}
+                    </div>
                   </div>
+                  <div className="text-xs font-semibold text-blue-600 mt-1">
+                    Price:{' '}
+                    {isCalculatingPrices ? (
+                      <Skeleton className="w-10 h-4" />
+                    ) : real_estate_intelligence ? (
+                      formatPrice(real_estate_intelligence?.cost || 0)
+                    ) : (
+                      '$0'
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  {checkout.intelligences.includes('Real Estate') ? (
+                    <MdCheckCircle className="text-green-600" size={24} />
+                  ) : (
+                    <span className="text-xs text-gray-400">Tap to view</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -1621,7 +1654,11 @@ function CheckoutBilling({ Name }: { Name: string }) {
             if (!selectedItem?.itemKey) return;
             if (selectedItem.type === 'intelligence') {
               handleIntelligenceToggle(
-                selectedItem.itemKey === 'Population' ? 'population' : 'income'
+                selectedItem.itemKey === 'Population'
+                  ? 'population'
+                  : selectedItem.itemKey === 'Real Estate'
+                    ? 'real_estate'
+                    : 'income'
               );
             } else if (selectedItem.type === 'dataset') {
               handleDatasetToggle(selectedItem.itemKey);
@@ -1633,7 +1670,11 @@ function CheckoutBilling({ Name }: { Name: string }) {
             if (!selectedItem?.itemKey) return;
             if (selectedItem.type === 'intelligence') {
               handleIntelligenceToggle(
-                selectedItem.itemKey === 'Population' ? 'population' : 'income'
+                selectedItem.itemKey === 'Population'
+                  ? 'population'
+                  : selectedItem.itemKey === 'Real Estate'
+                    ? 'real_estate'
+                    : 'income'
               );
             } else if (selectedItem.type === 'dataset') {
               handleDatasetToggle(selectedItem.itemKey);

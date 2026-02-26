@@ -15,7 +15,7 @@ type CheckoutAction =
   | { type: 'setCountry'; payload: string }
   | { type: 'setCity'; payload: string }
   | { type: 'toggleDataset'; payload: string }
-  | { type: 'toggleIntelligence'; payload: 'Income' | 'Population' }
+  | { type: 'toggleIntelligence'; payload: 'Income' | 'Population' | 'Real Estate' }
   | { type: 'setReport'; payload: ReportTier }
   | { type: 'setReportPotentialBusinessType'; payload: string }
   | { type: 'clearDatasets' }

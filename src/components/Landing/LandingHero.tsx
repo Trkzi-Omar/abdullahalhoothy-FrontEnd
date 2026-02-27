@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { MdSearch, MdCheckCircleOutline, MdInfo } from 'react-icons/md';
+import { MdSearch, MdCheckCircleOutline, MdInfo, MdVolumeOff, MdVolumeUp } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import type { LandingTranslations } from '../../pages/Landing/translations';
 import { LANDING_VIDEO } from './constants';
@@ -12,11 +12,10 @@ const LandingHero = ({ t }: LandingHeroProps) => {
   const navigate = useNavigate();
   const playerRef = useRef<HTMLDivElement>(null);
   const ytPlayerRef = useRef<YT.Player | null>(null);
-  const [videoActivated, setVideoActivated] = useState(false);
+  const [playerReady, setPlayerReady] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
-    if (!videoActivated) return;
-
     let isMounted = true;
 
     const initPlayer = () => {
@@ -26,6 +25,7 @@ const LandingHero = ({ t }: LandingHeroProps) => {
         videoId: LANDING_VIDEO.videoId,
         playerVars: {
           autoplay: 1,
+          mute: 1,
           rel: 0,
           modestbranding: 1,
         },
@@ -33,6 +33,7 @@ const LandingHero = ({ t }: LandingHeroProps) => {
           onReady: (event) => {
             event.target.setVolume(LANDING_VIDEO.volume);
             event.target.playVideo();
+            if (isMounted) setPlayerReady(true);
           },
         },
       });
@@ -60,7 +61,19 @@ const LandingHero = ({ t }: LandingHeroProps) => {
       ytPlayerRef.current?.destroy();
       ytPlayerRef.current = null;
     };
-  }, [videoActivated]);
+  }, []);
+
+  const toggleMute = () => {
+    const player = ytPlayerRef.current;
+    if (!player) return;
+    if (isMuted) {
+      player.unMute();
+      player.setVolume(LANDING_VIDEO.volume);
+    } else {
+      player.mute();
+    }
+    setIsMuted(!isMuted);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,33 +145,28 @@ const LandingHero = ({ t }: LandingHeroProps) => {
             style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}
           >
             <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black aspect-video">
-              {!videoActivated ? (
-                <button
-                  onClick={() => setVideoActivated(true)}
-                  className="w-full h-full relative cursor-pointer group/play"
-                  aria-label="Play video"
-                >
-                  <img
-                    src="/images/landing/video-poster.webp"
-                    alt={LANDING_VIDEO.title}
-                    className="w-full h-full object-cover"
-                    width={640}
-                    height={360}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center group-hover/play:bg-red-700 transition-colors shadow-lg">
-                      <svg viewBox="0 0 24 24" className="w-8 h-8 text-white fill-current ml-1">
-                        <path d="M8 5v14l11-7z"/>
-                      </svg>
-                    </div>
-                  </div>
-                </button>
-              ) : (
-                <div
-                  ref={playerRef}
-                  title={LANDING_VIDEO.title}
-                  className="w-full h-full"
+              {!playerReady && (
+                <img
+                  src="/images/landing/video-poster.webp"
+                  alt={LANDING_VIDEO.title}
+                  className="absolute inset-0 w-full h-full object-cover z-10"
+                  width={640}
+                  height={360}
                 />
+              )}
+              <div
+                ref={playerRef}
+                title={LANDING_VIDEO.title}
+                className="w-full h-full"
+              />
+              {playerReady && (
+                <button
+                  onClick={toggleMute}
+                  className="absolute bottom-3 right-3 z-20 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-colors"
+                  aria-label={isMuted ? 'Unmute' : 'Mute'}
+                >
+                  {isMuted ? <MdVolumeOff size={20} /> : <MdVolumeUp size={20} />}
+                </button>
               )}
             </div>
             <div className="absolute -z-10 top-[-20px] right-[-20px] w-24 h-24 bg-brand-green/20 rounded-full blur-2xl"></div>

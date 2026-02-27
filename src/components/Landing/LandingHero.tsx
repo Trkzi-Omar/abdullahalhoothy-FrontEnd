@@ -163,6 +163,15 @@ const LandingHero = ({ t }: LandingHeroProps) => {
             style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}
           >
             <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black aspect-video">
+              {!playerReady && (
+                <img
+                  src="/images/landing/video-poster.webp"
+                  alt={LANDING_VIDEO.title}
+                  className="absolute inset-0 w-full h-full object-cover z-10"
+                  width={640}
+                  height={360}
+                />
+              )}
               <div
                 ref={playerRef}
                 title={LANDING_VIDEO.title}

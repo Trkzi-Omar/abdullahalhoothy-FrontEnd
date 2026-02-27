@@ -17,6 +17,8 @@ const LandingHero = ({ t }: LandingHeroProps) => {
 
   useEffect(() => {
     let isMounted = true;
+    const interactionEvents = ['click', 'keydown'] as const;
+    let cleanupUnmuteListeners: (() => void) | null = null;
 
     const initPlayer = () => {
       if (!isMounted || !playerRef.current || ytPlayerRef.current) return;
@@ -31,9 +33,24 @@ const LandingHero = ({ t }: LandingHeroProps) => {
         },
         events: {
           onReady: (event) => {
-            event.target.setVolume(LANDING_VIDEO.volume);
             event.target.playVideo();
             if (isMounted) setPlayerReady(true);
+
+            // On first user interaction, unmute to volume
+            const unmute = () => {
+              event.target.unMute();
+              event.target.setVolume(LANDING_VIDEO.volume);
+              setIsMuted(false);
+              removeListeners();
+            };
+
+            const removeListeners = () => {
+              interactionEvents.forEach((e) => document.removeEventListener(e, unmute, true));
+              cleanupUnmuteListeners = null;
+            };
+
+            interactionEvents.forEach((e) => document.addEventListener(e, unmute, true));
+            cleanupUnmuteListeners = removeListeners;
           },
         },
       });
@@ -58,6 +75,7 @@ const LandingHero = ({ t }: LandingHeroProps) => {
 
     return () => {
       isMounted = false;
+      cleanupUnmuteListeners?.();
       ytPlayerRef.current?.destroy();
       ytPlayerRef.current = null;
     };
@@ -145,15 +163,6 @@ const LandingHero = ({ t }: LandingHeroProps) => {
             style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}
           >
             <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black aspect-video">
-              {!playerReady && (
-                <img
-                  src="/images/landing/video-poster.webp"
-                  alt={LANDING_VIDEO.title}
-                  className="absolute inset-0 w-full h-full object-cover z-10"
-                  width={640}
-                  height={360}
-                />
-              )}
               <div
                 ref={playerRef}
                 title={LANDING_VIDEO.title}

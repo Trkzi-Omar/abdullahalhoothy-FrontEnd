@@ -26,30 +26,29 @@ const LandingHero = ({ t }: LandingHeroProps) => {
       ytPlayerRef.current = new window.YT.Player(playerRef.current, {
         videoId: LANDING_VIDEO.videoId,
         playerVars: {
-          autoplay: 1,
+          autoplay: 0,
           mute: 1,
           rel: 0,
           modestbranding: 1,
         },
         events: {
           onReady: (event) => {
-            event.target.playVideo();
             if (isMounted) setPlayerReady(true);
 
-            // On first user interaction, unmute to volume
-            const unmute = () => {
+            const resumePlayback = () => {
               event.target.unMute();
               event.target.setVolume(LANDING_VIDEO.volume);
               setIsMuted(false);
               removeListeners();
+              event.target.playVideo();
             };
 
             const removeListeners = () => {
-              interactionEvents.forEach((e) => document.removeEventListener(e, unmute, true));
+              interactionEvents.forEach((e) => document.removeEventListener(e, resumePlayback, true));
               cleanupUnmuteListeners = null;
             };
 
-            interactionEvents.forEach((e) => document.addEventListener(e, unmute, true));
+            interactionEvents.forEach((e) => document.addEventListener(e, resumePlayback, true));
             cleanupUnmuteListeners = removeListeners;
           },
         },

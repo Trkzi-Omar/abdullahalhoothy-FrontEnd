@@ -12,6 +12,8 @@ export interface LandingTranslations {
     cta: string;
     placeholder: string;
     ctaNoSignup: string;
+    noCreditCard: string;
+    instantReport: string;
   };
   features: {
     title: string;
@@ -22,6 +24,8 @@ export interface LandingTranslations {
     visualTag1: string;
     visualTag2: string;
     visualOverlay: string;
+    cafeReport: string;
+    pharmacyReport: string;
     list: Array<{ title: string; desc: string }>;
   };
   report: {
@@ -64,7 +68,9 @@ export const translations: Record<'en' | 'ar', LandingTranslations> = {
       sub: 'Stop guessing. Get a comprehensive AI Location Report that predicts demand, analyzes competitors, and validates your success with 95% accuracy.',
       cta: 'Start Analysis',
       placeholder: 'Enter a location or city...',
-      ctaNoSignup: 'Expansion report Without Sign-up'
+      ctaNoSignup: 'Expansion report Without Sign-up',
+      noCreditCard: 'No Credit Card',
+      instantReport: 'Instant Report',
     },
     features: {
       title: 'Powerful Features',
@@ -76,6 +82,8 @@ export const translations: Record<'en' | 'ar', LandingTranslations> = {
       visualTag1: 'Executive Summary',
       visualTag2: 'Detailed Analytics',
       visualOverlay: 'View Sample Report',
+      cafeReport: 'Cafe Report',
+      pharmacyReport: 'Pharmacy Report',
       list: [
         {
           title: 'AI Scoring Engine',
@@ -105,7 +113,7 @@ export const translations: Record<'en' | 'ar', LandingTranslations> = {
       label: 'Success Story',
       title: 'Coffee Expansion Success',
       text1:
-        'A popular coffee chain planned a new branch in a high-rent district. The foot traffic looked good, but the conversion data was missing.',
+        'A popular coffee chain planned a new branch in a high-rent district. The foot traffic looked good, but the analysis data was missing.',
       text2:
         'S-LOC analysis revealed the area was oversaturated. We identified a "Hidden Gem" location 3km away with 40% lower rent.',
       stat1: '40% Lower OpEx',
@@ -128,7 +136,7 @@ export const translations: Record<'en' | 'ar', LandingTranslations> = {
     footer: '© 2025 S-LOC Intelligence. All rights reserved.',
   },
   ar: {
-    nav: { features: 'المميزات', caseStudy: 'قصة نجاح', tryFree: 'جرب المنصة' },
+    nav: { features: 'المميزات', caseStudy: 'قصة نجاح', tryFree: 'حمل التقرير' },
     hero: {
       badge: 'ذكاء اصطناعي للمواقع الجغرافية',
       alert: '٦٠٪ من مشاريع التجزئة تفشل بسبب الموقع.',
@@ -137,6 +145,8 @@ export const translations: Record<'en' | 'ar', LandingTranslations> = {
       cta: 'ابدأ التحليل الآن',
       placeholder: 'أدخل اسم الحي أو المدينة...',
       ctaNoSignup: 'ابدأ التحليل بدون تسجيل',
+      noCreditCard: 'بدون بطاقة ائتمان',
+      instantReport: 'تقرير فوري',
     },
     features: {
       title: 'مميزات المنصة',
@@ -147,29 +157,40 @@ export const translations: Record<'en' | 'ar', LandingTranslations> = {
       visualTag1: 'ملخص تنفيذي',
       visualTag2: 'تحليلات تفصيلية',
       visualOverlay: 'معاينة نموذج التقرير',
+      cafeReport: 'تقرير المقهى',
+      pharmacyReport: 'تقرير الصيدلية',
       list: [
-        { title: 'محرك التقييم الذكي', desc: 'تقييم فوري من ١٠٠ بناءً على الحركة والتكلفة.' },
-        { title: 'التركيبة السكانية', desc: 'تحليل القوة الشرائية وسلوك السكان.' },
-        { title: 'الخرائط الحرارية', desc: 'كشف مناطق الازدحام والكثافة البشرية.' },
+        {
+          title: 'محرك التقييم الذكي',
+          desc: 'تقييم فوري من ٠ إلى ١٠٠ بناءً على أكثر من ٥٠ مؤشراً تشمل الحركة والتكلفة.',
+        },
+        {
+          title: 'التركيبة السكانية',
+          desc: 'تحليل معمق للقوة الشرائية والفئات العمرية وسلوك السكان.',
+        },
+        {
+          title: 'الخرائط الحرارية',
+          desc: 'تصور مناطق الازدحام العالي ببيانات تنقل فورية.',
+        },
       ],
     },
     report: {
-      title: 'ماذا يوجد داخل التقرير؟',
-      sub: 'تفاصيل دقيقة تكشف مستقبل استثمارك.',
+      title: 'داخل تقرير الذكاء',
+      sub: 'ما تحصل عليه عند إنشاء تحليل S-LOC.',
       cards: [
-        { title: 'القرار النهائي', desc: 'توصية واضحة (ابدأ/توقف).' },
+        { title: 'القرار التنفيذي', desc: 'توصية واضحة (انطلق / لا تنطلق).' },
         { title: 'توقعات الطلب', desc: 'تحليل تقديري للطلب اليومي والشهري.' },
-        { title: 'رادار المنافسين', desc: 'تحليل التشبع والفجوات السوقية.' },
-        { title: 'كشف المخاطر', desc: 'تنبيهات حول الوصول والرؤية.' },
+        { title: 'رادار المنافسين', desc: 'تحليل التشبع وفجوات السوق.' },
+        { title: 'كاشف المخاطر', desc: 'مخاطر خفية في التقسيم العمراني وإمكانية الوصول.' },
       ],
     },
     caseStudy: {
       label: 'قصة نجاح',
       title: 'نجاح توسع سلسلة مقاهي',
       text1:
-        'خططت سلسلة مقاهي مشهورة لفرع في منطقة مرتفعة الإيجار. الحركة بدت جيدة، لكن البيانات الشرائية كانت مفقودة.',
+        'خططت سلسلة مقاهي مشهورة لفرع في منطقة مرتفعة الإيجار. الحركة بدت جيدة، لكن البيانات التحليلية  كانت مفقودة.',
       text2:
-        'كشف S-LOC أن المنطقة مشبعة تماماً. حددنا موقعاً بديلاً يبعد ٣ كم بتكلفة أقل وفرصة نمو أعلى.',
+        'كشف S-LOC أن المنطقة مشبعة تماماً. حددنا موقعاً أستراتيجياً يبعد ٣ كم بتكلفة أقل وفرصة نمو أعلى.',
       stat1: '٤٠٪ خفض التكاليف',
       stat2: '٢.٥ ضعف العائد',
       orig: 'الموقع المقترح',

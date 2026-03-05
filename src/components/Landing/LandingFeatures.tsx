@@ -38,7 +38,7 @@ const LandingFeatures = ({ t }: LandingFeaturesProps) => {
                   rel="noopener noreferrer"
                   className="bg-brand-surface border border-white/10 px-4 py-2 rounded text-xs text-slate-300 hover:bg-brand-surface/80 hover:border-white/20 transition-all cursor-pointer"
                 >
-                  Cafe Report
+                  {t.features.cafeReport}
                 </a>
                 <a
                   href="http://localhost:3000/static/reports/pharmacy_sales_report.html"
@@ -46,7 +46,7 @@ const LandingFeatures = ({ t }: LandingFeaturesProps) => {
                   rel="noopener noreferrer"
                   className="bg-brand-surface border border-white/10 px-4 py-2 rounded text-xs text-slate-300 hover:bg-brand-surface/80 hover:border-white/20 transition-all cursor-pointer"
                 >
-                  Pharmacy Report
+                  {t.features.pharmacyReport}
                 </a>
               </div>
             </div>

@@ -25,7 +25,7 @@ const LandingCaseStudy = ({ t }: LandingCaseStudyProps) => {
               </h3>
               <div className="space-y-4 text-slate-300 leading-relaxed mb-8">
                 <p>{t.caseStudy.text1}</p>
-                <p className="border-s-2 border-brand-green pl-4 rtl:border-s-0 rtl:border-e-2 rtl:pl-0 rtl:pr-4 italic text-white/90">
+                <p className="border-s-2 border-brand-green ps-4 italic text-white/90">
                   {t.caseStudy.text2}
                 </p>
               </div>

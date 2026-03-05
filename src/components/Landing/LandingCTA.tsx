@@ -18,7 +18,7 @@ const LandingCTA = ({ t }: LandingCTAProps) => {
             className="inline-flex items-center gap-3 px-8 py-4 bg-white text-brand-dark rounded-full font-bold text-lg hover:scale-105 transition-transform duration-200 shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)]"
           >
             {t.cta.btn}
-            <MdArrowForward size={20} />
+            <MdArrowForward size={20} className="rtl:rotate-180" aria-hidden="true" />
           </a>
         </div>
       </div>

@@ -91,27 +91,27 @@ const LandingHero = ({ t }: LandingHeroProps) => {
 
         </div>
 
-            <form onSubmit={handleSearch} className="relative max-w-lg lg:max-w-xl mx-auto lg:mx-0 mb-6 group">
+            <form onSubmit={handleSearch} className="relative max-w-xl lg:max-w-2xl mx-auto lg:mx-0 mb-6 group">
               <div className="absolute inset-0 bg-brand-green/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="relative bg-white/5 border border-white/10 rounded-xl p-2 lg:p-2.5 flex items-center backdrop-blur-sm focus-within:bg-brand-card focus-within:border-brand-green/50 transition-all">
-                <div className="px-4 text-slate-400">
+              <div className="relative bg-white/5 border border-white/10 rounded-xl p-2 lg:p-2.5 flex items-center gap-2 backdrop-blur-sm focus-within:bg-brand-card focus-within:border-brand-green/50 transition-all">
+                <div className="shrink-0 px-2 text-slate-400 sm:px-4">
                   <MdSearch size={20} />
                 </div>
                 <input
                   type="text"
                   placeholder={t.hero.placeholder}
-                  className="bg-transparent border-none outline-none text-white w-full placeholder:text-slate-500 placeholder:opacity-100 h-10 lg:h-12 text-base lg:text-base"
+                  className="min-w-0 flex-1 bg-transparent border-none outline-none text-white placeholder:text-slate-500 placeholder:opacity-100 h-10 lg:h-12 text-base lg:text-base"
                 />
                 <button
                   type="submit"
-                  className="bg-brand-green hover:bg-brand-greenHover text-white px-6 lg:px-7 py-2 lg:py-2.5 rounded-lg font-bold text-sm lg:text-base transition-colors shadow-lg whitespace-nowrap hidden sm:block"
+                  className="shrink-0 bg-brand-green hover:bg-brand-greenHover text-white px-3 sm:px-4 lg:px-5 py-2 rounded-lg font-bold text-sm lg:text-base transition-colors shadow-lg whitespace-nowrap hidden sm:block"
                 >
                   {t.hero.ctaNoSignup}
                 </button>
               </div>
               <button
                 type="submit"
-                className="mt-3 w-full sm:hidden bg-brand-green hover:bg-brand-greenHover text-white px-6 py-3 rounded-lg font-bold"
+                className="mt-3 w-full sm:hidden shrink-0 bg-brand-green hover:bg-brand-greenHover text-white px-4 py-3 rounded-lg font-bold"
               >
                 {t.hero.ctaNoSignup}
               </button>
@@ -119,11 +119,11 @@ const LandingHero = ({ t }: LandingHeroProps) => {
             <div className="flex items-center justify-center lg:justify-start gap-4 text-xs font-medium text-slate-400">
               <span className="flex items-center gap-1">
                 <MdCheckCircleOutline size={14} className="text-brand-green" />
-                <span>No Credit Card</span>
+                <span>{t.hero.noCreditCard}</span>
               </span>
               <span className="flex items-center gap-1">
                 <MdCheckCircleOutline size={14} className="text-brand-green" />
-                <span>Instant Report</span>
+                <span>{t.hero.instantReport}</span>
               </span>
             </div>
           </div>

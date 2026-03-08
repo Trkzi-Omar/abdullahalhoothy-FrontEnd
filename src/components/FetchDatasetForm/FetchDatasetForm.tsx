@@ -582,6 +582,7 @@ const FetchDatasetForm = () => {
             </select>
           </div>
 
+          <div className={`${!selectedCountry || !selectedCity ? 'opacity-50 pointer-events-none' : ''}`}>
           <label className="block my-2 text-base font-medium text-black" htmlFor="layers">
             Layers
           </label>
@@ -614,6 +615,7 @@ const FetchDatasetForm = () => {
               onChange={e => {
                 setSearchType(e.target.value);
               }}
+              disabled={!selectedCountry || !selectedCity}
             >
               <option value="category_search">Category Search</option>
               <option value="keyword_search">Keyword Search</option>
@@ -636,6 +638,7 @@ const FetchDatasetForm = () => {
                 placeholder="Enter search text"
                 value={textSearchInput}
                 onChange={e => setTextSearchInput(e.target.value)}
+                disabled={!selectedCountry || !selectedCity}
               />
 
               {errorMessage && <p className="text-red-500 text-sm mt-2">{errorMessage}</p>}
@@ -648,7 +651,8 @@ const FetchDatasetForm = () => {
                 <label className="mb-4 font-bold">What are you looking for?</label>
                 <button
                   onClick={handleClear}
-                  className="w-16 h-6 text-sm bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
+                  disabled={!selectedCountry || !selectedCity}
+                  className="w-16 h-6 text-sm bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Clear
                 </button>
@@ -669,6 +673,7 @@ const FetchDatasetForm = () => {
                   placeholder="Search for a type..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
+                  disabled={!selectedCountry || !selectedCity}
                 />
               </div>
               <CategoriesBrowserSubCategories
@@ -683,6 +688,7 @@ const FetchDatasetForm = () => {
               />
             </div>
           )}
+          </div>
         </div>
       </div>
       <div className="flex-col flex  px-2 py-2 select-none border-t lg:mb-0 mb-14 relative">
@@ -692,8 +698,8 @@ const FetchDatasetForm = () => {
               onButtonClick('sample', e);
             }}
             className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
-                 hover:bg-white transition-all cursor-pointer"
-            disabled={isLoadingDataset}
+                 hover:bg-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoadingDataset || !selectedCountry || !selectedCity}
           >
             Get Sample
           </button>
@@ -702,7 +708,7 @@ const FetchDatasetForm = () => {
             onClick={e => {
               onButtonClick('full data', e);
             }}
-            disabled={isLoadingDataset}
+            disabled={isLoadingDataset || !selectedCountry || !selectedCity}
           >
             <div className="text-lg">{costEstimate > 0 ? 'Buy now' : 'Full Data'}</div>
             <div className="flex flex-col items-end gap-1">

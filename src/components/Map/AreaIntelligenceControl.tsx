@@ -107,6 +107,9 @@ export const AreaIntelligeneControl: React.FC = () => {
             title={'Activate area intelligence'}
           >
             <div className="font-semibold text-white text-sm sm:text-base">Area Intelligence</div>
+            <p className="text-[11px] sm:text-xs text-gray-300 mt-1">
+              Only one intelligence layer can be active at a time
+            </p>
 
             <label
               htmlFor="population-toggle-map"

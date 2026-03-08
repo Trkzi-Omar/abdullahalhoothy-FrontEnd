@@ -20,6 +20,7 @@ import { topics } from '../../types';
 import { FaWandMagicSparkles } from 'react-icons/fa6';
 import Modal from '../common/Modal';
 import { useDatasetPrices } from '../../hooks/useDatasetPrices';
+import { toast } from 'sonner';
 
 import DatasetModalContent from './DatasetModalContent';
 
@@ -59,8 +60,6 @@ const FetchDatasetForm = () => {
   const [isPriceVisible, setIsPriceVisible] = useState<boolean>(false);
   // FETCHED DATA
   const [layers, setLayers] = useState<Layer[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState('');
   const [costEstimate, setCostEstimate] = useState<number>(0.0);
   // COLBASE CATEGORY
   const [openedCategories, setOpenedCategories] = useState<string[]>([]);
@@ -152,7 +151,7 @@ const FetchDatasetForm = () => {
       setCostEstimate(totalCost);
     } catch (error) {
       console.error('Error calculating cart cost:', error);
-      setError('Error calculating cart cost.');
+      toast.error('Error calculating cart cost.');
       setCostEstimate(0.0);
     }
   }, [authResponse?.localId, allDatasets, selectedCity, selectedCountry]);
@@ -224,7 +223,7 @@ const FetchDatasetForm = () => {
     const result = handleSubmitFetchDataset(action, event);
 
     if (result instanceof Error) {
-      setError(result.message);
+      toast.error(result.message);
       return;
     }
 
@@ -356,19 +355,19 @@ const FetchDatasetForm = () => {
   // Replace handleAddToIncluded and handleAddToExcluded with:
   const handleAddToIncluded = (type: string) => {
     if (!selectedCountry || !selectedCity) {
-      setError('Please select a country and city before adding datasets.');
+      toast.error('Please select a country and city before adding datasets.');
       return;
     }
-    setError(null);
+
     addTypeToFirstAvailableLayer(type, false);
   };
 
   const handleAddToExcluded = (type: string) => {
     if (!selectedCountry || !selectedCity) {
-      setError('Please select a country and city before adding datasets.');
+      toast.error('Please select a country and city before adding datasets.');
       return;
     }
-    setError(null);
+
     addTypeToFirstAvailableLayer(type, true);
   };
 
@@ -461,7 +460,7 @@ const FetchDatasetForm = () => {
 
   useEffect(() => {
     if (isError) {
-      setError(isError.message);
+      toast.error(isError.message);
     }
   }, [isError]);
 
@@ -486,10 +485,8 @@ const FetchDatasetForm = () => {
     }
 
     if (!selectedCountry || !selectedCity) {
-      setErrorMessage('Please select Country and city first.');
+      toast.error('Please select Country and city first.');
       return;
-    } else {
-      setErrorMessage('');
     }
 
     const delayDebounceFn = setTimeout(() => {
@@ -512,8 +509,6 @@ const FetchDatasetForm = () => {
     <>
       <div className="flex-1 flex flex-col justify-between overflow-y-auto relative">
         <div className="w-full p-4 overflow-y-auto ">
-          {error && <div className="mt-6 text-red-500 font-semibold">{error}</div>}
-
           <div className="mb-6">
             <label className="block mb-2 text-base font-medium text-black" htmlFor="ai-fetch">
               AI-Powered Dataset Finder
@@ -641,7 +636,6 @@ const FetchDatasetForm = () => {
                 disabled={!selectedCountry || !selectedCity}
               />
 
-              {errorMessage && <p className="text-red-500 text-sm mt-2">{errorMessage}</p>}
             </div>
           )}
 

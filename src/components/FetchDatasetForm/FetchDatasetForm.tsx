@@ -7,7 +7,7 @@ import {
 } from '../../utils/helperFunctions';
 import { PiX } from 'react-icons/pi';
 import urls from '../../urls.json';
-import { CategoryData, Layer } from '../../types/allTypesAndInterfaces';
+import { CategoryData, City, Layer } from '../../types/allTypesAndInterfaces';
 import { useLayerContext } from '../../context/LayerContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router';
@@ -53,6 +53,7 @@ const FetchDatasetForm = () => {
     handleFullDataFetchSuccess,
     isLoadingDataset,
     setCitiesData,
+    setCities,
   } = useLayerContext();
   // AUTH CONTEXT
   const { authResponse, authLoading } = useAuth();
@@ -191,7 +192,13 @@ const FetchDatasetForm = () => {
         url: urls.country_city,
         method: 'get',
       });
-      setCountries(processCityData(res.data.data, setCitiesData));
+      const cityData = res.data.data;
+      setCountries(processCityData(cityData, setCitiesData));
+
+      // Restore cities list for persisted country selection
+      if (selectedCountry && cityData[selectedCountry]) {
+        setCities(cityData[selectedCountry]);
+      }
     } catch (error) {
       if (error instanceof Error) {
         setIsError(error);

@@ -771,17 +771,15 @@ export function LayerProvider(props: { children: ReactNode }) {
   }
 
   function resetFetchDatasetForm() {
-    setReqFetchDataset({
-      selectedCountry: '',
-      selectedCity: '',
+    setReqFetchDataset(prev => ({
+      selectedCountry: prev.selectedCountry,
+      selectedCity: prev.selectedCity,
       layers: [],
       includedTypes: [],
       excludedTypes: [],
       zoomLevel: defaultMapConfig.zoomLevel,
-    });
+    }));
     setLayerDataMap({});
-    setSelectedCountry('');
-    setSelectedCity('');
     resetAreaIntelligence();
     setTextSearchInput('');
     setSearchType('category_search');

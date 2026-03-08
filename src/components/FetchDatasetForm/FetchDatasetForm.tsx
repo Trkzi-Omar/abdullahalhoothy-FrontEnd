@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import {
-  formatSubcategoryName,
   processCityData,
   getDefaultLayerColor,
   getYesterdayDate,
@@ -250,15 +249,6 @@ const FetchDatasetForm = () => {
     // Reset cost estimate
     setCostEstimate(0.0);
   }
-
-  // Add scroll handler function
-  const scrollToCategories = (e: React.MouseEvent) => {
-    e.preventDefault();
-    categoriesRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
-  };
 
   // Add new handler to remove type from specific layer
   const removeTypeFromLayer = (type: string, layerId: number, isExcluded: boolean) => {
@@ -541,90 +531,7 @@ const FetchDatasetForm = () => {
               <Chat topic={topics.DATASET} position="fixed left-[27.5rem] mx-2 inset-y-auto z-50" />
             </div>
           </div>
-
-          <label className="block mb-2 text-base font-medium text-black" htmlFor="layers">
-            Layers
-          </label>
-          <div
-            id="layers"
-            className="flex text-sm flex-col border border-gray-300 rounded-lg p-4 gap-4"
-          >
-            {/* Map through layers to create multiple Layer sections */}
-            {layers.map((layer, index) => (
-              <LayerDisplaySubCategories
-                key={layer.id}
-                layer={layer}
-                layerIndex={index}
-                onRemoveType={(type: string) => removeTypeFromLayer(type, layer.id, false)}
-                onToggleTypeInLayer={(type: string) => toggleTypeInLayer(type, layer.id, false)}
-                onNameChange={handleLayerNameChange}
-              />
-            ))}
-
-            {/* Add default empty layer section */}
-            <div className="">
-              <label
-                className="block mb-2 font-medium text-black"
-                htmlFor="selectedCategories-default"
-              >
-                Add Layer
-              </label>
-              <div
-                id="selectedCategories-default"
-                className="flex gap-2 overflow-x-auto bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              >
-                <button
-                  type="button"
-                  className={`flex items-center justify-between py-2 px-4 bg-[#f0f0f0] border border-[#ccc] rounded cursor-pointer text-[14px] transition-all duration-300 ease-in-out hover:bg-[#e0e0e0]`}
-                  onClick={scrollToCategories}
-                >
-                  {formatSubcategoryName('Category')}
-                  <span className="ml-2 font-bold">{'+'}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t mt-4 pt-2">
-            <label className="block mb-2 text-md font-medium text-black" htmlFor="searchType">
-              Search Type
-            </label>
-            <select
-              name="searchType"
-              id="searchType"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              value={searchType || 'category_search'}
-              onChange={e => {
-                setSearchType(e.target.value);
-              }}
-            >
-              <option value="category_search">Category Search</option>
-              <option value="keyword_search">Keyword Search</option>
-            </select>
-          </div>
-
-          {searchType == 'keyword_search' && (
-            <div className="pt-4">
-              <label
-                className="block mb-2 text-md font-medium text-black"
-                htmlFor="textSearchInput"
-              >
-                Search
-              </label>
-              <input
-                type="text"
-                id="textSearchInput"
-                name="textSearchInput"
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                placeholder="Enter search text"
-                value={textSearchInput}
-                onChange={e => setTextSearchInput(e.target.value)}
-              />
-
-              {errorMessage && <p className="text-red-500 text-sm mt-2">{errorMessage}</p>}
-            </div>
-          )}
-          <div className="pt-4">
+          <div>
             <label className="block mb-2 text-md font-medium text-black" htmlFor="country">
               Country
             </label>
@@ -674,6 +581,66 @@ const FetchDatasetForm = () => {
               ))}
             </select>
           </div>
+
+          <label className="block my-2 text-base font-medium text-black" htmlFor="layers">
+            Layers
+          </label>
+          <div
+            id="layers"
+            className="flex text-sm flex-col border border-gray-300 rounded-lg p-4 gap-4"
+          >
+            {/* Map through layers to create multiple Layer sections */}
+            {layers.map((layer, index) => (
+              <LayerDisplaySubCategories
+                key={layer.id}
+                layer={layer}
+                layerIndex={index}
+                onRemoveType={(type: string) => removeTypeFromLayer(type, layer.id, false)}
+                onToggleTypeInLayer={(type: string) => toggleTypeInLayer(type, layer.id, false)}
+                onNameChange={handleLayerNameChange}
+              />
+            ))}
+          </div>
+
+          <div className="border-t mt-4 pt-2">
+            <label className="block mb-2 text-md font-medium text-black" htmlFor="searchType">
+              Search Type
+            </label>
+            <select
+              name="searchType"
+              id="searchType"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              value={searchType || 'category_search'}
+              onChange={e => {
+                setSearchType(e.target.value);
+              }}
+            >
+              <option value="category_search">Category Search</option>
+              <option value="keyword_search">Keyword Search</option>
+            </select>
+          </div>
+
+          {searchType == 'keyword_search' && (
+            <div className="pt-4">
+              <label
+                className="block mb-2 text-md font-medium text-black"
+                htmlFor="textSearchInput"
+              >
+                Search
+              </label>
+              <input
+                type="text"
+                id="textSearchInput"
+                name="textSearchInput"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                placeholder="Enter search text"
+                value={textSearchInput}
+                onChange={e => setTextSearchInput(e.target.value)}
+              />
+
+              {errorMessage && <p className="text-red-500 text-sm mt-2">{errorMessage}</p>}
+            </div>
+          )}
 
           {searchType !== 'keyword_search' && (
             <div className="flex flex-col my-5" ref={categoriesRef}>

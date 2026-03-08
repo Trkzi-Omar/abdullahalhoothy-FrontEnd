@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { translations } from './translations';
 import LandingNavbar from '../../components/Landing/LandingNavbar';
 import LandingHero from '../../components/Landing/LandingHero';
@@ -9,8 +9,25 @@ import LandingDataSources from '../../components/Landing/LandingDataSources';
 import LandingCTA from '../../components/Landing/LandingCTA';
 import LandingFooter from '../../components/Landing/LandingFooter';
 
+const LANG_STORAGE_KEY = 'landing-lang';
+
+function getSavedLang(): 'en' | 'ar' {
+  const saved = localStorage.getItem(LANG_STORAGE_KEY);
+  return saved === 'ar' ? 'ar' : 'en';
+}
+
 const Landing = () => {
-  const [lang, setLang] = useState<'en' | 'ar'>('en');
+  const [lang, setLangState] = useState<'en' | 'ar'>(getSavedLang);
+
+  const setLang = useCallback((newLang: 'en' | 'ar') => {
+    setLangState(newLang);
+    localStorage.setItem(LANG_STORAGE_KEY, newLang);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  }, [lang]);
+
   const t = translations[lang];
 
   return (

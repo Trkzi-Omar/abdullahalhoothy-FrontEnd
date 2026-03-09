@@ -11,6 +11,7 @@ interface LandingHeroProps {
 const LandingHero = ({ t }: LandingHeroProps) => {
   const navigate = useNavigate();
   const playerRef = useRef<HTMLDivElement>(null);
+  const videoWrapperRef = useRef<HTMLDivElement>(null);
   const ytPlayerRef = useRef<YT.Player | null>(null);
   const [videoActivated, setVideoActivated] = useState(false);
 
@@ -60,6 +61,26 @@ const LandingHero = ({ t }: LandingHeroProps) => {
       ytPlayerRef.current?.destroy();
       ytPlayerRef.current = null;
     };
+  }, [videoActivated]);
+
+  useEffect(() => {
+    if (videoActivated) return;
+
+    const wrapper = videoWrapperRef.current;
+    if (!wrapper) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVideoActivated(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 },
+    );
+
+    observer.observe(wrapper);
+    return () => observer.disconnect();
   }, [videoActivated]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -131,7 +152,7 @@ const LandingHero = ({ t }: LandingHeroProps) => {
             className="relative animate-fade-in-up opacity-0"
             style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}
           >
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black aspect-video">
+            <div ref={videoWrapperRef} className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black aspect-video">
               {!videoActivated ? (
                 <button
                   onClick={() => setVideoActivated(true)}

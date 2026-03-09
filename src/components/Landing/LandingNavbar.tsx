@@ -21,9 +21,7 @@ const LandingNavbar = ({ lang, setLang, t }: LandingNavbarProps) => {
   }, []);
 
   const toggleLang = () => {
-    const newLang = lang === 'en' ? 'ar' : 'en';
-    setLang(newLang);
-    document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+    setLang(lang === 'en' ? 'ar' : 'en');
   };
 
   const navClasses = `fixed top-0 inset-x-0 z-50 transition-all duration-300 bg-[rgba(5,5,5,0.85)] backdrop-blur-[16px] border-b border-white/5 ${
@@ -48,7 +46,7 @@ const LandingNavbar = ({ lang, setLang, t }: LandingNavbarProps) => {
             {t.nav.caseStudy}
           </a>
         </div>
-        <div className="ml-auto hidden lg:flex items-center gap-6">
+        <div className="ms-auto hidden lg:flex items-center gap-6">
           <div className="h-5 w-px bg-white/10"></div>
           <button
             onClick={toggleLang}
@@ -64,7 +62,7 @@ const LandingNavbar = ({ lang, setLang, t }: LandingNavbarProps) => {
             {t.nav.tryFree}
           </a>
         </div>
-        <div className="lg:hidden ml-auto flex items-center gap-4">
+        <div className="lg:hidden ms-auto flex items-center gap-4">
           <button onClick={toggleLang} className="text-slate-300 font-bold text-xs">
             {lang === 'en' ? 'AR' : 'EN'}
           </button>

@@ -1,13 +1,12 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import {
-  formatSubcategoryName,
   processCityData,
   getDefaultLayerColor,
   getYesterdayDate,
 } from '../../utils/helperFunctions';
 import { PiX } from 'react-icons/pi';
 import urls from '../../urls.json';
-import { CategoryData, Layer } from '../../types/allTypesAndInterfaces';
+import { CategoryData, City, Layer } from '../../types/allTypesAndInterfaces';
 import { useLayerContext } from '../../context/LayerContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router';
@@ -21,6 +20,7 @@ import { topics } from '../../types';
 import { FaWandMagicSparkles } from 'react-icons/fa6';
 import Modal from '../common/Modal';
 import { useDatasetPrices } from '../../hooks/useDatasetPrices';
+import { toast } from 'sonner';
 
 import DatasetModalContent from './DatasetModalContent';
 
@@ -53,14 +53,13 @@ const FetchDatasetForm = () => {
     handleFullDataFetchSuccess,
     isLoadingDataset,
     setCitiesData,
+    setCities,
   } = useLayerContext();
   // AUTH CONTEXT
   const { authResponse, authLoading } = useAuth();
   const [isPriceVisible, setIsPriceVisible] = useState<boolean>(false);
   // FETCHED DATA
   const [layers, setLayers] = useState<Layer[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState('');
   const [costEstimate, setCostEstimate] = useState<number>(0.0);
   // COLBASE CATEGORY
   const [openedCategories, setOpenedCategories] = useState<string[]>([]);
@@ -152,7 +151,7 @@ const FetchDatasetForm = () => {
       setCostEstimate(totalCost);
     } catch (error) {
       console.error('Error calculating cart cost:', error);
-      setError('Error calculating cart cost.');
+      toast.error('Error calculating cart cost.');
       setCostEstimate(0.0);
     }
   }, [authResponse?.localId, allDatasets, selectedCity, selectedCountry]);
@@ -191,7 +190,13 @@ const FetchDatasetForm = () => {
         url: urls.country_city,
         method: 'get',
       });
-      setCountries(processCityData(res.data.data, setCitiesData));
+      const cityData = res.data.data;
+      setCountries(processCityData(cityData, setCitiesData));
+
+      // Restore cities list for persisted country selection
+      if (selectedCountry && cityData[selectedCountry]) {
+        setCities(cityData[selectedCountry]);
+      }
     } catch (error) {
       if (error instanceof Error) {
         setIsError(error);
@@ -218,7 +223,7 @@ const FetchDatasetForm = () => {
     const result = handleSubmitFetchDataset(action, event);
 
     if (result instanceof Error) {
-      setError(result.message);
+      toast.error(result.message);
       return;
     }
 
@@ -243,15 +248,6 @@ const FetchDatasetForm = () => {
     // Reset cost estimate
     setCostEstimate(0.0);
   }
-
-  // Add scroll handler function
-  const scrollToCategories = (e: React.MouseEvent) => {
-    e.preventDefault();
-    categoriesRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
-  };
 
   // Add new handler to remove type from specific layer
   const removeTypeFromLayer = (type: string, layerId: number, isExcluded: boolean) => {
@@ -359,19 +355,19 @@ const FetchDatasetForm = () => {
   // Replace handleAddToIncluded and handleAddToExcluded with:
   const handleAddToIncluded = (type: string) => {
     if (!selectedCountry || !selectedCity) {
-      setError('Please select a country and city before adding datasets.');
+      toast.error('Please select a country and city before adding datasets.');
       return;
     }
-    setError(null);
+
     addTypeToFirstAvailableLayer(type, false);
   };
 
   const handleAddToExcluded = (type: string) => {
     if (!selectedCountry || !selectedCity) {
-      setError('Please select a country and city before adding datasets.');
+      toast.error('Please select a country and city before adding datasets.');
       return;
     }
-    setError(null);
+
     addTypeToFirstAvailableLayer(type, true);
   };
 
@@ -464,7 +460,7 @@ const FetchDatasetForm = () => {
 
   useEffect(() => {
     if (isError) {
-      setError(isError.message);
+      toast.error(isError.message);
     }
   }, [isError]);
 
@@ -489,10 +485,8 @@ const FetchDatasetForm = () => {
     }
 
     if (!selectedCountry || !selectedCity) {
-      setErrorMessage('Please select Country and city first.');
+      toast.error('Please select Country and city first.');
       return;
-    } else {
-      setErrorMessage('');
     }
 
     const delayDebounceFn = setTimeout(() => {
@@ -515,8 +509,6 @@ const FetchDatasetForm = () => {
     <>
       <div className="flex-1 flex flex-col justify-between overflow-y-auto relative">
         <div className="w-full p-4 overflow-y-auto ">
-          {error && <div className="mt-6 text-red-500 font-semibold">{error}</div>}
-
           <div className="mb-6">
             <label className="block mb-2 text-base font-medium text-black" htmlFor="ai-fetch">
               AI-Powered Dataset Finder
@@ -534,90 +526,7 @@ const FetchDatasetForm = () => {
               <Chat topic={topics.DATASET} position="fixed left-[27.5rem] mx-2 inset-y-auto z-50" />
             </div>
           </div>
-
-          <label className="block mb-2 text-base font-medium text-black" htmlFor="layers">
-            Layers
-          </label>
-          <div
-            id="layers"
-            className="flex text-sm flex-col border border-gray-300 rounded-lg p-4 gap-4"
-          >
-            {/* Map through layers to create multiple Layer sections */}
-            {layers.map((layer, index) => (
-              <LayerDisplaySubCategories
-                key={layer.id}
-                layer={layer}
-                layerIndex={index}
-                onRemoveType={(type: string) => removeTypeFromLayer(type, layer.id, false)}
-                onToggleTypeInLayer={(type: string) => toggleTypeInLayer(type, layer.id, false)}
-                onNameChange={handleLayerNameChange}
-              />
-            ))}
-
-            {/* Add default empty layer section */}
-            <div className="">
-              <label
-                className="block mb-2 font-medium text-black"
-                htmlFor="selectedCategories-default"
-              >
-                Add Layer
-              </label>
-              <div
-                id="selectedCategories-default"
-                className="flex gap-2 overflow-x-auto bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              >
-                <button
-                  type="button"
-                  className={`flex items-center justify-between py-2 px-4 bg-[#f0f0f0] border border-[#ccc] rounded cursor-pointer text-[14px] transition-all duration-300 ease-in-out hover:bg-[#e0e0e0]`}
-                  onClick={scrollToCategories}
-                >
-                  {formatSubcategoryName('Category')}
-                  <span className="ml-2 font-bold">{'+'}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t mt-4 pt-2">
-            <label className="block mb-2 text-md font-medium text-black" htmlFor="searchType">
-              Search Type
-            </label>
-            <select
-              name="searchType"
-              id="searchType"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              value={searchType || 'category_search'}
-              onChange={e => {
-                setSearchType(e.target.value);
-              }}
-            >
-              <option value="category_search">Category Search</option>
-              <option value="keyword_search">Keyword Search</option>
-            </select>
-          </div>
-
-          {searchType == 'keyword_search' && (
-            <div className="pt-4">
-              <label
-                className="block mb-2 text-md font-medium text-black"
-                htmlFor="textSearchInput"
-              >
-                Search
-              </label>
-              <input
-                type="text"
-                id="textSearchInput"
-                name="textSearchInput"
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                placeholder="Enter search text"
-                value={textSearchInput}
-                onChange={e => setTextSearchInput(e.target.value)}
-              />
-
-              {errorMessage && <p className="text-red-500 text-sm mt-2">{errorMessage}</p>}
-            </div>
-          )}
-          <div className="pt-4">
+          <div>
             <label className="block mb-2 text-md font-medium text-black" htmlFor="country">
               Country
             </label>
@@ -668,13 +577,76 @@ const FetchDatasetForm = () => {
             </select>
           </div>
 
+          <div className={`${!selectedCountry || !selectedCity ? 'opacity-50 pointer-events-none' : ''}`}>
+          <label className="block my-2 text-base font-medium text-black" htmlFor="layers">
+            Layers
+          </label>
+          <div
+            id="layers"
+            className="flex text-sm flex-col border border-gray-300 rounded-lg p-4 gap-4"
+          >
+            {/* Map through layers to create multiple Layer sections */}
+            {layers.map((layer, index) => (
+              <LayerDisplaySubCategories
+                key={layer.id}
+                layer={layer}
+                layerIndex={index}
+                onRemoveType={(type: string) => removeTypeFromLayer(type, layer.id, false)}
+                onToggleTypeInLayer={(type: string) => toggleTypeInLayer(type, layer.id, false)}
+                onNameChange={handleLayerNameChange}
+              />
+            ))}
+          </div>
+
+          <div className="border-t mt-4 pt-2">
+            <label className="block mb-2 text-md font-medium text-black" htmlFor="searchType">
+              Search Type
+            </label>
+            <select
+              name="searchType"
+              id="searchType"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              value={searchType || 'category_search'}
+              onChange={e => {
+                setSearchType(e.target.value);
+              }}
+              disabled={!selectedCountry || !selectedCity}
+            >
+              <option value="category_search">Category Search</option>
+              <option value="keyword_search">Keyword Search</option>
+            </select>
+          </div>
+
+          {searchType == 'keyword_search' && (
+            <div className="pt-4">
+              <label
+                className="block mb-2 text-md font-medium text-black"
+                htmlFor="textSearchInput"
+              >
+                Search
+              </label>
+              <input
+                type="text"
+                id="textSearchInput"
+                name="textSearchInput"
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                placeholder="Enter search text"
+                value={textSearchInput}
+                onChange={e => setTextSearchInput(e.target.value)}
+                disabled={!selectedCountry || !selectedCity}
+              />
+
+            </div>
+          )}
+
           {searchType !== 'keyword_search' && (
             <div className="flex flex-col my-5" ref={categoriesRef}>
               <div className="flex justify-between">
                 <label className="mb-4 font-bold">What are you looking for?</label>
                 <button
                   onClick={handleClear}
-                  className="w-16 h-6 text-sm bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
+                  disabled={!selectedCountry || !selectedCity}
+                  className="w-16 h-6 text-sm bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Clear
                 </button>
@@ -695,6 +667,7 @@ const FetchDatasetForm = () => {
                   placeholder="Search for a type..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
+                  disabled={!selectedCountry || !selectedCity}
                 />
               </div>
               <CategoriesBrowserSubCategories
@@ -709,6 +682,7 @@ const FetchDatasetForm = () => {
               />
             </div>
           )}
+          </div>
         </div>
       </div>
       <div className="flex-col flex  px-2 py-2 select-none border-t lg:mb-0 mb-14 relative">
@@ -718,8 +692,8 @@ const FetchDatasetForm = () => {
               onButtonClick('sample', e);
             }}
             className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
-                 hover:bg-white transition-all cursor-pointer"
-            disabled={isLoadingDataset}
+                 hover:bg-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoadingDataset || !selectedCountry || !selectedCity}
           >
             Get Sample
           </button>
@@ -728,7 +702,7 @@ const FetchDatasetForm = () => {
             onClick={e => {
               onButtonClick('full data', e);
             }}
-            disabled={isLoadingDataset}
+            disabled={isLoadingDataset || !selectedCountry || !selectedCity}
           >
             <div className="text-lg">{costEstimate > 0 ? 'Buy now' : 'Full Data'}</div>
             <div className="flex flex-col items-end gap-1">

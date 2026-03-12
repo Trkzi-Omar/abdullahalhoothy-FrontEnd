@@ -985,6 +985,35 @@ const CustomReportForm = () => {
     setCurrentStep(1); // Move to first actual step
   };
 
+  // Check if user has at least one saved payment method (for paid location report purchase)
+  const checkHasPaymentMethod = useCallback(async (): Promise<boolean> => {
+    if (!authResponse?.localId) return false;
+    try {
+      const res = await apiRequest({
+        url: `${urls.list_stripe_payment_methods}?user_id=${authResponse.localId}`,
+        method: 'get',
+        isAuthRequest: true,
+      });
+      const methods = res?.data?.data;
+      return Array.isArray(methods) && methods.length > 0;
+    } catch {
+      return false;
+    }
+  }, [authResponse?.localId]);
+
+  // When user clicks "Purchase Report" on paid location card: use saved card if exists, else show error
+  const onPurchaseReportClick = useCallback(async () => {
+    if (!formData || !validateForm()) return;
+    setSubmitError(null);
+    const hasCard = await checkHasPaymentMethod();
+    if (hasCard) {
+      handleSubmit();
+    } else {
+      setSubmitError('Please add a payment method to purchase this report. You can add one below.');
+      setShowPaymentMethodForm(true);
+    }
+  }, [formData, checkHasPaymentMethod, validateForm, handleSubmit]);
+
   // Helper function to map step numbers to actual step content based on report type and advanced mode
   // @param step - 1-indexed step number (0 = report type selection, 1+ = form steps)
   // @param reportType - The selected report type
@@ -1182,6 +1211,7 @@ const CustomReportForm = () => {
             hasUsedFreeLocationReport={hasUsedFreeLocationReport}
             isAdvancedMode={isAdvancedMode}
             onPriceLoadingChange={handlePriceLoadingChange}
+            onPurchaseReport={reportType === 'location' ? onPurchaseReportClick : undefined}
           />
         );
 

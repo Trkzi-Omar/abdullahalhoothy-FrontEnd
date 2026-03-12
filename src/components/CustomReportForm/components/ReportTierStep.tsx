@@ -8,6 +8,7 @@ import {
 } from '../hooks/useReportPricing';
 import { FaBrain, FaUsers, FaDollarSign, FaStar, FaChartLine } from 'react-icons/fa';
 import { getPriceNumber as getPriceNumberHelper } from '../../../utils/helperFunctions';
+import { Skeleton } from '../../common/Skeleton';
 
 interface ReportTierStepProps {
   formData: CustomReportData;
@@ -17,6 +18,7 @@ interface ReportTierStepProps {
   hasUsedFreeLocationReport?: boolean;
   isAdvancedMode?: boolean;
   onPriceLoadingChange?: (isLoading: boolean, priceAvailable: boolean) => void;
+  onPurchaseReport?: () => void;
 }
 
 const ReportTierStep = ({
@@ -27,6 +29,7 @@ const ReportTierStep = ({
   hasUsedFreeLocationReport = false,
   isAdvancedMode = false,
   onPriceLoadingChange,
+  onPurchaseReport,
 }: ReportTierStepProps) => {
   // Collect all selected datasets from categories (memoized to prevent infinite loops)
   const allDatasets = useMemo(() => {
@@ -129,11 +132,42 @@ const ReportTierStep = ({
 
   // For location reports, show dynamic pricing from API
   if (reportType === 'location') {
-    // Determine price display
+    // Loading state: keep title + subtitle, show skeleton for both plans
+    if (isLoadingLocationPrice) {
+      const skeletonCard = (
+        <div className="relative border-2 border-[#e5e7eb] rounded-2xl p-6 bg-white shadow-[0_0.25rem_1rem_rgba(0,0,0,0.05)]">
+          <Skeleton className="absolute top-4 right-4 h-6 w-24 rounded-full" />
+          <Skeleton className="h-8 w-20 mb-2 rounded" />
+          <Skeleton className="h-4 w-32 mb-3 rounded" />
+          <Skeleton className="h-4 w-full mb-1 rounded" />
+          <Skeleton className="h-4 w-5/6 mb-4 rounded" />
+          <ul className="grid gap-[0.6rem] list-none p-0 mb-4">
+            <li className="flex items-center gap-2"><Skeleton className="h-4 w-full rounded" /></li>
+            <li className="flex items-center gap-2"><Skeleton className="h-4 w-full rounded" /></li>
+            <li className="flex items-center gap-2"><Skeleton className="h-4 w-4/5 rounded" /></li>
+          </ul>
+          <Skeleton className="w-full h-12 rounded-[0.625rem]" />
+        </div>
+      );
+      return (
+        <div className="font-sans text-[#1a1a1a] pt-6 px-5 pb-0 overflow-x-hidden min-h-full">
+          <div className="max-w-[62.5rem] mx-auto">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-[#1a1a1a]">Location Analysis Report</h2>
+              <p className="text-[#666] text-[0.95rem] mt-2">Choose your report option</p>
+            </div>
+
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(18rem,1fr))] gap-4">
+              {skeletonCard}
+              {skeletonCard}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Determine price display (loading already handled above)
     const getPriceDisplay = (): string => {
-      if (isLoadingLocationPrice) {
-        return '...';
-      }
       if (locationReportPrice === null) {
         return 'Price unavailable';
       }
@@ -189,9 +223,7 @@ const ReportTierStep = ({
                 <div className="text-[2rem] font-extrabold text-brand-green mb-[0.35rem]">{priceDisplay}</div>
                 <div className="text-[#666] mb-3 font-semibold">Evaluate Your Location</div>
                 <p className="text-[#666] text-[0.95rem] mb-4 leading-relaxed">
-                  {isLoadingLocationPrice
-                    ? 'Calculating price...'
-                    : locationReportPrice === null
+                  {locationReportPrice === null
                     ? 'Unable to calculate price at this time.'
                     : 'Get a fresh deep-dive on another site with competitive insights and instant recommendations.'}
                 </p>
@@ -211,7 +243,15 @@ const ReportTierStep = ({
                   <li className="flex items-center gap-2 text-[#1a1a1a] text-[0.9rem]"><span className="text-gem font-extrabold">✓</span>Competitive insights</li>
                   <li className="flex items-center gap-2 text-[#1a1a1a] text-[0.9rem]"><span className="text-gem font-extrabold">✓</span>Instant recommendations</li>
                 </ul>
-                <button className="w-full py-[0.8125rem] px-7 my-4 border-none rounded-[0.625rem] text-[0.8125rem] font-semibold font-rajdhani tracking-[0.0312rem] cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] uppercase text-white shadow-[0_0.25rem_0.75rem_rgba(125,0,184,0.2)] hover:shadow-[0_0.5rem_1.25rem_rgba(125,0,184,0.3)] hover:-translate-y-[2px] cta-shimmer" style={{ background: 'linear-gradient(135deg, #7D00B8 0%, #7E22CE 100%)' }}>Purchase Report</button>
+                <button
+                  type="button"
+                  disabled={disabled || locationReportPrice === null}
+                  onClick={() => onPurchaseReport?.()}
+                  className="w-full py-[0.8125rem] px-7 my-4 border-none rounded-[0.625rem] text-[0.8125rem] font-semibold font-rajdhani tracking-[0.0312rem] cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] uppercase text-white shadow-[0_0.25rem_0.75rem_rgba(125,0,184,0.2)] hover:shadow-[0_0.5rem_1.25rem_rgba(125,0,184,0.3)] hover:-translate-y-[2px] cta-shimmer disabled:opacity-60 disabled:cursor-not-allowed"
+                  style={{ background: 'linear-gradient(135deg, #7D00B8 0%, #7E22CE 100%)' }}
+                >
+                  Purchase Report
+                </button>
               </div>
             </div>
           </div>
@@ -234,9 +274,7 @@ const ReportTierStep = ({
               <div className="text-[2rem] font-extrabold text-brand-green mb-[0.35rem]">{priceDisplay}</div>
               <div className="text-[#666] mb-3 font-semibold">Single Location</div>
               <p className="text-[#666] text-[0.95rem] mb-4 leading-relaxed">
-                {isLoadingLocationPrice
-                  ? 'Calculating price...'
-                  : locationReportPrice === null
+                {locationReportPrice === null
                   ? 'Unable to calculate price at this time. Please retry to continue.'
                   : isFree
                   ? 'Instant analysis comparing your location to our database. Perfect for your first report.'

@@ -1,9 +1,10 @@
 import React, { useCallback, lazy, Suspense } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MdClose, MdCheckCircleOutline, MdErrorOutline } from 'react-icons/md';
 import { formatSubcategoryName } from '../../../../utils/helperFunctions';
 import { useBillingContext, type ReportTier } from '../../../../context/BillingContext';
 import { useUIContext } from '../../../../context/UIContext';
-import { useAuth } from '../../../../context/AuthContext';
+import { useAuth, isGuestUser } from '../../../../context/AuthContext';
 import apiRequest from '../../../../services/apiRequest';
 import urls from '../../../../urls.json';
 
@@ -72,9 +73,11 @@ function CheckoutModal({
   onRecalculateCart,
   reportTiers = [],
 }: CheckoutModalProps) {
+  const navigate = useNavigate();
   const { checkout, dispatch } = useBillingContext();
   const { openModal } = useUIContext();
   const { authResponse } = useAuth();
+  const isGuest = !!authResponse && isGuestUser(authResponse);
   const [isPurchasing, setIsPurchasing] = React.useState(false);
   const [promotionCode, setPromotionCode] = React.useState('');
   const [isApplyingPromo, setIsApplyingPromo] = React.useState(false);
@@ -125,9 +128,9 @@ function CheckoutModal({
       // Success - error will be cleared and prices updated
     } catch (error) {
       console.error('Failed to apply promotion code:', error);
-      
+
       let errorMessage = 'Invalid voucher code';
-      
+
       if (error && typeof error === 'object' && 'response' in error) {
         const apiError = error as {
           response?: { data?: { message?: string; detail?: string; error?: string } | string };
@@ -135,18 +138,18 @@ function CheckoutModal({
         const errorData = apiError.response?.data;
 
         if (errorData && typeof errorData === 'object') {
-          if (errorData.message) {
-            errorMessage = errorData.message;
-          } else if (errorData.detail) {
-            errorMessage = errorData.detail;
-          } else if (errorData.error) {
-            errorMessage = errorData.error;
-          }
+          const obj = errorData as Record<string, unknown>;
+          const msg =
+            typeof obj.message === 'string' ? obj.message :
+            typeof obj.detail === 'string' ? obj.detail :
+            typeof obj.error === 'string' ? obj.error : null;
+          if (msg) errorMessage = msg;
         } else if (typeof errorData === 'string') {
           errorMessage = errorData;
         }
       } else if (error instanceof Error) {
-        errorMessage = error.message.replace(/\s*\(Status:\s*\d+\)/g, '');
+        const msg = error.message.replace(/\s*\(Status:\s*\d+\)/g, '').trim();
+        if (msg && msg !== '[object Object]') errorMessage = msg;
       }
 
       setPromoError(errorMessage);
@@ -156,6 +159,12 @@ function CheckoutModal({
   }, [promotionCode, onRecalculateCart]);
 
   const handlePurchase = useCallback(async () => {
+    if (isGuest) {
+      onClose();
+      navigate('/auth?mode=register');
+      return;
+    }
+
     if (!authResponse?.localId) {
       return;
     }
@@ -268,7 +277,7 @@ function CheckoutModal({
     } finally {
       setIsPurchasing(false);
     }
-  }, [authResponse?.localId, checkout, cartCostResponse, promotionCode, openModal, onPurchaseComplete, onClose]);
+  }, [isGuest, authResponse?.localId, checkout, cartCostResponse, promotionCode, openModal, onPurchaseComplete, onClose, navigate]);
 
   const hasApiItems =
     cartCostResponse?.data &&
@@ -310,15 +319,23 @@ function CheckoutModal({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 py-6">
-          {/* Support Note */}
-          <div className="bg-gray-50 border border-gray-100 rounded-lg px-4 py-3 mb-6">
-            <p className="text-xs text-gray-500 leading-relaxed">
-              Questions? We're happy to help — reach us at{' '}
-              <a href="tel:+966558188632" className="text-[#115740] font-medium hover:underline">
-                +966 (55) 818 - 8632
-              </a>
-            </p>
-          </div>
+          {/* Guest user message or Support Note */}
+          {isGuest ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-6">
+              <p className="text-sm text-amber-800 leading-relaxed">
+                You're a guest user. Please sign up to complete your purchase.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-gray-50 border border-gray-100 rounded-lg px-4 py-3 mb-6">
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Questions? We're happy to help — reach us at{' '}
+                <a href="tel:+966558188632" className="text-[#115740] font-medium hover:underline">
+                  +966 (55) 818 - 8632
+                </a>
+              </p>
+            </div>
+          )}
 
           {isEmpty ? (
             <div className="flex flex-col items-center justify-center text-center py-12 text-gray-500">

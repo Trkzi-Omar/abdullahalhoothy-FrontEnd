@@ -326,12 +326,25 @@ function DataContainer() {
             </button>
           </div>
           {activeTab === 'Data Catalogue' || activeTab === 'Data Layer' ? (
-            <div
-              className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 md:gap-x-2 gap-y-10  w-full pb-10
-            "
-              // overflow-y-auto
-            >
-              {renderCards()}
+            <div className="w-full pb-10">
+              {selectedContainerType === 'Catalogue' && activeTab === 'Data Catalogue' && (
+                <div className="mb-6 p-4 rounded-xl bg-[#f0f7ff] border border-[#c5d9f1] text-[#1a365d]">
+                  <p className="font-semibold mb-2">Build your own data catalogue</p>
+                  <p className="text-sm leading-relaxed">
+                    Create a catalogue by adding multiple <strong>layers</strong> from the Layers
+                    section and saving them together. You can combine layers with <strong>pins</strong>{' '}
+                    and <strong>drawings</strong> on the map to organize your data the way you want.
+                    Once saved, your layers and annotations become a reusable catalogue you can add to
+                    the map anytime.
+                  </p>
+                </div>
+              )}
+              <div
+                className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 md:gap-x-2 gap-y-10 w-full"
+                // overflow-y-auto
+              >
+                {renderCards()}
+              </div>
             </div>
           ) : activeTab === 'Load Files' ? (
             <div className="text-center p-8 text-[1.2rem] text-[#666]">Load Files Content</div>

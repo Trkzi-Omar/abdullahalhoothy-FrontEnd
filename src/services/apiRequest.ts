@@ -30,6 +30,33 @@ const setAuthorizationHeader = (options: AxiosRequestConfig, token: string) => {
   };
 };
 
+/**
+ * Extracts a user-facing error message from API error payload.
+ * Handles string, object (e.g. { message, detail, error }), and array responses.
+ */
+function getErrorMessageFromPayload(data: unknown): string | null {
+  if (data == null) return null;
+  if (typeof data === 'string') return data;
+  if (Array.isArray(data)) {
+    const first = data[0];
+    if (typeof first === 'string') return first;
+    if (first && typeof first === 'object') return getErrorMessageFromPayload(first) ?? null;
+    return null;
+  }
+  if (typeof data === 'object') {
+    const obj = data as Record<string, unknown>;
+    const candidates = [obj.message, obj.detail, obj.error, obj.msg];
+    for (const c of candidates) {
+      if (typeof c === 'string') return c;
+      if (c != null && typeof c === 'object') {
+        const nested = getErrorMessageFromPayload(c);
+        if (nested) return nested;
+      }
+    }
+  }
+  return null;
+}
+
 const refreshAuthToken = async (refreshToken: string): Promise<AuthResponse> => {
   try {
     const res = await makeApiCall({
@@ -344,18 +371,7 @@ const apiRequest = async ({
     if (err?.response) {
       const status = err.response.status;
       const data = err.response.data;
-      let message = 'Request failed';
-
-      if (typeof data === 'string') {
-        message = data;
-      } else if (data?.detail) {
-        message = data.detail;
-      } else if (data?.message) {
-        message = data.message;
-      } else if (data?.error) {
-        message = data.error;
-      }
-
+      const message = getErrorMessageFromPayload(data) || 'Request failed';
       throw new Error(`${message} (Status: ${status})`);
     }
 

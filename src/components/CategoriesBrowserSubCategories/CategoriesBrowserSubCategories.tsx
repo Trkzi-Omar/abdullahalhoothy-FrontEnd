@@ -78,10 +78,21 @@ const CategoriesBrowserSubCategories = ({
                         <button
                           onClick={e => {
                             e.preventDefault();
-                            onAddToExcluded?.(type);
+                            if (!included && !excluded) return;
+                            // If type is in at least one layer, remove from one layer instead of creating a new excluded layer
+                            if (counts.includedCount.length > 0) {
+                              const layerToRemoveFrom =
+                                counts.includedCount[counts.includedCount.length - 1];
+                              onRemoveType(type, layerToRemoveFrom, false);
+                            } else {
+                              onAddToExcluded?.(type);
+                            }
                           }}
-                          className={`font-bold hover:opacity-75 transition-all cursor-pointer w-6 h-6 flex items-center justify-center rounded ${
-                            included || excluded ? 'bg-black/10' : 'bg-black/5'
+                          disabled={!included && !excluded}
+                          className={`font-bold transition-all w-6 h-6 flex items-center justify-center rounded ${
+                            included || excluded
+                              ? 'bg-black/10 hover:opacity-75 cursor-pointer'
+                              : 'bg-black/5 cursor-not-allowed opacity-50'
                           }`}
                         >
                           −

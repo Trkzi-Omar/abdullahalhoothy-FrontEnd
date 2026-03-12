@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useCallback } from 'react';
-import { formatSubcategoryName } from '../../../../utils/helperFunctions';
+import { formatSubcategoryName, fuzzyMatchCategoryType } from '../../../../utils/helperFunctions';
 import urls from '../../../../urls.json';
 import { useAuth } from '../../../../context/AuthContext';
 import apiRequest from '../../../../services/apiRequest';
-import { MdAttachMoney, MdCheckCircle, MdErrorOutline, MdClose, MdHome, MdSearch } from 'react-icons/md';
+import { MdAttachMoney, MdCheckCircle, MdClose, MdHome, MdSearch } from 'react-icons/md';
 import { CategoryData } from '../../../../types/allTypesAndInterfaces';
 import { useUIContext } from '../../../../context/UIContext';
 import { useBillingContext, type ReportTier } from '../../../../context/BillingContext';
@@ -11,6 +11,7 @@ import ItemSelectionView from './ItemSelectionView';
 import CheckoutModal from './CheckoutModal';
 import CategoriesBrowserSubCategories from '../../../../components/CategoriesBrowserSubCategories/CategoriesBrowserSubCategories';
 import { Skeleton } from '../../../../components/common/Skeleton';
+import { toast } from 'sonner';
 
 interface DataVariable {
   key: string;
@@ -363,25 +364,12 @@ function CheckoutBilling({ Name }: { Name: string }) {
   const handleDatasetToggle = useCallback(
     (type: string) => {
       if (!checkout.country_name || !checkout.city_name) {
-        openModal(
-          <div className="flex flex-col items-center justify-center p-8 text-center">
-            <MdErrorOutline className="text-orange-500 text-6xl mb-4" />
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Location Required</h2>
-            <p className="text-gray-600">
-              Please select a country and city before adding datasets.
-            </p>
-          </div>,
-          {
-            darkBackground: true,
-            isSmaller: true,
-            hasAutoSize: true,
-          }
-        );
+        toast.error('Please select a country and city before adding datasets.');
         return;
       }
       dispatch({ type: 'toggleDataset', payload: type });
     },
-    [dispatch, checkout.country_name, checkout.city_name, openModal]
+    [dispatch, checkout.country_name, checkout.city_name]
   );
 
   const handleIntelligenceToggle = useCallback(
@@ -758,8 +746,8 @@ function CheckoutBilling({ Name }: { Name: string }) {
 
       setCartCostResponse(response.data);
     } catch (error) {
-      setCartCostResponse(null);
-      throw error; // Re-throw to allow error handling in calling component
+      // Keep previous cart cost so user still sees price; only re-throw so modal can show error
+      throw error;
     } finally {
       setIsCalculatingCost(false);
     }
@@ -856,11 +844,11 @@ function CheckoutBilling({ Name }: { Name: string }) {
     [categories, checkout.country_name, checkout.city_name]
   );
 
-  // Filter categories based on search query
+  // Filter categories based on search query (fuzzy, supports spaces and multi-word)
   const filteredCategories = useMemo(() => {
     return Object.entries(categories).reduce((acc, [category, types]) => {
       const filteredTypes = (types as string[]).filter(type =>
-        type.toLowerCase().includes(searchQuery.toLowerCase())
+        fuzzyMatchCategoryType(type, searchQuery)
       );
       if (filteredTypes.length > 0) {
         acc[category] = filteredTypes;
@@ -940,20 +928,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
     (type: string) => {
       // Add to cart
       if (!checkout.country_name || !checkout.city_name) {
-        openModal(
-          <div className="flex flex-col items-center justify-center p-8 text-center">
-            <MdErrorOutline className="text-orange-500 text-6xl mb-4" />
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Location Required</h2>
-            <p className="text-gray-600">
-              Please select a country and city before adding datasets.
-            </p>
-          </div>,
-          {
-            darkBackground: true,
-            isSmaller: true,
-            hasAutoSize: true,
-          }
-        );
+        toast.error('Please select a country and city before adding datasets.');
         return;
       }
       if (!checkout.datasets.includes(type)) {
@@ -963,18 +938,18 @@ function CheckoutBilling({ Name }: { Name: string }) {
       const formattedName = formatSubcategoryName(type);
       handleItemSelect(type, 'dataset', formattedName);
     },
-    [checkout, dispatch, openModal, handleItemSelect]
+    [checkout, dispatch, handleItemSelect]
   );
 
   // Fetch prices for display - fetch only relevant items based on active view
   useEffect(() => {
-    if (!canCalculateCost || !authResponse?.localId) {
-      return; // Don't clear priceData, just don't fetch if conditions not met
+    if (!authResponse?.localId) {
+      return;
     }
 
     // Determine which prices to fetch based on the active view
     if (activeView === 'area') {
-      // For area intelligence, fetch only intelligences
+      // For area intelligence, fetch prices as soon as user is on the view (even without country/city so list prices show)
       const timeoutId = setTimeout(() => {
         fetchAreaPrices();
       }, 300);
@@ -1005,7 +980,6 @@ function CheckoutBilling({ Name }: { Name: string }) {
     hasInitializedDatasets,
     hasInitializedReports,
     openedCategories.length,
-    canCalculateCost,
     authResponse?.localId,
     checkout.country_name,
     checkout.city_name,

@@ -6,6 +6,49 @@ export function formatSubcategoryName(name: string | undefined | null): string {
     .join(' ');
 }
 
+/**
+ * Normalizes a category type for search (underscores to spaces, lowercase).
+ */
+function normalizeTypeForSearch(type: string): string {
+  return (type || '').replace(/_/g, ' ').toLowerCase();
+}
+
+/**
+ * Normalizes search query: trims and collapses multiple spaces so spaces are allowed.
+ */
+function normalizeSearchQuery(query: string): string {
+  return (query || '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+/**
+ * Returns true if needle is a subsequence of haystack (all chars of needle appear in order in haystack).
+ * Enables fuzzy matching e.g. "rntl" matches "rental", "cr" matches "car".
+ */
+function isSubsequence(needle: string, haystack: string): boolean {
+  if (!needle) return true;
+  let i = 0;
+  for (let j = 0; j < haystack.length && i < needle.length; j++) {
+    if (haystack[j] === needle[i]) i++;
+  }
+  return i === needle.length;
+}
+
+/**
+ * Fuzzy match: type matches search query when every space-separated token
+ * in the query appears in the normalized type (as substring or subsequence).
+ * - Allows spaces: multi-word queries work (e.g. "Car Rental" matches "Car_Rental").
+ * - Fuzzy: each token can match as subsequence (e.g. "cr rntl" matches "Car Rental").
+ */
+export function fuzzyMatchCategoryType(type: string, searchQuery: string): boolean {
+  const normalized = normalizeTypeForSearch(type);
+  const query = normalizeSearchQuery(searchQuery);
+  if (!query) return true;
+  const tokens = query.split(' ').filter(Boolean);
+  return tokens.every(
+    token => normalized.includes(token) || isSubsequence(token, normalized)
+  );
+}
+
 export function processCityData(data: any, setData: Function): string[] {
   if (typeof data === 'object' && data !== null) {
     const keys = Object.keys(data);

@@ -3,6 +3,7 @@ import {
   processCityData,
   getDefaultLayerColor,
   getYesterdayDate,
+  fuzzyMatchCategoryType,
 } from '../../utils/helperFunctions';
 import { PiX } from 'react-icons/pi';
 import urls from '../../urls.json';
@@ -176,7 +177,7 @@ const FetchDatasetForm = () => {
 
   const filteredCategories = Object.entries(categories).reduce((acc, [category, types]) => {
     const filteredTypes = (types as string[]).filter(type =>
-      type.toLowerCase().includes(searchQuery.toLowerCase())
+      fuzzyMatchCategoryType(type, searchQuery)
     );
     if (filteredTypes.length > 0) {
       acc[category] = filteredTypes;

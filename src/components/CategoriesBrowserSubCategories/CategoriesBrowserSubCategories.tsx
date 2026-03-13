@@ -18,7 +18,7 @@ const CategoriesBrowserSubCategories = ({
   return (
     <div className="flex flex-col gap-2.5">
       {Object.entries(categories).map(([category, types]) => (
-        <div key={category} className="flex-1 min-w-[200px] whitespace-nowrap">
+        <div key={category} className="flex-1 min-w-0">
           <button
             className="font-semibold text-lg cursor-pointer flex justify-start items-center w-full hover:bg-gray-200 transition-all rounded"
             onClick={() => onToggleCategory(category)}
@@ -33,7 +33,7 @@ const CategoriesBrowserSubCategories = ({
               (!openedCategories.includes(category) && ' h-0')
             }
           >
-            <div className="flex flex-wrap gap-3 mt-3">
+            <div className="grid grid-cols-2 gap-3 mt-3">
               {(types as string[]).map((type: string) => {
                 const counts = getTypeCounts(type);
                 const included = counts.includedCount.length > 0;
@@ -58,7 +58,7 @@ const CategoriesBrowserSubCategories = ({
                 return (
                   <div
                     key={type}
-                    className={`flex items-center justify-between py-2 px-4 bg-[#f0f0f0] border rounded text-[14px] ${colors} ${borderClass} ${hideAddRemoveButtons ? 'cursor-pointer' : ''} transition-colors `}
+                    className={`flex items-center justify-between py-2 px-4 bg-[#f0f0f0] border rounded text-[14px] min-w-0 ${colors} ${borderClass} ${hideAddRemoveButtons ? 'cursor-pointer' : ''} transition-colors `}
                     onClick={() => hideAddRemoveButtons && onTypeClick?.(type)}
                   >
                     {!hideAddRemoveButtons && (
@@ -100,10 +100,10 @@ const CategoriesBrowserSubCategories = ({
                       </div>
                     )}
 
-                    <div className="flex flex-col items-center mx-2">
+                    <div className="flex flex-col items-center mx-2 min-w-0">
                       <span
                         onClick={() => onTypeClick?.(type)}
-                        className={onTypeClick ? 'cursor-pointer hover:underline' : ''}
+                        className={`text-center break-words ${onTypeClick ? 'cursor-pointer hover:underline' : ''}`}
                       >
                         {formatSubcategoryName(type)}
                       </span>

@@ -9,7 +9,7 @@ import React, { useState, FormEvent, useCallback } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import apiRequest from '../../../services/apiRequest';
 import urls from '../../../urls.json';
-import { useOTP } from '../../../context/OTPContext';
+
 import { toast } from 'sonner';
 
 interface InlinePaymentMethodProps {
@@ -24,7 +24,7 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
   userPhone,
 }) => {
   const { authResponse } = useAuth();
-  const { openOTPModal } = useOTP();
+
   const stripe = useStripe();
   const elements = useElements();
 
@@ -35,6 +35,7 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
   const [cardCvcError, setCardCvcError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [cardholderName, setCardholderName] = useState('');
+  const [nameError, setNameError] = useState<string | null>(null);
 
   const handleCardChange = (event: any) => {
     setCardBrand(event.brand);
@@ -51,6 +52,23 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
 
   const handleCardCvcChange = (event: any) => {
     setCardCvcError(event.error ? event.error.message : null);
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCardholderName(e.target.value);
+    if (nameError) setNameError(null);
+  };
+
+  const validateName = (name: string): string | null => {
+    const trimmed = name.trim();
+    if (trimmed.length < 2) return 'Name must be at least 2 characters.';
+    if (!/^[a-zA-Z\s'-]+$/.test(trimmed)) return 'Name can only contain letters, spaces, hyphens, and apostrophes.';
+    return null;
+  };
+
+  const handleNameBlur = () => {
+    const error = validateName(cardholderName);
+    if (error) setNameError(error);
   };
 
   const cardBrands: Record<string, string> = {
@@ -148,23 +166,19 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
       return;
     }
 
+    const nameValidationError = validateName(cardholderName);
+    if (nameValidationError) {
+      setNameError(nameValidationError);
+      return;
+    }
+
     if (!userPhone) {
       toast.error('Please add a phone number to your profile before adding a payment method.');
       return;
     }
 
-    // Trigger OTP verification before saving payment method
-    openOTPModal(
-      userPhone,
-      () => {
-        // On successful OTP verification, save the payment method
-        savePaymentMethod();
-      },
-      () => {
-        // On cancel
-        toast.info('Payment method addition cancelled.');
-      }
-    );
+    // Profile phone was already verified when added; no separate OTP step for payment method.
+    savePaymentMethod();
   };
 
   const elementStyles = {
@@ -208,11 +222,13 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
             id="cardholder-name"
             type="text"
             value={cardholderName}
-            onChange={e => setCardholderName(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+            onChange={handleNameChange}
+            onBlur={handleNameBlur}
+            className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${nameError ? 'border-red-400' : 'border-gray-300'}`}
             placeholder="Name on card"
             required
           />
+          {nameError && <p className="text-red-500 text-sm mt-1">{nameError}</p>}
         </div>
 
         <div>

@@ -25,14 +25,20 @@ const AddFundsForm: React.FC = () => {
 
   const handleCostChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    
-    // Only allow digits (whole numbers only)
-    if (value === '' || /^\d+$/.test(value)) {
+    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
       setCost(value);
-      setInputError(null); // Clear error when valid input
+      setInputError(null);
     } else {
-      setInputError('Only whole dollar amounts are allowed (no decimals)');
+      setInputError('Enter a valid amount (e.g. 10.99)');
     }
+  };
+
+  const handleCostFocus = () => {
+    const num = parseFloat(cost);
+    if (!isNaN(num)) {
+      setCost(String(num));
+    }
+    setInputError(null);
   };
 
   const handleCostBlur = () => {
@@ -99,12 +105,16 @@ const AddFundsForm: React.FC = () => {
             <div>
               <input
                 id="cardholder-name"
-                type="text"
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+                min="0"
                 value={cost}
                 onChange={handleCostChange}
+                onFocus={handleCostFocus}
                 onBlur={handleCostBlur}
                 className="w-full p-3 border border-gray-200 shadow-sm rounded-md focus:outline-none"
-                placeholder="Amount (USD) - whole dollars only"
+                placeholder="0.00"
                 required
               />
               {inputError && <p className="text-red-500 text-sm mt-1">{inputError}</p>}

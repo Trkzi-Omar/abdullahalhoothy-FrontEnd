@@ -15,13 +15,13 @@ import { useAuth } from '../../context/AuthContext';
 import apiRequest from '../../services/apiRequest';
 import urls from '../../urls.json';
 import clsx from 'clsx';
-import { useOTP } from '../../context/OTPContext';
+
 import { toast } from 'sonner';
 import { UserProfile } from '../../types/allTypesAndInterfaces';
 
 const PaymentMethodForm: React.FC = () => {
   const { authResponse } = useAuth();
-  const { openOTPModal } = useOTP();
+
   const navigate = useNavigate();
   const stripe = useStripe();
   const elements = useElements();
@@ -34,6 +34,7 @@ const PaymentMethodForm: React.FC = () => {
   const [cardCvcError, setCardCvcError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [cardholderName, setCardholderName] = useState('');
+  const [nameError, setNameError] = useState<string | null>(null);
   const [userPhone, setUserPhone] = useState<string | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
@@ -80,6 +81,23 @@ const PaymentMethodForm: React.FC = () => {
 
   const handleCardCvcChange = (event: any) => {
     setCardCvcError(event.error ? event.error.message : null);
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCardholderName(e.target.value);
+    if (nameError) setNameError(null);
+  };
+
+  const validateName = (name: string): string | null => {
+    const trimmed = name.trim();
+    if (trimmed.length < 2) return 'Name must be at least 2 characters.';
+    if (!/^[a-zA-Z\s'-]+$/.test(trimmed)) return 'Name can only contain letters, spaces, hyphens, and apostrophes.';
+    return null;
+  };
+
+  const handleNameBlur = () => {
+    const error = validateName(cardholderName);
+    if (error) setNameError(error);
   };
 
   // Card brand icons
@@ -180,25 +198,22 @@ const PaymentMethodForm: React.FC = () => {
       return;
     }
 
-    // Check if user has a phone number for OTP verification
+    // Validate cardholder name
+    const nameValidationError = validateName(cardholderName);
+    if (nameValidationError) {
+      setNameError(nameValidationError);
+      return;
+    }
+
+    // Check if user has a phone number
     if (!userPhone) {
       toast.error('Please add a phone number to your profile before adding a payment method.');
       navigate('/profile');
       return;
     }
 
-    // Trigger OTP verification before saving payment method
-    openOTPModal(
-      userPhone,
-      () => {
-        // On successful OTP verification, save the payment method
-        savePaymentMethod();
-      },
-      () => {
-        // On cancel
-        toast.info('Payment method addition cancelled.');
-      }
-    );
+    // Profile phone was already verified when added; no separate OTP step for payment method.
+    savePaymentMethod();
   };
 
   // Styling for each Stripe element
@@ -251,11 +266,16 @@ const PaymentMethodForm: React.FC = () => {
                 id="cardholder-name"
                 type="text"
                 value={cardholderName}
-                onChange={e => setCardholderName(e.target.value)}
-                className="w-full p-3 border border-gray-200 shadow-sm rounded-md focus:outline-none"
+                onChange={handleNameChange}
+                onBlur={handleNameBlur}
+                className={clsx(
+                  "w-full p-3 border shadow-sm rounded-md focus:outline-none",
+                  nameError ? "border-red-400" : "border-gray-200"
+                )}
                 placeholder="Name on card"
                 required
               />
+              {nameError && <p className="text-red-500 text-sm mt-1">{nameError}</p>}
             </div>
             <div>
               <div className="relative">

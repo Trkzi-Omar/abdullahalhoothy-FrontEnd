@@ -508,7 +508,9 @@ function CheckoutModal({
                         <h3 className="text-lg font-semibold text-gray-900 mb-1">
                           {service} Intelligence
                         </h3>
-                        <p className="text-sm text-gray-500">Calculating price...</p>
+                        <p className="text-sm text-gray-500">
+                          {isCalculatingCost ? 'Calculating price...' : 'Unable to calculate price. Please try again.'}
+                        </p>
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <button
@@ -543,7 +545,9 @@ function CheckoutModal({
                         <h3 className="text-lg font-semibold text-gray-900 mb-1">
                           {formatSubcategoryName(dataset)}
                         </h3>
-                        <p className="text-sm text-gray-500">Calculating price...</p>
+                        <p className="text-sm text-gray-500">
+                          {isCalculatingCost ? 'Calculating price...' : 'Unable to calculate price. Please try again.'}
+                        </p>
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <button
@@ -561,6 +565,18 @@ function CheckoutModal({
                       const tierName =
                         reportTiers.find(t => t.reportKey === checkout.report)?.name ||
                         `${checkout.report.charAt(0).toUpperCase() + checkout.report.slice(1)} Tier`;
+                      const needsBusinessType = !checkout.report_potential_business_type?.trim();
+                      const needsLocation = !checkout.country_name || !checkout.city_name;
+                      let statusMessage = '';
+                      if (isCalculatingCost) {
+                        statusMessage = 'Calculating price...';
+                      } else if (needsBusinessType || needsLocation) {
+                        statusMessage = needsBusinessType
+                          ? 'Please select a business type to calculate price.'
+                          : 'Please select country and city to calculate price.';
+                      } else {
+                        statusMessage = 'Unable to calculate price. Please try again.';
+                      }
                       return (
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border border-gray-100 rounded-lg p-4">
                           <div className="flex-1">
@@ -576,7 +592,9 @@ function CheckoutModal({
                             <h3 className="text-lg font-semibold text-gray-900 mb-1">
                               {tierName} Report
                             </h3>
-                            <p className="text-sm text-gray-500">Calculating price...</p>
+                            <p className="text-sm text-gray-500">
+                              {statusMessage}
+                            </p>
                           </div>
                           <div className="flex flex-col items-end gap-2">
                             <button
@@ -634,9 +652,11 @@ function CheckoutModal({
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm text-gray-600">Subtotal</span>
               <span className="text-lg font-semibold text-gray-900">
-                {cartCostResponse?.data?.total_cost
-                  ? formatPrice(cartCostResponse.data.total_cost)
-                  : '$0.00'}
+                {isCalculatingCost
+                  ? 'Calculating...'
+                  : cartCostResponse?.data?.total_cost
+                    ? formatPrice(cartCostResponse.data.total_cost)
+                    : '$0.00'}
               </span>
             </div>
             <div className="flex gap-3">

@@ -176,7 +176,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
   const [isLoadingReportTiers, setIsLoadingReportTiers] = React.useState(false);
   const [businessTypeSearchTerm, setBusinessTypeSearchTerm] = React.useState('');
   const [isBusinessTypeDropdownOpen, setIsBusinessTypeDropdownOpen] = React.useState(false);
-  
+
   // Track last fetched report price params to prevent duplicate fetches
   const [lastFetchedReportParams, setLastFetchedReportParams] = React.useState<{
     country: string;
@@ -226,13 +226,35 @@ function CheckoutBilling({ Name }: { Name: string }) {
         packages = [];
       }
       
+      // Parse "Intelligences Included:" section from API description (✓/✗) as source of truth
+      const parseIntelligencesFromDescription = (description?: string): ReportTierData['intelligences'] => {
+        const fallback = {
+          ai: false,
+          income: false,
+          population: false,
+          realEstate: false,
+          competition: false,
+          poi: false,
+        };
+        if (!description) return fallback;
+        const normalized = description.replace(/<br\s*\/?>/gi, '\n');
+        const check = (label: string): boolean => {
+          const included = new RegExp(`✓\\s*${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\s|$|\\(|<)`).test(normalized);
+          const excluded = new RegExp(`✗\\s*${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\s|$|\\(|<)`).test(normalized);
+          return included && !excluded;
+        };
+        return {
+          ai: check('AI'),
+          income: check('Income'),
+          population: check('Population'),
+          realEstate: check('Real Estate'),
+          competition: check('Competition'),
+          poi: check('POI'),
+        };
+      };
+
       // Transform API data to match our component structure
       const transformedTiers: ReportTierData[] = packages.map((pkg) => {
-        // Handle included_intelligences array from API
-        const includedIntelligences = pkg.included_intelligences || [];
-        const hasIntelligence = (name: string) => 
-          includedIntelligences.some(i => i.toLowerCase() === name.toLowerCase());
-        
         // Parse perks from description if not provided directly
         const extractPerks = (description?: string): string[] => {
           if (pkg.perks && pkg.perks.length > 0) return pkg.perks;
@@ -245,14 +267,24 @@ function CheckoutBilling({ Name }: { Name: string }) {
           if (pkg.included_report_refreshes) {
             perks.push(`${pkg.included_report_refreshes}x Report Refreshes`);
           }
+          if (description.includes('1x Report')) perks.push('1x Report');
           if (description.includes('Full Data Access')) perks.push('Full Data Access');
           if (description.includes('Concierge')) perks.push('Personal Concierge Service');
           return perks;
         };
         
-        // Check if premium tier (has concierge mentioned in description)
-        const isPremium = pkg.report_tier === 'premium' || pkg.report_tier === 'single_location_premium';
         const hasConcierge = pkg.description?.toLowerCase().includes('concierge');
+        const intelligencesFromApi = parseIntelligencesFromDescription(pkg.description);
+        const intelligences = pkg.intelligences
+          ? {
+              ai: pkg.intelligences.ai ?? intelligencesFromApi.ai,
+              income: pkg.intelligences.income ?? intelligencesFromApi.income,
+              population: pkg.intelligences.population ?? intelligencesFromApi.population,
+              realEstate: pkg.intelligences.realEstate ?? intelligencesFromApi.realEstate,
+              competition: pkg.intelligences.competition ?? intelligencesFromApi.competition,
+              poi: pkg.intelligences.poi ?? intelligencesFromApi.poi,
+            }
+          : intelligencesFromApi;
         
         return {
           id: `report-${pkg.report_tier}-tier`,
@@ -260,21 +292,11 @@ function CheckoutBilling({ Name }: { Name: string }) {
           price: pkg.price_usd || pkg.price || 0,
           reportKey: pkg.report_tier as ReportTier,
           perks: extractPerks(pkg.description),
-          intelligences: pkg.intelligences ? {
-            ...pkg.intelligences
-          } : {
-            // Map from included_intelligences array
-            ai: isPremium, // AI is typically included in premium tiers
-            income: hasIntelligence('Income'),
-            population: hasIntelligence('Population'),
-            realEstate: hasIntelligence('Real Estate'),
-            competition: true, // Competition and POI are typically always included
-            poi: true,
-          },
+          intelligences,
           isMostPopular: pkg.is_most_popular ?? (pkg.report_tier === 'premium'),
           conciergeService: pkg.concierge_service || (hasConcierge ? 'Personal consultant to guide your business expansion' : undefined),
           datasetLimit: pkg.dataset_limit || pkg.included_datasets_count,
-          additionalDatasetCost: pkg.additional_dataset_cost || 300, // Default from API description
+          additionalDatasetCost: pkg.additional_dataset_cost ?? 300,
           tag: pkg.tag,
         };
       });
@@ -699,6 +721,12 @@ function CheckoutBilling({ Name }: { Name: string }) {
       return;
     }
 
+    // When a report is in the cart, the API requires report_potential_business_type
+    if (checkout.report && !checkout.report_potential_business_type?.trim()) {
+      toast.error('Please select a Report Potential Business Type to see pricing.');
+      return;
+    }
+
     setIsCalculatingCost(true);
 
     try {
@@ -746,8 +774,8 @@ function CheckoutBilling({ Name }: { Name: string }) {
 
       setCartCostResponse(response.data);
     } catch (error) {
-      // Keep previous cart cost so user still sees price; only re-throw so modal can show error
-      throw error;
+      console.error('Failed to calculate cart cost:', error);
+      setCartCostResponse(null);
     } finally {
       setIsCalculatingCost(false);
     }
@@ -1013,6 +1041,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
     checkout.datasets,
     checkout.intelligences,
     checkout.report,
+    checkout.report_potential_business_type,
     checkout.country_name,
     checkout.city_name,
     authResponse?.localId,
@@ -1038,7 +1067,12 @@ function CheckoutBilling({ Name }: { Name: string }) {
       <div className="w-full lg:w-1/3 flex flex-col overflow-hidden">
         {Name === 'area' ? (
           <div className="w-full h-full flex flex-col px-4 sm:px-6 lg:px-8 overflow-y-auto">
-            <div className="text-2xl pt-4 font-semibold mb-4 flex-shrink-0">Area Intelligence</div>
+            <div className="text-2xl pt-4 font-semibold mb-2 flex-shrink-0">Area Intelligence</div>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mb-4 flex-shrink-0">
+              <p className="text-sm text-yellow-800">
+                <span className="font-semibold">Note:</span> You must choose country, city and area intelligence type to see the price.
+              </p>
+            </div>
             <div className="flex flex-col items-stretch space-y-6 flex-1 pb-6">
               <div
                 className={getAreaCardClasses('Population')}
@@ -1376,7 +1410,9 @@ function CheckoutBilling({ Name }: { Name: string }) {
                         <div className="w-full flex justify-between items-start mb-2">
                           <span className="text-lg text-gray-900 font-bold">{tier.name}</span>
                           <span className="text-2xl font-bold text-gray-600">
-                            {formatPrice(tier.price)}
+                            {checkout.report_potential_business_type
+                              ? formatPrice(tier.price)
+                              : '—'}
                           </span>
                         </div>
                         <div className="mb-2">
@@ -1407,24 +1443,29 @@ function CheckoutBilling({ Name }: { Name: string }) {
                       <div className="w-full flex justify-between items-start mb-2">
                         <span className="text-lg text-gray-900 font-bold">{tier.name}</span>
                         <span className="text-2xl font-bold text-green-700">
-                          {/* Show calculated price only if this report is selected and all required fields are present */}
-                          {hasAllRequiredFields && checkout.report === tier.reportKey ? (
-                            isCalculatingPrices ? (
-                            <span className="text-2xl animate-pulse">Loading...</span>
-                          ) : priceData?.report_purchase_items?.find(
-                              r => r.report_tier === tier.reportKey
-                            ) ? (
-                            formatPrice(
-                              priceData.report_purchase_items.find(
-                                r => r.report_tier === tier.reportKey
-                              )?.cost || 0
-                            )
+                          {checkout.report_potential_business_type ? (
+                            <>
+                              {/* Show calculated price only if this report is selected and all required fields are present */}
+                              {hasAllRequiredFields && checkout.report === tier.reportKey ? (
+                                isCalculatingPrices ? (
+                                  <span className="text-2xl animate-pulse">Loading...</span>
+                                ) : priceData?.report_purchase_items?.find(
+                                    r => r.report_tier === tier.reportKey
+                                  ) ? (
+                                  formatPrice(
+                                    priceData.report_purchase_items.find(
+                                      r => r.report_tier === tier.reportKey
+                                    )?.cost || 0
+                                  )
+                                ) : (
+                                  formatPrice(tier.price)
+                                )
+                              ) : (
+                                formatPrice(tier.price)
+                              )}
+                            </>
                           ) : (
-                              formatPrice(tier.price)
-                            )
-                          ) : (
-                            // Show default price from report packages
-                            formatPrice(tier.price)
+                            <span className="text-gray-400 font-normal text-base">Select business type to see price</span>
                           )}
                         </span>
                       </div>
@@ -1543,6 +1584,12 @@ function CheckoutBilling({ Name }: { Name: string }) {
           <div className="w-full h-full flex flex-col overflow-hidden">
             <div className="w-full flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col my-5 w-full">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mb-4">
+                  <p className="text-sm text-yellow-800">
+                    <span className="font-semibold">Note:</span> You must choose country, city and dataset type to see the price.
+                  </p>
+                </div>
+
                 <div className="flex justify-between mb-4">
                   <label className="font-bold">What are you looking for?</label>
                   <button

@@ -23,7 +23,7 @@ const Landing = () => {
     setLangState(newLang);
     localStorage.setItem(LANG_STORAGE_KEY, newLang);
   }, []);
-
+  
   useEffect(() => {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   }, [lang]);

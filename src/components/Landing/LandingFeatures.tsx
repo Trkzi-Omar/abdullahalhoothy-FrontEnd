@@ -33,7 +33,7 @@ const LandingFeatures = ({ t }: LandingFeaturesProps) => {
               <p className="text-slate-400 leading-relaxed mb-6">{t.features.visualDesc}</p>
               <div className="flex gap-4">
                 <a
-                  href="http://localhost:3000/static/reports/cafe_sales_report.html"
+                  href="/static/reports/cafe_sales_report.html"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-brand-surface border border-white/10 px-4 py-2 rounded text-xs text-slate-300 hover:bg-brand-surface/80 hover:border-white/20 transition-all cursor-pointer"
@@ -41,7 +41,7 @@ const LandingFeatures = ({ t }: LandingFeaturesProps) => {
                   {t.features.cafeReport}
                 </a>
                 <a
-                  href="http://localhost:3000/static/reports/pharmacy_sales_report.html"
+                  href="/static/reports/pharmacy_sales_report.html"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-brand-surface border border-white/10 px-4 py-2 rounded text-xs text-slate-300 hover:bg-brand-surface/80 hover:border-white/20 transition-all cursor-pointer"
@@ -51,11 +51,11 @@ const LandingFeatures = ({ t }: LandingFeaturesProps) => {
               </div>
             </div>
             <div className="bg-brand-surface/50 p-8 flex items-center justify-center relative overflow-hidden">
-              <div className="w-full aspect-[4/5] md:aspect-[4/3] relative rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-brand-card flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-500">
+              <div className="w-full aspect-[4/3] relative rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-brand-card flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-500">
                 <img
                   src="/images/landing/report.webp"
                   alt="Report Sample"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover"
                   loading="lazy"
                   decoding="async"
                   width={800}
@@ -72,7 +72,7 @@ const LandingFeatures = ({ t }: LandingFeaturesProps) => {
 
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
                   <a
-                    href="http://localhost:3000/static/reports/cafe_sales_report.html"
+                    href="/static/reports/cafe_sales_report.html"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-white text-black px-6 py-2 rounded-full font-bold text-sm shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:bg-gray-100 cursor-pointer"

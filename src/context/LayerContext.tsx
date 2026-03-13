@@ -74,8 +74,8 @@ export function LayerProvider(props: { children: ReactNode }) {
   const [citiesData, setCitiesData] = useState<{ [country: string]: City[] }>({});
   const [categories, setCategories] = useState<CategoryData>({});
   const [reqFetchDataset, setReqFetchDataset] = useState<ReqFetchDataset>({
-    selectedCountry: '',
-    selectedCity: '',
+    selectedCountry: 'Saudi Arabia',
+    selectedCity: 'Riyadh',
     layers: [],
     includedTypes: [],
     excludedTypes: [],

@@ -25,7 +25,7 @@
   "street_view_link": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=",
   "fetch_gradient_colors": "fetch_gradient_colors",
   "recolor_based": "recolor_based",
-  "change_password": "change-password",
+  "change_password": "change_password",
   "change_email": "change_email",
   "get_payment_methods": "get_payment_methods",
   "check_street_view": "/check_street_view",
@@ -45,8 +45,8 @@
   "fetch_population_by_viewport": "/fetch_population_by_viewport",
   "drive_time_polyline": "/drive_time_polyline",
   "fetch_single_catalog": "/fetch_single_catalog",
-  "fetch_plans": "/plan-details",
-  "fetch_campaigns": "/campaign-details",
+  "fetch_plans": "/plan_details",
+  "fetch_campaigns": "/campaign_details",
   "smart_site_report": "/smart_site_report",
   "business_category_metrics": "/business_category_metrics",
   "calculate_cart_cost": "/calculate_cart_cost",
@@ -55,5 +55,5 @@
   "sms_send_otp": "/sms_send_otp",
   "sms_verify_otp": "/sms_verify_otp",
   "google_login": "google_login",
-  "report_packages": "/report-packages"
+  "report_packages": "/report_packages"
 }

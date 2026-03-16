@@ -3,20 +3,37 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router';
 import urls from './../../urls.json';
 import apiRequest from '../../services/apiRequest';
+import {
+  getChangePasswordDisabledReason,
+  isChangePasswordValid,
+  passwordSchema,
+} from '../../utils/auth.validation';
 
 const ChangePassword: React.FC = () => {
   const { isAuthenticated, authResponse } = useAuth();
 
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const navigate = useNavigate();
+
+  const disabledReason = loading
+    ? 'Password change is in progress'
+    : getChangePasswordDisabledReason(currentPassword, newPassword, confirmPassword);
+  const isSubmitDisabled =
+    loading || !isChangePasswordValid(currentPassword, newPassword, confirmPassword);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-    const formData = new FormData(e.target as HTMLFormElement);
-    const data = Object.fromEntries(formData.entries());
+    const data = {
+      password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    };
     if (data.password === '' || data.new_password === '' || data.confirm_password === '') {
       setError({
         message: 'All fields are required',
@@ -28,6 +45,21 @@ const ChangePassword: React.FC = () => {
       setError({
         message: 'Passwords do not match',
         name: 'Passwords do not match',
+      });
+      return;
+    }
+    try {
+      await passwordSchema.validate(data.new_password);
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error);
+        return;
+      }
+    }
+    if (data.password === data.new_password) {
+      setError({
+        message: 'New password must be different from current password',
+        name: 'New password must be different from current password',
       });
       return;
     }
@@ -68,7 +100,10 @@ const ChangePassword: React.FC = () => {
             type="password"
             id="current-password"
             name="password"
+            value={currentPassword}
+            onChange={e => setCurrentPassword(e.target.value)}
             className="w-full px-3 py-2 border rounded-md focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            disabled={loading}
             required
           />
         </div>
@@ -81,7 +116,10 @@ const ChangePassword: React.FC = () => {
             type="password"
             id="new-password"
             name="new_password"
+            value={newPassword}
+            onChange={e => setNewPassword(e.target.value)}
             className="w-full px-3 py-2 border rounded-md focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            disabled={loading}
             required
           />
         </div>
@@ -94,7 +132,10 @@ const ChangePassword: React.FC = () => {
             type="password"
             id="confirm-password"
             name="confirm_password"
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
             className="w-full px-3 py-2 border rounded-md focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            disabled={loading}
             required
           />
         </div>
@@ -103,13 +144,18 @@ const ChangePassword: React.FC = () => {
             {error?.response?.data?.detail || error?.message}
           </p>
         )}
-        <button
-          type="submit"
-          className="w-full bg-primary text-white py-2 rounded-lg hover:bg-primary disabled:opacity-50"
-          disabled={loading}
-        >
-          {loading ? 'Changing Password...' : 'Change Password'}
-        </button>
+        <div title={isSubmitDisabled ? disabledReason ?? undefined : undefined}>
+          <button
+            type="submit"
+            className="w-full bg-primary text-white py-2 rounded-lg hover:bg-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isSubmitDisabled}
+          >
+            {loading ? 'Changing Password...' : 'Change Password'}
+          </button>
+        </div>
+        {isSubmitDisabled && disabledReason && !error && (
+          <p className="mt-2 text-sm text-gray-500">{disabledReason}</p>
+        )}
       </form>
     </div>
   );

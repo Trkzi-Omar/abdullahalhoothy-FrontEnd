@@ -269,6 +269,7 @@ const apiRequest = async ({
   method = 'GET',
   body = {},
   options = {},
+  authMode = 'private',
   isAuthRequest = false,
   isFormData = false,
   useCache = false,
@@ -281,8 +282,9 @@ const apiRequest = async ({
     email === 'guest@slocator.com' ||
     (authResponseFull as any)?.registered === false ||
     authResponseFull?.localId?.startsWith('guest_') === true;
+  const isPublicAuthRequest = authMode === 'public';
 
-  if (authResponse?.idToken) {
+  if (!isPublicAuthRequest && authResponse?.idToken) {
     setAuthorizationHeader(options, authResponse.idToken);
   }
 
@@ -308,6 +310,10 @@ const apiRequest = async ({
     return response;
   } catch (err: any) {
     if (err?.response?.status === 403) {
+      if (isPublicAuthRequest) {
+        throw new Error(getErrorMessageFromPayload(err?.response?.data) || 'Access forbidden');
+      }
+
       if (isGuest) {
         const apiMessage = err?.response?.data?.detail;
         const message =
@@ -324,8 +330,13 @@ const apiRequest = async ({
     }
 
     if (err?.response?.status === 401) {
+      const apiMessage = getErrorMessageFromPayload(err?.response?.data);
+
+      if (isPublicAuthRequest) {
+        throw new Error(apiMessage || 'Authentication failed');
+      }
+
       if (isGuest) {
-        const apiMessage = err?.response?.data?.detail;
         const message =
           typeof apiMessage === 'string'
             ? apiMessage

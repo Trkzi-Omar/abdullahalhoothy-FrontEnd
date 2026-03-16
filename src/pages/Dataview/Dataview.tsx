@@ -7,6 +7,7 @@ import { ColDef } from 'ag-grid-community';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
+import { isIntelligentLayer } from '../../utils/layerUtils';
 
 // Define the column definitions for the grid
 export const columnDefs: ColDef<TabularData>[] = [
@@ -59,8 +60,10 @@ const Dataview: React.FC = () => {
 
   useEffect(() => {
     if (geoPoints.length > 0) {
-      // Use flatMap to combine features from all MapFeatures objects
-      const tabularData = geoPoints.flatMap(mapFeature =>
+      const visibleLayers = geoPoints.filter(mapFeature => !isIntelligentLayer(mapFeature));
+
+      // Use flatMap to combine features from all non-intelligent layers
+      const tabularData = visibleLayers.flatMap(mapFeature =>
         mapFeature.features.map(mapFeatureToTabularData)
       );
       setBusinesses(tabularData);

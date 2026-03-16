@@ -769,6 +769,7 @@ export interface IAuthResponse {
 }
 
 export interface ApiRequestOptions extends AxiosRequestConfig {
+  authMode?: 'public' | 'private';
   isAuthRequest?: boolean;
   isFormData?: boolean;
   body?: any;

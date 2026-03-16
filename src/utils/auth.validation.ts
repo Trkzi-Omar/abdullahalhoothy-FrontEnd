@@ -6,6 +6,11 @@ export const emailSchema = yup
   .required('Email is required')
   .matches(emailRegex, 'Please enter a valid email');
 
+export const passwordSchema = yup
+  .string()
+  .required('Password is required')
+  .min(8, 'Password must be at least 8 characters');
+
 export const loginSchema = yup.object({
   email: emailSchema,
   password: yup.string().required('Password is required'),
@@ -13,10 +18,7 @@ export const loginSchema = yup.object({
 
 export const registerStep1Schema = yup.object({
   email: emailSchema,
-  password: yup
-    .string()
-    .required('Password is required')
-    .min(8, 'Password must be at least 8 characters'),
+  password: passwordSchema,
   confirmPassword: yup
     .string()
     .required('Please confirm your password')
@@ -61,3 +63,29 @@ export const isRegisterStep1Valid = (email: string, password: string, confirmPas
 
 export const isRegisterStep2Valid = (name: string, phone: string) =>
   registerStep2Schema.isValidSync({ name, phone });
+
+export const getChangePasswordDisabledReason = (
+  currentPassword: string,
+  newPassword: string,
+  confirmPassword: string
+) => {
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return 'Fill in all password fields';
+  }
+  if (!passwordSchema.isValidSync(newPassword)) {
+    return 'New password must be at least 8 characters';
+  }
+  if (confirmPassword !== newPassword) {
+    return 'Confirmation must match the new password';
+  }
+  if (currentPassword === newPassword) {
+    return 'New password must be different from current password';
+  }
+  return null;
+};
+
+export const isChangePasswordValid = (
+  currentPassword: string,
+  newPassword: string,
+  confirmPassword: string
+) => getChangePasswordDisabledReason(currentPassword, newPassword, confirmPassword) === null;

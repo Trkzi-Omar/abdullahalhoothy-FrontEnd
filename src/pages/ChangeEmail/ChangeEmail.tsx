@@ -1,5 +1,6 @@
 import React, { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router';
+import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import urls from './../../urls.json';
 import apiRequest from '../../services/apiRequest';
@@ -32,19 +33,33 @@ const ChangeEmail: React.FC = () => {
       });
       return;
     }
+    if (
+      typeof data.new_email === 'string' &&
+      data.new_email.toLowerCase() === authResponse?.email?.toLowerCase()
+    ) {
+      setError({
+        message: 'New email must be different from current email',
+        name: 'New email must be different from current email',
+      });
+      return;
+    }
     data.user_id = authResponse?.localId;
     data.current_email = authResponse?.email;
 
     setLoading(true);
     try {
-      const res = await apiRequest({
+      await apiRequest({
         url: urls.change_email,
         method: 'post',
         body: data,
         isAuthRequest: true,
       });
+      toast.success('Email changed successfully! Please use your new email next time you sign in.');
+      navigate('/profile');
     } catch (error) {
-      setError(error);
+      const err = error instanceof Error ? error : new Error(String(error));
+      setError(err);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -73,6 +88,7 @@ const ChangeEmail: React.FC = () => {
             id="email"
             name="new_email"
             className="w-full px-3 py-2 border rounded-md focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            disabled={loading}
             required
           />
         </div>
@@ -86,6 +102,7 @@ const ChangeEmail: React.FC = () => {
             id="confirm-email"
             name="confirm_email"
             className="w-full px-3 py-2 border rounded-md focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            disabled={loading}
             required
           />
         </div>
@@ -100,6 +117,7 @@ const ChangeEmail: React.FC = () => {
             id="password"
             name="password"
             className="w-full px-3 py-2 border rounded-md focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            disabled={loading}
             required
           />
         </div>
@@ -110,9 +128,17 @@ const ChangeEmail: React.FC = () => {
         )}
         <button
           type="submit"
-          className="w-full bg-primary text-white py-2 rounded-md hover:bg-blue-primary"
+          className="w-full bg-primary text-white py-2 rounded-md hover:bg-blue-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={loading}
         >
-          Change Email
+          {loading ? (
+            <span className="inline-flex items-center gap-2">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              Changing Email...
+            </span>
+          ) : (
+            'Change Email'
+          )}
         </button>
       </form>
     </div>

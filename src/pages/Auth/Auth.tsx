@@ -40,6 +40,19 @@ const Auth = () => {
     }, 100);
   };
 
+  const handleRegistrationSuccess = () => {
+    const params = new URLSearchParams(location.search);
+    params.delete('mode');
+    setMode('login');
+    nav(
+      {
+        pathname: '/auth',
+        search: params.toString() ? `?${params.toString()}` : '',
+      },
+      { replace: true }
+    );
+  };
+
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       setGoogleError(null);
@@ -110,7 +123,7 @@ const Auth = () => {
       case 'register':
         return (
           <RegisterForm
-            onSuccess={handleRedirect}
+            onSuccess={handleRegistrationSuccess}
             source={sourceLocal}
           />
         );

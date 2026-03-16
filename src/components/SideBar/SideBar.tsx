@@ -3,32 +3,33 @@ import { FaAngleRight, FaNetworkWired } from 'react-icons/fa';
 import { MdInfo, MdLogout, MdMap, MdPerson, MdTableChart } from 'react-icons/md';
 import { Link, useNavigate } from 'react-router-dom';
 import { HiCurrencyDollar } from 'react-icons/hi';
-import { useAuth } from '../../context/AuthContext';
+import { isGuestUser, useAuth } from '../../context/AuthContext';
 
 const SideBar = () => {
-  const { isAuthenticated, logout } = useAuth();
-  const [isColabsed, setIsColabsed] = useState(true);
+  const { authResponse, isAuthenticated, logout } = useAuth();
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const navigate = useNavigate();
+  const shouldShowLogout = isAuthenticated && !isGuestUser(authResponse);
 
   return (
     <>
       <div
         className={
           'lg:flex justify-start flex-col hidden relative bg-[#115740] transition-all ' +
-          (isColabsed ? 'w-14' : 'w-48')
+          (isCollapsed ? 'w-14' : 'w-48')
         }
       >
         {/* Sidebar Collabs Button */}
         <div
           className="sidebar-icon w-fit"
           onClick={() => {
-            setIsColabsed(!isColabsed);
+            setIsCollapsed(!isCollapsed);
           }}
-          title={isColabsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
         >
           <FaAngleRight
             className={
-              'w-6 h-6 transition-all delay-100 fill-white ' + (!isColabsed && ' rotate-180')
+              'w-6 h-6 transition-all delay-100 fill-white ' + (!isCollapsed && ' rotate-180')
             }
           />
         </div>
@@ -37,7 +38,7 @@ const SideBar = () => {
         <div
           className="sidebar-icon"
           onClick={() => {
-            setIsColabsed(true);
+            setIsCollapsed(true);
             setTimeout(() => {
               navigate('/');
             }, 100);
@@ -47,7 +48,7 @@ const SideBar = () => {
           <div>
             <MdMap className="w-6 h-6 transition-all fill-white" />
           </div>
-          {!isColabsed && <span className="ml-2 text-white truncate">Map</span>}
+          {!isCollapsed && <span className="ml-2 text-white truncate">Map</span>}
         </div>
 
         {/* Tabluar View Button */}
@@ -55,7 +56,7 @@ const SideBar = () => {
           <div>
             <MdTableChart className="w-6 h-6 transition-all fill-white" />
           </div>
-          {!isColabsed && <span className="ml-2 text-white truncate">Tabular View</span>}
+          {!isCollapsed && <span className="ml-2 text-white truncate">Tabular View</span>}
         </Link>
 
         {/* Organization View Button */}
@@ -63,7 +64,7 @@ const SideBar = () => {
           <div>
             <FaNetworkWired className="w-6 h-6 transition-all fill-white" />
           </div>
-          {!isColabsed && <span className="ml-2 text-white">Organization</span>}
+          {!isCollapsed && <span className="ml-2 text-white">Organization</span>}
         </Link>
 
         {/* Billing View Button */}
@@ -71,7 +72,7 @@ const SideBar = () => {
           <div>
             <HiCurrencyDollar className="w-6 h-6 transition-all fill-white" />
           </div>
-          {!isColabsed && <span className="ml-2 text-white">Checkout</span>}
+          {!isCollapsed && <span className="ml-2 text-white">Checkout</span>}
         </Link>
 
         {/* Bottom Icons */}
@@ -80,34 +81,32 @@ const SideBar = () => {
             <div>
               <MdPerson className="w-6 h-6 transition-all fill-white" />
             </div>
-            {!isColabsed && <span className="ml-2 text-white truncate">Account</span>}
+            {!isCollapsed && <span className="ml-2 text-white truncate">Account</span>}
           </Link>
 
           <a className="sidebar-icon" href="https://s-locator.com/" title="About Us" target="_blank">
             <div>
               <MdInfo className="w-6 h-6 transition-all fill-white" />
             </div>
-            {!isColabsed && <span className="ml-2 text-white truncate">About Us</span>}
+            {!isCollapsed && <span className="ml-2 text-white truncate">About Us</span>}
           </a>
 
-          <div
-            className="sidebar-icon"
-            onClick={() => {
-              logout();
-              setIsColabsed(true);
-              navigate('/auth');
-            }}
-            title={!isAuthenticated ? 'Login' : 'Logout'}
-          >
-            <div>
-              <MdLogout className="w-6 h-6 transition-all fill-white" />
+          {shouldShowLogout ? (
+            <div
+              className="sidebar-icon"
+              onClick={() => {
+                logout();
+                setIsCollapsed(true);
+                navigate('/auth');
+              }}
+              title="Logout"
+            >
+              <div>
+                <MdLogout className="w-6 h-6 transition-all fill-white" />
+              </div>
+              {!isCollapsed && <span className="ml-2 text-white truncate">Logout</span>}
             </div>
-            {!isColabsed && (
-              <span className="ml-2 text-white truncate">
-                {!isAuthenticated ? <>Login</> : <>Logout</>}
-              </span>
-            )}
-          </div>
+          ) : null}
         </div>
       </div>
     </>

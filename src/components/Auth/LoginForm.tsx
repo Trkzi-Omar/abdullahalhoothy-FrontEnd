@@ -1,4 +1,5 @@
 import { FaEnvelope, FaLock } from 'react-icons/fa';
+import { toast } from 'sonner';
 import { useAuthForm } from '../../hooks/useAuthForm';
 import { loginSchema, isLoginValid } from '../../utils/auth.validation';
 import { performLogin } from '../../context/AuthContext';
@@ -42,7 +43,9 @@ export const LoginForm = ({ onSuccess, onForgotPassword }: LoginFormProps) => {
       });
       onSuccess();
     } catch (e: any) {
-      setError(e.response?.data?.detail || e.message || 'Login failed');
+      const message = e.response?.data?.detail || e.message || 'Login failed';
+      setError(message);
+      toast.error(message, { duration: 3000 });
     } finally {
       setIsLoading(false);
     }

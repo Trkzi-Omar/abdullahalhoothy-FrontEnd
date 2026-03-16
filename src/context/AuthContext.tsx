@@ -32,6 +32,7 @@ export const performGoogleLogin = async (
     url: urls.google_login,
     method: 'POST',
     body: payload,
+    authMode: 'public',
   });
 
   const data = (response?.data?.data || response?.data) as AuthResponse;
@@ -77,6 +78,7 @@ export const performLogin = async (
     url: urls.login,
     method: 'POST',
     body: credentials,
+    authMode: 'public',
   });
 
   const data = (response?.data?.data || response?.data) as AuthResponse;
@@ -107,6 +109,7 @@ export const performRegistration = async (
   const response = await apiRequest({
     url: urls.create_user_profile,
     method: 'POST',
+    authMode: 'public',
     body: {
       email: data.email,
       password: data.password,

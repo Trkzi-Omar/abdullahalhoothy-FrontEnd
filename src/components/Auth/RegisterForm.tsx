@@ -20,7 +20,7 @@ interface RegisterFormProps {
 }
 
 export const RegisterForm = ({ onSuccess, source }: RegisterFormProps) => {
-  const { setAuthResponse } = useAuth();
+  const { setAuthResponse, logout } = useAuth();
   const { openOTPModal } = useOTP();
   const [registerStep, setRegisterStep] = useState(1);
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
@@ -50,6 +50,7 @@ export const RegisterForm = ({ onSuccess, source }: RegisterFormProps) => {
         source: source || '',
       });
       toast.success('Registration successful! Please verify your email.', { duration: 3000 });
+      logout();
       onSuccess();
     } catch (e: any) {
       const msg = e.message || 'Registration failed. Please try again.';

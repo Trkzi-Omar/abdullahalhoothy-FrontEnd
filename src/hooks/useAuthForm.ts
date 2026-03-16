@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as yup from 'yup';
 import { emailRegex, isValidPhone } from '../utils/validation';
+import { passwordSchema } from '../utils/auth.validation';
 
 export interface FormState {
   email: string;
@@ -48,8 +49,12 @@ export function useAuthForm({ mode, registerStep = 1 }: UseAuthFormOptions) {
 
       if (mode === 'register' && registerStep === 1) {
         if (touchedFields.has('password') && form.password) {
-          if (form.password.length < 8) {
-            errors.password = 'Password must be at least 8 characters';
+          try {
+            passwordSchema.validateSync(form.password);
+          } catch (error) {
+            if (error instanceof yup.ValidationError) {
+              errors.password = error.message;
+            }
           }
         }
         if (touchedFields.has('confirmPassword') && form.confirmPassword) {

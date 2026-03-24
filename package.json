@@ -7,9 +7,14 @@
     "start": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "lint:files": "node scripts/eslint-files.mjs",
     "preview": "vite preview --port 3000",
     "format": "prettier --config .prettierrc.cjs --write \"src/**/*.{ts,tsx,js,jsx,json,css}\"",
-    "format:check": "prettier --config .prettierrc.cjs --check \"src/**/*.{ts,tsx,js,jsx,json,css}\""
+    "format:check": "prettier --config .prettierrc.cjs --check \"src/**/*.{ts,tsx,js,jsx,json,css}\"",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs}": "node scripts/eslint-files.mjs"
   },
   "dependencies": {
     "@emotion/css": "^11.13.5",
@@ -70,6 +75,8 @@
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
     "postcss": "^8.4.41",
     "prettier": "^3.0.0",
     "tailwindcss": "^3.4.10",

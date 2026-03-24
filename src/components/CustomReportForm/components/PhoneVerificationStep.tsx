@@ -8,11 +8,20 @@ import urls from '../../../urls.json';
 interface PhoneVerificationStepProps {
   onVerificationSuccess: (phoneNumber: string) => void;
   disabled?: boolean;
+  /** Override the default title. Set to `null` to hide. */
+  title?: string | null;
+  /** Override the default subtitle. Set to `null` to hide. */
+  subtitle?: string | null;
+  /** Compact mode: smaller title, no outer shadow/padding — suited for inline use in modals */
+  compact?: boolean;
 }
 
 const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
   onVerificationSuccess,
   disabled = false,
+  title,
+  subtitle,
+  compact = false,
 }) => {
   const { sendOTP, verifyOTP, state, resetState, isModalOpen, closeOTPModal } = useOTP();
   
@@ -129,7 +138,20 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
 
   // Handle OTP input change
   const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) return; // Prevent paste for now (handled separately if needed)
+    // If multiple digits entered (e.g. from autocomplete), treat as paste
+    if (value.length > 1) {
+      const digits = value.replace(/\D/g, '').slice(0, 6);
+      if (digits.length > 0) {
+        const newOtp = [...otpCode];
+        for (let i = 0; i < digits.length && index + i < 6; i++) {
+          newOtp[index + i] = digits[i];
+        }
+        setOtpCode(newOtp);
+        const focusIdx = Math.min(index + digits.length, 5);
+        inputRefs.current[focusIdx]?.focus();
+      }
+      return;
+    }
     if (!/^\d*$/.test(value)) return;
 
     const newOtp = [...otpCode];
@@ -140,6 +162,21 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
+  };
+
+  // Handle paste across all OTP inputs
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pasted.length === 0) return;
+    e.preventDefault();
+
+    const newOtp = [...otpCode];
+    for (let i = 0; i < pasted.length && i < 6; i++) {
+      newOtp[i] = pasted[i];
+    }
+    setOtpCode(newOtp);
+    const focusIdx = Math.min(pasted.length, 5);
+    inputRefs.current[focusIdx]?.focus();
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -162,18 +199,35 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
     );
   }
 
-  return (
-    <div className="max-w-xl mx-auto animate-fade-in-up">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">
-          Verify Your Phone
-        </h2>
-        <p className="text-lg text-gray-600">
-          We need to verify your phone number to generate the report.
-        </p>
-      </div>
+  const resolvedTitle = title === undefined ? 'Verify Your Phone' : title;
+  const resolvedSubtitle = subtitle === undefined
+    ? 'We need to verify your phone number to generate the report.'
+    : subtitle;
 
-      <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+  return (
+    <div className={`max-w-xl mx-auto ${compact ? '' : 'animate-fade-in-up'}`}>
+      {(resolvedTitle || resolvedSubtitle) && (
+        <div className={`text-center ${compact ? 'mb-4' : 'mb-8'}`}>
+          {resolvedTitle && (
+            <h2 className={compact
+              ? 'text-lg font-semibold text-gray-900 mb-1'
+              : 'text-3xl font-extrabold text-gray-900 mb-3 tracking-tight'
+            }>
+              {resolvedTitle}
+            </h2>
+          )}
+          {resolvedSubtitle && (
+            <p className={compact ? 'text-sm text-gray-600' : 'text-lg text-gray-600'}>
+              {resolvedSubtitle}
+            </p>
+          )}
+        </div>
+      )}
+
+      <div className={compact
+        ? 'bg-white rounded-lg p-6 border border-gray-200'
+        : 'bg-white rounded-2xl p-8 shadow-lg border border-gray-100'
+      }>
         {step === 'phone' ? (
           <form onSubmit={handleSendOTP} className="space-y-6">
             <div>
@@ -240,6 +294,7 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
+                  onPaste={handleOtpPaste}
                   className="w-10 h-12 sm:w-12 sm:h-14 text-center text-xl font-bold border-2 border-gray-200 rounded-lg focus:border-gem focus:ring-gem outline-none transition-all"
                   disabled={isLoading || disabled}
                 />

@@ -71,3 +71,4 @@ testem.log
 src/fakeData
 
 public/data
+.husky/_

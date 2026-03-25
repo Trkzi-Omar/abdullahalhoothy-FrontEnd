@@ -4,7 +4,6 @@ import { CustomReportData } from '../../../types/allTypesAndInterfaces';
 import {
   useTierPricing,
   useLocationPricing,
-  formatPrice as formatPriceHelper,
 } from '../hooks/useReportPricing';
 import { FaBrain, FaUsers, FaDollarSign, FaStar, FaChartLine } from 'react-icons/fa';
 import { getPriceNumber as getPriceNumberHelper } from '../../../utils/helperFunctions';
@@ -12,24 +11,28 @@ import { Skeleton } from '../../common/Skeleton';
 
 interface ReportTierStepProps {
   formData: CustomReportData;
-  onInputChange: (field: string, value: any) => void;
+  onInputChange: (field: 'report_tier', value: 'basic' | 'standard' | 'premium') => void;
+  apiBusinessType?: string;
   disabled?: boolean;
   reportType?: 'full' | 'location';
   hasUsedFreeLocationReport?: boolean;
   isAdvancedMode?: boolean;
   onPriceLoadingChange?: (isLoading: boolean, priceAvailable: boolean) => void;
   onPurchaseReport?: () => void;
+  onTierSubmit?: (tier: 'basic' | 'standard' | 'premium') => void;
 }
 
 const ReportTierStep = ({
   formData,
   onInputChange,
+  apiBusinessType,
   disabled = false,
   reportType,
   hasUsedFreeLocationReport = false,
   isAdvancedMode = false,
   onPriceLoadingChange,
   onPurchaseReport,
+  onTierSubmit,
 }: ReportTierStepProps) => {
   // Collect all selected datasets from categories (memoized to prevent infinite loops)
   const allDatasets = useMemo(() => {
@@ -54,6 +57,8 @@ const ReportTierStep = ({
   const locationDatasets = useMemo(() => {
     return isAdvancedMode ? allDatasets : [];
   }, [isAdvancedMode, allDatasets]);
+  const allDatasetsKey = useMemo(() => allDatasets.join(','), [allDatasets]);
+  const locationDatasetsKey = useMemo(() => locationDatasets.join(','), [locationDatasets]);
 
   // For full reports, fetch all tier pricing
   const {
@@ -67,14 +72,13 @@ const ReportTierStep = ({
     country: formData.country_name,
     city: formData.city_name,
     datasets: allDatasets,
-    report_potential_business_type: formData.Type,
+    report_potential_business_type: apiBusinessType || formData.Type,
     enabled: reportType !== 'location',
   });
 
   // For location reports, fetch location pricing
   const {
     price: locationReportPrice,
-    comingSoon: locationComingSoon,
     isLoading: isLoadingLocationPrice,
     refetch: refetchLocationPrice,
   } = useLocationPricing({
@@ -82,7 +86,7 @@ const ReportTierStep = ({
     city: formData.city_name,
     datasets: locationDatasets,
     reportType: 'single_location_premium',
-    report_potential_business_type: formData.Type,
+    report_potential_business_type: apiBusinessType || formData.Type,
     enabled: reportType === 'location',
     onLoadingChange: onPriceLoadingChange,
   });
@@ -102,10 +106,8 @@ const ReportTierStep = ({
     formData.country_name,
     formData.city_name,
     reportType,
-    // Include datasets to refetch when categories change
-    // Using join to create a stable string representation for comparison
-    allDatasets.join(','),
-    locationDatasets.join(','),
+    allDatasetsKey,
+    locationDatasetsKey,
     refetchLocationPrice,
     refetchTierPrices,
   ]);
@@ -119,11 +121,6 @@ const ReportTierStep = ({
 
   // Default to premium if not set
   const currentTier = formData.report_tier || 'premium';
-
-  // Helper function to format price (uses formatPrice from hooks)
-  const formatPriceValue = (price: number | null): string => {
-    return formatPriceHelper(price, isLoadingPrices);
-  };
 
   // Helper to extract price number for display
   const getPriceNumber = (price: number | null): string => {
@@ -385,12 +382,15 @@ const ReportTierStep = ({
 
             <button
               type="button"
-              className={`w-full py-[0.8125rem] px-7 my-4 border-none rounded-[0.625rem] text-[0.8125rem] font-semibold font-rajdhani tracking-[0.0312rem] cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] uppercase cta-shimmer max-md:py-3 max-md:px-5 max-md:text-xs ${currentTier === 'basic' ? 'text-white shadow-[0_0.25rem_0.75rem_rgba(72,158,70,0.2)] hover:shadow-[0_0.5rem_1.25rem_rgba(72,158,70,0.3)] hover:-translate-y-[2px]' : 'bg-transparent text-brand-green border-2 border-[#e8e8e8] hover:border-brand-green hover:bg-[rgba(72,158,70,0.05)]'}`}
-              style={currentTier === 'basic' ? { background: 'linear-gradient(135deg, #489E46 0%, #3a8039 100%)' } : undefined}
+              className={`w-full py-[0.8125rem] px-7 my-4 border-none rounded-[0.625rem] text-[0.8125rem] font-semibold font-rajdhani tracking-[0.0312rem] cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] uppercase text-white shadow-[0_0.25rem_0.75rem_rgba(72,158,70,0.2)] hover:shadow-[0_0.5rem_1.25rem_rgba(72,158,70,0.3)] hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-[#489E46]/30 focus:ring-offset-2 cta-shimmer max-md:py-3 max-md:px-5 max-md:text-xs ${
+                currentTier === 'basic' ? 'ring-2 ring-[#489E46]/20 ring-offset-2' : ''
+              }`}
+              style={{ background: 'linear-gradient(135deg, #489E46 0%, #3a8039 100%)' }}
               onClick={(e) => {
                 e.stopPropagation();
                 if (!disabled && tierAvailability.basic) {
                   onInputChange('report_tier', 'basic');
+                  onTierSubmit?.('basic');
                 }
               }}
               disabled={disabled || !tierAvailability.basic}
@@ -474,12 +474,15 @@ const ReportTierStep = ({
 
             <button
               type="button"
-              className={`w-full py-[0.8125rem] px-7 my-4 border-none rounded-[0.625rem] text-[0.8125rem] font-semibold font-rajdhani tracking-[0.0312rem] cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] uppercase cta-shimmer max-md:py-3 max-md:px-5 max-md:text-xs ${currentTier === 'standard' ? 'text-white shadow-[0_0.25rem_0.75rem_rgba(72,158,70,0.2)] hover:shadow-[0_0.5rem_1.25rem_rgba(72,158,70,0.3)] hover:-translate-y-[2px]' : 'bg-transparent text-brand-green border-2 border-[#e8e8e8] hover:border-brand-green hover:bg-[rgba(72,158,70,0.05)]'}`}
-              style={currentTier === 'standard' ? { background: 'linear-gradient(135deg, #489E46 0%, #3a8039 100%)' } : undefined}
+              className={`w-full py-[0.8125rem] px-7 my-4 border-none rounded-[0.625rem] text-[0.8125rem] font-semibold font-rajdhani tracking-[0.0312rem] cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] uppercase text-white shadow-[0_0.25rem_0.75rem_rgba(72,158,70,0.2)] hover:shadow-[0_0.5rem_1.25rem_rgba(72,158,70,0.3)] hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-[#489E46]/30 focus:ring-offset-2 cta-shimmer max-md:py-3 max-md:px-5 max-md:text-xs ${
+                currentTier === 'standard' ? 'ring-2 ring-[#489E46]/20 ring-offset-2' : ''
+              }`}
+              style={{ background: 'linear-gradient(135deg, #489E46 0%, #3a8039 100%)' }}
               onClick={(e) => {
                 e.stopPropagation();
                 if (!disabled && tierAvailability.standard) {
                   onInputChange('report_tier', 'standard');
+                  onTierSubmit?.('standard');
                 }
               }}
               disabled={disabled || !tierAvailability.standard}
@@ -570,12 +573,15 @@ const ReportTierStep = ({
 
             <button
               type="button"
-              className="w-full py-[0.8125rem] px-7 my-4 border-none rounded-[0.625rem] text-[0.8125rem] font-semibold font-rajdhani tracking-[0.0312rem] cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] uppercase text-white shadow-[0_0.25rem_0.75rem_rgba(125,0,184,0.2)] hover:shadow-[0_0.5rem_1.25rem_rgba(125,0,184,0.3)] hover:-translate-y-[2px] cta-shimmer max-md:py-3 max-md:px-5 max-md:text-xs"
+              className={`w-full py-[0.8125rem] px-7 my-4 border-none rounded-[0.625rem] text-[0.8125rem] font-semibold font-rajdhani tracking-[0.0312rem] cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] uppercase text-white shadow-[0_0.25rem_0.75rem_rgba(125,0,184,0.2)] hover:shadow-[0_0.5rem_1.25rem_rgba(125,0,184,0.3)] hover:-translate-y-[2px] focus:outline-none focus:ring-2 focus:ring-[#7D00B8]/30 focus:ring-offset-2 cta-shimmer max-md:py-3 max-md:px-5 max-md:text-xs ${
+                currentTier === 'premium' ? 'ring-2 ring-[#7D00B8]/20 ring-offset-2' : ''
+              }`}
               style={{ background: 'linear-gradient(135deg, #7D00B8 0%, #7E22CE 100%)' }}
               onClick={(e) => {
                 e.stopPropagation();
                 if (!disabled && tierAvailability.premium) {
                   onInputChange('report_tier', 'premium');
+                  onTierSubmit?.('premium');
                 }
               }}
               disabled={disabled || !tierAvailability.premium}

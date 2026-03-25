@@ -1,7 +1,21 @@
-import { useState } from 'react';
-import { FaGlobe, FaMapMarkerAlt, FaBuilding, FaExclamationTriangle, FaSearch, FaCheck, FaTimes } from 'react-icons/fa';
-import { CITY_OPTIONS, getBusinessTypeConfig } from '../constants';
-import { BusinessTypeConfig } from '../services/businessMetricsService';
+import { KeyboardEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  FaGlobe,
+  FaMapMarkerAlt,
+  FaBuilding,
+  FaExclamationTriangle,
+  FaSearch,
+  FaPlus,
+} from 'react-icons/fa';
+import { CITY_OPTIONS } from '../constants';
+
+const formatCategoryName = (category: string): string =>
+  category
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+
+const normalizeValue = (value: string): string => value.trim().replace(/\s+/g, ' ');
 
 interface BasicInformationStepProps {
   formData: {
@@ -11,9 +25,9 @@ interface BasicInformationStepProps {
   };
   errors: {
     city_name?: string;
+    Type?: string;
   };
-  onInputChange: (field: string, value: any) => void;
-  businessConfig?: BusinessTypeConfig | null;
+  onInputChange: (field: 'city_name' | 'Type', value: string) => void;
   isAdvancedMode: boolean;
   onToggleAdvancedMode: (enabled: boolean) => void;
   disabled?: boolean;
@@ -24,49 +38,108 @@ const BasicInformationStep = ({
   formData,
   errors,
   onInputChange,
-  businessConfig,
   isAdvancedMode,
   onToggleAdvancedMode,
   disabled = false,
   categories,
 }: BasicInformationStepProps) => {
-  const config = businessConfig ? getBusinessTypeConfig(businessConfig) : null;
-  const [isEditingCategory, setIsEditingCategory] = useState(false);
-  const [categorySearchTerm, setCategorySearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState(formData.Type);
+  const [categorySearchTerm, setCategorySearchTerm] = useState(formData.Type);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
 
-  // Format category names by removing underscores and capitalizing words
-  const formatCategoryName = (category: string): string => {
-    return category
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
-  };
+  const findExactCategoryMatch = useCallback(
+    (value: string): string | undefined => {
+      const normalizedValue = normalizeValue(value).toLowerCase();
+      if (!normalizedValue) return undefined;
 
-  // Filter categories based on search term
-  const filteredCategories = categories.filter(category =>
-    formatCategoryName(category).toLowerCase().includes(categorySearchTerm.toLowerCase())
+      return categories.find(category => {
+        const normalizedCategory = category.toLowerCase();
+        const normalizedFormattedCategory = formatCategoryName(category).toLowerCase();
+        return (
+          normalizedCategory === normalizedValue || normalizedFormattedCategory === normalizedValue
+        );
+      });
+    },
+    [categories]
   );
 
-  const handleCategorySelect = (category: string) => {
-    setSelectedCategory(category);
+  const getDisplayValue = useCallback(
+    (value: string): string => {
+      const exactMatch = findExactCategoryMatch(value);
+      return exactMatch ? formatCategoryName(exactMatch) : value;
+    },
+    [findExactCategoryMatch]
+  );
+
+  const validateCustomValue = (value: string): { valid: boolean; error?: string } => {
+    if (value.length < 2) {
+      return { valid: false, error: 'Business type must be at least 2 characters' };
+    }
+
+    if (value.length > 50) {
+      return { valid: false, error: 'Business type must be at most 50 characters' };
+    }
+
+    return { valid: true };
   };
 
-  const handleSaveCategory = () => {
-    onInputChange('Type', selectedCategory);
-    setIsEditingCategory(false);
-    setCategorySearchTerm('');
+  const filteredCategories = useMemo(() => {
+    const normalizedSearch = normalizeValue(categorySearchTerm).toLowerCase();
+
+    if (!normalizedSearch) {
+      return categories;
+    }
+
+    return categories.filter(category => {
+      const formattedCategory = formatCategoryName(category).toLowerCase();
+      return category.toLowerCase().includes(normalizedSearch) || formattedCategory.includes(normalizedSearch);
+    });
+  }, [categories, categorySearchTerm]);
+
+  const exactCategoryMatch = findExactCategoryMatch(categorySearchTerm);
+  const normalizedSearchTerm = normalizeValue(categorySearchTerm);
+  const showAddAction = !!normalizedSearchTerm && !exactCategoryMatch;
+  const showNoResultsMessage =
+    normalizedSearchTerm.length > 0 && filteredCategories.length === 0 && !showAddAction;
+  const displayCategoryValue = useMemo(
+    () => getDisplayValue(formData.Type),
+    [formData.Type, getDisplayValue]
+  );
+
+  useEffect(() => {
+    if (!isCategoryDropdownOpen) {
+      setCategorySearchTerm(displayCategoryValue);
+    }
+  }, [displayCategoryValue, isCategoryDropdownOpen]);
+
+  const applyCategoryValue = (value: string) => {
+    const normalizedValue = normalizeValue(value);
+
+    if (!normalizedValue) {
+      setCategoryError('Please enter a business type');
+      return;
+    }
+
+    const validation = validateCustomValue(normalizedValue);
+    if (!validation.valid) {
+      setCategoryError(validation.error || 'Invalid business type');
+      return;
+    }
+
+    const matchedCategory = findExactCategoryMatch(normalizedValue);
+
+    onInputChange('Type', matchedCategory || normalizedValue);
+    setCategorySearchTerm(matchedCategory ? formatCategoryName(matchedCategory) : normalizedValue);
+    setIsCategoryDropdownOpen(false);
+    setCategoryError(null);
   };
 
-  const handleCancelEdit = () => {
-    setSelectedCategory(formData.Type);
-    setIsEditingCategory(false);
-    setCategorySearchTerm('');
-  };
+  const handleCategorySearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter') return;
 
-  if (!config) {
-    return <div>Loading...</div>;
-  }
+    event.preventDefault();
+    applyCategoryValue(categorySearchTerm);
+  };
 
   return (
     <div className="space-y-3 animate-fade-in-up">
@@ -141,85 +214,97 @@ const BasicInformationStep = ({
           </span>
         </label>
 
-        {!isEditingCategory ? (
-          // View mode - show selected category with change button
-          <div className="flex items-center space-x-3">
+        <div className="space-y-3">
+          <div className="relative">
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
               id="Type"
-              value={formatCategoryName(formData.Type)}
-              readOnly
-              className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-600 cursor-not-allowed"
-            />
-            <button
-              type="button"
-              onClick={() => setIsEditingCategory(true)}
+              placeholder="Search categories or enter a custom business type..."
+              value={categorySearchTerm}
+              onChange={e => {
+                setCategorySearchTerm(e.target.value);
+                setIsCategoryDropdownOpen(true);
+                if (categoryError) {
+                  setCategoryError(null);
+                }
+              }}
+              onFocus={() => setIsCategoryDropdownOpen(true)}
+              onBlur={() => {
+                window.setTimeout(() => {
+                  setIsCategoryDropdownOpen(false);
+                  setCategorySearchTerm(displayCategoryValue);
+                }, 150);
+              }}
+              onKeyDown={handleCategorySearchKeyDown}
               disabled={disabled}
-              className="px-3 py-2 bg-primary text-white rounded-xl hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            >
-              Change
-            </button>
+              className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
+                disabled
+                  ? 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60'
+                  : errors.Type
+                    ? 'border-red-300 bg-red-50'
+                    : 'border-gray-300 bg-white'
+              }`}
+            />
           </div>
-        ) : (
-          // Edit mode - show search and category list
-          <div className="space-y-3">
-            {/* Search bar */}
-            <div className="relative">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search categories..."
-                value={categorySearchTerm}
-                onChange={(e) => setCategorySearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200"
-              />
-            </div>
 
-            {/* Category list */}
-            <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-xl bg-white">
-              {filteredCategories.length > 0 ? (
-                filteredCategories.map(category => (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => handleCategorySelect(category)}
-                    className={`w-full text-left px-4 py-3 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors duration-150 ${
-                      selectedCategory === category
-                        ? 'bg-primary/10 border-l-4 border-primary text-primary font-medium'
-                        : 'text-gray-700'
-                    }`}
-                  >
-                    {formatCategoryName(category)}
-                  </button>
-                ))
-              ) : (
-                <div className="px-4 py-3 text-gray-500 text-center">
-                  No categories found matching "{categorySearchTerm}"
+          {categoryError && (
+            <p className="text-sm text-red-600 flex items-center">
+              <FaExclamationTriangle className="w-4 h-4 mr-1" />
+              {categoryError}
+            </p>
+          )}
+
+          {isCategoryDropdownOpen && normalizedSearchTerm && (
+            <div className="space-y-3">
+              {showAddAction && (
+                <button
+                  type="button"
+                  onMouseDown={event => event.preventDefault()}
+                  onClick={() => applyCategoryValue(normalizedSearchTerm)}
+                  disabled={disabled}
+                  className="w-full flex items-center justify-center px-4 py-3 bg-primary/10 text-primary border border-primary/20 rounded-xl hover:bg-primary/15 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FaPlus className="w-3.5 h-3.5 mr-2" />
+                  Add "{normalizedSearchTerm}"
+                </button>
+              )}
+
+              {(filteredCategories.length > 0 || showNoResultsMessage) && (
+                <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-xl bg-white">
+                  {filteredCategories.length > 0 ? (
+                    filteredCategories.map(category => (
+                      <button
+                        key={category}
+                        type="button"
+                        onMouseDown={event => event.preventDefault()}
+                        onClick={() => applyCategoryValue(category)}
+                        disabled={disabled}
+                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors duration-150 ${
+                          formData.Type.toLowerCase() === category.toLowerCase()
+                            ? 'bg-primary/10 border-l-4 border-primary text-primary font-medium'
+                            : 'text-gray-700'
+                        } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {formatCategoryName(category)}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-gray-500 text-center">
+                      No categories found matching "{normalizedSearchTerm}"
+                    </div>
+                  )}
                 </div>
               )}
             </div>
+          )}
+        </div>
 
-            {/* Action buttons */}
-            <div className="flex space-x-3 justify-center">
-              <button
-                type="button"
-                onClick={handleSaveCategory}
-                disabled={!selectedCategory || selectedCategory === formData.Type}
-                className="w-48 flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <FaCheck className="w-4 h-4 mr-2" />
-                Save Changes
-              </button>
-              <button
-                type="button"
-                onClick={handleCancelEdit}
-                className="w-48 flex items-center justify-center px-4 py-3 bg-gray-300 text-gray-700 rounded-xl hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500/20 transition-all duration-200"
-              >
-                <FaTimes className="w-4 h-4 mr-2" />
-                Cancel
-              </button>
-            </div>
-          </div>
+        {errors.Type && !categoryError && (
+          <p className="mt-2 text-sm text-red-600 flex items-center">
+            <FaExclamationTriangle className="w-4 h-4 mr-1" />
+            {errors.Type}
+          </p>
         )}
       </div>
 

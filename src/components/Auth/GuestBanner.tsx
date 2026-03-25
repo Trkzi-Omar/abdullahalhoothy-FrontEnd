@@ -40,7 +40,7 @@ export default function GuestBanner() {
 
     toast.custom(
       toastId => (
-        <div className="w-[min(32rem,calc(100vw-1.5rem))] rounded-2xl border border-sky-200 bg-white px-4 py-4 shadow-2xl sm:px-5">
+        <div className="w-[min(24rem,calc(100vw-1.5rem))] rounded-2xl border border-sky-200 bg-white px-4 py-4 shadow-2xl sm:px-5">
           <div className="relative min-w-0 pr-8">
             <div>
               <p className="text-lg font-semibold leading-7 text-slate-900">

@@ -34,8 +34,49 @@ import SmartSegmentReport from '../SegmentReport';
 import ReportTypeSelectionStep from './components/ReportTypeSelectionStep';
 import DeliveryInStoreStep from './components/DeliveryInStoreStep';
 import PhoneVerificationStep from './components/PhoneVerificationStep';
+import { formatBusinessTypeForApi } from './utils/businessTypeApi';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+
+type FormInputValue = CustomReportData[keyof CustomReportData];
+type LocationUpdate = { lat: number; lng: number; properties?: { price?: number } };
+type CurrentLocationUpdate = {
+  lat: number;
+  lng: number;
+  properties?: { price?: number; avg_order_value?: number };
+};
+
+type ApiErrorShape = {
+  response?: {
+    data?: { message?: string; detail?: string; error?: string } | string;
+  };
+  message?: string;
+};
+
+const extractErrorMessage = (error: unknown): string => {
+  let errorMessage = 'An unexpected error occurred. Please try again.';
+
+  if (error && typeof error === 'object' && 'response' in error) {
+    const apiError = error as ApiErrorShape;
+    const errorData = apiError.response?.data;
+
+    if (errorData && typeof errorData === 'object') {
+      errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
+    } else if (typeof errorData === 'string') {
+      errorMessage = errorData;
+    }
+  } else if (error instanceof Error) {
+    errorMessage = error.message.replace(/\s*\(Status:\s*\d+\)/g, '');
+  }
+
+  return errorMessage;
+};
+
+const isPaymentIntentErrorMessage = (errorMessage: string): boolean =>
+  (errorMessage.includes('PaymentIntent') || errorMessage.includes('payment method')) &&
+  (errorMessage.includes('missing a payment method') ||
+    errorMessage.includes('missing payment method') ||
+    errorMessage.includes('You cannot confirm this PaymentIntent'));
 
 const CustomReportForm = () => {
   // STEP INDEXING CONVENTION:
@@ -103,7 +144,7 @@ const CustomReportForm = () => {
           : null
       );
     }
-  }, [authResponse, formData?.user_id]);
+  }, [authResponse, formData]);
 
   // Fetch user profile to check free location report status and get phone number
   useEffect(() => {
@@ -142,10 +183,10 @@ const CustomReportForm = () => {
     fetchUserProfile();
   }, [authResponse?.localId]);
 
-  const loadBusinessMetrics = async (businessType: string) => {
+  const loadBusinessMetrics = useCallback(async (businessTypeValue: string) => {
     try {
       const res = await apiRequest({
-        url: `${urls.business_category_metrics}/${businessType}`,
+        url: `${urls.business_category_metrics}/${businessTypeValue}`,
         method: 'get',
       });
       const data = res.data?.data;
@@ -155,7 +196,7 @@ const CustomReportForm = () => {
     } catch (error) {
       console.error('Error loading business metrics:', error);
     }
-  };
+  }, []);
 
   // Initialize form data when business configuration is loaded
   useEffect(() => {
@@ -169,7 +210,7 @@ const CustomReportForm = () => {
         loadBusinessMetrics(businessType);
       }
     }
-  }, [businessConfig, businessType]);
+  }, [businessConfig, businessType, businessMetrics?.business_type, loadBusinessMetrics]);
 
   useEffect(() => {
     if (selectedSegment) {
@@ -350,9 +391,10 @@ const CustomReportForm = () => {
     reportType,
     isAdvancedMode,
     segmentReportError,
+    getSegmentReport,
   ]);
 
-  const validateForm = (): boolean => {
+  const validateForm = useCallback((): boolean => {
     if (!formData) return false;
 
     // Validate report type is selected
@@ -366,6 +408,10 @@ const CustomReportForm = () => {
     // Validate city selection
     if (!formData.city_name) {
       newErrors.city_name = 'Please select a city';
+    }
+
+    if (!formData.Type?.trim()) {
+      newErrors.Type = 'Please select or enter a business type';
     }
 
     // In advanced mode, validate report tier selection
@@ -413,7 +459,7 @@ const CustomReportForm = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData, isAdvancedMode, reportType]);
 
   // Separate validation function that doesn't update state (for use during render)
   const validateFormWithoutStateUpdate = (): boolean => {
@@ -421,6 +467,10 @@ const CustomReportForm = () => {
 
     // Validate city selection
     if (!formData.city_name) {
+      return false;
+    }
+
+    if (!formData.Type?.trim()) {
       return false;
     }
 
@@ -471,12 +521,17 @@ const CustomReportForm = () => {
     return true;
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: FormInputValue) => {
     setFormData(prev =>
       prev
         ? {
             ...prev,
             [field]: value,
+            ...(field === 'Type'
+              ? {
+                  potential_business_type: value,
+                }
+              : {}),
           }
         : null
     );
@@ -512,7 +567,7 @@ const CustomReportForm = () => {
     }
   };
 
-  const handleAttributeChange = (key: string, value: number) => {
+  const handleAttributeChange = (key: string, value: number | string | string[]) => {
     setFormData(prev =>
       prev
         ? {
@@ -552,6 +607,15 @@ const CustomReportForm = () => {
     formData?.cross_shopping_categories,
   ]);
 
+  const apiBusinessType = useMemo(() => {
+    if (!formData) return undefined;
+
+    return formatBusinessTypeForApi(
+      formData.potential_business_type || formData.Type || businessType,
+      categories
+    );
+  }, [formData, businessType, categories]);
+
   // Use the new pricing hook for additional cost calculation
   const { cost: additionalCost, isLoading: isCalculatingCost } = useAdditionalCost({
     country: formData?.country_name || null,
@@ -559,7 +623,7 @@ const CustomReportForm = () => {
     datasets: allDatasets,
     reportTier:
       reportType === 'location' ? 'single_location_premium' : formData?.report_tier || 'premium',
-    report_potential_business_type: formData?.Type,
+    report_potential_business_type: apiBusinessType,
     enabled: isAttributesStep && allDatasets.length > 0,
   });
 
@@ -583,9 +647,7 @@ const CustomReportForm = () => {
   const handleCustomLocationSelect = useCallback(
     (
       index: number,
-      newLocation:
-        | { lat: number; lng: number }
-        | { lat: number; lng: number; properties?: { price?: number } }
+      newLocation: LocationUpdate
     ) => {
       setFormData(prev =>
         prev
@@ -596,7 +658,7 @@ const CustomReportForm = () => {
                   ? {
                       ...newLocation,
                       properties: {
-                        price: (newLocation as any).properties?.price ?? loc.properties?.price ?? 0,
+                        price: newLocation.properties?.price ?? loc.properties?.price ?? 0,
                       },
                     }
                   : loc
@@ -622,9 +684,7 @@ const CustomReportForm = () => {
   // Memoized callback for current location selection
   const handleCurrentLocationSelect = useCallback(
     (
-      newLocation:
-        | { lat: number; lng: number }
-        | { lat: number; lng: number; properties?: { price?: number; avg_order_value?: number } }
+      newLocation: CurrentLocationUpdate
     ) => {
       setFormData(prev =>
         prev
@@ -633,12 +693,9 @@ const CustomReportForm = () => {
               current_location: {
                 ...newLocation,
                 properties: {
-                  price:
-                    (newLocation as any).properties?.price ??
-                    prev.current_location?.properties?.price ??
-                    0,
+                  price: newLocation.properties?.price ?? prev.current_location?.properties?.price ?? 0,
                   avg_order_value:
-                    (newLocation as any).properties?.avg_order_value ??
+                    newLocation.properties?.avg_order_value ??
                     prev.current_location?.properties?.avg_order_value ??
                     30,
                 },
@@ -661,7 +718,7 @@ const CustomReportForm = () => {
     [] // Empty deps OK: uses functional setState, no external dependencies
   );
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async (reportTierOverride?: 'basic' | 'standard' | 'premium') => {
     if (!formData || !validateForm()) {
       return;
     }
@@ -681,7 +738,7 @@ const CustomReportForm = () => {
         user_id: formData.user_id,
         city_name: formData.city_name,
         country_name: formData.country_name,
-        potential_business_type: formData.potential_business_type || businessType,
+        potential_business_type: apiBusinessType || businessType,
         target_income_level: formData.target_income_level,
         target_age: formData.target_age,
         complementary_categories: formData.complementary_categories,
@@ -706,8 +763,10 @@ const CustomReportForm = () => {
         },
         single_location: reportType === 'location',
         report_tier:
-          reportType === 'location' ? 'single_location_premium' : formData.report_tier || 'premium',
-        report_potential_business_type: formData.potential_business_type || businessType,
+          reportType === 'location'
+            ? 'single_location_premium'
+            : reportTierOverride || formData.report_tier || 'premium',
+        report_potential_business_type: apiBusinessType || businessType,
       };
 
       const reportUrl = urls.smart_site_report;
@@ -737,35 +796,10 @@ const CustomReportForm = () => {
         // Fallback to home if no URL at all
         navigate('/');
       }
-    } catch (error: any) {
-      // Extract error message from various error formats
-      let errorMessage = 'An unexpected error occurred. Please try again.';
-      
-      if (error && typeof error === 'object' && 'response' in error) {
-        const apiError = error as {
-          response?: { data?: { message?: string; detail?: string; error?: string } | string };
-        };
-        const errorData = apiError.response?.data;
-        
-        if (errorData && typeof errorData === 'object') {
-          errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
-        } else if (typeof errorData === 'string') {
-          errorMessage = errorData;
-        }
-      } else if (error instanceof Error) {
-        errorMessage = error.message.replace(/\s*\(Status:\s*\d+\)/g, '');
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
-      
-      // Check if error is related to PaymentIntent missing payment method
-      // This handles various error message formats
-      const isPaymentIntentError = 
-        (errorMessage.includes('PaymentIntent') || errorMessage.includes('payment method')) && 
-        (errorMessage.includes('missing a payment method') || 
-         errorMessage.includes('missing payment method') ||
-         errorMessage.includes('You cannot confirm this PaymentIntent'));
-      
+    } catch (error: unknown) {
+      const errorMessage = extractErrorMessage(error);
+      const isPaymentIntentError = isPaymentIntentErrorMessage(errorMessage);
+
       if (isPaymentIntentError) {
         // Store submission data for retry after payment method is added
         setPendingSubmission(submissionData);
@@ -778,7 +812,15 @@ const CustomReportForm = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [
+    apiBusinessType,
+    businessType,
+    formData,
+    hasUsedFreeLocationReport,
+    navigate,
+    reportType,
+    validateForm,
+  ]);
 
   // Retry submission after payment method is added
   const retrySubmission = useCallback(async () => {
@@ -808,34 +850,10 @@ const CustomReportForm = () => {
       } else {
         navigate('/');
       }
-    } catch (error: any) {
-      // Extract error message from various error formats
-      let errorMessage = 'An unexpected error occurred. Please try again.';
-      
-      if (error && typeof error === 'object' && 'response' in error) {
-        const apiError = error as {
-          response?: { data?: { message?: string; detail?: string; error?: string } | string };
-        };
-        const errorData = apiError.response?.data;
-        
-        if (errorData && typeof errorData === 'object') {
-          errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
-        } else if (typeof errorData === 'string') {
-          errorMessage = errorData;
-        }
-      } else if (error instanceof Error) {
-        errorMessage = error.message.replace(/\s*\(Status:\s*\d+\)/g, '');
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
-      
-      // Check if error is still related to PaymentIntent
-      const isPaymentIntentError = 
-        (errorMessage.includes('PaymentIntent') || errorMessage.includes('payment method')) && 
-        (errorMessage.includes('missing a payment method') || 
-         errorMessage.includes('missing payment method') ||
-         errorMessage.includes('You cannot confirm this PaymentIntent'));
-      
+    } catch (error: unknown) {
+      const errorMessage = extractErrorMessage(error);
+      const isPaymentIntentError = isPaymentIntentErrorMessage(errorMessage);
+
       if (isPaymentIntentError) {
         // Keep payment method form visible
         setShowPaymentMethodForm(true);
@@ -861,7 +879,7 @@ const CustomReportForm = () => {
 
     switch (actualStep) {
       case 'basic-info':
-        return !!formData.city_name;
+        return !!formData.city_name && !!formData.Type?.trim();
 
       case 'current-location':
         // Optional for both report types
@@ -873,9 +891,10 @@ const CustomReportForm = () => {
           Object.values(formData.evaluation_metrics).every(v => v >= 0)
         );
 
-      case 'delivery-in-store':
+      case 'delivery-in-store': {
         const deliverySum = (formData.delivery_weight || 0) + (formData.dine_in_weight || 0);
         return Math.abs(deliverySum - 1) < 0.001;
+      }
 
       case 'custom-locations':
         // Required for location reports, optional for full reports
@@ -1002,7 +1021,7 @@ const CustomReportForm = () => {
   }, [authResponse?.localId]);
 
   // When user clicks "Purchase Report" on paid location card: use saved card if exists, else show error
-  const onPurchaseReportClick = useCallback(async () => {
+  const onPurchaseReportClick = async () => {
     if (!formData || !validateForm()) return;
     setSubmitError(null);
     const hasCard = await checkHasPaymentMethod();
@@ -1012,7 +1031,7 @@ const CustomReportForm = () => {
       setSubmitError('Please add a payment method to purchase this report. You can add one below.');
       setShowPaymentMethodForm(true);
     }
-  }, [formData, checkHasPaymentMethod, validateForm, handleSubmit]);
+  };
 
   // Helper function to map step numbers to actual step content based on report type and advanced mode
   // @param step - 1-indexed step number (0 = report type selection, 1+ = form steps)
@@ -1051,7 +1070,6 @@ const CustomReportForm = () => {
             formData={formData}
             errors={errors}
             onInputChange={handleInputChange}
-            businessConfig={businessConfig}
             isAdvancedMode={isAdvancedMode}
             onToggleAdvancedMode={setIsAdvancedMode}
             disabled={isSubmitting}
@@ -1206,12 +1224,20 @@ const CustomReportForm = () => {
           <ReportTierStep
             formData={formData}
             onInputChange={handleInputChange}
+            apiBusinessType={apiBusinessType}
             disabled={isSubmitting}
             reportType={reportType || undefined}
             hasUsedFreeLocationReport={hasUsedFreeLocationReport}
             isAdvancedMode={isAdvancedMode}
             onPriceLoadingChange={handlePriceLoadingChange}
             onPurchaseReport={reportType === 'location' ? onPurchaseReportClick : undefined}
+            onTierSubmit={
+              reportType === 'full'
+                ? tier => {
+                    void handleSubmit(tier);
+                  }
+                : undefined
+            }
           />
         );
 
@@ -1221,7 +1247,7 @@ const CustomReportForm = () => {
   };
 
   // Show loading state while fetching business configuration
-  if (configLoading) {
+  if (configLoading && !businessConfig) {
     return (
       <main className="min-h-screen w-full flex justify-center items-center bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="text-center max-w-md mx-auto p-6">
@@ -1263,7 +1289,7 @@ const CustomReportForm = () => {
   }
 
   // Show error state if configuration failed to load
-  if (configError) {
+  if (configError && !businessConfig) {
     const isNotSupportedError = configError.includes('not yet supported');
 
     return (

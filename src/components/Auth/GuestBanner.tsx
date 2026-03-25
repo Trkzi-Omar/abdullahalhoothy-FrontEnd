@@ -103,6 +103,9 @@ export default function GuestBanner() {
       {
         id: GUEST_TOAST_ID,
         duration: Infinity,
+        style: {
+          right: '2rem',
+        },
       }
     );
   }, [authResponse, isGuest, isHomePage, navigate, sourceLocal]);

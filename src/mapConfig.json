@@ -1,8 +1,8 @@
 {
   "defaultColor": "#12939A",
   "hoverColor": "#FF5733",
-  "circleRadius": 7,
-  "hoverCircleRadius": 10,
+  "circleRadius": 5,
+  "hoverCircleRadius": 8,
   "circleOpacity": 0.8,
   "circleStrokeWidth": 0.4,
   "circleStrokeColor": "#898989",

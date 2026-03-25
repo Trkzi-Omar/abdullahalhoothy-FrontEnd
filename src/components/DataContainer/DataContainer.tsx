@@ -15,56 +15,29 @@ import { Spinner } from '../common';
 function DataContainer() {
   const {
     selectedContainerType,
-    setMarkers,
-    setMeasurements,
     handleAddClick,
     setGeoPoints,
-    setCaseStudyContent,
-    setPolygons,
-    setSections,
-    setBenchmarks,
-    setIsBenchmarkControlOpen,
-    setCurrentStyle,
     isLoading,
   } = useCatalogContext();
   const { setSelectedCity, setSelectedCountry } = useLayerContext();
-  const { isAuthenticated, authResponse, logout } = useAuth();
+  const { authResponse } = useAuth();
   const { closeModal } = useUIContext();
   const [activeTab, setActiveTab] = useState('Data Catalogue');
   const [resData, setResData] = useState<(Catalog | UserLayer)[] | string>('');
   // layers data that will be sat after user clicks Add Layer
   const [userLayersData, setUserLayersData] = useState<UserLayer[]>([]);
-  const [catalogCollectionData, setCatalogCollectionData] = useState<Catalog[]>([]);
   const [userCatalogsData, setUserCatalogsData] = useState<Catalog[]>([]);
-  const [resMessage, setResMessage] = useState<string>('');
-  const [resId, setResId] = useState<string>('');
+  const [, setResMessage] = useState<string>('');
+  const [, setResId] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const [wsResMessage, setWsResMessage] = useState<string>('');
-  const [wsResId, setWsResId] = useState<string>('');
-  const [wsResloading, setWsResLoading] = useState<boolean>(false);
-  const [wsResError, setWsResError] = useState<Error | null>(null);
+  const [, setWsResMessage] = useState<string>('');
+  const [, setWsResId] = useState<string>('');
+  const [, setWsResLoading] = useState<boolean>(false);
+  const [, setWsResError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // Fetch catalog collection data
-    async function fetchCatalogCollection() {
-      setLoading(true);
-      try {
-        const res = await apiRequest({
-          url: urls.catlog_collection,
-          method: 'get',
-        });
-        setCatalogCollectionData(res.data.data);
-        setResMessage(res.data.message);
-        setResId(res.data.request_id);
-      } catch (error) {
-        setError(error instanceof Error ? error : new Error(String(error)));
-      } finally {
-        setLoading(false);
-      }
-    }
-
     async function fetchUserLayers() {
       setLoading(true);
 
@@ -115,10 +88,7 @@ function DataContainer() {
       if (selectedContainerType === 'Layer') {
         await fetchUserLayers();
       } else if (selectedContainerType === 'Catalogue') {
-        await fetchCatalogCollection();
         await fetchUserCatalogs();
-      } else if (selectedContainerType === 'Home') {
-        await fetchCatalogCollection();
       }
 
       setLoading(false);
@@ -129,23 +99,22 @@ function DataContainer() {
 
   useEffect(
     function () {
-      // Combine catalog and user layers data based on selected container type
+      // Select the data shown in the modal based on the current mode.
       if (selectedContainerType === 'Catalogue') {
-        var combinedData = catalogCollectionData.concat(userCatalogsData);
-        if (JSON.stringify(resData) !== JSON.stringify(combinedData)) {
-          setResData(combinedData);
+        if (JSON.stringify(resData) !== JSON.stringify(userCatalogsData)) {
+          setResData(userCatalogsData);
         }
       } else if (selectedContainerType === 'Layer') {
         if (JSON.stringify(resData) !== JSON.stringify(userLayersData)) {
           setResData(userLayersData);
         }
       } else if (selectedContainerType === 'Home') {
-        if (JSON.stringify(resData) !== JSON.stringify(catalogCollectionData)) {
-          setResData(catalogCollectionData);
+        if (resData !== '') {
+          setResData('');
         }
       }
     },
-    [userLayersData, catalogCollectionData, userCatalogsData, selectedContainerType]
+    [userLayersData, userCatalogsData, selectedContainerType, resData]
   );
 
   // Handle click event on catalog card
@@ -215,7 +184,7 @@ function DataContainer() {
       );
     } else {
       // Render CatalogueCard if item is a catalog
-      var typeOfCard = 'catalog_name' in item ? 'userCatalog' : 'catalog';
+      const typeOfCard = 'catalog_name' in item ? 'userCatalog' : 'catalog';
       return (
         <CatalogueCard
           key={(item.id || item.catalog_id || '') + '-' + index}
@@ -345,6 +314,15 @@ function DataContainer() {
               >
                 {renderCards()}
               </div>
+              {selectedContainerType === 'Catalogue' &&
+                activeTab === 'Data Catalogue' &&
+                Array.isArray(resData) &&
+                resData.length === 0 && (
+                  <div className="mt-6 rounded-xl border border-dashed border-[#c5d9f1] bg-[#f8fbff] p-6 text-center text-[#1a365d]">
+                    No saved catalogues yet. Build one by adding layers to the map and saving
+                    them as a catalogue.
+                  </div>
+                )}
             </div>
           ) : activeTab === 'Load Files' ? (
             <div className="text-center p-8 text-[1.2rem] text-[#666]">Load Files Content</div>

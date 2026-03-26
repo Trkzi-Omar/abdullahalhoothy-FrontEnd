@@ -35,6 +35,7 @@ import ReportTypeSelectionStep from './components/ReportTypeSelectionStep';
 import DeliveryInStoreStep from './components/DeliveryInStoreStep';
 import PhoneVerificationStep from './components/PhoneVerificationStep';
 import { formatBusinessTypeForApi } from './utils/businessTypeApi';
+import ReportAIAssistant from './components/ReportAIAssistant/ReportAIAssistant';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
@@ -1573,6 +1574,15 @@ const CustomReportForm = () => {
           />
         </div>
       )}
+
+      {/* AI Assistant - visible on all custom report steps */}
+      <ReportAIAssistant
+        stepTitle={
+          currentStep > 0 && reportType
+            ? getStepDefinitions(reportType, isAdvancedMode, needsPhoneVerificationInitial)[currentStep - 1]?.title
+            : undefined
+        }
+      />
     </main>
   );
 };

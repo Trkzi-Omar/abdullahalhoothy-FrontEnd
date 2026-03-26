@@ -10,7 +10,9 @@ import { useAuth, isGuestUser } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import apiRequest from '../../services/apiRequest';
 import urls from '../../urls.json';
-import IntelligencePaywallModal, { type IntelligencePurchaseItem } from './IntelligencePaywallModal';
+import IntelligencePaywallModal, {
+  type IntelligencePurchaseItem,
+} from './IntelligencePaywallModal';
 
 type IntelligenceType = 'Population' | 'Income' | 'Real Estate';
 
@@ -33,8 +35,14 @@ export const AreaIntelligeneControl: React.FC = () => {
     includeIncome,
     includeRealEstate,
   } = useLayerContext();
-  const { populationSample, setPopulationSample, incomeSample, setIncomeSample, realEstateSample, setRealEstateSample } =
-    useIntelligenceViewport();
+  const {
+    populationSample,
+    setPopulationSample,
+    incomeSample,
+    setIncomeSample,
+    realEstateSample,
+    setRealEstateSample,
+  } = useIntelligenceViewport();
   const { authResponse } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -68,59 +76,59 @@ export const AreaIntelligeneControl: React.FC = () => {
    * If cost=0 (already purchased), proceed immediately.
    * If cost>0, show paywall modal.
    */
-  const checkCostAndProceed = useCallback(async (
-    intelligenceNames: IntelligenceType[],
-    onProceed: () => void,
-  ) => {
-    // Not authenticated → redirect
-    if (!authResponse || !('idToken' in authResponse)) {
-      navigate('/auth');
-      return;
-    }
-
-    // Guest → redirect to register
-    if (isGuestUser(authResponse)) {
-      navigate('/auth?mode=register');
-      return;
-    }
-
-    setIsCheckingCost(true);
-    try {
-      const requestBody = {
-        user_id: authResponse.localId,
-        country_name: '',
-        city_name: '',
-        datasets: [] as string[],
-        intelligences: intelligenceNames,
-        displayed_price: 0,
-      };
-
-      const response = await apiRequest({
-        url: urls.calculate_cart_cost,
-        method: 'POST',
-        body: requestBody,
-        isAuthRequest: true,
-      });
-
-      const data: CartCostData = response.data?.data;
-
-      if (!data || data.total_cost === 0) {
-        // Already purchased or free → proceed directly
-        onProceed();
-      } else {
-        // Needs purchase → show paywall
-        setPaywallData(data);
-        setPaywallIntelligences(intelligenceNames);
-        setPendingAction(() => onProceed);
+  const checkCostAndProceed = useCallback(
+    async (intelligenceNames: IntelligenceType[], onProceed: () => void) => {
+      // Not authenticated → redirect
+      if (!authResponse || !('idToken' in authResponse)) {
+        navigate('/auth');
+        return;
       }
-    } catch (error) {
-      console.error('Error checking intelligence cost:', error);
-      // On error, proceed anyway — backend will catch it during data fetch
-      onProceed();
-    } finally {
-      setIsCheckingCost(false);
-    }
-  }, [authResponse, navigate]);
+
+      // Guest → redirect to register
+      if (isGuestUser(authResponse)) {
+        navigate('/auth?mode=register');
+        return;
+      }
+
+      setIsCheckingCost(true);
+      try {
+        const requestBody = {
+          user_id: authResponse.localId,
+          country_name: '',
+          city_name: '',
+          datasets: [] as string[],
+          intelligences: intelligenceNames,
+          displayed_price: 0,
+        };
+
+        const response = await apiRequest({
+          url: urls.calculate_cart_cost,
+          method: 'POST',
+          body: requestBody,
+          isAuthRequest: true,
+        });
+
+        const data: CartCostData = response.data?.data;
+
+        if (!data || data.total_cost === 0) {
+          // Already purchased or free → proceed directly
+          onProceed();
+        } else {
+          // Needs purchase → show paywall
+          setPaywallData(data);
+          setPaywallIntelligences(intelligenceNames);
+          setPendingAction(() => onProceed);
+        }
+      } catch (error) {
+        console.error('Error checking intelligence cost:', error);
+        // On error, proceed anyway — backend will catch it during data fetch
+        onProceed();
+      } finally {
+        setIsCheckingCost(false);
+      }
+    },
+    [authResponse, navigate]
+  );
 
   const handlePaywallClose = useCallback(() => {
     setPaywallData(null);
@@ -140,78 +148,94 @@ export const AreaIntelligeneControl: React.FC = () => {
   // Wrapped toggle handlers that check cost first
   const handlePopulationToggle = useCallback(() => {
     if (includePopulation) {
-      // Turning OFF — no paywall needed
+      // Turning OFF — no check needed
+      switchPopulationLayer();
+    } else if (populationSample) {
+      // Sample mode — free, no check needed
       switchPopulationLayer();
     } else {
-      // Turning ON — check cost
+      // Full mode — check cost
       checkCostAndProceed(['Population'], () => {
         switchPopulationLayer();
       });
     }
-  }, [includePopulation, switchPopulationLayer, checkCostAndProceed]);
+  }, [includePopulation, populationSample, switchPopulationLayer, checkCostAndProceed]);
 
   const handleIncomeToggle = useCallback(() => {
     if (includeIncome) {
+      switchIncomeLayer();
+    } else if (incomeSample) {
       switchIncomeLayer();
     } else {
       checkCostAndProceed(['Income'], () => {
         switchIncomeLayer();
       });
     }
-  }, [includeIncome, switchIncomeLayer, checkCostAndProceed]);
+  }, [includeIncome, incomeSample, switchIncomeLayer, checkCostAndProceed]);
 
   const handleRealEstateToggle = useCallback(() => {
     if (includeRealEstate) {
+      switchRealEstateLayer();
+    } else if (realEstateSample) {
       switchRealEstateLayer();
     } else {
       checkCostAndProceed(['Real Estate'], () => {
         switchRealEstateLayer();
       });
     }
-  }, [includeRealEstate, switchRealEstateLayer, checkCostAndProceed]);
+  }, [includeRealEstate, realEstateSample, switchRealEstateLayer, checkCostAndProceed]);
 
   // Sample→Full toggle handlers with paywall check
-  const handlePopulationFull = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (populationSample) {
-      // Switching to Full — check if purchased
-      if (includePopulation) {
-        // Layer is active, switching mode
-        checkCostAndProceed(['Population'], () => {
+  const handlePopulationFull = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (populationSample) {
+        // Switching to Full — check if purchased
+        if (includePopulation) {
+          // Layer is active, switching mode
+          checkCostAndProceed(['Population'], () => {
+            setPopulationSample(false);
+          });
+        } else {
+          // Layer is off, just set the preference
           setPopulationSample(false);
-        });
-      } else {
-        // Layer is off, just set the preference
-        setPopulationSample(false);
+        }
       }
-    }
-  }, [populationSample, includePopulation, setPopulationSample, checkCostAndProceed]);
+    },
+    [populationSample, includePopulation, setPopulationSample, checkCostAndProceed]
+  );
 
-  const handleIncomeFull = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (incomeSample) {
-      if (includeIncome) {
-        checkCostAndProceed(['Income'], () => {
+  const handleIncomeFull = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (incomeSample) {
+        if (includeIncome) {
+          checkCostAndProceed(['Income'], () => {
+            setIncomeSample(false);
+          });
+        } else {
           setIncomeSample(false);
-        });
-      } else {
-        setIncomeSample(false);
+        }
       }
-    }
-  }, [incomeSample, includeIncome, setIncomeSample, checkCostAndProceed]);
+    },
+    [incomeSample, includeIncome, setIncomeSample, checkCostAndProceed]
+  );
 
-  const handleRealEstateFull = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (realEstateSample) {
-      if (includeRealEstate) {
-        checkCostAndProceed(['Real Estate'], () => {
+  const handleRealEstateFull = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (realEstateSample) {
+        if (includeRealEstate) {
+          checkCostAndProceed(['Real Estate'], () => {
+            setRealEstateSample(false);
+          });
+        } else {
           setRealEstateSample(false);
-        });
-      } else {
-        setRealEstateSample(false);
+        }
       }
-    }
-  }, [realEstateSample, includeRealEstate, setRealEstateSample, checkCostAndProceed]);
+    },
+    [realEstateSample, includeRealEstate, setRealEstateSample, checkCostAndProceed]
+  );
 
   const handlePopulationRefetch = async () => {
     setIsPopulationRefetching(true);
@@ -603,7 +627,9 @@ export const AreaIntelligeneControl: React.FC = () => {
                     <label className="font-medium text-gem text-xs sm:text-sm">
                       Real Estate Intelligence
                     </label>
-                    <p className="text-xs sm:text-sm text-gem/80 mt-1">Enable smart real estate data</p>
+                    <p className="text-xs sm:text-sm text-gem/80 mt-1">
+                      Enable smart real estate data
+                    </p>
                     <p className="text-[10px] text-gray-500 mt-0.5">
                       Updated on:{' '}
                       <span className="text-[#115740] font-medium">{getYesterdayDate()}</span>

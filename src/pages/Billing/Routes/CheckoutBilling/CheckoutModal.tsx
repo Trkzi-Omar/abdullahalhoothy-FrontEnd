@@ -1,5 +1,5 @@
 import React, { useCallback, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { MdClose, MdCheckCircleOutline, MdErrorOutline } from 'react-icons/md';
 import { formatSubcategoryName } from '../../../../utils/helperFunctions';
 import { useBillingContext, type ReportTier } from '../../../../context/BillingContext';
@@ -90,9 +90,14 @@ function CheckoutModal({
   );
 
   const handleIntelligenceToggle = useCallback(
-    (service: 'population' | 'income') => {
-      const formatted = service === 'population' ? 'Population' : 'Income';
-      dispatch({ type: 'toggleIntelligence', payload: formatted });
+    (intelligenceName: string) => {
+      const normalized = intelligenceName.trim().toLowerCase().replace(/\s+/g, '_');
+      let formatted: 'Income' | 'Population' | 'Real Estate' | null = null;
+      if (normalized === 'population') formatted = 'Population';
+      else if (normalized === 'income') formatted = 'Income';
+      else if (normalized === 'real_estate' || normalized === 'realestate')
+        formatted = 'Real Estate';
+      if (formatted) dispatch({ type: 'toggleIntelligence', payload: formatted });
     },
     [dispatch]
   );
@@ -290,6 +295,20 @@ function CheckoutModal({
 
   const isEmpty = !hasApiItems && !hasCheckoutItems;
 
+  const hasCountryAndCity = !!(checkout.country_name?.trim() && checkout.city_name?.trim());
+  const canPurchase =
+    !isEmpty &&
+    !isGuest &&
+    hasCountryAndCity &&
+    !!authResponse?.localId;
+  const purchaseDisabledReason = isEmpty
+    ? null
+    : isGuest
+      ? 'Please sign in to complete your purchase.'
+      : !hasCountryAndCity
+        ? 'Please select country and city to continue with your purchase.'
+        : null;
+
   const apiItemCount =
     (cartCostResponse?.data?.intelligence_purchase_items?.length ?? 0) +
     (cartCostResponse?.data?.dataset_purchase_items?.length ?? 0) +
@@ -319,14 +338,25 @@ function CheckoutModal({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 py-6">
-          {/* Guest user message or Support Note */}
+          {/* Guest / location / Support messages */}
           {isGuest ? (
             <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-6">
               <p className="text-sm text-amber-800 leading-relaxed">
-                You're a guest user. Please sign up to complete your purchase.
+                You're a guest user. Please{' '}
+                <Link to="/auth" className="text-[#115740] font-semibold underline hover:no-underline">
+                  sign in
+                </Link>{' '}
+                to complete your purchase.
               </p>
             </div>
-          ) : (
+          ) : !hasCountryAndCity && hasCheckoutItems ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-6">
+              <p className="text-sm text-amber-800 leading-relaxed">
+                Please select country and city to continue with your purchase.
+              </p>
+            </div>
+          ) : null}
+          {!isGuest && hasCountryAndCity ? (
             <div className="bg-gray-50 border border-gray-100 rounded-lg px-4 py-3 mb-6">
               <p className="text-xs text-gray-500 leading-relaxed">
                 Questions? We're happy to help — reach us at{' '}
@@ -335,7 +365,7 @@ function CheckoutModal({
                 </a>
               </p>
             </div>
-          )}
+          ) : null}
 
           {isEmpty ? (
             <div className="flex flex-col items-center justify-center text-center py-12 text-gray-500">
@@ -397,9 +427,7 @@ function CheckoutModal({
                             className="text-xs text-red-500 hover:text-red-700"
                             onClick={() =>
                               item.intelligence_name &&
-                              handleIntelligenceToggle(
-                                item.intelligence_name.toLowerCase() as 'population' | 'income'
-                              )
+                              handleIntelligenceToggle(item.intelligence_name)
                             }
                           >
                             Remove
@@ -516,11 +544,7 @@ function CheckoutModal({
                         <button
                           type="button"
                           className="text-xs text-red-500 hover:text-red-700"
-                          onClick={() =>
-                            handleIntelligenceToggle(
-                              service.toLowerCase() as 'population' | 'income'
-                            )
-                          }
+                          onClick={() => handleIntelligenceToggle(service)}
                         >
                           Remove
                         </button>
@@ -659,6 +683,21 @@ function CheckoutModal({
                     : '$0.00'}
               </span>
             </div>
+            {purchaseDisabledReason && (
+              <p className="text-sm text-amber-700 mb-3" role="status">
+                {isGuest ? (
+                  <>
+                    Please{' '}
+                    <Link to="/auth" className="text-[#115740] font-semibold underline hover:no-underline">
+                      sign in
+                    </Link>{' '}
+                    to complete your purchase.
+                  </>
+                ) : (
+                  purchaseDisabledReason
+                )}
+              </p>
+            )}
             <div className="flex gap-3">
               <button
                 type="button"
@@ -670,7 +709,7 @@ function CheckoutModal({
               <button
                 type="button"
                 onClick={handlePurchase}
-                disabled={isPurchasing || isCalculatingCost || isEmpty}
+                disabled={isPurchasing || isCalculatingCost || !canPurchase}
                 className="flex-1 bg-[#115740] text-white py-3 rounded-lg font-semibold hover:bg-[#0d4632] transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {isPurchasing ? 'Processing...' : 'Purchase Now'}

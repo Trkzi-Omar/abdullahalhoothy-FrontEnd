@@ -5,7 +5,6 @@ import { useAuth } from '../../../../context/AuthContext';
 import apiRequest from '../../../../services/apiRequest';
 import { MdAttachMoney, MdCheckCircle, MdClose, MdHome, MdSearch } from 'react-icons/md';
 import { CategoryData } from '../../../../types/allTypesAndInterfaces';
-import { useUIContext } from '../../../../context/UIContext';
 import { useBillingContext, type ReportTier } from '../../../../context/BillingContext';
 import ItemSelectionView from './ItemSelectionView';
 import CheckoutModal from './CheckoutModal';
@@ -28,6 +27,16 @@ interface SelectedItemData {
   isCurrentlyOwned?: boolean;
   expiration?: string;
   explanation?: string;
+}
+
+interface PurchaseItem {
+  cost: number;
+  description?: string;
+  data_variables?: Record<string, string>;
+  is_currently_owned: boolean;
+  expiration: string | null;
+  explanation: string;
+  [key: string]: unknown;
 }
 
 interface PriceData {
@@ -102,6 +111,7 @@ interface ReportPackage {
   additional_dataset_cost?: number;
   tag?: string;
   description?: string;
+  data_variables?: Record<string, string>;
 }
 
 interface ReportTierData {
@@ -123,6 +133,9 @@ interface ReportTierData {
   datasetLimit?: number;
   additionalDatasetCost?: number;
   tag?: string;
+  /** From report_packages API – used for View Details when not in cart */
+  description?: string;
+  data_variables?: Record<string, string>;
 }
 
 const itemConfig = {
@@ -186,8 +199,13 @@ function CheckoutBilling({ Name }: { Name: string }) {
   } | null>(null);
 
   const { authResponse } = useAuth();
-  const { openModal } = useUIContext();
   const { checkout, dispatch } = useBillingContext();
+
+  const hasCountryAndCity = !!(checkout.country_name?.trim() && checkout.city_name?.trim());
+  const addToCartDisabled = !hasCountryAndCity;
+  const addToCartMessage = !hasCountryAndCity
+    ? 'Please select country and city to add items to cart.'
+    : undefined;
 
   // Update active view when Name changes
   useEffect(() => {
@@ -298,6 +316,8 @@ function CheckoutBilling({ Name }: { Name: string }) {
           datasetLimit: pkg.dataset_limit || pkg.included_datasets_count,
           additionalDatasetCost: pkg.additional_dataset_cost ?? 300,
           tag: pkg.tag,
+          description: pkg.description,
+          data_variables: pkg.data_variables,
         };
       });
 
@@ -701,6 +721,64 @@ function CheckoutBilling({ Name }: { Name: string }) {
   ]);
 
   /**
+   * Fetch a single report's details (description + data_variables) for "View Details" panel.
+   * Does not add the report to cart; only loads display data into priceData.
+   */
+  const fetchReportDetailsForView = useCallback(
+    async (reportKey: string) => {
+      if (!authResponse?.localId) return;
+      const country = checkout.country_name || '';
+      const city = checkout.city_name || '';
+      const businessType = (checkout.report_potential_business_type || '').trim();
+      if (!country || !city || !businessType) return;
+
+      setIsCalculatingPrices(true);
+      try {
+        const response = await apiRequest({
+          url: urls.calculate_cart_cost,
+          method: 'POST',
+          body: {
+            user_id: authResponse.localId,
+            country_name: country,
+            city_name: city,
+            datasets: [],
+            intelligences: [],
+            displayed_price: 0,
+            report: reportKey as ReportTier,
+            report_potential_business_type: businessType,
+          },
+          isAuthRequest: true,
+        });
+        const newReportItems = response?.data?.data?.report_purchase_items || [];
+        if (newReportItems.length === 0) return;
+        setPriceData(prev => {
+          const existing = prev?.report_purchase_items || [];
+          const merged = [...existing];
+          newReportItems.forEach((newItem: { report_tier: string }) => {
+            const i = merged.findIndex(item => item.report_tier === newItem.report_tier);
+            if (i >= 0) merged[i] = newItem as (typeof merged)[0];
+            else merged.push(newItem as (typeof merged)[0]);
+          });
+          return {
+            ...(prev ?? {}),
+            report_purchase_items: merged,
+          } as PriceData;
+        });
+      } catch {
+        // Keep existing priceData on error
+      } finally {
+        setIsCalculatingPrices(false);
+      }
+    },
+    [
+      authResponse?.localId,
+      checkout.country_name,
+      checkout.city_name,
+      checkout.report_potential_business_type,
+    ]
+  );
+
+  /**
    * Calculate cart cost - sends only CHECKED items for cart management
    *
    * This function sends only the items that user has checked/selected.
@@ -810,6 +888,23 @@ function CheckoutBilling({ Name }: { Name: string }) {
     []
   );
 
+  // Build selectedItem from report tier when not in priceData (e.g. View Details before Add to Cart)
+  const getReportSelectedItemFromTier = useCallback(
+    (name: string, key: string) => {
+      const tier = reportTiers.find(t => t.reportKey === key);
+      if (!tier) return null;
+      return {
+        name,
+        type: 'report' as const,
+        description: tier.description || 'No description available.',
+        dataVariables: convertDataVariables(tier.data_variables),
+        price: tier.price,
+        itemKey: key,
+      };
+    },
+    [reportTiers, convertDataVariables]
+  );
+
   // Update selectedItem when price data changes (uses priceData for display)
   useEffect(() => {
     if (!selectedItemKey) {
@@ -823,53 +918,56 @@ function CheckoutBilling({ Name }: { Name: string }) {
       return;
     }
 
-    if (!priceData) {
-      setSelectedItem(createEmptySelectedItem(name, type, key));
-      return;
-    }
-
     const config = itemConfig[type];
     if (config) {
-      const items = priceData[config.arrayKey];
-      const item = items?.find((i: any) => i[config.matchKey] === key);
+      const items = priceData?.[config.arrayKey];
+      const item = items?.find((i: PurchaseItem) => i[config.matchKey] === key) as PurchaseItem | undefined;
 
       if (item) {
         setSelectedItem({
           name,
           type,
-          description: (item as any).description || '',
-          dataVariables: convertDataVariables((item as any).data_variables),
-          price: (item as any).cost,
+          description: item.description || '',
+          dataVariables: convertDataVariables(item.data_variables),
+          price: item.cost,
           itemKey: key,
-          isCurrentlyOwned: (item as any).is_currently_owned,
-          expiration: (item as any).expiration || undefined,
-          explanation: (item as any).explanation,
+          isCurrentlyOwned: item.is_currently_owned,
+          expiration: item.expiration || undefined,
+          explanation: item.explanation,
         });
-      } else {
-        setSelectedItem(createEmptySelectedItem(name, type, key));
+        return;
+      }
+
+      // Report not in priceData (e.g. user clicked View Details without adding to cart) – use tier info
+      if (type === 'report') {
+        const fromTier = getReportSelectedItemFromTier(name, key);
+        if (fromTier) {
+          setSelectedItem(fromTier);
+          return;
+        }
       }
     }
+
+    setSelectedItem(createEmptySelectedItem(name, type, key));
   }, [
     priceData,
     selectedItemKey,
     isCalculatingPrices,
     convertDataVariables,
     createEmptySelectedItem,
+    getReportSelectedItemFromTier,
   ]);
 
   // Handler to select item for viewing details (NOT for adding to cart)
   const handleItemSelect = useCallback(
     (itemKey: string, type: 'dataset' | 'intelligence' | 'report', name: string) => {
-      // ONLY set selected item key for viewing - don't add to cart
       setSelectedItemKey({ key: itemKey, type, name });
+      // For reports, fetch description + data_variables so the Data Variables tab is populated without adding to cart
+      if (type === 'report') {
+        fetchReportDetailsForView(itemKey);
+      }
     },
-    []
-  );
-
-  // Can always calculate cost if we have categories loaded and location set
-  const canCalculateCost = useMemo(
-    () => Object.keys(categories).length > 0 && checkout.country_name && checkout.city_name,
-    [categories, checkout.country_name, checkout.city_name]
+    [fetchReportDetailsForView]
   );
 
   // Filter categories based on search query (fuzzy, supports spaces and multi-word)
@@ -943,7 +1041,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
   );
 
   const handleRemoveType = useCallback(
-    (type: string, _layerId: number, _isExcluded: boolean) => {
+    (type: string) => {
       // Remove from cart
       if (checkout.datasets.includes(type)) {
         dispatch({ type: 'toggleDataset', payload: type });
@@ -1671,6 +1769,8 @@ function CheckoutBilling({ Name }: { Name: string }) {
                   ? checkout.report === selectedItem.itemKey
                   : false
           }
+          addToCartDisabled={addToCartDisabled}
+          addToCartMessage={addToCartMessage}
           onAddToCart={() => {
             if (!selectedItem?.itemKey) return;
             if (selectedItem.type === 'intelligence') {

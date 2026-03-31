@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getYesterdayDate } from '../../../../utils/helperFunctions';
 
 interface DataVariable {
@@ -24,6 +25,12 @@ interface ItemSelectionViewProps {
   isLoading?: boolean;
   onAddToCart?: () => void;
   onRemoveFromCart?: () => void;
+  /** When true, Add to Cart is disabled (e.g. guest or missing country/city). */
+  addToCartDisabled?: boolean;
+  /** Message shown when Add to Cart is disabled (e.g. "Please sign in" or "Please select country and city"). */
+  addToCartMessage?: string;
+  /** When true, show a "Sign in" link next to the message (for guest users). */
+  showSignInLink?: boolean;
 }
 
 function ItemSelectionView({
@@ -32,6 +39,9 @@ function ItemSelectionView({
   isLoading,
   onAddToCart,
   onRemoveFromCart,
+  addToCartDisabled = false,
+  addToCartMessage,
+  showSignInLink = false,
 }: ItemSelectionViewProps) {
   const [activeTab, setActiveTab] = useState<'description' | 'dataVariables'>('description');
 
@@ -186,21 +196,39 @@ function ItemSelectionView({
               Remove from Cart
             </button>
           ) : (
-            <button
-              onClick={onAddToCart}
-              className="w-full py-3 px-6 bg-[#115740] text-white font-semibold rounded-lg hover:bg-[#0d4632] transition-all flex items-center justify-center gap-2"
-              key="add-to-cart"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-              Add to Cart
-            </button>
+            <div className="w-full space-y-2">
+              {addToCartMessage && addToCartDisabled && (
+                <p className="text-sm text-amber-700" role="status">
+                  {showSignInLink ? (
+                    <>
+                      Please{' '}
+                      <Link to="/auth" className="text-[#115740] font-semibold underline hover:no-underline">
+                        sign in
+                      </Link>{' '}
+                      to add items to cart.
+                    </>
+                  ) : (
+                    addToCartMessage
+                  )}
+                </p>
+              )}
+              <button
+                onClick={onAddToCart}
+                disabled={addToCartDisabled}
+                className="w-full py-3 px-6 bg-[#115740] text-white font-semibold rounded-lg hover:bg-[#0d4632] transition-all flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:hover:bg-gray-400"
+                key="add-to-cart"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+                Add to Cart
+              </button>
+            </div>
           )}
         </div>
       )}

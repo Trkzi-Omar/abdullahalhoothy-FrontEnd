@@ -85,7 +85,7 @@ const refreshAuthToken = async (refreshToken: string): Promise<AuthResponse> => 
 
 // Add cache implementation
 interface CacheEntry {
-  data: any;
+  data: unknown;
   timestamp: number;
 }
 
@@ -94,7 +94,7 @@ const DURATION_IN_MINUTES = 60;
 const CACHE_EXPIRY = DURATION_IN_MINUTES * 60 * 1000;
 
 // Generic cache helper functions
-const generateCacheKey = (url: string, method: string, data: any): string => {
+const generateCacheKey = (url: string, method: string, data: Record<string, unknown>): string => {
   // For POST requests, we only care about the request_body part of the data
   const keyData = method === 'POST' ? data?.request_body : data;
 
@@ -109,7 +109,7 @@ const generateCacheKey = (url: string, method: string, data: any): string => {
   return cacheKey;
 };
 
-const getCachedResponse = (key: string): any | null => {
+const getCachedResponse = (key: string): unknown | null => {
   try {
     const cached = localStorage.getItem(key);
     if (!cached) {
@@ -130,7 +130,7 @@ const getCachedResponse = (key: string): any | null => {
   }
 };
 
-const setCacheEntry = (key: string, data: any) => {
+const setCacheEntry = (key: string, data: unknown) => {
   try {
     const entry: CacheEntry = {
       data,
@@ -202,7 +202,7 @@ const makeApiCall = async ({
 }: {
   url: string;
   method: string;
-  body?: any;
+  body?: Record<string, unknown>;
   options?: AxiosRequestConfig;
   isFormData?: boolean;
   useCache?: boolean;
@@ -273,14 +273,14 @@ const apiRequest = async ({
   isAuthRequest = false,
   isFormData = false,
   useCache = false,
-}: ApiRequestOptions): Promise<any> => {
+}: ApiRequestOptions): Promise<unknown> => {
   const authResponse = getAuthResponse();
-  const authResponseFull = authResponse as any as AuthResponse;
+  const authResponseFull = authResponse as unknown as AuthResponse;
   const email = authResponseFull?.email?.toLowerCase() || '';
   const isGuest =
     email === 'guest' ||
     email === 'guest@slocator.com' ||
-    (authResponseFull as any)?.registered === false ||
+    (authResponseFull as unknown as Record<string, unknown>)?.registered === false ||
     authResponseFull?.localId?.startsWith('guest_') === true;
   const isPublicAuthRequest = authMode === 'public';
 
@@ -308,14 +308,57 @@ const apiRequest = async ({
       useCache,
     });
     return response;
-  } catch (err: any) {
-    if (err?.response?.status === 403) {
+  } catch (err: unknown) {
+    const axiosErr = err as { response?: { status: number; data?: Record<string, unknown> } };
+    if (axiosErr?.response?.status === 403) {
       if (isPublicAuthRequest) {
-        throw new Error(getErrorMessageFromPayload(err?.response?.data) || 'Access forbidden');
+        throw new Error(getErrorMessageFromPayload(axiosErr?.response?.data) || 'Access forbidden');
       }
 
       if (isGuest) {
-        const apiMessage = err?.response?.data?.detail;
+        const apiMessage = axiosErr?.response?.data?.detail;
+        const isTokenError =
+          typeof apiMessage === 'string' &&
+          apiMessage.toLowerCase().includes('token');
+
+        // If it's a token issue (expired/invalid), silently re-login
+        if (isTokenError) {
+          try {
+            const loginResponse = await makeApiCall({
+              url: urls.login,
+              method: 'POST',
+              body: {
+                email: 'guest@slocator.com',
+                password: 'guest',
+              },
+            });
+
+            const newAuth = loginResponse?.data?.data || loginResponse?.data;
+            if (!newAuth?.idToken) {
+              throw new Error('Guest re-login failed');
+            }
+
+            localStorage.setItem('authResponse', JSON.stringify(newAuth));
+            setAuthorizationHeader(options, newAuth.idToken);
+
+            const retryResponse = await makeApiCall({
+              url: url || '',
+              method: method || 'GET',
+              body,
+              options,
+              isFormData,
+              useCache,
+            });
+            return retryResponse;
+          } catch (reLoginErr) {
+            console.error('Guest silent re-login failed:', reLoginErr);
+            localStorage.removeItem('authResponse');
+            handleAuthError();
+            throw new Error('Guest session expired. Please try again.');
+          }
+        }
+
+        // Non-token 403 = actual permission denial (e.g. paywall)
         const message =
           typeof apiMessage === 'string'
             ? apiMessage
@@ -329,21 +372,48 @@ const apiRequest = async ({
       throw new Error('Access forbidden');
     }
 
-    if (err?.response?.status === 401) {
-      const apiMessage = getErrorMessageFromPayload(err?.response?.data);
+    if (axiosErr?.response?.status === 401) {
+      const apiMessage = getErrorMessageFromPayload(axiosErr?.response?.data);
 
       if (isPublicAuthRequest) {
         throw new Error(apiMessage || 'Authentication failed');
       }
 
       if (isGuest) {
-        const message =
-          typeof apiMessage === 'string'
-            ? apiMessage
-            : Array.isArray(apiMessage)
-              ? apiMessage[0]
-              : apiMessage;
-        throw new Error(message || 'Access denied for guest user');
+        // Silent re-login: guest credentials are hardcoded, so just get a fresh token
+        try {
+          const loginResponse = await makeApiCall({
+            url: urls.login,
+            method: 'POST',
+            body: {
+              email: 'guest@slocator.com',
+              password: 'guest',
+            },
+          });
+
+          const newAuth = loginResponse?.data?.data || loginResponse?.data;
+          if (!newAuth?.idToken) {
+            throw new Error('Guest re-login failed');
+          }
+
+          localStorage.setItem('authResponse', JSON.stringify(newAuth));
+          setAuthorizationHeader(options, newAuth.idToken);
+
+          const retryResponse = await makeApiCall({
+            url: url || '',
+            method: method || 'GET',
+            body,
+            options,
+            isFormData,
+            useCache,
+          });
+          return retryResponse;
+        } catch (reLoginErr) {
+          console.error('Guest silent re-login failed:', reLoginErr);
+          localStorage.removeItem('authResponse');
+          handleAuthError();
+          throw new Error('Guest session expired. Please try again.');
+        }
       }
 
       localStorage.removeItem('authResponse');
@@ -379,9 +449,9 @@ const apiRequest = async ({
     }
 
     // Handle other error responses (e.g., 400, 422, etc.)
-    if (err?.response) {
-      const status = err.response.status;
-      const data = err.response.data;
+    if (axiosErr?.response) {
+      const status = axiosErr.response.status;
+      const data = axiosErr.response.data;
       const message = getErrorMessageFromPayload(data) || 'Request failed';
       throw new Error(`${message} (Status: ${status})`);
     }

@@ -7,7 +7,7 @@ import {
 } from '../../utils/helperFunctions';
 import { PiX } from 'react-icons/pi';
 import urls from '../../urls.json';
-import { CategoryData, City, Layer } from '../../types/allTypesAndInterfaces';
+import { CategoryData, Layer } from '../../types/allTypesAndInterfaces';
 import { useLayerContext } from '../../context/LayerContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router';
@@ -79,12 +79,14 @@ const FetchDatasetForm = () => {
   useEffect(() => {
     resetFetchDatasetForm();
     handleGetCountryCityCategory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (!authLoading) {
       fetchProfile();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading]);
 
   const fetchProfile = async () => {
@@ -524,7 +526,7 @@ const FetchDatasetForm = () => {
                 beforeIcon={<FaWandMagicSparkles />}
                 afterIcon={<></>}
               />
-              <Chat topic={topics.DATASET} position="fixed left-[27.5rem] mx-2 inset-y-auto z-50" />
+              <Chat topic={topics.DATASET} position="fixed bottom-16 lg:bottom-auto left-[2.5vw] lg:left-[27.5rem] z-50" />
             </div>
           </div>
           <div>

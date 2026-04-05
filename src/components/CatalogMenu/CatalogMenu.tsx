@@ -1,16 +1,15 @@
-import { useState, MouseEvent, useEffect, useRef } from 'react';
+import { useState, MouseEvent, useEffect } from 'react';
 import { FaWandMagicSparkles } from 'react-icons/fa6';
 import DataContainer from '../DataContainer/DataContainer';
 import { useCatalogContext } from '../../context/CatalogContext';
 import MultipleLayersSetting from '../MultipleLayersSetting/MultipleLayersSetting';
 import { useUIContext } from '../../context/UIContext';
-import { GradientColorBasedOnZone, topics } from '../../types';
+import { topics } from '../../types';
 import { useLayerContext } from '../../context/LayerContext';
 import { defaultMapConfig } from '../../hooks/map/useMapInitialization';
 import Chat from '../Chat/Chat';
 import ChatTrigger from '../Chat/ChatTrigger';
 import { CaseStudyToggle } from '../CaseStudy/CaseStudyToggle';
-import { Spinner } from '../common';
 
 const enableAI = true;
 
@@ -31,7 +30,6 @@ function CatalogMenu() {
     setPolygons,
     setBenchmarks,
     setIsBenchmarkControlOpen,
-    isLoading,
   } = useCatalogContext();
   const { setSelectedCity, setSelectedCountry } = useLayerContext();
 
@@ -67,6 +65,7 @@ function CatalogMenu() {
   useEffect(() => {
     resetFormStage('catalog');
     setSidebarMode('catalog');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handleRestoreClick() {
@@ -136,11 +135,11 @@ function CatalogMenu() {
     openModal(<DataContainer />);
   }
 
-  function handleAddCatalogClick(event: MouseEvent) {
+  function handleAddCatalogClick() {
     openCatalogModal('Catalogue');
   }
 
-  function handleAddLayerClick(event: MouseEvent) {
+  function handleAddLayerClick() {
     openCatalogModal('Layer');
   }
 
@@ -208,7 +207,7 @@ function CatalogMenu() {
               beforeIcon={<FaWandMagicSparkles />}
               afterIcon={<></>}
             />
-            <Chat topic={topics.RECOLOR} position="fixed left-[27.5rem] mx-2 inset-y-auto " />
+            <Chat topic={topics.RECOLOR} position="fixed bottom-16 lg:bottom-auto left-[2.5vw] lg:left-[27.5rem] z-50" />
           </div>
         )}
 

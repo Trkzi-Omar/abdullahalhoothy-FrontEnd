@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useLayerContext } from '../../context/LayerContext';
 import { useMapContext } from '../../context/MapContext';
@@ -25,14 +25,14 @@ export function useMapBounds() {
   const { geoPoints } = useCatalogContext();
   const { selectedCity } = useLayerContext();
 
-  const [fallbackCenter, setFallbackCenter] = useState(cityCenters.jeddah);
+  const fallbackCenter = useRef(cityCenters.jeddah);
 
   useEffect(() => {
     const city = selectedCity.trim().toLowerCase();
     const center = cityCenters[city];
 
     if (center) {
-      setFallbackCenter(center);
+      fallbackCenter.current = center;
 
       const map = mapRef.current;
       if (map) {
@@ -79,8 +79,8 @@ export function useMapBounds() {
 
       map.flyTo({
         center: [
-          isNaN(centerLng) ? fallbackCenter.centerLng : centerLng,
-          isNaN(centerLat) ? fallbackCenter.centerLat : centerLat,
+          isNaN(centerLng) ? fallbackCenter.current.centerLng : centerLng,
+          isNaN(centerLat) ? fallbackCenter.current.centerLat : centerLat,
         ],
         speed: defaultMapConfig.speed,
         curve: 1,
@@ -88,5 +88,5 @@ export function useMapBounds() {
         maxDuration: 1000,
       });
     }
-  }, [mapRef, geoPoints, shouldInitializeFeatures, fallbackCenter]);
+  }, [mapRef, geoPoints, shouldInitializeFeatures]);
 }

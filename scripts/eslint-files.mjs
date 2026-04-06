@@ -49,7 +49,7 @@ if (!existsSync(eslintBinary)) {
 const result = spawnSync(
   eslintBinary,
   ['--max-warnings', '0', '--no-warn-ignored', ...files],
-  { encoding: 'utf8' },
+  { encoding: 'utf8', shell: process.platform === 'win32' },
 )
 
 if (result.stdout) {

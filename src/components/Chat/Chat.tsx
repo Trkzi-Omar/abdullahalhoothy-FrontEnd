@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { HiArrowRight, HiX, HiArrowUp } from 'react-icons/hi';
 import { useAuth } from '../../context/AuthContext';
-import { useChatContext } from '../../context/ChatContext';
-import { ChatMessage, topics } from '../../types';
+import { useChatContext } from '../../context/useChatContext';
+import { ChatMessage, topics, FetchDatasetBody } from '../../types';
 import Loader from '../Loader/Loader';
 import _ from 'lodash';
 import { useLayerContext } from '../../context/LayerContext';
@@ -34,7 +34,7 @@ function Chat(props: ChatProps = defaultProps) {
 
   const { authResponse } = useAuth();
 
-  const { setShowLoaderTopup, setShowErrorMessage, handleFetchDataset, setCentralizeOnce } =
+  const { setShowErrorMessage, handleFetchDataset, setCentralizeOnce } =
     useLayerContext();
 
   const [input, setInput] = useState('');
@@ -96,7 +96,7 @@ function Chat(props: ChatProps = defaultProps) {
     }, 0);
   };
 
-  const handleDatasetFetch = async (action: 'sample' | 'full data', responseBody: any) => {
+  const handleDatasetFetch = async (action: 'sample' | 'full data', responseBody: FetchDatasetBody) => {
     const countryName = responseBody.country_name || '';
     const cityName = responseBody.city_name || '';
     const booleanQuery = responseBody.boolean_query || '';

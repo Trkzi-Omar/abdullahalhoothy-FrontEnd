@@ -1,21 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useLayerContext } from '../../context/LayerContext';
 import { useMapContext } from '../../context/MapContext';
 import { defaultMapConfig } from '../../hooks/map/useMapInitialization';
 import { isIntelligentLayer } from '../../utils/layerUtils';
 
-const jeddahCenter = {
-  centerLng: 39.338754846938805,
-  centerLat: 21.48137806122448,
-};
-const meccaCenter = {
-  centerLng: 39.808084925,
-  centerLat: 21.374926824999996,
-};
-const riyadhCenter = {
-  centerLng: 46.715234200000005,
-  centerLat: 24.680283985000003,
+const cityCenters: Record<string, { centerLng: number; centerLat: number }> = {
+  jeddah: {
+    centerLng: 39.338754846938805,
+    centerLat: 21.48137806122448,
+  },
+  mecca: {
+    centerLng: 39.808084925,
+    centerLat: 21.374926824999996,
+  },
+  riyadh: {
+    centerLng: 46.715234200000005,
+    centerLat: 24.680283985000003,
+  },
 };
 
 export function useMapBounds() {
@@ -23,14 +25,26 @@ export function useMapBounds() {
   const { geoPoints } = useCatalogContext();
   const { selectedCity } = useLayerContext();
 
-  const [fallbackCenter, setFallbackCenter] = useState(jeddahCenter);
+  const fallbackCenter = useRef(cityCenters.jeddah);
 
   useEffect(() => {
     const city = selectedCity.trim().toLowerCase();
+    const center = cityCenters[city];
 
-    if (city === 'mecca') setFallbackCenter(meccaCenter);
-    else if (city === 'riyadh') setFallbackCenter(riyadhCenter);
-  }, [selectedCity]);
+    if (center) {
+      fallbackCenter.current = center;
+
+      const map = mapRef.current;
+      if (map) {
+        map.flyTo({
+          center: [center.centerLng, center.centerLat],
+          speed: 1.2,
+          curve: 1.42,
+          essential: true,
+        });
+      }
+    }
+  }, [selectedCity, mapRef]);
 
   useEffect(() => {
     if (!shouldInitializeFeatures) return;
@@ -65,8 +79,8 @@ export function useMapBounds() {
 
       map.flyTo({
         center: [
-          isNaN(centerLng) ? fallbackCenter.centerLng : centerLng,
-          isNaN(centerLat) ? fallbackCenter.centerLat : centerLat,
+          isNaN(centerLng) ? fallbackCenter.current.centerLng : centerLng,
+          isNaN(centerLat) ? fallbackCenter.current.centerLat : centerLat,
         ],
         speed: defaultMapConfig.speed,
         curve: 1,

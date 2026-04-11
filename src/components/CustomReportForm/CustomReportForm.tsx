@@ -1005,33 +1005,14 @@ const CustomReportForm = () => {
     setCurrentStep(1); // Move to first actual step
   };
 
-  // Check if user has at least one saved payment method (for paid location report purchase)
-  const checkHasPaymentMethod = useCallback(async (): Promise<boolean> => {
-    if (!authResponse?.localId) return false;
-    try {
-      const res = await apiRequest({
-        url: `${urls.list_stripe_payment_methods}?user_id=${authResponse.localId}`,
-        method: 'get',
-        isAuthRequest: true,
-      });
-      const methods = res?.data?.data;
-      return Array.isArray(methods) && methods.length > 0;
-    } catch {
-      return false;
-    }
-  }, [authResponse?.localId]);
-
-  // When user clicks "Purchase Report" on paid location card: use saved card if exists, else show error
+  // When user clicks "Purchase Report" or "Claim Free Report" on location card:
+  // Submit directly — if it's free, the backend succeeds without payment.
+  // If payment is required and fails, handleSubmit's catch block stores
+  // pendingSubmission and shows the payment form for retry.
   const onPurchaseReportClick = async () => {
     if (!formData || !validateForm()) return;
     setSubmitError(null);
-    const hasCard = await checkHasPaymentMethod();
-    if (hasCard) {
-      handleSubmit();
-    } else {
-      setSubmitError('Please add a payment method to purchase this report. You can add one below.');
-      setShowPaymentMethodForm(true);
-    }
+    handleSubmit();
   };
 
   // Helper function to map step numbers to actual step content based on report type and advanced mode
@@ -1416,7 +1397,7 @@ const CustomReportForm = () => {
       {/* Content Area - No scrolling, fits viewport */}
       <div className="flex-1 overflow-hidden flex flex-col">
         <div className={`flex-1 ${isLastStep ? 'overflow-hidden' : 'overflow-y-auto'} px-4 sm:px-6 py-4 ${formData && currentStep > 0 && !isLastStep ? 'pb-24' : ''}`}>
-          <form className="h-full flex flex-col">
+          <form className="h-full flex flex-col" onSubmit={e => e.preventDefault()}>
             {/* Current Step Content */}
             <div className={`flex-1 flex flex-col ${isLastStep ? 'overflow-hidden' : ''}`}>
               {renderCurrentStep()}

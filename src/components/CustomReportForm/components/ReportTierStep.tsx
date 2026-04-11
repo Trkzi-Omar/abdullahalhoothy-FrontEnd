@@ -227,6 +227,7 @@ const ReportTierStep = ({
 
                 {locationReportPrice === null && !isLoadingLocationPrice && (
                   <button
+                    type="button"
                     onClick={refetchLocationPrice}
                     className="w-full py-[0.8125rem] px-7 mb-4 border-none rounded-[0.625rem] text-[0.8125rem] font-semibold font-rajdhani tracking-[0.0312rem] cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] uppercase text-white shadow-[0_0.25rem_0.75rem_rgba(72,158,70,0.2)] hover:shadow-[0_0.5rem_1.25rem_rgba(72,158,70,0.3)] hover:-translate-y-[2px] cta-shimmer" style={{ background: 'linear-gradient(135deg, #489E46 0%, #3a8039 100%)' }}
                   >
@@ -280,6 +281,7 @@ const ReportTierStep = ({
 
               {locationReportPrice === null && !isLoadingLocationPrice && (
                 <button
+                  type="button"
                   onClick={refetchLocationPrice}
                   className="w-full py-[0.8125rem] px-7 mb-4 border-none rounded-[0.625rem] text-[0.8125rem] font-semibold font-rajdhani tracking-[0.0312rem] cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] uppercase text-white shadow-[0_0.25rem_0.75rem_rgba(72,158,70,0.2)] hover:shadow-[0_0.5rem_1.25rem_rgba(72,158,70,0.3)] hover:-translate-y-[2px] cta-shimmer" style={{ background: 'linear-gradient(135deg, #489E46 0%, #3a8039 100%)' }}
                 >
@@ -292,7 +294,12 @@ const ReportTierStep = ({
                 <li className="flex items-center gap-2 text-[#1a1a1a] text-[0.9rem]"><span className="text-brand-green font-extrabold">✓</span>Detailed demographic and competitive analysis</li>
                 <li className="flex items-center gap-2 text-[#1a1a1a] text-[0.9rem]"><span className="text-brand-green font-extrabold">✓</span>Instant insights and recommendations</li>
               </ul>
-              <button className="w-full py-[0.8125rem] px-7 my-4 border-none rounded-[0.625rem] text-[0.8125rem] font-semibold font-rajdhani tracking-[0.0312rem] cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] uppercase text-white shadow-[0_0.25rem_0.75rem_rgba(72,158,70,0.2)] hover:shadow-[0_0.5rem_1.25rem_rgba(72,158,70,0.3)] hover:-translate-y-[2px] cta-shimmer" style={{ background: 'linear-gradient(135deg, #489E46 0%, #3a8039 100%)' }}>Claim Free Report</button>
+              <button
+                type="button"
+                disabled={disabled || locationReportPrice === null}
+                onClick={() => onPurchaseReport?.()}
+                className="w-full py-[0.8125rem] px-7 my-4 border-none rounded-[0.625rem] text-[0.8125rem] font-semibold font-rajdhani tracking-[0.0312rem] cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] uppercase text-white shadow-[0_0.25rem_0.75rem_rgba(72,158,70,0.2)] hover:shadow-[0_0.5rem_1.25rem_rgba(72,158,70,0.3)] hover:-translate-y-[2px] cta-shimmer disabled:opacity-60 disabled:cursor-not-allowed" style={{ background: 'linear-gradient(135deg, #489E46 0%, #3a8039 100%)' }}
+              >Claim Free Report</button>
             </div>
           </div>
         </div>

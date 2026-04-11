@@ -29,7 +29,6 @@ const StaticRedirect = lazy(() => import('../StaticRedirect/StaticRedirect'));
 const CustomReportForm = lazy(() => import('../CustomReportForm'));
 const MarketingDashboard = lazy(() => import('../../pages/MarketingDashboard/MarketingDashboard'));
 const Billing = lazy(() => import('../../pages/Billing/Billing'));
-const SmartSegmentReport = lazy(() => import('../SegmentReport'));
 
 const Layout = () => {
   const location = useLocation();
@@ -38,7 +37,8 @@ const Layout = () => {
   const hideLayout =
     location.pathname.startsWith('/campaign') ||
     location.pathname.startsWith('/plans') ||
-    location.pathname.startsWith('/custom-report');
+    location.pathname.startsWith('/custom-report') ||
+    location.pathname.startsWith('/static');
 
   const isBillingRoute = location.pathname.startsWith('/billing');
 

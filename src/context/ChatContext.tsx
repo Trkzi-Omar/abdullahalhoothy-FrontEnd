@@ -1,23 +1,24 @@
-import { createContext, useContext, useState, useRef, useEffect, ReactNode } from 'react';
+import { useState, useRef, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import apiRequest from '../services/apiRequest';
-import { ChatContextType, topics, ChatMessage, llms } from '../types';
+import { topics, ChatMessage, llms, FetchDatasetBody, RecolorBody, GradientColorResponse, GradientColorBasedOnZone, Feature } from '../types';
 import urls from '../urls.json';
 import { useCatalogContext } from './CatalogContext';
 import { useLayerContext } from './LayerContext';
-
-const ChatContext = createContext<ChatContextType | undefined>(undefined);
+import { useMapContext } from './MapContext';
+import { ChatContext } from './chatContextDef';
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const { authResponse } = useAuth();
   const { geoPoints, setGeoPoints, setGradientColorBasedOnZone } = useCatalogContext();
   const { handleFetchDataset, setCentralizeOnce, incrementFormStage } = useLayerContext();
+  const { mapRef } = useMapContext();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [topic, setTopic] = useState<topics>(topics.DEFAULT);
-  const [colors, setColors] = useState<string[][]>([]);
+  const [colors] = useState<string[][]>([]);
   const hasGreeted = useRef(false);
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     clearChat();
   };
 
-  const fetchDataset = async (endpoint: string, body: any) => {
+  const fetchDataset = async (endpoint: string, body: FetchDatasetBody) => {
     try {
       setIsLoading(true);
 
@@ -126,7 +127,15 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         reqBody = { user_id: authResponse?.localId, prompt: content.trim(), layers: geoPoints };
       } else if (topic === topics.DATASET) {
         url = urls.process_llm_query;
-        reqBody = { query: content.trim(), user_id: authResponse?.localId };
+        const bounds = mapRef.current?.getBounds();
+        reqBody = {
+          query: content.trim(),
+          user_id: authResponse?.localId,
+          top_lng: bounds?.getEast(),
+          top_lat: bounds?.getNorth(),
+          bottom_lng: bounds?.getWest(),
+          bottom_lat: bounds?.getSouth(),
+        };
       } else {
         url = urls.recolor_based_llm;
         reqBody = { user_id: authResponse?.localId, prompt: content.trim(), layers: geoPoints };
@@ -173,14 +182,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const applyGradientColor = async (endpointOrResponseData: string | any, body?: any) => {
+  const applyGradientColor = async (endpointOrResponseData: string | GradientColorResponse, body?: RecolorBody) => {
     try {
       setIsLoading(true);
 
       // Determine if first parameter is an endpoint string or response data object
       const isEndpointString = typeof endpointOrResponseData === 'string';
 
-      let processedBody: any;
+      let processedBody: RecolorBody | undefined;
       let endpoint: string;
 
       if (isEndpointString) {
@@ -242,7 +251,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   };
 
   // Helper function to process LLM response body
-  const processLLMResponseBody = (responseBody: any) => {
+  const processLLMResponseBody = (responseBody: RecolorBody): RecolorBody => {
     // Ensure required fields are present
     if (!responseBody) {
       throw new Error('Missing response body');
@@ -289,14 +298,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   };
 
   // Helper function to handle recolor response
-  const handleRecolorResponse = async (responseData: any) => {
+  const handleRecolorResponse = async (responseData: GradientColorBasedOnZone[]) => {
     if (!responseData) return;
 
     // If response is an array of gradient color data, process it
     if (Array.isArray(responseData)) {
       // Process gradient data for UI update
       const combinedFeatures = responseData.flatMap(group =>
-        (group.features || []).map((feature: any) => ({
+        (group.features || []).map((feature: Feature) => ({
           ...feature,
           properties: {
             ...feature.properties,
@@ -315,7 +324,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               ...point,
               layer_name: matchingGroup.layer_name || point.layer_name,
               layer_legend: matchingGroup.layer_legend || point.layer_legend,
-              features: combinedFeatures.filter((f: any) => f.layer_id === point.layerId),
+              features: combinedFeatures.filter((f) => f.layer_id === point.layerId),
               gradient_groups: responseData.map(group => ({
                 color: group.points_color,
                 legend: group.layer_legend,
@@ -359,10 +368,3 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useChatContext() {
-  const context = useContext(ChatContext);
-  if (context === undefined) {
-    throw new Error('useChatContext must be used within a ChatProvider');
-  }
-  return context;
-}

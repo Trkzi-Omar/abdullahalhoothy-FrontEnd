@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { MdHome } from 'react-icons/md';
 import urls from '../../urls.json';
 
 const StaticRedirect = () => {
   const params = useParams();
+  const navigate = useNavigate();
   const [backendUrl, setBackendUrl] = useState<string>('');
 
   const filePath = params['*'];
@@ -44,7 +46,7 @@ const StaticRedirect = () => {
   }
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full relative">
       <iframe
         src={backendUrl}
         className="w-full h-full border-none"
@@ -53,6 +55,13 @@ const StaticRedirect = () => {
         sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
         referrerPolicy="strict-origin-when-cross-origin"
       />
+      <button
+        onClick={() => navigate('/')}
+        className="fixed bottom-4 left-4 z-50 flex items-center gap-2 bg-[#115740] text-white px-4 py-2 rounded-full shadow-lg hover:bg-[#0d4532] transition-colors"
+      >
+        <MdHome size={20} />
+        <span className="text-sm font-medium">Home</span>
+      </button>
     </div>
   );
 };

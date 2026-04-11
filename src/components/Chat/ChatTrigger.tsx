@@ -1,5 +1,5 @@
 import { HiOutlineChat } from 'react-icons/hi';
-import { useChatContext } from '../../context/ChatContext';
+import { useChatContext } from '../../context/useChatContext';
 import { ReactElement } from 'react';
 
 interface ChatTriggerProps {

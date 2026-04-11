@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { HiArrowRight, HiX, HiArrowUp } from 'react-icons/hi';
 import { useAuth } from '../../context/AuthContext';
 import { useChatContext } from '../../context/useChatContext';
@@ -333,10 +334,10 @@ function Chat(props: ChatProps = defaultProps) {
     );
   };
 
-  return (
+  const chatContent = (
     <div
       className={`${props.position}
-        lg:w-[400px] w-[95vw] max-h-[70vh] bg-white rounded-2xl shadow-xl 
+        lg:w-[400px] w-[95vw] max-h-[70vh] bg-white rounded-2xl shadow-xl
         transform-gpu transition-all duration-500 ease-out z-20
         ${isOpen ? '-translate-x-0 scale-100 opacity-100' : '-translate-x-1/4 scale-95 opacity-0 pointer-events-none'}`}
     >
@@ -416,6 +417,10 @@ function Chat(props: ChatProps = defaultProps) {
       </form>
     </div>
   );
+
+  // Portal to document.body to escape BottomDrawer's transform context,
+  // which breaks position:fixed on mobile
+  return createPortal(chatContent, document.body);
 }
 
 export default Chat;

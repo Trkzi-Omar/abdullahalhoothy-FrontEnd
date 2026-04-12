@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps, react-refresh/only-export-components */
 // src/context/LayerContext.tsx
 
 import React, {
@@ -22,7 +23,6 @@ import {
   LayerState,
   MapFeatures,
   Insights,
-  IntelligenceViewport,
 } from '../types/allTypesAndInterfaces';
 import urls from '../urls.json';
 import { useCatalogContext } from './CatalogContext';
@@ -33,25 +33,10 @@ import apiRequest from '../services/apiRequest';
 import { defaultMapConfig } from '../hooks/map/useMapInitialization';
 import { useMapContext } from './MapContext';
 import { isIntelligentLayer } from '../utils/layerUtils';
-import { mapZoomToFakeDataZoom } from '../utils/mapZoomUtils';
 import _ from 'lodash';
 import { useIntelligenceViewport } from './IntelligenceViewPortContext';
 
 const FAKE_IS_ENABLED = true;
-
-const getFakeData = async (zoomLevel: number) => {
-  const url = `/data/population_json_files/v${zoomLevel}/all_features.json`;
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    console.error('Response status:', response.status);
-    console.error('Response text:', await response.text());
-    throw new Error(`Failed to fetch data: ${response.status}`);
-  }
-
-  const fakeData = await response.json();
-  return fakeData;
-};
 
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
@@ -258,16 +243,16 @@ export function LayerProvider(props: { children: ReactNode }) {
   }
   //To be removed after fixed on backend
   function assignPopularityCategory(json: any): void {
-    let features = json.features;
+    const features = json.features;
 
     // Extract popularity scores
-    let scores = features.map(f => f.properties.popularity_score);
+    const scores = features.map(f => f.properties.popularity_score);
 
     // Compute percentiles
     scores.sort((a, b) => b - a);
-    let quartile = Math.ceil(scores.length / 4);
+    const quartile = Math.ceil(scores.length / 4);
 
-    let thresholds = {
+    const thresholds = {
       very_high: scores[quartile - 1] || 0,
       high: scores[2 * quartile - 1] || 0,
       mid: scores[3 * quartile - 1] || 0,
@@ -276,7 +261,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     // Assign categories
     features.forEach(feature => {
       if (!feature.properties.popularity_score_category) {
-        let score = feature.properties.popularity_score;
+        const score = feature.properties.popularity_score;
         if (score >= thresholds.very_high) {
           feature.properties.popularity_score_category = 'very high';
         } else if (score >= thresholds.high) {
@@ -447,7 +432,7 @@ export function LayerProvider(props: { children: ReactNode }) {
           throw error;
         }
       } else {
-        let defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${textSearchInput?.trim()}`;
+        const defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${textSearchInput?.trim()}`;
 
         // Get viewport bounds for sample action
         let viewportBounds = null;
@@ -495,7 +480,7 @@ export function LayerProvider(props: { children: ReactNode }) {
             ...prev,
             [1]: res.data.data,
           }));
-          let layers = [
+          const layers = [
             {
               id: 1,
               name: textSearchInput?.trim(),
@@ -512,7 +497,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         }
       }
 
-      if (!!customBody) {
+      if (customBody) {
         try {
           // Set the country and city directly
           const countryName = customBody.country_name || customBody.selectedCountry;
@@ -569,7 +554,7 @@ export function LayerProvider(props: { children: ReactNode }) {
             }));
 
             // Create a proper layer configuration
-            let layers = [
+            const layers = [
               {
                 id: 1002,
                 name: defaultName,
@@ -890,9 +875,10 @@ export function LayerProvider(props: { children: ReactNode }) {
         throw new Error('No data returned for current viewport');
       }
       const features = res.data.data.features;
+      const metadata = res.data.data.metadata;
 
       if (shouldReturnFeatures) {
-        return features;
+        return { features, metadata };
       }
 
       const insights = calculateInsights(features);
@@ -998,7 +984,7 @@ export function LayerProvider(props: { children: ReactNode }) {
           try {
             const shouldFake = FAKE_IS_ENABLED;
 
-            const features = await fetchPopulationByViewport(true);
+            const { features, metadata } = await fetchPopulationByViewport(true);
 
             setGeoPoints(prevPoints => {
               const populationLayer = {
@@ -1006,7 +992,7 @@ export function LayerProvider(props: { children: ReactNode }) {
                 type: 'FeatureCollection',
                 features: features,
                 display: true,
-                points_color: colorOptions[0].hex,
+                points_color: metadata?.color || colorOptions[0].hex,
                 layer_legend: `Population Layer (${features?.length})`,
                 is_grid: true,
                 is_intelligent: true,
@@ -1156,7 +1142,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         if (shouldInclude) {
           setShowLoaderTopup(true);
           try {
-            const features = await fetchIncomeByViewport(true);
+            const { features, metadata } = await fetchIncomeByViewport(true);
             console.log('features', features.length);
 
             console.log('Raw INCOME features for geoPoints:', JSON.stringify(features, null, 2));
@@ -1167,7 +1153,7 @@ export function LayerProvider(props: { children: ReactNode }) {
                 type: 'FeatureCollection',
                 features: features,
                 display: true,
-                points_color: colorOptions[3].hex,
+                points_color: metadata?.color || colorOptions[3].hex,
                 layer_legend: `Income Intelligence (${features?.length})`,
                 is_grid: true,
                 is_intelligent: true,
@@ -1277,7 +1263,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         if (shouldInclude) {
           setShowLoaderTopup(true);
           try {
-            const features = await fetchRealEstateByViewport(true);
+            const { features, metadata } = await fetchRealEstateByViewport(true);
 
             setGeoPoints(prevPoints => {
               const realEstateLayer: MapFeatures = {
@@ -1285,7 +1271,7 @@ export function LayerProvider(props: { children: ReactNode }) {
                 type: 'FeatureCollection',
                 features: features,
                 display: true,
-                points_color: colorOptions[2].hex,
+                points_color: metadata?.color || colorOptions[2].hex,
                 layer_legend: `Real Estate Intelligence (${features?.length})`,
                 is_grid: true,
                 is_intelligent: true,
@@ -1422,9 +1408,9 @@ export function LayerProvider(props: { children: ReactNode }) {
     let totalPopulation = 0;
     let totalMalePopulation = 0;
     let totalFemalePopulation = 0;
-    let medianAgesTotal: number[] = [];
-    let medianAgesFemale: number[] = [];
-    let densityValues: number[] = [];
+    const medianAgesTotal: number[] = [];
+    const medianAgesFemale: number[] = [];
+    const densityValues: number[] = [];
 
     // Collect data for aggregation
     for (const feature of features) {

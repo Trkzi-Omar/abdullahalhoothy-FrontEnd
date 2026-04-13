@@ -865,7 +865,7 @@ export function LayerProvider(props: { children: ReactNode }) {
   realEstateSample: realEstateSample,
 });
       const res = await apiRequest({
-        url: urls.fetch_population_by_viewport,
+        url: urls.fetch_intelligence_by_viewport,
         method: 'post',
         body: reqBody,
         isAuthRequest: true,

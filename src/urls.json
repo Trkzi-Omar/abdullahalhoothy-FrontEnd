@@ -42,7 +42,7 @@
   "filter_based_zone": "/filter_based_on",
   "process_llm_query": "/process_llm_query",
   "recolor_based_llm": "recolor_based_llm",
-  "fetch_population_by_viewport": "/fetch_population_by_viewport",
+  "fetch_intelligence_by_viewport": "/fetch_intelligence_by_viewport",
   "drive_time_polyline": "/drive_time_polyline",
   "fetch_single_catalog": "/fetch_single_catalog",
   "fetch_plans": "/plan_details",

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps */
 import { useEffect, useState, useCallback, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { useCatalogContext } from '../../context/CatalogContext';
@@ -14,7 +15,6 @@ import { useGridPopup } from './useGridPopup';
 import { useGridInteraction } from './useGridInteraction';
 import _ from 'lodash';
 import { isIntelligentLayer } from '../../utils/layerUtils';
-const USE_BASEDON = true;
 
 import { LRUCache } from 'lru-cache';
 
@@ -48,21 +48,15 @@ const debouncedStreetViewCheck = _.debounce(
   300
 );
 
-const getGridPaint = (
-  basedonLength: boolean,
-  pointsColor: string,
-  p25: number,
-  p50: number,
-  p75: number
-) => ({
+const getGridPaint = (pointsColor: string) => ({
   'fill-color': pointsColor || defaultMapConfig.defaultColor,
-  'fill-opacity': [
+  'fill-opacity': ['/', ['get', 'backend_opacity'], 100],
+  'fill-outline-color': [
     'case',
-    ['==', ['get', 'density'], 0],
-    0,
-    ['step', ['get', 'density'], 0, p25 / 2, 0.1, p25, 0.25, p50, 0.5, p75, 0.75],
+    ['==', ['get', 'backend_opacity'], 0],
+    'rgba(0,0,0,0)',
+    'rgba(0,0,0,128)',
   ],
-  'fill-outline-color': ['case', ['==', ['get', 'density'], 0], 'rgba(0,0,0,0)', 'rgba(0,0,0,128)'],
 });
 
 const getHeatmapPaint = (basedon: string, pointsColor?: string) => ({
@@ -355,15 +349,7 @@ export function useMapLayers() {
                       paint: {
                         'fill-color':
                           featureCollection.points_color || defaultMapConfig.defaultColor,
-                        'fill-opacity': [
-                          'interpolate',
-                          ['linear'],
-                          ['get', 'density'],
-                          0,
-                          0.1,
-                          100,
-                          0.9,
-                        ],
+                        'fill-opacity': ['/', ['get', 'backend_opacity'], 100],
                         'fill-outline-color': '#000',
                       },
                     });
@@ -475,20 +461,6 @@ export function useMapLayers() {
                     generateId: true,
                   });
 
-                  // Calculate density values for styling
-                  const allDensityValues = grid.features.map(f => f.properties?.density || 0);
-                  const nonZeroDensities = allDensityValues
-                    .filter(v => v > 0)
-                    .sort((a, b) => a - b);
-                  const pick = (pct: number) => {
-                    if (nonZeroDensities.length === 0) return 1;
-                    const idx = Math.floor(pct * (nonZeroDensities.length - 1));
-                    return nonZeroDensities[idx];
-                  };
-                  const p25 = pick(0.25);
-                  const p50 = pick(0.5);
-                  const p75 = pick(0.75);
-
                   // Add grid layer with interactive settings
                   map.addLayer({
                     id: gridLayerId,
@@ -498,11 +470,7 @@ export function useMapLayers() {
                       visibility: featureCollection.display ? 'visible' : 'none',
                     },
                     paint: getGridPaint(
-                      USE_BASEDON && featureCollection.basedon?.length > 0,
-                      featureCollection.points_color || defaultMapConfig.defaultColor,
-                      p25,
-                      p50,
-                      p75
+                      featureCollection.points_color || defaultMapConfig.defaultColor
                     ),
                   });
 
@@ -594,7 +562,7 @@ export function useMapLayers() {
                 // Add hover interaction variables
                 let hoveredStateId: number | null = null;
                 let popup: mapboxgl.Popup | null = null;
-                let isOverPopup = false;
+                const isOverPopup = false;
                 let isOverPoint = false;
 
                 const handleMouseOverOrTouchStart = async (

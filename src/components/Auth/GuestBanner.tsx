@@ -15,6 +15,7 @@ const KNOWN_ROUTES = [
   'landing',
   'marketing-dashboard',
   'custom-report',
+  'vrp-wizard',
   'static',
   'tabularView',
 ];

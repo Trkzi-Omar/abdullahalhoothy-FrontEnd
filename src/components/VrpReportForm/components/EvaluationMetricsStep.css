@@ -1,0 +1,52 @@
+/* Custom slider thumb styling for evaluation metrics */
+.slider-thumb-primary {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 4px;
+  outline: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.slider-thumb-primary:hover {
+  transform: scaleY(1.2);
+}
+
+.slider-thumb-primary:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(17, 87, 64, 0.1);
+}
+
+.slider-thumb-primary::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #115740;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.slider-thumb-primary::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(17, 87, 64, 0.3);
+}
+
+.slider-thumb-primary::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #115740;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.slider-thumb-primary::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(17, 87, 64, 0.3);
+}

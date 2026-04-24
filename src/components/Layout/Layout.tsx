@@ -27,6 +27,7 @@ const CampaignPage = lazy(() => import('../../pages/Campaign/campaign'));
 const PlansPage = lazy(() => import('../../pages/Plans/Plans'));
 const StaticRedirect = lazy(() => import('../StaticRedirect/StaticRedirect'));
 const CustomReportForm = lazy(() => import('../CustomReportForm'));
+const VrpReportForm = lazy(() => import('../VrpReportForm/'));
 const MarketingDashboard = lazy(() => import('../../pages/MarketingDashboard/MarketingDashboard'));
 const Billing = lazy(() => import('../../pages/Billing/Billing'));
 
@@ -59,6 +60,7 @@ const Layout = () => {
         <Route path="/plans" element={<PlansPage />} />
         <Route path="/marketing-dashboard" element={<MarketingDashboard />} />
         <Route path="/custom-report" element={<CustomReportForm />} />
+        <Route path="/vrp-wizard" element={<VrpReportForm />} />
         <Route path="/static/*" element={<StaticRedirect />} />
       </Routes>
 

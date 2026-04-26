@@ -5,6 +5,8 @@ import { loginSchema, isLoginValid } from '../../utils/auth.validation';
 import { performLogin } from '../../context/AuthContext';
 import { useAuth } from '../../context/AuthContext';
 import styles from '../../pages/Auth/Auth.module.css';
+import { t } from '../../i18n';
+
 
 interface LoginFormProps {
   onSuccess: () => void;
@@ -42,8 +44,9 @@ export const LoginForm = ({ onSuccess, onForgotPassword }: LoginFormProps) => {
         password: form.password,
       });
       onSuccess();
-    } catch (e: any) {
-      const message = e.response?.data?.detail || e.message || 'Login failed';
+    } catch (e: unknown) {
+      const error = e as { response?: { data?: { detail?: string } }; message?: string };
+      const message = error.response?.data?.detail || error.message || 'Login failed';
       setError(message);
       toast.error(message, { duration: 3000 });
     } finally {
@@ -60,7 +63,7 @@ export const LoginForm = ({ onSuccess, onForgotPassword }: LoginFormProps) => {
             <FaEnvelope className={styles.icon} />
             <input
               type="email"
-              placeholder="Email"
+              placeholder={t("email")}
               value={form.email}
               onChange={e => updateForm('email', e.target.value)}
               className={styles.authInput}
@@ -75,7 +78,7 @@ export const LoginForm = ({ onSuccess, onForgotPassword }: LoginFormProps) => {
             <FaLock className={styles.icon} />
             <input
               type="password"
-              placeholder="Password"
+              placeholder={t("password")}
               value={form.password}
               onChange={e => updateForm('password', e.target.value)}
               className={styles.authInput}
@@ -90,16 +93,14 @@ export const LoginForm = ({ onSuccess, onForgotPassword }: LoginFormProps) => {
           className="px-4 py-2.5 sm:py-3 text-base sm:text-lg text-white bg-[#155315] rounded-md hover:bg-[#1a651a] disabled:bg-gray-400 disabled:cursor-not-allowed"
           disabled={isLoading || !isLoginValid(form.email, form.password)}
         >
-          {isLoading ? 'Logging in...' : 'Login'}
+          {isLoading ?t("logging-in") :t("login")}
         </button>
       </form>
       <div className="flex justify-center mt-6">
         <button
           onClick={onForgotPassword}
           className="text-[#006400] text-sm hover:underline"
-        >
-          Forgot Password?
-        </button>
+        >{t("forgot-password")}</button>
       </div>
     </>
   );

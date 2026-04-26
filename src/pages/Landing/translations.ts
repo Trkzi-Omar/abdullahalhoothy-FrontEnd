@@ -1,8 +1,12 @@
+import { t } from '../../i18n';
+
 export interface LandingTranslations {
   nav: {
     features: string;
     caseStudy: string;
     tryFree: string;
+    closeMenu: string;
+    openMenu: string;
   };
   hero: {
     badge: string;
@@ -58,156 +62,86 @@ export interface LandingTranslations {
   footer: string;
 }
 
-export const translations: Record<'en' | 'ar', LandingTranslations> = {
-  en: {
-    nav: { features: 'Features', caseStudy: 'Success Story', tryFree: 'Get Report' },
+export const getLandingTranslations = (lang: 'en' | 'ar'): LandingTranslations => {
+  const tr = (key: string) => t(key, { lng: lang });
+
+  return {
+    nav: {
+      features: tr('features'),
+      caseStudy: tr('success-story'),
+      tryFree: tr('get-report'),
+      closeMenu: tr('close-menu'),
+      openMenu: tr('open-menu'),
+    },
     hero: {
-      badge: 'AI-Powered Location Intelligence',
-      alert: '60% of retail businesses fail due to location.',
-      headline: 'Validate Your Investment Before You Build.',
-      sub: 'Stop guessing. Get a comprehensive AI Location Report that predicts demand, analyzes competitors, and validates your success with 95% accuracy.',
-      cta: 'Start Analysis',
-      placeholder: 'Enter a location or city...',
-      ctaNoSignup: 'Expansion report Without Sign-up',
-      noCreditCard: 'No Credit Card',
-      instantReport: 'Instant Report',
+      badge: tr('ai-powered-location-intelligence'),
+      alert: tr('60-of-retail-businesses-fail-due-to-location'),
+      headline: tr('validate-your-investment-before-you-build'),
+      sub: tr('stop-guessing-get-a-comprehensive-ai-location-report-that-predicts-demand-analyzes-competitors-and-validates-your-success-with-95-accuracy'),
+      cta: tr('start-analysis'),
+      placeholder: tr('enter-a-location-or-city'),
+      ctaNoSignup: tr('expansion-report-without-sign-up'),
+      noCreditCard: tr('no-credit-card'),
+      instantReport: tr('instant-report'),
     },
     features: {
-      title: 'Powerful Features',
-      sub: 'Data-driven insights tailored for retail expansion.',
-      visualLabel: 'Comprehensive Site Report',
-      visualDesc:
-        'Get a detailed PDF report containing all critical data points for your decision making.',
-      visualBadge: 'Downloadable PDF',
-      visualTag1: 'Executive Summary',
-      visualTag2: 'Detailed Analytics',
-      visualOverlay: 'View Sample Report',
-      cafeReport: 'Cafe Report',
-      pharmacyReport: 'Pharmacy Report',
+      title: tr('powerful-features'),
+      sub: tr('data-driven-insights-tailored-for-retail-expansion'),
+      visualLabel: tr('comprehensive-site-report'),
+      visualDesc: tr('get-a-detailed-pdf-report-containing-all-critical-data-points-for-your-decision-making'),
+      visualBadge: tr('downloadable-pdf'),
+      visualTag1: tr('executive-summary'),
+      visualTag2: tr('detailed-analytics'),
+      visualOverlay: tr('view-sample-report'),
+      cafeReport: tr('cafe-report'),
+      pharmacyReport: tr('pharmacy-report'),
       list: [
         {
-          title: 'AI Scoring Engine',
-          desc: 'Instant 0-100 score based on 50+ data points including traffic and cost.',
+          title: tr('ai-scoring-engine'),
+          desc: tr('instant-0-100-score-based-on-50-data-points-including-traffic-and-cost'),
         },
         {
-          title: 'Demographics',
-          desc: 'Deep dive into spending power, age groups, and resident behavior.',
+          title: tr('demographics'),
+          desc: tr('deep-dive-into-spending-power-age-groups-and-resident-behavior'),
         },
         {
-          title: 'Traffic Heatmaps',
-          desc: 'Visualize high-footfall zones with real-time mobility data.',
+          title: tr('traffic-heatmaps'),
+          desc: tr('visualize-high-footfall-zones-with-real-time-mobility-data'),
         },
       ],
     },
     report: {
-      title: 'Inside The Intelligence Report',
-      sub: 'What you get when you generate an S-LOC analysis.',
+      title: tr('inside-the-intelligence-report'),
+      sub: tr('what-you-get-when-you-generate-an-s-locator-analysis'),
       cards: [
-        { title: 'Executive Decision', desc: 'Clear GO/NO-GO recommendation.' },
-        { title: 'Demand Prediction', desc: 'Estimated daily and monthly demand analysis.' },
-        { title: 'Competitor Radar', desc: 'Saturation & market gap analysis.' },
-        { title: 'Risk Detector', desc: 'Hidden zoning & accessibility risks.' },
+        { title: tr('executive-decision'), desc: tr('clear-go-no-go-recommendation') },
+        { title: tr('demand-prediction'), desc: tr('estimated-daily-and-monthly-demand-analysis') },
+        { title: tr('competitor-radar'), desc: tr('saturation-market-gap-analysis') },
+        { title: tr('risk-detector'), desc: tr('hidden-zoning-accessibility-risks') },
       ],
     },
     caseStudy: {
-      label: 'Success Story',
-      title: 'Coffee Expansion Success',
-      text1:
-        'A popular coffee chain planned a new branch in a high-rent district. The foot traffic looked good, but the analysis data was missing.',
-      text2:
-        'S-LOC analysis revealed the area was oversaturated. We identified a "Hidden Gem" location 3km away with 40% lower rent.',
-      stat1: '40% Lower OpEx',
-      stat2: '2.5x ROI Year 1',
-      orig: 'Proposed Site',
-      risk: 'High Saturation',
-      pick: 'S-LOC Choice',
-      rec: 'High Potential',
+      label: tr('success-story'),
+      title: tr('coffee-expansion-success'),
+      text1: tr('a-popular-coffee-chain-planned-a-new-branch-in-a-high-rent-district-the-foot-traffic-looked-good-but-the-analysis-data-was-missing'),
+      text2: tr('s-locator-analysis-revealed-the-area-was-oversaturated-we-identified-a-hidden-gem-location-3km-away-with-40-lower-rent'),
+      stat1: tr('40-lower-opex'),
+      stat2: tr('2-5x-roi-year-1'),
+      orig: tr('proposed-site'),
+      risk: tr('high-saturation'),
+      pick: tr('s-locator-choice'),
+      rec: tr('high-potential'),
     },
     dataSources: {
-      title: 'Trusted Data Sources',
-      sub: 'We aggregate data from verified government and private entities.',
-      andMore: 'More data sources',
+      title: tr('trusted-data-sources'),
+      sub: tr('we-aggregate-data-from-verified-government-and-private-entities'),
+      andMore: tr('more-data-sources'),
     },
     cta: {
-      title: 'Ready to Expand Confidently?',
-      sub: 'Join leading Saudi businesses using S-LOC to find their next branch location.',
-      btn: 'Try Without Sign-up',
+      title: tr('ready-to-expand-confidently'),
+      sub: tr('join-leading-saudi-businesses-using-s-locator-to-find-their-next-branch-location'),
+      btn: tr('try-without-sign-up'),
     },
-    footer: '© 2025 S-LOC Intelligence. All rights reserved.',
-  },
-  ar: {
-    nav: { features: 'المميزات', caseStudy: 'قصة نجاح', tryFree: 'حمل التقرير' },
-    hero: {
-      badge: 'ذكاء اصطناعي للمواقع الجغرافية',
-      alert: '٦٠٪ من مشاريع التجزئة تفشل بسبب الموقع.',
-      headline: 'لا تغامر.. تحقق من موقعك بالأرقام.',
-      sub: 'توقف عن التخمين. احصل على تقرير ذكي يتوقع الطلب، ويحلل المنافسين، ويقيم نسبة نجاح مشروعك بدقة ٩٥٪ قبل أن تدفع ريالاً واحداً.',
-      cta: 'ابدأ التحليل الآن',
-      placeholder: 'أدخل اسم الحي أو المدينة...',
-      ctaNoSignup: 'ابدأ التحليل بدون تسجيل',
-      noCreditCard: 'بدون بطاقة ائتمان',
-      instantReport: 'تقرير فوري',
-    },
-    features: {
-      title: 'مميزات المنصة',
-      sub: 'بيانات دقيقة مصممة لنمو قطاع التجزئة.',
-      visualLabel: 'تقرير موقع شامل',
-      visualDesc: 'احصل على تقرير PDF مفصل يحتوي على جميع البيانات الهامة لاتخاذ قرارك.',
-      visualBadge: 'تقرير قابل للتحميل',
-      visualTag1: 'ملخص تنفيذي',
-      visualTag2: 'تحليلات تفصيلية',
-      visualOverlay: 'معاينة نموذج التقرير',
-      cafeReport: 'تقرير المقهى',
-      pharmacyReport: 'تقرير الصيدلية',
-      list: [
-        {
-          title: 'محرك التقييم الذكي',
-          desc: 'تقييم فوري من ٠ إلى ١٠٠ بناءً على أكثر من ٥٠ مؤشراً تشمل الحركة والتكلفة.',
-        },
-        {
-          title: 'التركيبة السكانية',
-          desc: 'تحليل معمق للقوة الشرائية والفئات العمرية وسلوك السكان.',
-        },
-        {
-          title: 'الخرائط الحرارية',
-          desc: 'تصور مناطق الازدحام العالي ببيانات تنقل فورية.',
-        },
-      ],
-    },
-    report: {
-      title: 'داخل تقرير الذكاء',
-      sub: 'ما تحصل عليه عند إنشاء تحليل S-LOC.',
-      cards: [
-        { title: 'القرار التنفيذي', desc: 'توصية واضحة (انطلق / لا تنطلق).' },
-        { title: 'توقعات الطلب', desc: 'تحليل تقديري للطلب اليومي والشهري.' },
-        { title: 'رادار المنافسين', desc: 'تحليل التشبع وفجوات السوق.' },
-        { title: 'كاشف المخاطر', desc: 'مخاطر خفية في التقسيم العمراني وإمكانية الوصول.' },
-      ],
-    },
-    caseStudy: {
-      label: 'قصة نجاح',
-      title: 'نجاح توسع سلسلة مقاهي',
-      text1:
-        'خططت سلسلة مقاهي مشهورة لفرع في منطقة مرتفعة الإيجار. الحركة بدت جيدة، لكن البيانات التحليلية  كانت مفقودة.',
-      text2:
-        'كشف S-LOC أن المنطقة مشبعة تماماً. حددنا موقعاً أستراتيجياً يبعد ٣ كم بتكلفة أقل وفرصة نمو أعلى.',
-      stat1: '٤٠٪ خفض التكاليف',
-      stat2: '٢.٥ ضعف العائد',
-      orig: 'الموقع المقترح',
-      risk: 'تشبع عالي',
-      pick: 'توصية S-LOC',
-      rec: 'فرصة ذهبية',
-    },
-    dataSources: {
-      title: 'مصادر بيانات موثوقة',
-      sub: 'نجمع البيانات من جهات حكومية وخاصة موثوقة لضمان الدقة.',
-      andMore: 'المزيد من المصادر',
-    },
-    cta: {
-      title: 'جاهز للتوسع بثقة؟',
-      sub: 'انضم إلى نخبة الشركات السعودية التي تعتمد على S-LOC لتحديد مواقع فروعها القادمة.',
-      btn: 'تقرير التوسع بدون تسجيل',
-    },
-    footer: '© ٢٠٢٥ S-LOC. جميع الحقوق محفوظة.',
-  },
+    footer: tr('copyright-2025-s-locator-intelligence-all-rights-reserved'),
+  };
 };

@@ -3,6 +3,8 @@ import { HiOutlineSparkles } from 'react-icons/hi2';
 import { IoClose } from 'react-icons/io5';
 import ReportAIChatPanel from './ReportAIChatPanel';
 import { useReportAIChat } from './useReportAIChat';
+import { t } from '../../../../i18n';
+
 
 interface ReportAIAssistantProps {
   stepTitle?: string;
@@ -51,12 +53,11 @@ function ReportAIAssistant({ stepTitle }: ReportAIAssistantProps) {
   }, []);
 
   const greetingText = stepTitle ? (
-    <>
-      Hello, I can answer any question you may have regarding{' '}
+    <>{t("hello-i-can-answer-any-question-you-may-have-regarding")}{' '}
       <strong>{stepTitle}</strong>.
     </>
   ) : (
-    <>Hello, I can answer any question you may have regarding report generation.</>
+    <>{t("hello-i-can-answer-any-question-you-may-have-regarding-report-generation")}</>
   );
 
   return (
@@ -64,31 +65,31 @@ function ReportAIAssistant({ stepTitle }: ReportAIAssistantProps) {
       {/* Greeting bubble */}
       {showGreeting && !isOpen && (
         <div
-          className="fixed bottom-[7.5rem] right-20 lg:bottom-[7.5rem] lg:right-[5.5rem] z-50
+          className="fixed bottom-[7.5rem] end-20 lg:bottom-[7.5rem] lg:end-[5.5rem] z-50
             bg-white rounded-xl shadow-lg p-3 text-sm text-gray-700 border border-gray-200
             max-w-[260px] animate-fade-in-up"
         >
           <button
             onClick={dismissGreeting}
-            className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-200 hover:bg-gray-300
+            className="absolute -top-1.5 -end-1.5 w-5 h-5 bg-gray-200 hover:bg-gray-300
               rounded-full flex items-center justify-center transition-colors"
-            aria-label="Dismiss greeting"
+            aria-label={t("dismiss-greeting")}
           >
             <IoClose className="w-3 h-3 text-gray-600" />
           </button>
           <p>{greetingText}</p>
           {/* Right-pointing caret/arrow */}
           <div
-            className="absolute top-1/2 -right-2 -translate-y-1/2 w-0 h-0
+            className="absolute top-1/2 -end-2 -translate-y-1/2 w-0 h-0
               border-t-[6px] border-t-transparent
               border-b-[6px] border-b-transparent
-              border-l-[8px] border-l-white"
+              border-s-[8px] border-s-white"
           />
           <div
-            className="absolute top-1/2 -right-[9px] -translate-y-1/2 w-0 h-0
+            className="absolute top-1/2 -end-[9px] -translate-y-1/2 w-0 h-0
               border-t-[6px] border-t-transparent
               border-b-[6px] border-b-transparent
-              border-l-[8px] border-l-gray-200 -z-10"
+              border-s-[8px] border-s-gray-200 -z-10"
           />
         </div>
       )}
@@ -96,12 +97,12 @@ function ReportAIAssistant({ stepTitle }: ReportAIAssistantProps) {
       {/* Trigger button */}
       <button
         onClick={toggleOpen}
-        className={`fixed bottom-24 right-4 lg:bottom-24 lg:right-6
+        className={`fixed bottom-24 end-4 lg:bottom-24 lg:end-6
           bg-[#6366F1] w-14 h-14 rounded-full shadow-xl
           flex items-center justify-center
           transition-all duration-300 hover:scale-110 hover:brightness-110 z-50
           ${isOpen ? 'opacity-90 pointer-events-none' : 'opacity-100'}`}
-        aria-label="Open AI assistant"
+        aria-label={t("open-ai-assistant")}
       >
         <HiOutlineSparkles className="text-white w-7 h-7" />
       </button>

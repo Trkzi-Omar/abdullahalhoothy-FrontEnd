@@ -1,28 +1,27 @@
 // src/components/CreateLayer/CreateLayer.tsx
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useLayerContext } from '../../context/LayerContext';
 import CustomizeLayer from '../CustomizeLayer/CustomizeLayer';
 import FetchDatasetForm from '../FetchDatasetForm/FetchDatasetForm';
 import { useUIContext } from '../../context/UIContext';
-import { Spinner } from '../common';
 
 function LayerFormLoader() {
-  const { createLayerformStage, resetFormStage, isLoadingDataset } = useLayerContext();
+  const { createLayerformStage, resetFormStage } = useLayerContext();
 
-  const { sidebarMode, setSidebarMode } = useUIContext();
+  const { setSidebarMode } = useUIContext();
 
   // const [createLayerformStage, _] = useState('initial');
 
   useEffect(() => {
     resetFormStage();
     setSidebarMode('default');
-  }, []);
+  }, [resetFormStage, setSidebarMode]);
 
   return (
     <>
-      {createLayerformStage === 'initial' && <FetchDatasetForm />}
-      {createLayerformStage === 'secondStep' && <CustomizeLayer />}
+      {createLayerformStage ==="initial" && <FetchDatasetForm />}
+      {createLayerformStage ==="secondStep" && <CustomizeLayer />}
     </>
   );
 }

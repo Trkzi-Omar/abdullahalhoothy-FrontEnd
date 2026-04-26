@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { t } from '../../i18n';
+
 
 export default function MarketingDashboard() {
   const [dashboardHtml, setDashboardHtml] = useState<string>('');
@@ -10,12 +12,12 @@ export default function MarketingDashboard() {
       try {
         const response = await fetch('http://localhost:8000/fastapi/marketing-dashboard');
         if (!response.ok) {
-          throw new Error('Failed to fetch dashboard');
+          throw new Error(t("failed-to-fetch-dashboard"));
         }
         const html = await response.text();
         setDashboardHtml(html);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        setError(err instanceof Error ? err.message : t("unknown-error"));
       } finally {
         setLoading(false);
       }
@@ -27,7 +29,7 @@ export default function MarketingDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading marketing dashboard...</div>
+        <div className="text-lg">{t("loading-marketing-dashboard")}</div>
       </div>
     );
   }
@@ -35,7 +37,7 @@ export default function MarketingDashboard() {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-red-500">Error loading dashboard: {error}</div>
+        <div className="text-red-500">{t("error-loading-dashboard")}{' '}{error}</div>
       </div>
     );
   }

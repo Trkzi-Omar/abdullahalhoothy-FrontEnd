@@ -1,19 +1,20 @@
 import * as yup from 'yup';
 import { emailRegex, isValidPhone } from './validation';
+import { t } from '../i18n';
 
 export const emailSchema = yup
   .string()
-  .required('Email is required')
-  .matches(emailRegex, 'Please enter a valid email');
+  .required(t("email-is-required"))
+  .matches(emailRegex, t("please-enter-a-valid-email"));
 
 export const passwordSchema = yup
   .string()
-  .required('Password is required')
-  .min(8, 'Password must be at least 8 characters');
+  .required(t("password-is-required"))
+  .min(8, t("password-must-be-at-least-8-characters"));
 
 export const loginSchema = yup.object({
   email: emailSchema,
-  password: yup.string().required('Password is required'),
+  password: yup.string().required(t("password-is-required")),
 });
 
 export const registerStep1Schema = yup.object({
@@ -21,19 +22,19 @@ export const registerStep1Schema = yup.object({
   password: passwordSchema,
   confirmPassword: yup
     .string()
-    .required('Please confirm your password')
-    .oneOf([yup.ref('password')], 'Passwords must match'),
+    .required(t("please-confirm-your-password"))
+    .oneOf([yup.ref('password')], t("passwords-must-match")),
 });
 
 export const registerStep2Schema = yup.object({
   name: yup
     .string()
-    .required('Full name is required')
-    .min(2, 'Name must be at least 2 characters'),
+    .required(t("full-name-is-required"))
+    .min(2, t("name-must-be-at-least-2-characters")),
   phone: yup
     .string()
     .optional()
-    .test('phone', 'Please enter a valid phone number', function(value) {
+    .test('phone', t("please-enter-a-valid-phone-number"), function(value) {
       // Only validate if phone is provided
       if (!value || value === '' || value === '+') {
         return true;
@@ -70,16 +71,16 @@ export const getChangePasswordDisabledReason = (
   confirmPassword: string
 ) => {
   if (!currentPassword || !newPassword || !confirmPassword) {
-    return 'Fill in all password fields';
+    return t("fill-in-all-password-fields");
   }
   if (!passwordSchema.isValidSync(newPassword)) {
-    return 'New password must be at least 8 characters';
+    return t("new-password-must-be-at-least-8-characters");
   }
   if (confirmPassword !== newPassword) {
-    return 'Confirmation must match the new password';
+    return t("confirmation-must-match-the-new-password");
   }
   if (currentPassword === newPassword) {
-    return 'New password must be different from current password';
+    return t("new-password-must-be-different-from-current-password");
   }
   return null;
 };

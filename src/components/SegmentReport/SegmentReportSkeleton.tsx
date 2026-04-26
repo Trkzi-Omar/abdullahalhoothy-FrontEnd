@@ -39,7 +39,7 @@ function SegmentReportSkeleton() {
           <div className="bg-[#f5f5f5]">
             <div className="grid grid-cols-3 border-b-2 border-gray-100">
               {[...Array(3)].map((_, index) => (
-                <div key={index} className="h-16 border-r border-gray-300">
+                <div key={index} className="h-16 border-e border-gray-300">
                   <Skeleton className="w-full h-full bg-transparent" />
                 </div>
               ))}

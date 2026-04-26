@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+
 export function formatSubcategoryName(name: string | undefined | null): string {
   if (!name) return '';
   return name
@@ -49,7 +51,10 @@ export function fuzzyMatchCategoryType(type: string, searchQuery: string): boole
   );
 }
 
-export function processCityData(data: any, setData: Function): string[] {
+export function processCityData(
+  data: Record<string, unknown>,
+  setData: (value: Record<string, unknown>) => void
+): string[] {
   if (typeof data === 'object' && data !== null) {
     const keys = Object.keys(data);
     setData(data);
@@ -93,7 +98,7 @@ export const handleWhatsAppClick = ({
   message: string | undefined;
 }) => {
   const encodedMessage = message ? encodeURIComponent(message) : '';
-  if (!phoneNumber) throw new Error('Phone number is required');
+  if (!phoneNumber) throw new Error(t("phone-number-is-required"));
 
   const whatsappUrl = `https://wa.me/${phoneNumber}${encodedMessage ? `?text=${encodedMessage}` : ''}`;
 

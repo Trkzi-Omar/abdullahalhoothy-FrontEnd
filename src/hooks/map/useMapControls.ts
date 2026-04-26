@@ -32,14 +32,17 @@ export function useMapControls() {
         return;
       }
 
+      const isRTL = document.documentElement.dir === 'rtl';
+      const nativeControlsPosition: mapboxgl.ControlPosition = isRTL ? 'top-left' : 'top-right';
+
       try {
         // Add styles control
         controls.styles = new StylesControl(currentStyle, setCurrentStyle);
-        map.addControl(controls.styles, 'top-right');
+        map.addControl(controls.styles, nativeControlsPosition);
 
         // Add navigation control
         controls.navigation = new mapboxgl.NavigationControl();
-        map.addControl(controls.navigation, 'top-right');
+        map.addControl(controls.navigation, nativeControlsPosition);
 
         // Initialize draw control
         drawRef.current = new MapboxDraw({
@@ -57,10 +60,10 @@ export function useMapControls() {
           draw: drawRef.current,
           isMobile,
         });
-        map.addControl(controls.circle, 'top-right');
+        map.addControl(controls.circle, nativeControlsPosition);
 
         // Add draw control
-        map.addControl(drawRef.current);
+        map.addControl(drawRef.current, nativeControlsPosition);
 
         // Add scale control
         controls.scale = new mapboxgl.ScaleControl({

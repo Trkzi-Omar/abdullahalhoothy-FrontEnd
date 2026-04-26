@@ -3,6 +3,8 @@ import { useCatalogContext } from '../../context/CatalogContext';
 import { BasedOnLayerDropdownProps } from '../../types/allTypesAndInterfaces';
 import { formatSubcategoryName } from '../../utils/helperFunctions';
 import { HexColorPicker } from 'react-colorful';
+import { t } from '../../i18n';
+
 
 interface ExtendedBasedOnLayerDropdownProps extends BasedOnLayerDropdownProps {
   onRecolorColorChange?: (color: string) => void;
@@ -37,18 +39,6 @@ export default function BasedOnLayerDropdown({
   }));
   
   const [selectedColor, setSelectedColor] = useState('#ff0000');
-  const filterableProperties = [
-    'id',
-    'phone',
-    'address',
-    'priceLevel',
-    'primaryType',
-    'rating',
-    'heatmap_weight',
-    'user_ratings_total',
-    'popularity_score_category',
-    'popularity_score',
-  ];
   const availableTypes = [
     ...new Set(
       geoPoints.flatMap(layer => layer.features.flatMap(feature => feature.properties.types))
@@ -199,20 +189,20 @@ export default function BasedOnLayerDropdown({
         {/* First Sentence - Always available for filtering */}
         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="text-gray-700">Keep only</span>
+            <span className="text-gray-700">{t("keep-only")}</span>
             <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded font-medium">
               {currentLayerName}
             </span>
-            <span className="text-gray-700">that are</span>
+            <span className="text-gray-700">{t("that-are")}</span>
             <select
               value={comparisonType}
               onChange={handleComparisonTypeChange}
               className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="less">less</option>
-              <option value="more">more</option>
+              <option value="less">{t("less")}</option>
+              <option value="more">{t("more")}</option>
             </select>
-            <span className="text-gray-700">than</span>
+            <span className="text-gray-700">{t("than")}</span>
             <input
               type="number"
               value={coverageValue}
@@ -226,16 +216,16 @@ export default function BasedOnLayerDropdown({
               onChange={handleCoverageTypeChange}
               className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="radius">kilometers</option>
-              <option value="drive_time">minutes drive</option>
+              <option value="radius">{t("kilometers")}</option>
+              <option value="drive_time">{t("minutes-drive")}</option>
             </select>
-            <span className="text-gray-700">from</span>
+            <span className="text-gray-700">{t("from")}</span>
             <select
               value={basedOnLayerId || ''}
               onChange={handleSelectChange}
               className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[120px]"
             >
-              <option value="">select layer</option>
+              <option value="">{t("select-layer")}</option>
               {availableLayers.map(layer => {
                 const isSelf = layer.id === geoPoints[layerIndex]?.layer_id;
                 return (
@@ -243,7 +233,7 @@ export default function BasedOnLayerDropdown({
                     {(layer.name.length > 15
                       ? `${layer.name.substring(0, 15)}...`
                       : layer.name
-                    ).concat(isSelf ? ' (Self)' : '')}
+                    ).concat(isSelf ?"(Self)" : '')}
                   </option>
                 );
               })}
@@ -258,25 +248,23 @@ export default function BasedOnLayerDropdown({
             id="enableSecondFilter"
             checked={enableSecondSentence}
             onChange={handleSecondSentenceToggle}
-            className="mr-2"
+            className="me-2"
           />
-          <label htmlFor="enableSecondFilter" className="text-sm text-gray-700">
-            Add additional filter condition
-          </label>
+          <label htmlFor="enableSecondFilter" className="text-sm text-gray-700">{t("add-additional-filter-condition")}</label>
         </div>
 
         {/* Second Sentence (Optional) - Only show when enabled */}
         {enableSecondSentence && (
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
             <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="text-gray-700">And where</span>
+              <span className="text-gray-700">{t("and-where")}</span>
               <select
                 value={basedOnProperty || ''}
                 onChange={handleMetricChange}
                 disabled={!basedOnLayerId}
                 className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-200 disabled:text-gray-500 min-w-[120px]"
               >
-                <option value="">select property (optional)</option>
+                <option value="">{t("select-property-optional")}</option>
                 {metrics.map(metric => (
                   <option key={metric} value={metric}>
                     {formatSubcategoryName(metric)}
@@ -287,31 +275,31 @@ export default function BasedOnLayerDropdown({
               {/* Only show the value input if a property is selected */}
               {basedOnProperty && (
                 <>
-                  <span className="text-gray-700">is</span>
-                  {basedOnProperty === 'popularity_score_category' ? (
+                  <span className="text-gray-700">{t("is")}</span>
+                  {basedOnProperty ==="popularity_score_category" ? (
                     <select
                       value={propertyValue}
                       onChange={handlePropertyValueSelectChange}
                       className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[100px]"
                     >
-                      <option value="">any value</option>
-                      <option value="High">High</option>
-                      <option value="Very High">Very High</option>
-                      <option value="Low">Low</option>
-                      <option value="Very Low">Very Low</option>
+                      <option value="">{t("any-value")}</option>
+                      <option value="High">{t("high")}</option>
+                      <option value="Very High">{t("very-high")}</option>
+                      <option value="Low">{t("low")}</option>
+                      <option value="Very Low">{t("very-low")}</option>
                     </select>
-                  ) : basedOnProperty === 'primaryType' ? (
+                  ) : basedOnProperty ==="primaryType" ? (
                     <select
                       value={propertyValue}
                       onChange={handlePropertyValueSelectChange}
                       className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[120px]"
                     >
-                      <option value="">any type</option>
+                      <option value="">{t("any-type")}</option>
                       {availableTypes.map((type, index) => (
                         <option key={index} value={type}>
                           {type
                             .replace(/_/g, ' ')
-                            .replace(/\b\w/g, (char: any) => char.toUpperCase())}
+                            .replace(/\b\w/g, (char: string) => char.toUpperCase())}
                         </option>
                       ))}
                     </select>
@@ -340,20 +328,20 @@ export default function BasedOnLayerDropdown({
         {/* First Sentence - Always available for recoloring */}
         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="text-gray-700">Recolor</span>
+            <span className="text-gray-700">{t("recolor")}</span>
             <span className="bg-green-100 text-green-800 px-2 py-1 rounded font-medium">
               {currentLayerName}
             </span>
-            <span className="text-gray-700">that are</span>
+            <span className="text-gray-700">{t("that-are")}</span>
             <select
               value={comparisonType}
               onChange={handleComparisonTypeChange}
               className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="less">less</option>
-              <option value="more">more</option>
+              <option value="less">{t("less")}</option>
+              <option value="more">{t("more")}</option>
             </select>
-            <span className="text-gray-700">than</span>
+            <span className="text-gray-700">{t("than")}</span>
             <input
               type="number"
               value={coverageValue}
@@ -367,16 +355,16 @@ export default function BasedOnLayerDropdown({
               onChange={handleCoverageTypeChange}
               className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="radius">kilometers</option>
-              <option value="drive_time">minutes drive</option>
+              <option value="radius">{t("kilometers")}</option>
+              <option value="drive_time">{t("minutes-drive")}</option>
             </select>
-            <span className="text-gray-700">from</span>
+            <span className="text-gray-700">{t("from")}</span>
             <select
               value={basedOnLayerId || ''}
               onChange={handleSelectChange}
               className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[120px]"
             >
-              <option value="">select layer</option>
+              <option value="">{t("select-layer")}</option>
               {availableLayers.map(layer => {
                 const isSelf = layer.id === geoPoints[layerIndex]?.layer_id;
                 return (
@@ -384,7 +372,7 @@ export default function BasedOnLayerDropdown({
                     {(layer.name.length > 15
                       ? `${layer.name.substring(0, 15)}...`
                       : layer.name
-                    ).concat(isSelf ? ' (Self)' : '')}
+                    ).concat(isSelf ?"(Self)" : '')}
                   </option>
                 );
               })}
@@ -399,24 +387,22 @@ export default function BasedOnLayerDropdown({
             id="enableSecondRecolor"
             checked={enableSecondSentence}
             onChange={handleSecondSentenceToggle}
-            className="mr-2"
+            className="me-2"
           />
-          <label htmlFor="enableSecondRecolor" className="text-sm text-gray-700">
-            Add additional recolor condition
-          </label>
+          <label htmlFor="enableSecondRecolor" className="text-sm text-gray-700">{t("add-additional-recolor-condition")}</label>
         </div>
 
         {/* Second Sentence (Optional) - Only show when enabled */}
         {enableSecondSentence && (
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
             <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="text-gray-700">And where</span>
+              <span className="text-gray-700">{t("and-where")}</span>
               <select
                 value={basedOnProperty || ''}
                 onChange={handleMetricChange}
                 className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[120px]"
               >
-                <option value="">select property (optional)</option>
+                <option value="">{t("select-property-optional")}</option>
                 {metrics.map(metric => (
                   <option key={metric} value={metric}>
                     {formatSubcategoryName(metric)}
@@ -427,35 +413,35 @@ export default function BasedOnLayerDropdown({
               {/* Only show the value input if a property is selected */}
               {basedOnProperty && (
                 <>
-                  <span className="text-gray-700">is</span>
-                  {basedOnProperty === 'popularity_score_category' ? (
+                  <span className="text-gray-700">{t("is")}</span>
+                  {basedOnProperty ==="popularity_score_category" ? (
                     <select
                       value={threshold}
                       onChange={handleSelectThresholdChange}
                       className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[100px]"
                     >
-                      <option value="">any value</option>
-                      <option value="High">High</option>
-                      <option value="Very High">Very High</option>
-                      <option value="Low">Low</option>
-                      <option value="Very Low">Very Low</option>
+                      <option value="">{t("any-value")}</option>
+                      <option value="High">{t("high")}</option>
+                      <option value="Very High">{t("very-high")}</option>
+                      <option value="Low">{t("low")}</option>
+                      <option value="Very Low">{t("very-low")}</option>
                     </select>
-                  ) : basedOnProperty === 'primaryType' ? (
+                  ) : basedOnProperty ==="primaryType" ? (
                     <select
                       value={threshold}
                       onChange={handleSelectThresholdChange}
                       className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[120px]"
                     >
-                      <option value="">any type</option>
+                      <option value="">{t("any-type")}</option>
                       {availableTypes.map((type, index) => (
                         <option key={index} value={type}>
                           {type
                             .replace(/_/g, ' ')
-                            .replace(/\b\w/g, (char: any) => char.toUpperCase())}
+                            .replace(/\b\w/g, (char: string) => char.toUpperCase())}
                         </option>
                       ))}
                     </select>
-                  ) : basedOnProperty === 'name' ? (
+                  ) : basedOnProperty ==="name" ? (
                     <div className="flex flex-wrap gap-2 border border-gray-300 p-2 rounded-md bg-white">
                       {nameInputs
                         .filter(name => name.trim() !== '')
@@ -467,7 +453,7 @@ export default function BasedOnLayerDropdown({
                             {name}
                             <button
                               onClick={() => handleRemoveName(index)}
-                              className="ml-2 text-red-500 font-bold text-xs shadow-sm p-1"
+                              className="ms-2 text-red-500 font-bold text-xs shadow-sm p-1"
                             >
                               ✕
                             </button>
@@ -479,7 +465,7 @@ export default function BasedOnLayerDropdown({
                         onChange={handleInputChange}
                         onKeyDown={handleKeyDown}
                         className="bg-white text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[120px] outline-none"
-                        placeholder="Type and press comma..."
+                        placeholder={t("type-and-press-comma")}
                       />
                     </div>
                   ) : (
@@ -500,7 +486,7 @@ export default function BasedOnLayerDropdown({
         {/* Color Selection - Always show for recolor */}
         <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="text-gray-700">Using color</span>
+            <span className="text-gray-700">{t("using-color")}</span>
             <div className="relative" ref={pickerRef}>
               <button
                 className="w-16 h-8 rounded-md border border-gray-300 shadow-sm"
@@ -508,7 +494,7 @@ export default function BasedOnLayerDropdown({
                 onClick={() => setIsOpen(!isOpen)}
               />
               {isOpen && (
-                <div className="absolute top-10 left-0 bg-white p-2 border border-gray-300 shadow-lg rounded-md z-50">
+                <div className="absolute top-10 start-0 bg-white p-2 border border-gray-300 shadow-lg rounded-md z-50">
                   <HexColorPicker color={selectedColor} onChange={handleColorChange} />
                 </div>
               )}

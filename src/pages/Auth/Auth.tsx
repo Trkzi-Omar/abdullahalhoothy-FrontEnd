@@ -7,6 +7,8 @@ import MarketingContent from '../../components/Auth/MarketingContent';
 import LoginForm from '../../components/Auth/LoginForm';
 import RegisterForm from '../../components/Auth/RegisterForm';
 import ResetPasswordForm from '../../components/Auth/ResetPasswordForm';
+import { t } from '../../i18n';
+
 
 type AuthMode = 'login' | 'register' | 'reset';
 
@@ -36,7 +38,11 @@ const Auth = () => {
     const params = new URLSearchParams(location.search);
     const redirectUrl = params.get('redirect_url');
     setTimeout(() => {
-      redirectUrl ? window.location.replace(redirectUrl) : nav('/');
+      if (redirectUrl) {
+        window.location.replace(redirectUrl);
+      } else {
+        nav('/');
+      }
     }, 100);
   };
 
@@ -59,12 +65,13 @@ const Auth = () => {
       try {
         await performGoogleLogin(setAuthResponse, tokenResponse.access_token, sourceLocal);
         handleRedirect();
-      } catch (e: any) {
-        setGoogleError(e.response?.data?.detail || e.message || 'Google login failed');
+      } catch (e: unknown) {
+        const error = e as { response?: { data?: { detail?: string } }; message?: string };
+        setGoogleError(error.response?.data?.detail || error.message || t("google-login-failed"));
       }
     },
     onError: () => {
-      setGoogleError('Google login failed');
+      setGoogleError(t("google-login-failed"));
     },
   });
 
@@ -74,14 +81,14 @@ const Auth = () => {
   };
 
   const getTitle = () => {
-    if (mode === 'reset') return 'Reset Password';
-    if (mode === 'login') return 'Log in';
-    return 'Sign up';
+    if (mode === 'reset') return t("reset-password");
+    if (mode === 'login') return t("log-in");
+    return t("sign-up");
   };
 
   const getSubtitle = () => {
     if (mode === 'register') {
-      return 'Get started for free. No credit card required.';
+      return t("get-started-for-free-no-credit-card-required");
     }
     return null;
   };
@@ -100,11 +107,11 @@ const Auth = () => {
           className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-md bg-white hover:bg-gray-50 transition-colors duration-200"
         >
           <FcGoogle className="text-xl" />
-          <span className="text-gray-700 font-medium">Google</span>
+          <span className="text-gray-700 font-medium">{t("google")}</span>
         </button>
         <div className="flex items-center my-4">
           <div className="flex-1 border-t border-gray-300" />
-          <span className="px-3 text-gray-500 text-sm">Or with email and password</span>
+          <span className="px-3 text-gray-500 text-sm">{t("or-with-email-and-password")}</span>
           <div className="flex-1 border-t border-gray-300" />
         </div>
       </>
@@ -150,15 +157,12 @@ const Auth = () => {
             {renderGoogleLogin()}
             {renderForm()}
 
-            {mode === 'login' && (
-              <div className="text-center mt-4 text-gray-600 text-sm">
-                Don't have an account?{' '}
+            {mode ==="login" && (
+              <div className="text-center mt-4 text-gray-600 text-sm">{t("don-t-have-an-account")}{' '}
                 <button
                   onClick={() => switchMode('register')}
                   className="text-[#006400] hover:underline"
-                >
-                  Sign up
-                </button>
+                >{t("sign-up")}</button>
               </div>
             )}
           </div>
@@ -179,8 +183,7 @@ const Auth = () => {
       <div className="flex-1 flex items-center justify-center bg-white p-4 lg:p-8 min-h-0 overflow-hidden">
         <div className="w-full max-w-md">
           {/* Mobile-only headline */}
-          <h1 className="lg:hidden text-2xl font-bold text-primary mb-6 text-center">
-            Get started with <span className="whitespace-nowrap">S-Locator</span>
+          <h1 className="lg:hidden text-2xl font-bold text-primary mb-6 text-center">{t("get-started-with")}{' '}<span className="whitespace-nowrap">{t("s-locator")}</span>
           </h1>
           <h2 className="text-xl sm:text-2xl font-semibold text-[#006400] mb-2 text-center">
             {getTitle()}
@@ -192,14 +195,11 @@ const Auth = () => {
           {renderGoogleLogin()}
           {renderForm()}
 
-          <div className="text-center mt-6 text-gray-600 text-sm">
-            Already using S-Locator?{' '}
+          <div className="text-center mt-6 text-gray-600 text-sm">{t("already-using-s-locator")}{' '}
             <button
               onClick={() => switchMode('login')}
               className="text-[#006400] hover:underline"
-            >
-              Log in
-            </button>
+            >{t("log-in")}</button>
           </div>
         </div>
       </div>

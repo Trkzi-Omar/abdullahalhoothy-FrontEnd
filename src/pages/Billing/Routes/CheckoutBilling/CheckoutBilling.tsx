@@ -11,6 +11,8 @@ import CheckoutModal from './CheckoutModal';
 import CategoriesBrowserSubCategories from '../../../../components/CategoriesBrowserSubCategories/CategoriesBrowserSubCategories';
 import { Skeleton } from '../../../../components/common/Skeleton';
 import { toast } from 'sonner';
+import { t } from '../../../../i18n';
+
 
 interface DataVariable {
   key: string;
@@ -406,7 +408,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
   const handleDatasetToggle = useCallback(
     (type: string) => {
       if (!checkout.country_name || !checkout.city_name) {
-        toast.error('Please select a country and city before adding datasets.');
+        toast.error(t("please-select-a-country-and-city-before-adding-datasets"));
         return;
       }
       dispatch({ type: 'toggleDataset', payload: type });
@@ -801,7 +803,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
 
     // When a report is in the cart, the API requires report_potential_business_type
     if (checkout.report && !checkout.report_potential_business_type?.trim()) {
-      toast.error('Please select a Report Potential Business Type to see pricing.');
+      toast.error(t("please-select-a-report-potential-business-type-to-see-pricing"));
       return;
     }
 
@@ -877,7 +879,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
       name: string,
       type: 'dataset' | 'intelligence' | 'report',
       itemKey: string,
-      description = 'No data available.'
+      description = t("no-data-available")
     ): SelectedItemData => ({
       name,
       type,
@@ -1054,7 +1056,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
     (type: string) => {
       // Add to cart
       if (!checkout.country_name || !checkout.city_name) {
-        toast.error('Please select a country and city before adding datasets.');
+        toast.error(t("please-select-a-country-and-city-before-adding-datasets"));
         return;
       }
       if (!checkout.datasets.includes(type)) {
@@ -1163,13 +1165,12 @@ function CheckoutBilling({ Name }: { Name: string }) {
   return (
     <div className="h-full overflow-hidden relative flex flex-col lg:flex-row" >
       <div className="w-full lg:w-1/3 flex flex-col overflow-hidden">
-        {Name === 'area' ? (
+        {Name ==="area" ? (
           <div className="w-full h-full flex flex-col px-4 sm:px-6 lg:px-8 overflow-y-auto">
-            <div className="text-2xl pt-4 font-semibold mb-2 flex-shrink-0">Area Intelligence</div>
+            <div className="text-2xl pt-4 font-semibold mb-2 flex-shrink-0">{t("area-intelligence")}</div>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mb-4 flex-shrink-0">
               <p className="text-sm text-yellow-800">
-                <span className="font-semibold">Note:</span> You must choose country, city and area intelligence type to see the price.
-              </p>
+                <span className="font-semibold">{t("note")}</span>{' '}{t("you-must-choose-country-city-and-area-intelligence-type-to-see-the-price")}</p>
             </div>
             <div className="flex flex-col items-stretch space-y-6 flex-1 pb-6">
               <div
@@ -1243,7 +1244,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                       </g>
                     </svg>
                     <div className="flex-1">
-                      <div className="font-semibold">Population Intelligence</div>
+                      <div className="font-semibold">{t("population-intelligence")}</div>
                       {isCalculatingPrices ? (
                         <Skeleton className="w-full h-4" />
                       ) : (
@@ -1253,8 +1254,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                       )}
                     </div>
                   </div>
-                  <div className="text-xs font-semibold text-blue-600 mt-1">
-                    Price:{' '}
+                  <div className="text-xs font-semibold text-blue-600 mt-1">{t("price")}{' '}
                     {isCalculatingPrices ? (
                       <Skeleton className="w-10 h-4" />
                     ) : population_intelligence ? (
@@ -1265,10 +1265,10 @@ function CheckoutBilling({ Name }: { Name: string }) {
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  {checkout.intelligences.includes('Population') ? (
+                  {checkout.intelligences.includes("Population") ? (
                     <MdCheckCircle className="text-green-600" size={24} />
                   ) : (
-                    <span className="text-xs text-gray-400">Tap to view</span>
+                    <span className="text-xs text-gray-400">{t("tap-to-view")}</span>
                   )}
                 </div>
               </div>
@@ -1290,7 +1290,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                   <div className="flex items-center gap-3 mb-2">
                     <MdAttachMoney size={24} />
                     <div className="flex-1">
-                      <div className="font-semibold">Income Intelligence</div>
+                      <div className="font-semibold">{t("income-intelligence")}</div>
                       {isCalculatingPrices ? (
                         <Skeleton className="w-full h-4" />
                       ) : (
@@ -1300,8 +1300,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                       )}
                     </div>
                   </div>
-                  <div className="text-xs font-semibold text-blue-600 mt-1 flex">
-                    Price:{' '}
+                  <div className="text-xs font-semibold text-blue-600 mt-1 flex">{t("price")}{' '}
                     {isCalculatingPrices ? (
                       <Skeleton className="w-10 h-4" />
                     ) : income_intelligence ? (
@@ -1312,10 +1311,10 @@ function CheckoutBilling({ Name }: { Name: string }) {
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  {checkout.intelligences.includes('Income') ? (
+                  {checkout.intelligences.includes("Income") ? (
                     <MdCheckCircle className="text-green-600" size={24} />
                   ) : (
-                    <span className="text-xs text-gray-400">Tap to view</span>
+                    <span className="text-xs text-gray-400">{t("tap-to-view")}</span>
                   )}
                 </div>
               </div>
@@ -1337,7 +1336,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                   <div className="flex items-center gap-3 mb-2">
                     <MdHome size={24} />
                     <div className="flex-1">
-                      <div className="font-semibold">Real Estate Intelligence</div>
+                      <div className="font-semibold">{t("real-estate-intelligence")}</div>
                       {isCalculatingPrices ? (
                         <Skeleton className="w-full h-4" />
                       ) : (
@@ -1347,8 +1346,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                       )}
                     </div>
                   </div>
-                  <div className="text-xs font-semibold text-blue-600 mt-1">
-                    Price:{' '}
+                  <div className="text-xs font-semibold text-blue-600 mt-1">{t("price")}{' '}
                     {isCalculatingPrices ? (
                       <Skeleton className="w-10 h-4" />
                     ) : real_estate_intelligence ? (
@@ -1359,43 +1357,40 @@ function CheckoutBilling({ Name }: { Name: string }) {
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  {checkout.intelligences.includes('Real Estate') ? (
+                  {checkout.intelligences.includes("Real Estate") ? (
                     <MdCheckCircle className="text-green-600" size={24} />
                   ) : (
-                    <span className="text-xs text-gray-400">Tap to view</span>
+                    <span className="text-xs text-gray-400">{t("tap-to-view")}</span>
                   )}
                 </div>
               </div>
             </div>
           </div>
-        ) : Name === 'reports' ? (
+        ) : Name ==="reports" ? (
           <div className="w-full h-full flex flex-col px-2 sm:px-3 lg:px-4 overflow-y-auto">
-            <div className="text-2xl pt-2 font-semibold mb-2 flex-shrink-0">Report</div>
+            <div className="text-2xl pt-2 font-semibold mb-2 flex-shrink-0">{t("report-2")}</div>
             
             {/* Note about required fields */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mb-2 flex-shrink-0">
               <p className="text-sm text-yellow-800">
-                <span className="font-semibold">Note:</span> You must choose country, city and report potential business type to see the price.
-              </p>
+                <span className="font-semibold">{t("note")}</span>{' '}{t("you-must-choose-country-city-and-report-potential-business-type-to-see-the-price")}</p>
             </div>
 
             {/* Searchable dropdown for report_potential_business_type */}
             <div className="mb-2 flex-shrink-0">
-              <label htmlFor="reportBusinessTypeSearch" className="block text-sm font-medium text-gray-700 mb-2">
-                Report Potential Business Type
-              </label>
+              <label htmlFor="reportBusinessTypeSearch" className="block text-sm font-medium text-gray-700 mb-2">{t("report-potential-business-type")}</label>
               <div className="relative">
                 {/* Search input */}
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute inset-y-0 start-0 ps-3 flex items-center pointer-events-none">
                     <MdSearch className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     type="text"
                     id="reportBusinessTypeSearch"
                     name="reportBusinessTypeSearch"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-10 p-2.5"
-                    placeholder="Search for business type..."
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 pe-10 p-2.5"
+                    placeholder={t("search-for-business-type")}
                     value={businessTypeSearchTerm}
                     onChange={e => {
                       setBusinessTypeSearchTerm(e.target.value);
@@ -1414,7 +1409,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                         dispatch({ type: 'setReportPotentialBusinessType', payload: '' });
                         setBusinessTypeSearchTerm('');
                       }}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      className="absolute inset-y-0 end-0 pe-3 flex items-center"
                     >
                       <MdClose className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                     </button>
@@ -1434,9 +1429,9 @@ function CheckoutBilling({ Name }: { Name: string }) {
                             setBusinessTypeSearchTerm('');
                             setIsBusinessTypeDropdownOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-2 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors duration-150 ${
+                          className={`w-full text-start px-4 py-2 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors duration-150 ${
                             checkout.report_potential_business_type === businessType
-                              ? 'bg-[#115740]/10 border-l-4 border-[#115740] text-[#115740] font-medium'
+                              ? 'bg-[#115740]/10 border-s-4 border-[#115740] text-[#115740] font-medium'
                               : 'text-gray-700'
                           }`}
                         >
@@ -1444,8 +1439,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                         </button>
                       ))
                     ) : (
-                      <div className="px-4 py-3 text-gray-500 text-center text-sm">
-                        No business types found matching "{businessTypeSearchTerm}"
+                      <div className="px-4 py-3 text-gray-500 text-center text-sm">{t("no-business-types-found-matching")}{businessTypeSearchTerm}"
                       </div>
                     )}
                   </div>
@@ -1453,8 +1447,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
 
                 {/* Display selected value */}
                 {checkout.report_potential_business_type && !isBusinessTypeDropdownOpen && (
-                  <div className="mt-2 text-sm text-gray-600">
-                    Selected: <span className="font-medium text-[#115740]">{formatCategoryName(checkout.report_potential_business_type)}</span>
+                  <div className="mt-2 text-sm text-gray-600">{t("selected")}{' '}<span className="font-medium text-[#115740]">{formatCategoryName(checkout.report_potential_business_type)}</span>
                   </div>
                 )}
               </div>
@@ -1471,20 +1464,18 @@ function CheckoutBilling({ Name }: { Name: string }) {
                   ))}
                 </div>
               ) : reportTiers.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No report packages available
-                </div>
+                <div className="text-center py-8 text-gray-500">{t("no-report-packages-available")}</div>
               ) : (
                 reportTiers.map(tier => {
                 const isSelected =
-                  selectedItemKey?.key === tier.reportKey && selectedItemKey?.type === 'report';
+                  selectedItemKey?.key === tier.reportKey && selectedItemKey?.type ==="report";
                 const isInCart = checkout.report === tier.reportKey;
                 const reportItem = priceData?.report_purchase_items?.find(
                   r => r.report_tier === tier.reportKey
                 );
                 const isComingSoon = reportItem?.coming_soon === true;
                 const borderClass =
-                  isSelected || isInCart ? 'border-[#115740] ' : 'border-gray-300';
+                  isSelected || isInCart ?"border-[#115740]" :"border-gray-300";
                 
                 // Check if all required fields are selected
                 const hasAllRequiredFields = 
@@ -1499,10 +1490,8 @@ function CheckoutBilling({ Name }: { Name: string }) {
                       key={tier.id}
                       className="relative border rounded-xl shadow-md w-full bg-gray-100/60 overflow-hidden border-gray-300 cursor-not-allowed"
                     >
-                      <div className="absolute top-3 right-3 z-10">
-                        <span className="text-xs bg-purple-500 text-white px-3 py-1.5 rounded-full font-semibold shadow-sm">
-                          Coming soon
-                        </span>
+                      <div className="absolute top-3 end-3 z-10">
+                        <span className="text-xs bg-purple-500 text-white px-3 py-1.5 rounded-full font-semibold shadow-sm">{t("coming-soon")}</span>
                       </div>
                       <div className="p-3 opacity-50">
                         <div className="w-full flex justify-between items-start mb-2">
@@ -1514,13 +1503,9 @@ function CheckoutBilling({ Name }: { Name: string }) {
                           </span>
                         </div>
                         <div className="mb-2">
-                          <span className="bg-purple-100 text-purple-700 rounded-full px-3 py-1 font-medium text-sm inline-block">
-                            Top 10 Locations Ranked
-                          </span>
+                          <span className="bg-purple-100 text-purple-700 rounded-full px-3 py-1 font-medium text-sm inline-block">{t("top-10-locations-ranked")}</span>
                         </div>
-                        <div className="text-sm text-gray-600">
-                          This report tier will be available soon.
-                        </div>
+                        <div className="text-sm text-gray-600">{t("this-report-tier-will-be-available-soon")}</div>
                       </div>
                     </div>
                   );
@@ -1532,9 +1517,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                     className={`relative border rounded-xl shadow-md hover:shadow-lg transition-all w-full bg-white overflow-hidden ${borderClass}`}
                   >
                     {tier.isMostPopular && (
-                      <div className="absolute top-0 right-0 bg-purple-600 text-white px-4 py-1.5 text-xs font-semibold rounded-bl-lg z-10">
-                        Most Popular
-                        <div className="absolute -right-2 top-0 w-0 h-0 border-l-[10px] border-l-transparent border-t-[10px] border-t-green-500"></div>
+                      <div className="absolute top-0 end-0 bg-purple-600 text-white px-4 py-1.5 text-xs font-semibold rounded-es-lg z-10">{t("most-popular-2")}<div className="absolute -end-2 top-0 w-0 h-0 border-s-[10px] border-s-transparent border-t-[10px] border-t-green-500"></div>
                       </div>
                     )}
                     <summary className="cursor-pointer p-3 flex flex-col items-start font-semibold list-none [&::-webkit-details-marker]:hidden">
@@ -1546,7 +1529,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                               {/* Show calculated price only if this report is selected and all required fields are present */}
                               {hasAllRequiredFields && checkout.report === tier.reportKey ? (
                                 isCalculatingPrices ? (
-                                  <span className="text-2xl animate-pulse">Loading...</span>
+                                  <span className="text-2xl animate-pulse">{t("loading")}</span>
                                 ) : priceData?.report_purchase_items?.find(
                                     r => r.report_tier === tier.reportKey
                                   ) ? (
@@ -1563,7 +1546,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                               )}
                             </>
                           ) : (
-                            <span className="text-gray-400 font-normal text-base">Select business type to see price</span>
+                            <span className="text-gray-400 font-normal text-base">{t("select-business-type-to-see-price")}</span>
                           )}
                         </span>
                       </div>
@@ -1584,9 +1567,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                         ))}
                       </ul>
                       <div className="mb-2">
-                        <div className="text-sm font-semibold text-gray-900 mb-2">
-                          Intelligences Included:
-                        </div>
+                        <div className="text-sm font-semibold text-gray-900 mb-2">{t("intelligences-included")}</div>
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
                             {tier.intelligences.ai ? (
@@ -1594,7 +1575,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                             ) : (
                               <MdClose className="text-red-600" size={20} />
                             )}
-                            <span className="text-sm text-gray-700">AI</span>
+                            <span className="text-sm text-gray-700">{t("ai")}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             {tier.intelligences.income ? (
@@ -1602,7 +1583,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                             ) : (
                               <MdClose className="text-red-600" size={20} />
                             )}
-                            <span className="text-sm text-gray-700">Income</span>
+                            <span className="text-sm text-gray-700">{t("income")}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             {tier.intelligences.population ? (
@@ -1610,7 +1591,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                             ) : (
                               <MdClose className="text-red-600" size={20} />
                             )}
-                            <span className="text-sm text-gray-700">Population</span>
+                            <span className="text-sm text-gray-700">{t("population")}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             {tier.intelligences.realEstate ? (
@@ -1618,7 +1599,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                             ) : (
                               <MdClose className="text-red-600" size={20} />
                             )}
-                            <span className="text-sm text-gray-700">Real Estate</span>
+                            <span className="text-sm text-gray-700">{t("real-estate")}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             {tier.intelligences.competition ? (
@@ -1626,7 +1607,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                             ) : (
                               <MdClose className="text-red-600" size={20} />
                             )}
-                            <span className="text-sm text-gray-700">Competition</span>
+                            <span className="text-sm text-gray-700">{t("competition")}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             {tier.intelligences.poi ? (
@@ -1634,15 +1615,15 @@ function CheckoutBilling({ Name }: { Name: string }) {
                             ) : (
                               <MdClose className="text-red-600" size={20} />
                             )}
-                            <span className="text-sm text-gray-700">POI (Point of Interest)</span>
+                            <span className="text-sm text-gray-700">{t("poi-point-of-interest")}</span>
                           </div>
                           {(tier.datasetLimit !== undefined || tier.additionalDatasetCost !== undefined) && (
-                            <div className="text-xs text-gray-500 ml-7 mt-0.5">
+                            <div className="text-xs text-gray-500 ms-7 mt-0.5">
                               {tier.datasetLimit !== undefined && (
-                                <>Includes up to {tier.datasetLimit} dataset{tier.datasetLimit !== 1 ? 's' : ''}. </>
+                                <>{t("includes-up-to")}{' '}{tier.datasetLimit}{' '}{t("dataset-2")}{tier.datasetLimit !== 1 ?t("s") : ''}. </>
                               )}
                               {tier.additionalDatasetCost !== undefined && (
-                                <>Additional datasets starting from {formatPrice(tier.additionalDatasetCost)}.</>
+                                <>{t("additional-datasets-starting-from")}{' '}{formatPrice(tier.additionalDatasetCost)}.</>
                               )}
                             </div>
                           )}
@@ -1653,7 +1634,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                           <div className="flex items-start gap-2">
                             <span className="text-purple-600 text-lg">★</span>
                             <span className="text-sm text-purple-900">
-                              <span className="font-semibold">Concierge Service:</span>{' '}
+                              <span className="font-semibold">{t("concierge-service-2")}</span>{' '}
                               {tier.conciergeService}
                             </span>
                           </div>
@@ -1667,9 +1648,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                             handleItemSelect(tier.reportKey, 'report', `${tier.name} Report`);
                           }}
                           className="flex-1 rounded-lg transition-all py-2 font-semibold bg-purple-600 text-white hover:bg-purple-700"
-                        >
-                          View Details
-                        </button>
+                        >{t("view-details")}</button>
                       </div>
                     </div>
                   </details>
@@ -1684,18 +1663,15 @@ function CheckoutBilling({ Name }: { Name: string }) {
               <div className="flex flex-col my-5 w-full">
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mb-4">
                   <p className="text-sm text-yellow-800">
-                    <span className="font-semibold">Note:</span> You must choose country, city and dataset type to see the price.
-                  </p>
+                    <span className="font-semibold">{t("note")}</span>{' '}{t("you-must-choose-country-city-and-dataset-type-to-see-the-price")}</p>
                 </div>
 
                 <div className="flex justify-between mb-4">
-                  <label className="font-bold">What are you looking for?</label>
+                  <label className="font-bold">{t("what-are-you-looking-for")}</label>
                   <button
                     onClick={handleClear}
                     className="w-16 h-6 text-sm bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
-                  >
-                    Clear
-                  </button>
+                  >{t("clear")}</button>
                 </div>
 
                 <div className="pb-3">
@@ -1704,7 +1680,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                     id="searchInput"
                     name="searchInput"
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                    placeholder="Search for a type..."
+                    placeholder={t("search-for-a-type")}
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                   />
@@ -1738,7 +1714,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 />
               </div>
             </div>
-            <div className="sticky bottom-0 w-full bg-white flex justify-center items-center space-x-4 border-t pt-2 lg:h-[10%] flex-shrink-0">
+            <div className="sticky bottom-0 w-full bg-white flex justify-center items-center gap-4 border-t pt-2 lg:h-[10%] flex-shrink-0">
               {/* <button
                 type="button"
                 className={`w-48 lg:h-16 h-12 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg transition-all cursor-pointer ${isCalculatingCost || !canCalculateCost
@@ -1756,7 +1732,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
       </div>
 
       {/* Item Selection View panel */}
-      <div className="w-full lg:w-2/3 flex flex-col justify-center items-center border-l-0 lg:border-l border-gray-200">
+      <div className="w-full lg:w-2/3 flex flex-col justify-center items-center border-s-0 lg:border-s border-gray-200">
         <ItemSelectionView
           selectedItem={selectedItem}
           isLoading={isCalculatingPrices && !!selectedItemKey}
@@ -1808,7 +1784,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
 
       {/* View Checkout Button - Fixed at bottom center - Show only if user has selected items */}
       {(checkout.datasets.length > 0 || checkout.intelligences.length > 0 || checkout.report) && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-20">
+        <div className="fixed bottom-6 start-1/2 transform -translate-x-1/2 rtl:translate-x-1/2 z-20">
           <button
             type="button"
             onClick={() => setShowCheckoutModal(true)}
@@ -1821,9 +1797,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 strokeWidth={2}
                 d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
               />
-            </svg>
-            View Cart
-            {(() => {
+            </svg>{t("view-cart")}{(() => {
               const itemCount =
                 checkout.datasets.length +
                 checkout.intelligences.length +

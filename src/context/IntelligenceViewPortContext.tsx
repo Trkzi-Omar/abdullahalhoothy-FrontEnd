@@ -1,5 +1,7 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { IntelligenceViewport } from '../types/allTypesAndInterfaces';
+import { t } from '../i18n';
 
 interface IntelligenceViewportContextType {
   viewport: IntelligenceViewport | null;
@@ -46,7 +48,7 @@ export const IntelligenceViewportProvider = ({ children }: { children: ReactNode
 export const useIntelligenceViewport = () => {
   const context = useContext(IntelligenceViewportContext);
   if (!context) {
-    throw new Error('useIntelligenceViewport must be used within IntelligenceViewportProvider');
+    throw new Error(t("useintelligenceviewport-must-be-used-within-intelligenceviewportprovider"));
   }
   return context;
 };

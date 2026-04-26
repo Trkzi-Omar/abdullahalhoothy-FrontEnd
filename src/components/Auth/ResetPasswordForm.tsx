@@ -5,6 +5,8 @@ import { resetSchema, isValidEmail } from '../../utils/auth.validation';
 import { HttpReq } from '../../services/apiService';
 import urls from '../../urls.json';
 import styles from '../../pages/Auth/Auth.module.css';
+import { t } from '../../i18n';
+
 
 interface ResetPasswordFormProps {
   onSuccess: () => void;
@@ -42,10 +44,10 @@ export const ResetPasswordForm = ({ onSuccess, onBackToLogin }: ResetPasswordFor
         'post',
         { email: form.email }
       );
-      toast.success('Password reset email sent. Please check your inbox.');
+      toast.success(t("password-reset-email-sent-please-check-your-inbox"));
       onSuccess();
     } catch {
-      setError('Failed to send reset email. Please try again.');
+      setError(t("failed-to-send-reset-email-please-try-again"));
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +62,7 @@ export const ResetPasswordForm = ({ onSuccess, onBackToLogin }: ResetPasswordFor
             <FaEnvelope className={styles.icon} />
             <input
               type="email"
-              placeholder="Email"
+              placeholder={t("email")}
               value={form.email}
               onChange={e => updateForm('email', e.target.value)}
               className={styles.authInput}
@@ -75,16 +77,14 @@ export const ResetPasswordForm = ({ onSuccess, onBackToLogin }: ResetPasswordFor
           className={styles.authButton}
           disabled={isLoading || !isValidEmail(form.email)}
         >
-          {isLoading ? 'Sending...' : 'Reset Password'}
+          {isLoading ?t("sending") :t("reset-password")}
         </button>
       </form>
       <div className="flex justify-center mt-6">
         <button
           onClick={onBackToLogin}
           className="text-[#006400] text-sm hover:underline"
-        >
-          Back to Login
-        </button>
+        >{t("back-to-login")}</button>
       </div>
     </>
   );

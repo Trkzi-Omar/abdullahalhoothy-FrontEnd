@@ -1,7 +1,9 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import apiRequest from '../services/apiRequest';
 import urls from '../urls.json';
+import { t } from '../i18n';
 import {
   OTPChannel,
   OTPConfig,
@@ -61,9 +63,9 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (cooldownTimerRef.current) {
       clearInterval(cooldownTimerRef.current);
     }
-    
+
     setState(prev => ({ ...prev, resendCooldown: seconds }));
-    
+
     cooldownTimerRef.current = setInterval(() => {
       setState(prev => {
         const newCooldown = prev.resendCooldown - 1;
@@ -89,6 +91,21 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     onSuccessRef.current = null;
     onCancelRef.current = null;
   }, []);
+
+  // Close OTP Modal
+  const closeOTPModal = useCallback(() => {
+    setIsModalOpen(false);
+
+    // Call cancel callback if not successful
+    if (state.status !== 'success' && onCancelRef.current) {
+      onCancelRef.current();
+    }
+
+    // Reset state after modal closes
+    setTimeout(() => {
+      resetState();
+    }, 300);
+  }, [state.status, resetState]);
 
   // Send OTP
   const sendOTP = useCallback(async (phoneNumber: string, otpChannel: OTPChannel = 'sms'): Promise<boolean> => {
@@ -119,14 +136,15 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       startCooldownTimer(DEFAULT_RESEND_COOLDOWN);
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Clear any existing timer on send failure
       if (cooldownTimerRef.current) {
         clearInterval(cooldownTimerRef.current);
         cooldownTimerRef.current = null;
       }
       
-      const errorMessage = error?.message || 'Failed to send OTP. Please try again.';
+      const apiError = error as { message?: string };
+      const errorMessage = apiError.message || t("failed-to-send-otp-please-try-again");
       setState(prev => ({
         ...prev,
         status: 'error' as OTPStatus,
@@ -143,7 +161,7 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (code.length !== state.codeLength) {
       setState(prev => ({
         ...prev,
-        errorMessage: `Please enter a ${state.codeLength}-digit code`,
+        errorMessage: t("please-enter-a-count-digit-code", { count: state.codeLength }),
       }));
       return false;
     }
@@ -169,7 +187,7 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         status: 'success' as OTPStatus,
       }));
 
-      toast.success('Phone number verified successfully!');
+      toast.success(t("phone-number-verified-successfully"));
       
       // Call success callback
       if (onSuccessRef.current) {
@@ -182,11 +200,12 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }, 1000);
 
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const apiError = error as { response?: { status?: number }; message?: string };
       // Check for 404 (invalid code)
-      const errorMessage = error?.response?.status === 404 
-        ? 'Invalid verification code. Please try again.'
-        : error?.message || 'Verification failed. Please try again.';
+      const errorMessage = apiError.response?.status === 404
+        ? t("invalid-verification-code-please-try-again")
+        : apiError.message || t("verification-failed-please-try-again");
       
       setState(prev => ({
         ...prev,
@@ -196,17 +215,17 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       return false;
     }
-  }, [state.codeLength, state.phoneNumber]);
+  }, [state.codeLength, state.phoneNumber, closeOTPModal]);
 
   // Resend OTP
   const resendOTP = useCallback(async (): Promise<boolean> => {
     if (state.resendCooldown > 0) {
-      toast.error(`Please wait ${state.resendCooldown} seconds before resending`);
+      toast.error(t("please-wait-count-seconds-before-resending", { count: state.resendCooldown }));
       return false;
     }
 
     if (state.retryCount >= state.maxRetries) {
-      const errorMessage = 'Maximum retry attempts reached. Please try again later.';
+      const errorMessage = t("maximum-retry-attempts-reached-please-try-again-later");
       setState(prev => ({
         ...prev,
         status: 'error' as OTPStatus,
@@ -253,21 +272,6 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     sendOTP(phoneNumber, otpChannel);
   }, [resetState, sendOTP]);
 
-  // Close OTP Modal
-  const closeOTPModal = useCallback(() => {
-    setIsModalOpen(false);
-    
-    // Call cancel callback if not successful
-    if (state.status !== 'success' && onCancelRef.current) {
-      onCancelRef.current();
-    }
-    
-    // Reset state after modal closes
-    setTimeout(() => {
-      resetState();
-    }, 300);
-  }, [state.status, resetState]);
-
   const value: OTPContextType = {
     state,
     isModalOpen,
@@ -285,10 +289,7 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 export const useOTP = (): OTPContextType => {
   const context = useContext(OTPContext);
   if (!context) {
-    throw new Error('useOTP must be used within an OTPProvider');
+    throw new Error(t("useotp-must-be-used-within-an-otpprovider"));
   }
   return context;
 };
-
-
-

@@ -18,6 +18,8 @@ import {
 import { useUIContext } from '../../context/UIContext';
 import urls from '../../urls.json';
 import { DynamicIcon } from '../../utils/iconUtils';
+import { t } from '../../i18n';
+
 
 export default function CampaignHomePage() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -63,7 +65,7 @@ export default function CampaignHomePage() {
       })
       .catch(err => {
         console.error('Failed to fetch reports:', err);
-        setError('Failed to load reports. Please try again.');
+        setError(t("failed-to-load-reports-please-try-again"));
         setIsLoading(false);
       });
   }, []);
@@ -105,7 +107,7 @@ export default function CampaignHomePage() {
       })
       .catch(err => {
         console.error('Failed to fetch reports:', err);
-        setError('Failed to load reports. Please try again.');
+        setError(t("failed-to-load-reports-please-try-again"));
         setIsLoading(false);
       });
   };
@@ -126,14 +128,14 @@ export default function CampaignHomePage() {
       {/* Page Header */}
       {step === 0 && (
         <PageHeader
-          title="Choose Your Report Type"
-          description="Select the analysis that best fits your business needs"
+          title={t("choose-your-report-type")}
+          description={t("select-the-analysis-that-best-fits-your-business-needs")}
         />
       )}
       {step === 1 && (
         <PageHeader
-          title="Select Your Option"
-          description="Choose between a free preview or a custom detailed report"
+          title={t("select-your-option")}
+          description={t("choose-between-a-free-preview-or-a-custom-detailed-report")}
         />
       )}
 
@@ -145,7 +147,7 @@ export default function CampaignHomePage() {
       )}
 
       {/* Loading State */}
-      {isLoading && <LoadingState message="Loading available reports..." />}
+      {isLoading && <LoadingState message={t("loading-available-reports")} />}
 
       {/* Error State */}
       {error && <ErrorState message={error} onRetry={handleRetry} />}
@@ -164,7 +166,7 @@ export default function CampaignHomePage() {
                     description={report.description}
                     onClick={() => handleReportClick(report)}
                     icon={<DynamicIcon iconString={report.icon} fallbackIcon={FaMapMarkedAlt} className="w-6 h-6" />}
-                    badge={index === 0 && !report.coming_soon ? 'Popular' : undefined}
+                    badge={index === 0 && !report.coming_soon ? t("popular") : undefined}
                     comingSoon={report.coming_soon}
                     bgImage={resolveBgImage(report.bgImage)}
                   />
@@ -172,11 +174,8 @@ export default function CampaignHomePage() {
               </div>
 
               <HelpSection>
-                <p className="font-medium mb-1">Need help deciding?</p>
-                <p className="text-xs text-gray-600">
-                  Each report provides unique insights to help you make data-driven location
-                  decisions for your business expansion.
-                </p>
+                <p className="font-medium mb-1">{t("need-help-deciding")}</p>
+                <p className="text-xs text-gray-600">{t("each-report-provides-unique-insights-to-help-you-make-data-driven-location-decis")}</p>
               </HelpSection>
             </div>
           )}
@@ -186,14 +185,14 @@ export default function CampaignHomePage() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <SelectableCard
-                  title="Free Preview"
-                  description="Explore an example report with our interactive map. No account required."
+                  title={t("free-preview")}
+                  description={t("explore-an-example-report-with-our-interactive-map-no-account-required")}
                   onClick={() => handleFreeClick(selectedReport.options.free_redirect)}
                   icon={<FaGift className="w-6 h-6" />}
                 />
                 <SelectableCard
-                  title="Custom Report"
-                  description="Get a personalized analysis tailored to your specific location and business needs."
+                  title={t("custom-report")}
+                  description={t("get-a-personalized-analysis-tailored-to-your-specific-location-and-business-needs")}
                   onClick={() => handleCustomClick(selectedReport.options.custom_redirect)}
                   icon={<FaFileAlt className="w-6 h-6" />}
                   recommended
@@ -201,10 +200,7 @@ export default function CampaignHomePage() {
               </div>
 
               <HelpSection>
-                <p className="text-xs text-gray-600">
-                  The free preview gives you a sample of what's possible. Create a custom report to
-                  get analysis specific to your target location.
-                </p>
+                <p className="text-xs text-gray-600">{t("the-free-preview-gives-you-a-sample-of-what-s-possible-create-a-custom-report-to")}</p>
               </HelpSection>
             </div>
           )}

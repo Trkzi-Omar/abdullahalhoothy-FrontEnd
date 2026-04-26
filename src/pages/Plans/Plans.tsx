@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import urls from '../../urls.json';
 import { useNavigate } from 'react-router';
 import apiRequest from '../../services/apiRequest';
+import { t } from '../../i18n';
+
 
 type Feature = {
   included: boolean;
@@ -48,7 +50,7 @@ const PlansPage: React.FC = () => {
         setPlansData(Array.isArray(plans) ? plans : []);
       } catch (err) {
         console.error('Failed to fetch plans:', err);
-        setError('Failed to load plans. Please try again later.');
+        setError(t("failed-to-load-plans-please-try-again-later"));
         setPlansData([]);
       } finally {
         setIsLoading(false);
@@ -73,7 +75,7 @@ const PlansPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="w-full flex flex-col items-center justify-center px-6 py-3 bg-gray-50 min-h-screen">
-        <div className="text-lg text-gray-600">Loading plans...</div>
+        <div className="text-lg text-gray-600">{t("loading-plans")}</div>
       </div>
     );
   }
@@ -92,7 +94,7 @@ const PlansPage: React.FC = () => {
       <div className="w-full bg-white border border-gray-200 max-w-4xl p-3 flex flex-col md:flex-row items-start gap-6">
         {/* Billing toggle */}
         <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-gray-700">Billing:</span>
+          <span className="text-sm font-medium text-gray-700">{t("billing")}</span>
           <div className="bg-gray-100 p-1 flex">
             <button
               onClick={() => setBillingCycle('month')}
@@ -101,9 +103,7 @@ const PlansPage: React.FC = () => {
                   ? 'bg-white shadow text-gray-800'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
-            >
-              Monthly
-            </button>
+            >{t("monthly")}</button>
             <button
               onClick={() => setBillingCycle('year')}
               className={`px-6 py-1.5 text-sm font-medium transition ${
@@ -111,17 +111,13 @@ const PlansPage: React.FC = () => {
                   ? 'bg-white shadow text-gray-800'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
-            >
-              Annual
-            </button>
+            >{t("annual")}</button>
           </div>
         </div>
 
         {/* User counter */}
         <div className="flex items-center gap-3">
-          <label htmlFor="users" className="text-sm font-medium text-gray-700">
-            Users
-          </label>
+          <label htmlFor="users" className="text-sm font-medium text-gray-700">{t("users")}</label>
 
           <div className="flex h-9 w-28 items-stretch overflow-hidden border border-gray-300 bg-white shadow-sm">
             <input
@@ -148,12 +144,12 @@ const PlansPage: React.FC = () => {
             />
 
             {/* Always-visible custom stepper */}
-            <div className="flex w-8 flex-col border-l border-gray-200">
+            <div className="flex w-8 flex-col border-s border-gray-200">
               <button
                 type="button"
                 onClick={increaseUsers}
                 className="grid flex-1 place-items-center hover:bg-gray-50 active:bg-gray-100 focus:outline-none"
-                aria-label="Increase users"
+                aria-label={t("increase-users")}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path
@@ -169,7 +165,7 @@ const PlansPage: React.FC = () => {
                 type="button"
                 onClick={decreaseUsers}
                 className="grid flex-1 place-items-center border-t border-gray-200 hover:bg-gray-50 active:bg-gray-100 focus:outline-none"
-                aria-label="Decrease users"
+                aria-label={t("decrease-users")}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path
@@ -200,9 +196,7 @@ const PlansPage: React.FC = () => {
               }`}
             >
               {plan.recommended && (
-                <span className="absolute top-0 right-0 bg-purple-600 text-white text-xs font-semibold px-3 py-1">
-                  RECOMMENDED
-                </span>
+                <span className="absolute top-0 end-0 bg-purple-600 text-white text-xs font-semibold px-3 py-1">{t("recommended")}</span>
               )}
 
               {/* Plan name + tagline */}
@@ -212,8 +206,8 @@ const PlansPage: React.FC = () => {
               {/* Price */}
               <p className="text-2xl font-bold text-gray-900 mb-1">
                 {plan.price}
-                <span className="text-sm font-medium text-gray-500 ml-1">
-                  / {billingCycle} / {users} user{users > 1 ? 's' : ''}
+                <span className="text-sm font-medium text-gray-500 ms-1">
+                  / {billingCycle} / {users}{' '}{t("user")}{users > 1 ?t("s") : ''}
                 </span>
               </p>
 
@@ -225,9 +219,7 @@ const PlansPage: React.FC = () => {
                     ? 'bg-purple-600 text-white hover:bg-purple-700'
                     : 'bg-white text-purple-600 border border-purple-600 hover:bg-purple-50'
                 }`}
-              >
-                Get Started
-              </button>
+              >{t("get-started")}</button>
 
               {/* Included features */}
               <div className="space-y-3">
@@ -272,7 +264,7 @@ const PlansPage: React.FC = () => {
                               />
                             </svg>
 
-                            <div className="absolute left-5 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
+                            <div className="absolute start-5 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
                               {feature.meta}
                             </div>
                           </div>
@@ -357,7 +349,7 @@ const PlansPage: React.FC = () => {
                                 strokeLinecap="round"
                               />
                             </svg>
-                            <div className="absolute left-5 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
+                            <div className="absolute start-5 top-1/2 -translate-y-1/2 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
                               {feature.meta}
                             </div>
                           </div>

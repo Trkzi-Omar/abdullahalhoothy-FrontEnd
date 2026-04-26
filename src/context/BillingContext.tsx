@@ -1,4 +1,6 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import { t } from '../i18n';
 
 export type ReportTier = 'basic' | 'standard' | 'premium' | 'single_location_premium' | '';
 
@@ -112,7 +114,7 @@ export function BillingProvider({ children }: { children: ReactNode }) {
 export function useBillingContext() {
   const context = useContext(BillingContext);
   if (context === undefined) {
-    throw new Error('useBillingContext must be used within a BillingProvider');
+    throw new Error(t("usebillingcontext-must-be-used-within-a-billingprovider"));
   }
   return context;
 }

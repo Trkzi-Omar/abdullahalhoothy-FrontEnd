@@ -1,8 +1,10 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { AuthContextType, AuthResponse, AuthSuccessResponse } from '../types/allTypesAndInterfaces';
 import apiRequest from '../services/apiRequest';
 import urls from '../urls.json';
 import { useSearchParams } from 'react-router-dom';
+import { t } from '../i18n';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -13,7 +15,7 @@ export const isGuestUser = (authResponse: AuthResponse | null): boolean => {
   return (
     email === 'guest' ||
     email === 'guest@slocator.com' ||
-    (authResponse as any).registered === false ||
+    (authResponse as AuthResponse & { registered?: boolean }).registered === false ||
     authResponse.localId?.startsWith('guest_') === true
   );
 };
@@ -37,7 +39,7 @@ export const performGoogleLogin = async (
 
   const data = (response?.data?.data || response?.data) as AuthResponse;
   if (!data || !('idToken' in data)) {
-    throw new Error('Google Login Error: Invalid response');
+    throw new Error(t("google-login-error-invalid-response"));
   }
 
   setAuthResponse(data);
@@ -83,11 +85,11 @@ export const performLogin = async (
 
   const data = (response?.data?.data || response?.data) as AuthResponse;
   if (!data || !('idToken' in data)) {
-    throw new Error('Login Error: Invalid response');
+    throw new Error(t("login-error-invalid-response"));
   }
 
   if (options.isGuest && isGuestUser(data) && options.source) {
-    (data as any).source = options.source;
+    (data as AuthResponse & { source?: string }).source = options.source;
   }
 
   setAuthResponse(data);
@@ -141,7 +143,7 @@ export const performRegistration = async (
     return authData;
   }
 
-  throw new Error(responseData?.detail || 'Registration failed');
+  throw new Error(responseData?.detail || t("registration-failed-please-try-again"));
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -201,7 +203,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
     initializeAuth();
-  }, [urlAuth]);
+  }, [urlAuth, urlSource]);
 
   const isAuthenticated = !!(authResponse && 'idToken' in authResponse);
   const [authLoading, setAuthLoading] = useState(() => {
@@ -223,7 +225,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error(t("useauth-must-be-used-within-an-authprovider"));
   }
   return context;
 };

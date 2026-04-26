@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useCaseStudy } from './CaseStudyPanel';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { t } from '../../i18n';
+
 
 export const CaseStudyToggle: React.FC = () => {
   const { showCaseStudy, setShowCaseStudy } = useCaseStudy();
-  const [isDisabled, setIsDisabled] = useState(false);
+  const isDisabled = false;
 
   const handleToggle = () => {
     if (!isDisabled) {
@@ -36,7 +38,7 @@ export const CaseStudyToggle: React.FC = () => {
         `}
         aria-pressed={showCaseStudy}
         title={
-          isDisabled ? 'This feature is currently unavailable' : 'Toggle case study visibility'
+          isDisabled ? t("this-feature-is-currently-unavailable") : t("toggle-case-study-visibility")
         }
       >
         <div className="flex gap-3 items-center justify-center">
@@ -46,7 +48,7 @@ export const CaseStudyToggle: React.FC = () => {
             <FaEye className="stroke-current w-[18px] h-[18px]" aria-hidden="true" />
           )}
           <span className="font-medium">
-            {showCaseStudy ? 'Hide Case Study' : 'Show Case Study'}
+            {showCaseStudy ?t("hide-case-study") :t("show-case-study")}
           </span>
         </div>
       </button>

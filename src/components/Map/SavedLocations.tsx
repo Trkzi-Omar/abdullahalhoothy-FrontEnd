@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { useMapContext } from '../../context/MapContext';
@@ -9,6 +10,8 @@ import './mapbox-custom.css';
 import { useMeasurement } from '../../hooks/useMeasurement';
 import { MeasurementData } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
+import { t } from '../../i18n';
+
 
 const defaultMarkerColor = '#7D00B8';
 
@@ -76,7 +79,7 @@ const SavedLocations: React.FC = () => {
       initialColor?: string
     ) => (
       <div className="p-0 w-44">
-        <h2 className="text-xl font-bold mb-2">Marker</h2>
+        <h2 className="text-xl font-bold mb-2">{t("marker")}</h2>
 
         <form
           onSubmit={event => {
@@ -93,8 +96,7 @@ const SavedLocations: React.FC = () => {
           }}
         >
           <div className="mb-2">
-            <label htmlFor="name" className="block mb-2 font-medium">
-              Name <span className="text-red-500">*</span>
+            <label htmlFor="name" className="block mb-2 font-medium">{t("name-2")}{' '}<span className="text-red-500">*</span>
             </label>
             <input
               id="name"
@@ -103,15 +105,13 @@ const SavedLocations: React.FC = () => {
               className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
               aria-required="true"
-              placeholder="Enter a name"
+              placeholder={t("enter-a-name")}
               defaultValue={initialName}
             />
           </div>
 
           <div className="mb-2">
-            <label htmlFor="color" className="block mb-2 font-medium">
-              Color
-            </label>
+            <label htmlFor="color" className="block mb-2 font-medium">{t("color")}</label>
             <input
               id="color"
               name="color"
@@ -122,14 +122,12 @@ const SavedLocations: React.FC = () => {
           </div>
 
           <div className="mb-2">
-            <label htmlFor="description" className="block mb-2 font-medium">
-              Description
-            </label>
+            <label htmlFor="description" className="block mb-2 font-medium">{t("description")}</label>
             <textarea
               id="description"
               name="description"
               rows={2}
-              placeholder="Enter a description"
+              placeholder={t("enter-a-description")}
               className="w-full p-2 border rounded-md resize-none"
               defaultValue={initialDescription}
             />
@@ -139,9 +137,7 @@ const SavedLocations: React.FC = () => {
             <button
               type="submit"
               className="w-full px-4 py-2 shadow-sm bg-gem-gradient text-white rounded-md"
-            >
-              Save
-            </button>
+            >{t("save")}</button>
           </div>
         </form>
       </div>
@@ -175,17 +171,17 @@ const SavedLocations: React.FC = () => {
             <h3 class="font-bold text-lg text-gray-800 mb-2">${markerData.name}</h3>
             <p class="text-gray-600 mb-${markerData.description ? '3' : '0'}">${markerData.description}</p>
             <div class="mt-2 w-full flex justify-end gap-1">
-              <button aria-label="Delete Location" class="delete-location text-xs bg-red-500 hover:bg-red-600 transition-colors duration-200 text-white px-2 py-1.5 rounded-md shadow-sm flex items-center justify-center" data-id="${markerData.id}">
+              <button aria-label="${t("delete-location")}" class="delete-location text-xs bg-red-500 hover:bg-red-600 transition-colors duration-200 text-white px-2 py-1.5 rounded-md shadow-sm flex items-center justify-center" data-id="${markerData.id}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </button>
-              <button aria-label="Edit Location" class="edit-location text-xs bg-blue-500 hover:bg-blue-600 transition-colors duration-200 text-white px-2 py-1 rounded-md shadow-sm flex items-center justify-center" data-id="${markerData.id}">
+              <button aria-label="${t("edit-location")}" class="edit-location text-xs bg-blue-500 hover:bg-blue-600 transition-colors duration-200 text-white px-2 py-1 rounded-md shadow-sm flex items-center justify-center" data-id="${markerData.id}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </button>
-             <button aria-label="Measure from this location" class="measure-location text-xs bg-gem-gradient hover:bg-gem-gradient-hover transition-colors duration-200 text-white px-2 py-1 rounded-md shadow-sm flex items-center justify-center" data-id="${markerData.id}">
+             <button aria-label="${t("measure-from-this-location")}" class="measure-location text-xs bg-gem-gradient hover:bg-gem-gradient-hover transition-colors duration-200 text-white px-2 py-1 rounded-md shadow-sm flex items-center justify-center" data-id="${markerData.id}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 256 256" stroke="currentColor">
                   <rect x="26.2" y="82.7" width="203.6" height="90.51" rx="8" transform="translate(-53 128) rotate(-45)" stroke-linecap="round" stroke-linejoin="round" stroke-width="12"/>
                   <line x1="132" y1="60" x2="164" y2="92" stroke-linecap="round" stroke-linejoin="round" stroke-width="12"/>
@@ -816,13 +812,11 @@ const SavedLocations: React.FC = () => {
       )}
 
       {isMeasuring && (
-        <div className="absolute bottom-4 right-4 p-2 rounded z-10">
+        <div className="absolute bottom-4 end-4 p-2 rounded z-10">
           <button
             className="shadow px-3 py-1 bg-rose-700 text-white rounded hover:bg-rose-600 text-sm"
             onClick={exitMeasureMode}
-          >
-            Cancel Measurement
-          </button>
+          >{t("cancel-measurement")}</button>
         </div>
       )}
     </>

@@ -33,7 +33,7 @@ function Container() {
         <StatisticsPopups />
         {shouldInitializeFeatures && (
           <>
-            <div className="absolute top-4 left-4 flex items-center gap-2 z-[1]">
+            <div className="absolute top-4 start-4 flex items-center gap-2 z-[1]">
               <AreaIntelligeneControl />
               <BenchmarkControl />
             </div>

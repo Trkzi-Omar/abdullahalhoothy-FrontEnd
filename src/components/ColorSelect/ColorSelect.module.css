@@ -43,7 +43,7 @@
   position: static;
   min-width: 14px;
   min-height: 14px;
-  margin-left: 16px;
+  margin-inline-start: 16px;
 }
 
 .colorCatalog {
@@ -95,5 +95,5 @@
 }
 
 .optionText {
-  margin-right: 10px;
+  margin-inline-end: 10px;
 }

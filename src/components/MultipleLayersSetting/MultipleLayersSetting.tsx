@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { FaTrash } from 'react-icons/fa';
 import ColorSelect from '../ColorSelect/ColorSelect';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useLayerContext } from '../../context/LayerContext';
 import { MultipleLayersSettingProps, DisplayType } from '../../types/allTypesAndInterfaces';
-import DropdownColorSelect from '../ColorSelect/DropdownColorSelect';
 import { IoIosArrowDropdown } from 'react-icons/io';
 import { RiCloseCircleLine } from 'react-icons/ri';
 import urls from '../../urls.json';
@@ -12,9 +11,10 @@ import { useAuth } from '../../context/AuthContext';
 import apiRequest from '../../services/apiRequest';
 import BasedOnLayerDropdown from './BasedOnLayerDropdown';
 import { toast } from 'sonner';
+import { t } from '../../i18n';
+
 
 const initialBasedon = 'radius';
-const initialRadius = 1000;
 
 const getFormattedThreshold = (value: string, basedOn: string | null) => {
   if (
@@ -51,20 +51,17 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     isAdvanced,
     setIsAdvanced,
     openDropdownIndices,
-    setOpenDropdownIndices,
     updateDropdownIndex,
     setColors,
     setReqGradientColorBasedOnZone,
     colors,
     chosenPallet,
     setChosenPallet,
-    selectedBasedon,
     setSelectedBasedon,
     layerColors,
     setLayerColors,
     setGradientColorBasedOnZone,
     setIsAdvancedMode,
-    setIsRadiusMode,
     updateLayerGrid,
     updateLayerColor,
     basedOnLayerId,
@@ -74,22 +71,19 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     handleFilteredZone,
     handleNameBasedColorZone,
     nameInputs,
-    setNameInputs,
     selectedOption,
     setSelectedOption,
     coverageType,
-    setCoverageType,
     coverageValue,
     setCoverageValue,
     propertyThreshold,
-    setPropertyThreshold,
     comparisonType,
   } = useCatalogContext();
 
   const { setIncludePopulation, setIncludeIncome, setLayerDataMap } = useLayerContext();
   const layer = geoPoints[layerIndex];
 
-  const { layer_name, layer_legend, is_zone_layer, display, is_heatmap, is_grid, city_name } =
+  const { layer_name, layer_legend, is_zone_layer, display, is_heatmap, is_grid } =
     layer;
   const [, setIsZoneLayer] = useState(is_zone_layer);
   const [isDisplay, setIsDisplay] = useState(display);
@@ -99,15 +93,24 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const buttonRef = useRef<HTMLDivElement>(null);
   const { authResponse } = useAuth();
   const [, setIsError] = useState<Error | null>(null);
-  const [radiusInput, setRadiusInput] = useState<number | string>(layer.radius_meters || '');
-
   // Add state for the recolor color selection
   const [recolorSelectedColor, setRecolorSelectedColor] = useState<string>('#ff0000');
 
   const dropdownIndex = layerIndex ?? -1;
   const isOpen = openDropdownIndices[1] === dropdownIndex;
 
-
+  const handleGetGradientColors = useCallback(async () => {
+    try {
+      const res = await apiRequest({
+        url: urls.fetch_gradient_colors,
+        method: 'get',
+      });
+      setColors(res.data.data);
+    } catch (error) {
+      setIsError(error instanceof Error ? error : new Error(String(error)));
+      console.error('error fetching gradient colors', error);
+    }
+  }, [setColors]);
 
   const [displayType, setDisplayType] = useState(
     layer.is_gradient
@@ -124,10 +127,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setSelectedBasedon(layer.basedon || initialBasedon);
     // Only set initial values if they exist, otherwise keep empty
     if (layer.radius_meters) {
-      setRadiusInput(layer.radius_meters);
       setCoverageValue(String(layer.radius_meters));
     }
-  }, []);
+  }, [handleGetGradientColors, layer.basedon, layer.radius_meters, setCoverageValue, setSelectedBasedon]);
 
   useEffect(
     function () {
@@ -157,19 +159,11 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [setOpenDropdownIndices]);
+  }, [setIsAdvanced, updateDropdownIndex]);
 
   function handleDisplayChange() {
     updateLayerDisplay(layerIndex, !isDisplay);
     setIsDisplay(!isDisplay);
-  }
-
-  function handleHeatMapChange() {
-    if (isGrid) {
-      setIsGrid(false);
-    }
-    updateLayerHeatmap(layerIndex, !isHeatmap);
-    setIsHeatmap(!isHeatmap);
   }
 
   function handleRemoveLayer() {
@@ -226,82 +220,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     }
   }
 
-  async function handleGetGradientColors() {
-    try {
-      const res = await apiRequest({
-        url: urls.fetch_gradient_colors,
-        method: 'get',
-      });
-      setColors(res.data.data);
-    } catch (error) {
-      setIsError(error instanceof Error ? error : new Error(String(error)));
-      console.error('error fetching gradient colors', error);
-    }
-  }
-
-  function handleApplayeradius(newRadius: number | string) {
-    if (!newRadius) {
-      return null;
-    } else {
-      setIsRadiusMode(true);
-      const layer_id =
-        layerIndex == 0
-          ? geoPoints[0]?.layer_id
-          : layerIndex == 1
-            ? geoPoints[1]?.layer_id
-            : '';
-      const change_layer_id =
-        layerIndex == 0
-          ? geoPoints[1]?.layer_id
-          : layerIndex == 1
-            ? geoPoints[0]?.layer_id
-            : '';
-
-      const updatedLayer = {
-        ...geoPoints[layerIndex],
-        radius_meters: newRadius || 1000,
-      };
-      setGeoPoints(prev => {
-        const updated = [...prev];
-        updated[layerIndex] = updatedLayer;
-        return updated;
-      });
-
-      setReqGradientColorBasedOnZone({
-        layer_id,
-        user_id: authResponse?.localId || '',
-        color_grid_choice: colors[chosenPallet || 0],
-        change_layer_id,
-        change_layer_name: geoPoints[layerIndex]?.layer_name || `Layer ${layerIndex}`,
-        based_on_layer_id: layer_id,
-        based_on_layer_name: geoPoints[layerIndex]?.layer_name || `Layer ${layerIndex}`,
-        threshold: getFormattedThreshold(propertyThreshold, basedOnProperty),
-        coverage_value: newRadius,
-        coverage_property: selectedBasedon,
-        color_based_on: basedOnProperty || '',
-      });
-    }
-  }
-
-  function handleGridChange() {
-    if (isHeatmap) {
-      updateLayerHeatmap(layerIndex, false);
-      setIsHeatmap(false);
-    }
-    updateLayerGrid(layerIndex, !isGrid);
-    setIsGrid(!isGrid);
-  }
-
-  function handleRadiusInputChange(newRadius: number | string) {
-    setRadiusInput(newRadius);
-    setCoverageValue(String(newRadius));
-
-    setReqGradientColorBasedOnZone((prev: any) => ({
-      ...prev,
-      offset_value: newRadius,
-    }));
-  }
-
   const handleColorChange = (color: string) => {
     if (layerIndex !== undefined) {
       // Update layerColors state
@@ -330,16 +248,12 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setRecolorSelectedColor(color);
   };
 
-  const handleThresholdChange = (value: string) => {
-    setPropertyThreshold(value);
-  };
-
   const handleApplyFilter = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
     // Validate required fields
     if (!coverageValue || !basedOnLayerId) {
-      toast.error('Please fill in all required fields (distance and layer)');
+      toast.error(t("please-fill-in-all-required-fields-distance-and-layer"));
       return;
     }
 
@@ -352,7 +266,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
       if (!currentLayer || !baseLayer || !selectedColors) {
         console.error('Missing required fields');
-        toast.error('Missing required fields for filtering');
+        toast.error(t("missing-required-fields-for-filtering"));
         return;
       }
 
@@ -379,7 +293,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       const filterResponse = await handleFilteredZone(filterRequest);
 
       if (!filterResponse || filterResponse.length === 0) {
-        toast.error('No features found based on the given criteria.');
+        toast.error(t("no-features-found-based-on-the-given-criteria"));
         return;
       }
 
@@ -402,9 +316,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
           return layer; // Keep other layers unchanged
         })
       );
-    } catch (error: any) {
+    } catch (error) {
       console.error('Filter error:', error);
-      toast.error('Server error (500). Please try again later.');
+      toast.error(t("server-error-500-please-try-again-later"));
     } finally {
       setIsLoading(false);
     }
@@ -415,7 +329,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
     // Validate required fields for recolor
     if (!coverageValue || !basedOnLayerId) {
-      toast.error('Please fill in all required fields (distance and layer)');
+      toast.error(t("please-fill-in-all-required-fields-distance-and-layer"));
       return;
     }
 
@@ -428,7 +342,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       const selectedColors = colors[chosenPallet || 0];
 
       if (!currentLayer || !baseLayer || !selectedColors) {
-        toast.error('Missing required fields for recoloring');
+        toast.error(t("missing-required-fields-for-recoloring"));
         return;
       }
 
@@ -459,7 +373,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       const gradientData = await handleNameBasedColorZone(gradientRequest);
 
       if (!gradientData || gradientData.length === 0) {
-        throw new Error('No gradient data received.');
+        throw new Error(t("no-gradient-data-received"));
       }
 
       // Process gradient data for UI update
@@ -497,31 +411,11 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       });
     } catch (error) {
       console.error('Error applying dynamic color:', error);
-      setIsError(error instanceof Error ? error : new Error('Failed to apply dynamic color'));
-      toast.error('Failed to apply recoloring');
+      setIsError(error instanceof Error ? error : new Error(t("failed-to-apply-dynamic-color")));
+      toast.error(t("failed-to-apply-recoloring"));
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleMetricChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = event.target.value;
-    setSelectedBasedon(value);
-    setCoverageType(value);
-
-    setGeoPoints(prev =>
-      prev.map((point, idx) => (idx === layerIndex ? { ...point, basedon: value } : point))
-    );
-  };
-
-  // Handler for coverage type changes from BasedOnLayerDropdown
-  const handleCoverageTypeChange = (type: string) => {
-    setCoverageType(type);
-  };
-
-  // Handler for coverage value changes from BasedOnLayerDropdown
-  const handleCoverageValueChange = (value: string) => {
-    setCoverageValue(value);
   };
 
   useEffect(() => {
@@ -532,7 +426,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         [layerIndex]: initialColor,
       }));
     }
-  }, [layer, layerIndex, layerColors]);
+  }, [layer, layerIndex, layerColors, setLayerColors]);
 
   useEffect(() => {
     const currentLayer = geoPoints[layerIndex];
@@ -542,7 +436,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         [layerIndex]: currentLayer.points_color,
       }));
     }
-  }, [geoPoints, layerIndex, layerColors]);
+  }, [geoPoints, layerIndex, layerColors, setLayerColors]);
 
   const handleDisplayTypeChange = (newType: (typeof DisplayType)[keyof typeof DisplayType]) => {
     if (layer.is_gradient) return;
@@ -588,7 +482,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
           }
         >
           <button
-            className="bg-transparent border-none text-[#ff4d4f] text-base cursor-pointer absolute top-[2px] right-[2px] rounded-full h-5 w-5 flex justify-center items-center transition-colors duration-300 hover:bg-[#ff4d4f] hover:text-white"
+            className="bg-transparent border-none text-[#ff4d4f] text-base cursor-pointer absolute top-[2px] end-[2px] rounded-full h-5 w-5 flex justify-center items-center transition-colors duration-300 hover:bg-[#ff4d4f] hover:text-white"
             onClick={handleRemoveLayer}
           >
             <FaTrash />
@@ -608,7 +502,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 onChange={handleDisplayChange}
                 className="w-[11px] h-[11px] cursor-pointer accent-[#28a745]"
               />
-              <p className="text-[11px] my-[2px] text-[#555] whitespace-nowrap">Visible</p>
+              <p className="text-[11px] my-[2px] text-[#555] whitespace-nowrap">{t("visible")}</p>
             </div>
           </div>
 
@@ -639,7 +533,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 {layer_name || layer_legend}
               </p>
               <div className="flex items-center  gap-2">
-                <p className="text-xs mb-0 font-medium">Advanced</p>
+                <p className="text-xs mb-0 font-medium">{t("advanced")}</p>
                 <div
                   onClick={e => {
                     setIsAdvanced(!isAdvanced);
@@ -653,7 +547,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
               </div>
             </div>
 
-            <p className="text-sm mb-0 font-medium">Change display type</p>
+            <p className="text-sm mb-0 font-medium">{t("change-display-type")}</p>
 
             <div
               className={`flex gap-2 ms-2.5 text-sm ${layer.is_gradient ? 'cursor-not-allowed' : ''}`}
@@ -678,9 +572,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                   className={`my-[2px] whitespace-nowrap cursor-pointer ${
                     layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
                   }`}
-                >
-                  Points
-                </label>
+                >{t("points-2")}</label>
               </div>
 
               <div className="flex items-center gap-2">
@@ -703,9 +595,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                   className={`my-[2px] whitespace-nowrap cursor-pointer ${
                     layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
                   }`}
-                >
-                  Heatmap
-                </label>
+                >{t("heatmap")}</label>
               </div>
 
               <div className="flex items-center gap-2">
@@ -728,9 +618,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                   className={`my-[2px] whitespace-nowrap cursor-pointer ${
                     layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
                   }`}
-                >
-                  Grid
-                </label>
+                >{t("grid")}</label>
               </div>
             </div>
             <div className="flex  justify-between items-center">
@@ -743,9 +631,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                       ? 'border-primary text-primary font-bold' // Active tab styling
                       : 'border-transparent text-gray-500 hover:text-black'
                   }`}
-                >
-                  Recolor
-                </button>
+                >{t("recolor")}</button>
                 <button
                   onClick={() => setSelectedOption('filter')}
                   className={`px-4 py-2 text-sm font-medium flex items-center text-center gap-2 border-b-2 ${
@@ -753,9 +639,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                       ? 'border-primary text-primary font-bold' // Active tab styling
                       : 'border-transparent text-gray-500 hover:text-black'
                   }`}
-                >
-                  Filter
-                </button>
+                >{t("filter")}</button>
               </div>
             </div>
 
@@ -767,7 +651,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
             />
 
             <div>
-              {selectedOption === 'recolor' ? (
+              {selectedOption ==="recolor" ? (
                 <button
                   onClick={e => handleApplayerecolor(e)}
                   disabled={isLoading}
@@ -794,11 +678,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                           fill="currentColor"
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         />
-                      </svg>
-                      Applying...
-                    </span>
-                  ) : (
-                    'Recolor'
+                      </svg>{t("applying")}</span>
+                  ) : (t("recolor")
                   )}
                 </button>
               ) : (
@@ -829,11 +710,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                             fill="currentColor"
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           />
-                        </svg>
-                        Applying...
-                      </span>
-                    ) : (
-                      'Filter'
+                        </svg>{t("applying")}</span>
+                    ) : (t("filter")
                     )}
                   </button>
                 </>

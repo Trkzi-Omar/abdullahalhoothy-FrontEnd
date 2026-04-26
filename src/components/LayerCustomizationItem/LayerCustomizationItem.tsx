@@ -1,6 +1,8 @@
 import ColorSelect from '../ColorSelect/ColorSelect';
 import { LayerCustomizationItemProps } from '../../types/allTypesAndInterfaces';
 import { HiCheck, HiExclamation } from 'react-icons/hi';
+import { t } from '../../i18n';
+
 
 function LayerCustomizationItem({
   layer,
@@ -26,11 +28,11 @@ function LayerCustomizationItem({
         className="flex justify-between items-center cursor-pointer"
         style={getHeaderStyle(layer.color)}
       >
-        <div className="flex items-center space-x-3 p-4">
+        <div className="flex items-center gap-3 p-4">
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: layer.color }} />
           <h3 className="font-medium text-gray-900">{layer.name || `Layer ${layer.layerId}`}</h3>
         </div>
-        <div className="pr-4">
+        <div className="pe-4">
           <svg
             className={`w-5 h-5 transform transition-transform duration-200 ${
               isCollapsed ? '' : 'rotate-180'
@@ -56,7 +58,7 @@ function LayerCustomizationItem({
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Name</label>
+              <label className="block text-sm font-medium text-gray-700">{t("name-2")}</label>
               <input
                 type="text"
                 value={layer.name}
@@ -67,7 +69,7 @@ function LayerCustomizationItem({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Point Color</label>
+              <label className="block text-sm font-medium text-gray-700">{t("point-color")}</label>
               <ColorSelect
                 layerId={layer.layerId}
                 onColorChange={color => onLayerChange(layer.layerId, 'color', color)}
@@ -75,7 +77,7 @@ function LayerCustomizationItem({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Legend</label>
+              <label className="block text-sm font-medium text-gray-700">{t("legend")}</label>
               <textarea
                 value={layer.legend}
                 onChange={e => onLayerChange(layer.layerId, 'legend', e.target.value)}
@@ -86,7 +88,7 @@ function LayerCustomizationItem({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <label className="block text-sm font-medium text-gray-700">{t("description")}</label>
               <textarea
                 value={layer.description}
                 onChange={e => onLayerChange(layer.layerId, 'description', e.target.value)}
@@ -96,7 +98,7 @@ function LayerCustomizationItem({
               />
             </div>
 
-            <div className="flex justify-end space-x-3 pt-2">
+            <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => onDiscard(layer.layerId)}
                 disabled={isSaved}
@@ -106,9 +108,7 @@ function LayerCustomizationItem({
                       ? 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'
                       : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
                   }`}
-              >
-                Discard
-              </button>
+              >{t("discard")}</button>
               <button
                 onClick={() => onSave(layer.layerId)}
                 disabled={isSaving || isSaved}
@@ -148,21 +148,14 @@ function LayerCustomizationItem({
                         fill="currentColor"
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
-                    </svg>
-                    Saving...
-                  </span>
+                    </svg>{t("saving-2")}</span>
                 ) : isSaved ? (
                   <>
-                    <HiCheck className="h-5 w-5" />
-                    Saved
-                  </>
+                    <HiCheck className="h-5 w-5" />{t("saved")}</>
                 ) : error ? (
                   <>
-                    <HiExclamation className="h-5 w-5" />
-                    Retry
-                  </>
-                ) : (
-                  'Save'
+                    <HiExclamation className="h-5 w-5" />{t("retry")}</>
+                ) : (t("save")
                 )}
               </button>
             </div>

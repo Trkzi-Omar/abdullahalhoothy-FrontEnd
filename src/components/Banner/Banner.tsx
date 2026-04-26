@@ -1,6 +1,8 @@
 // src/components/Banner.tsx
 import React from 'react';
 import { IoClose } from 'react-icons/io5';
+import { t } from '../../i18n';
+
 
 
 interface BannerProps {
@@ -31,18 +33,18 @@ const Banner: React.FC<BannerProps> = ({
 
   const containerClasses = inline
     ? `w-full ${colors[type]} py-2 px-4 flex justify-between items-center rounded-md shadow-sm ${className}`
-    : `fixed top-0 left-0 right-0 ${colors[type]} py-3 px-4 flex justify-between items-center z-50 shadow-lg ${className}`
+    : `fixed top-0 start-0 end-0 ${colors[type]} py-3 px-4 flex justify-between items-center z-50 shadow-lg ${className}`
 
   return (
     <div className={containerClasses}>
-      <div className="flex-1 text-center sm:text-left">
+      <div className="flex-1 text-center sm:text-start">
         <span className="text-sm sm:text-base">{message}</span>
       </div>
       {onClose && (
         <button 
           onClick={onClose} 
-          className="ml-3 flex items-center justify-center w-7 h-7 rounded-full bg-red-500 hover:bg-red-600 transition-colors flex-shrink-0"
-          aria-label="Close banner"
+          className="ms-3 flex items-center justify-center w-7 h-7 rounded-full bg-red-500 hover:bg-red-600 transition-colors flex-shrink-0"
+          aria-label={t("close-banner")}
         >
           <IoClose size={16} color="white" />
         </button>

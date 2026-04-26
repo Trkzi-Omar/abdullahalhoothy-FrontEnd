@@ -3,9 +3,11 @@ import DemographicChart from '../DemographicChart/DemographicChart';
 import PopulationPyramid from '../DemographicChart/PopulationPyramid';
 import TrendChart from '../DemographicChart/TrendChart';
 import DemographicInfoCard from './DemographicInfoCard';
+import { t } from '../../i18n';
+
 
 interface ChartMapping {
-  [key: string]: React.FC<any>;
+  [key: string]: React.FC<Record<string, unknown>>;
 }
 
 type ChartDataType = {
@@ -20,7 +22,7 @@ type ChartDataType = {
     saudiPopulation: number;
     averageIncome: number;
   };
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 const chartComponents: ChartMapping = {
@@ -85,8 +87,7 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({ chartId, title, className
   if (!chartComponents[chartType]) {
     console.log();
     return (
-      <div className={`p-4 text-center bg-gray-100 rounded ${className}`}>
-        Chart type not found: {chartType}
+      <div className={`p-4 text-center bg-gray-100 rounded ${className}`}>{t("chart-type-not-found")}{' '}{chartType}
       </div>
     );
   }
@@ -110,4 +111,3 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({ chartId, title, className
 };
 
 export default ChartRenderer;
-export { chartComponents, chartData };

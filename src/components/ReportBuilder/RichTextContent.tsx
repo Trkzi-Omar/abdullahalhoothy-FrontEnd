@@ -2,6 +2,8 @@ import React from 'react';
 import { Descendant, Text, Element } from 'slate';
 import ChartRenderer from './ChartRenderer';
 import { CustomElement, CustomText } from './RichTextEditor';
+import { t } from '../../i18n';
+
 
 interface RichTextContentProps {
   value: Descendant[];
@@ -84,7 +86,7 @@ const RichTextContent: React.FC<RichTextContentProps> = ({ value, className = ''
         return (
           <blockquote
             key={index}
-            className="pl-4 border-l-4 border-gem-dark italic text-gray-700 my-4"
+            className="ps-4 border-s-4 border-gem-dark italic text-gray-700 my-4"
             style={elementStyle}
             {...elementProps}
           >
@@ -102,10 +104,10 @@ const RichTextContent: React.FC<RichTextContentProps> = ({ value, className = ''
                 <div className="text-gray-600 font-medium mb-1">
                   {element.placeholderType
                     ? `${element.placeholderType.charAt(0).toUpperCase() + element.placeholderType.slice(1)} Chart Placeholder`
-                    : 'Chart Placeholder'}
+                    :t("chart-placeholder")}
                 </div>
                 <div className="text-sm text-gray-500">
-                  {element.placeholder || 'This chart will be replaced with actual data later'}
+                  {element.placeholder ||"This chart will be replaced with actual data later"}
                 </div>
               </div>
             )}

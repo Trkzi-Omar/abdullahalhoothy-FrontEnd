@@ -1,11 +1,13 @@
 import { FaExclamationTriangle, FaStore, FaTruck } from 'react-icons/fa';
 import { CustomReportData, FormErrors } from '../../../types/allTypesAndInterfaces';
 import '../DeliveryStore.css';
+import { t } from '../../../i18n';
+
 
 interface DeliveryInStoreStepProps {
   formData: CustomReportData;
   errors: FormErrors;
-  onInputChange: (field: string, value: any) => void;
+  onInputChange: (field: string, value: unknown) => void;
   disabled?: boolean;
 }
 
@@ -32,10 +34,8 @@ export const DeliveryInStoreStep = ({
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div className="text-center mb-6">
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Delivery vs In-Store</h3>
-        <p className="text-gray-600">
-          How do you expect your revenue to be split between delivery and in-store sales?
-        </p>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">{t("delivery-vs-in-store")}</h3>
+        <p className="text-gray-600">{t("how-do-you-expect-your-revenue-to-be-split-between-delivery-and-in-store-sales")}</p>
       </div>
 
       <div className="bg-white border text-center border-gray-200 rounded-xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
@@ -48,7 +48,7 @@ export const DeliveryInStoreStep = ({
               }`}
             >
               <FaTruck className="w-5 h-5" />
-              <span className="font-bold text-sm">Delivery</span>
+              <span className="font-bold text-sm">{t("delivery")}</span>
             </div>
             <span
               className="text-5xl font-extrabold transition-all duration-200"
@@ -64,7 +64,7 @@ export const DeliveryInStoreStep = ({
                 dineInWeight > 0.5 ? 'bg-amber-100 text-amber-600' : 'bg-gray-50 text-gray-500'
               }`}
             >
-              <span className="font-bold text-sm">In-Store</span>
+              <span className="font-bold text-sm">{t("in-store")}</span>
               <FaStore className="w-5 h-5" />
             </div>
             <span
@@ -79,7 +79,7 @@ export const DeliveryInStoreStep = ({
         {/* Custom Range Slider Container */}
         <div className="relative h-14 flex items-center mb-2 px-2">
           {/* Track Background Visuals - Optional Markers */}
-          <div className="absolute left-0 right-0 h-2 bg-gray-100 rounded-full overflow-hidden pointer-events-none"></div>
+          <div className="absolute start-0 end-0 h-2 bg-gray-100 rounded-full overflow-hidden pointer-events-none"></div>
 
           <input
             type="range"
@@ -93,7 +93,6 @@ export const DeliveryInStoreStep = ({
               disabled ? 'opacity-60 cursor-not-allowed' : ''
             }`}
             style={{
-              // @ts-ignore - Custom property for track gradient
               background: `linear-gradient(to right, ${deliveryColor} 0%, ${deliveryColor} ${
                 deliveryWeight * 100
               }%, ${inStoreColor} ${deliveryWeight * 100}%, ${inStoreColor} 100%)`,
@@ -107,15 +106,11 @@ export const DeliveryInStoreStep = ({
           <span
             className="transition-colors duration-200"
             style={{ color: deliveryWeight > 0.5 ? deliveryColor : undefined }}
-          >
-            More Delivery
-          </span>
+          >{t("more-delivery")}</span>
           <span
             className="transition-colors duration-200"
             style={{ color: dineInWeight > 0.5 ? inStoreColor : undefined }}
-          >
-            More In-Store
-          </span>
+          >{t("more-in-store")}</span>
         </div>
       </div>
 
@@ -123,7 +118,7 @@ export const DeliveryInStoreStep = ({
       {(errors.delivery_weight || errors.dine_in_weight) && (
         <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl animate-fade-in">
           <p className="text-sm font-medium flex items-center">
-            <FaExclamationTriangle className="w-4 h-4 mr-2" />
+            <FaExclamationTriangle className="w-4 h-4 me-2" />
             {errors.delivery_weight || errors.dine_in_weight}
           </p>
         </div>

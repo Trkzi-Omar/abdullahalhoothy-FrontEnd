@@ -1,9 +1,10 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, {
   createContext,
   useContext,
   useState,
+  useCallback,
   ReactNode,
-  useLayoutEffect,
   useRef,
   useEffect,
 } from 'react';
@@ -12,6 +13,7 @@ import { useCatalogContext } from './CatalogContext';
 import { useLayerContext } from './LayerContext';
 import { ModalOptions, UIContextProps } from '../types/allTypesAndInterfaces';
 import { useLocation } from 'react-router';
+import { t } from '../i18n';
 
 const UIContext = createContext<UIContextProps | undefined>(undefined);
 
@@ -19,7 +21,7 @@ const UIContext = createContext<UIContextProps | undefined>(undefined);
 export function useUIContext() {
   const context = useContext(UIContext);
   if (!context) {
-    throw new Error('useUIContext must be used within a UIProvider');
+    throw new Error(t("useuicontext-must-be-used-within-a-uiprovider"));
   }
   return context;
 }
@@ -38,7 +40,6 @@ export function UIProvider({ children }: { children: ReactNode }) {
     saveResponse: catalogIsSaved,
     isError: catalogIsError,
     setSaveResponse: setCatalogIsSaved,
-    setIsError: setCatalogIsError,
     resetFormStage,
     resetState,
   } = useCatalogContext();
@@ -53,12 +54,11 @@ export function UIProvider({ children }: { children: ReactNode }) {
     setInitialFlyToDone,
   } = useLayerContext();
 
-  // Function to open the modal with specified content and options
-  function openModal(content: ReactNode, options: ModalOptions = {}) {
+  const openModal = useCallback((content: ReactNode, options: ModalOptions = {}) => {
     setModalContent(content);
     setModalOptions(options);
     setIsModalOpen(true);
-  }
+  }, []);
 
   // Function to close the modal and reset related states
   function closeModal() {
@@ -132,6 +132,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
       return;
     }
     closeModal();
+    // closeModal depends on several provider setters; this effect intentionally tracks route changes only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   return (

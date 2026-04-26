@@ -1,6 +1,8 @@
 import { FaUsers, FaLayerGroup, FaChild, FaFemale } from 'react-icons/fa';
 import { useLayerContext } from '../../context/LayerContext';
 import { ViewportInsights } from '../../types';
+import { t } from '../../i18n';
+
 
 const DemographicInfoCard = () => {
   const { currentViewportInsights } = useLayerContext() as {
@@ -15,7 +17,7 @@ const DemographicInfoCard = () => {
     return (
       <div className="bg-[#1E293B] text-white p-6 rounded-lg shadow-lg max-w-xs mx-auto">
         <div className="flex justify-center items-center h-48">
-          <p className="text-gray-400">No demographic data available for current view</p>
+          <p className="text-gray-400">{t("no-demographic-data-available-for-current-view")}</p>
         </div>
       </div>
     );

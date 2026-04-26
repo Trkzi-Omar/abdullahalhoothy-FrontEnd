@@ -42,18 +42,18 @@ const CategoriesBrowserSubCategories = ({
                 const isSelected = selectedType === type;
 
                 const colors = isMixed
-                  ? 'bg-[#FFE8D6] border-[#C86B31] text-[#CD5C08]'
+                  ?"bg-[#FFE8D6] border-[#C86B31] text-[#CD5C08]"
                   : included
-                    ? 'bg-[rgb(40,167,69)] border-[#167a1b] text-white'
+                    ?"bg-[rgb(40,167,69)] border-[#167a1b] text-white"
                     : excluded
-                      ? 'bg-[#ffebee] border-[#f44336] text-[#c62828]'
+                      ?"bg-[#ffebee] border-[#f44336] text-[#c62828]"
                       : '';
 
                 const borderClass = isSelected
-                  ? 'border-[#115740]'
+                  ?"border-[#115740]"
                   : included || excluded
                     ? ''
-                    : 'border-[#ccc]';
+                    :"border-[#ccc]";
 
                 return (
                   <div
@@ -70,7 +70,7 @@ const CategoriesBrowserSubCategories = ({
                               e.preventDefault();
                               onRemoveType(type, layerId, true);
                             }}
-                            className="text-xs opacity-75 hover:opacity-100 mr-1 bg-black/10 px-1.5 rounded-md"
+                            className="text-xs opacity-75 hover:opacity-100 me-1 bg-black/10 px-1.5 rounded-md"
                           >
                             {layerId}
                           </button>
@@ -130,7 +130,7 @@ const CategoriesBrowserSubCategories = ({
                               e.preventDefault();
                               onRemoveType(type, layerId, false);
                             }}
-                            className="text-xs opacity-75 hover:opacity-100 ml-1 bg-black/10 px-1.5 rounded-md"
+                            className="text-xs opacity-75 hover:opacity-100 ms-1 bg-black/10 px-1.5 rounded-md"
                           >
                             {layerId}
                           </button>

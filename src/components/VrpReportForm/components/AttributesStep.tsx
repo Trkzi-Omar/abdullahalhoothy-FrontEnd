@@ -1,11 +1,11 @@
 import {
-  FaUsers,
-  FaLayerGroup,
   FaHandshake,
   FaExclamationTriangle,
 } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { CustomReportData } from "../../../types";
+import { t } from '../../../i18n';
+
 
 interface CategoryItem {
   type: "predefined" | "custom";
@@ -25,38 +25,22 @@ interface SetAttributeStepProps {
   inputCategories: string[];
 }
 
-const INCOME_OPTIONS = ["Low", "Medium", "High"];
-
 const SetAttributeStep = ({
   formData,
-  errors = {},
   onInputChange,
   disabled = false,
   inputCategories,
 }: SetAttributeStepProps) => {
-  const [age, setTargetAge] = useState<number>(formData.target_age || 0);
-  const [targetIncome, setTargetIncome] = useState<string>(
-    formData.target_income_level || "",
-  );
-
   const [searchComplementary, setSearchComplementary] = useState("");
-  const [searchCompetition, setSearchCompetition] = useState("");
-  const [searchCross, setSearchCross] = useState("");
 
   const [selectedComplementary, setSelectedComplementary] = useState<
     CategoryItem[]
   >([]);
-  const [selectedCompetition, setSelectedCompetition] = useState<
-    CategoryItem[]
-  >([]);
-  const [selectedCross, setSelectedCross] = useState<CategoryItem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
 
   const [complementaryError, setComplementaryError] = useState<string | null>(
     null,
   );
-  const [competitionError, setCompetitionError] = useState<string | null>(null);
-  const [crossError, setCrossError] = useState<string | null>(null);
 
   // Helper: Parse API format to internal CategoryItem format
   const parseFromApiFormat = (categories: string[]): CategoryItem[] => {
@@ -92,11 +76,11 @@ const SetAttributeStep = ({
     const trimmed = value.trim();
 
     if (trimmed.length < 2) {
-      return { valid: false, error: "Keyword must be at least 2 characters" };
+      return { valid: false, error: t("keyword-must-be-at-least-2-characters") };
     }
 
     if (trimmed.length > 50) {
-      return { valid: false, error: "Keyword must be at most 50 characters" };
+      return { valid: false, error: t("keyword-must-be-at-most-50-characters") };
     }
 
     return { valid: true };
@@ -119,13 +103,13 @@ const SetAttributeStep = ({
     const sanitized = searchValue.trim().replace(/^@+|@+$/g, "");
 
     if (!sanitized) {
-      setError("Please enter a keyword");
+      setError(t("please-enter-a-keyword"));
       return;
     }
 
     const validation = validateKeywordInput(sanitized);
     if (!validation.valid) {
-      setError(validation.error || "Invalid keyword");
+      setError(validation.error || t("invalid-keyword"));
       return;
     }
 
@@ -134,7 +118,7 @@ const SetAttributeStep = ({
     );
 
     if (isDuplicate) {
-      setError("This keyword is already added");
+      setError(t("this-keyword-is-already-added"));
       return;
     }
 
@@ -171,19 +155,9 @@ const SetAttributeStep = ({
 
   useEffect(() => {
     if (formData) {
-      setSelectedCompetition(
-        parseFromApiFormat([
-          ...new Set(formData?.competition_categories ?? []),
-        ]),
-      );
       setSelectedComplementary(
         parseFromApiFormat([
           ...new Set(formData?.complementary_categories ?? []),
-        ]),
-      );
-      setSelectedCross(
-        parseFromApiFormat([
-          ...new Set(formData?.cross_shopping_categories ?? []),
         ]),
       );
     }
@@ -192,12 +166,6 @@ const SetAttributeStep = ({
   useEffect(() => {
     setCategories(inputCategories);
   }, [inputCategories]);
-
-  const onAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number(e.target.value);
-    onInputChange("target_age", value);
-    setTargetAge(value);
-  };
 
   const getOrderedCategories = (
     query: string,
@@ -243,29 +211,15 @@ const SetAttributeStep = ({
     onInputChange(key, transformToApiFormat(updated));
   };
 
-  // Chip selector handler
-  const handleTagSelect = (
-    setSelected: React.Dispatch<React.SetStateAction<string>>,
-    field: string,
-    value: string,
-  ) => {
-    const updated = value;
-
-    setSelected(updated);
-    onInputChange(field, updated.toLowerCase());
-  };
-  
   return (
   
         <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-4 flex flex-col overflow-hidden max-h-[60vh]">
           <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center flex-shrink-0">
-            <FaHandshake className="w-4 h-4 mr-2 text-primary" />
-            Excluded Categories
-          </h3>
+            <FaHandshake className="w-4 h-4 me-2 text-primary" />{t("excluded-categories")}</h3>
 
           <input
             type="text"
-            placeholder="Search categories or add custom keyword..."
+            placeholder={t("search-categories-or-add-custom-keyword")}
             value={searchComplementary}
             onChange={(e) => setSearchComplementary(e.target.value)}
             onKeyDown={(e) =>
@@ -292,21 +246,17 @@ const SetAttributeStep = ({
               (cat) =>
                 cat.toLowerCase() === searchComplementary.trim().toLowerCase(),
             ) && (
-              <div className="text-xs text-blue-600 mb-2 px-3">
-                Press Enter to add '
-                {searchComplementary.trim().replace(/^@+|@+$/g, "")}' as custom
-                keyword
-              </div>
+              <div className="text-xs text-blue-600 mb-2 px-3">{t("press-enter-to-add")}{searchComplementary.trim().replace(/^@+|@+$/g, "")}{t("as-custom-keyword")}</div>
             )}
 
           {complementaryError && (
             <div className="text-xs text-red-600 mb-2 px-3 flex items-center">
-              <FaExclamationTriangle className="mr-1" />
+              <FaExclamationTriangle className="me-1" />
               {complementaryError}
             </div>
           )}
 
-          <div className="flex flex-wrap gap-1 max-h-52 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <div className="flex flex-wrap gap-1 max-h-52 overflow-y-auto pe-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {getOrderedCategories(
               searchComplementary,
               inputCategories,

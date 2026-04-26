@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { isGuestUser } from '../../context/AuthContext';
 import Banner from '../../components/Banner/Banner';
+import { t } from '../../i18n';
+
 
 const GuestAutoLogin = () => {
   const { authResponse } = useAuth();
@@ -28,17 +30,9 @@ const GuestAutoLogin = () => {
       visible={bannerVisible}
       type="info"
       message={
-        <>
-          You are logged in as a guest user. Please{' '}
-          <button className="underline font-semibold" onClick={handleSignupClick}>
-            sign up
-          </button>{' '}
-          or{' '}
-          <button className="underline font-semibold" onClick={handleSigninClick}>
-            sign in
-          </button>{' '}
-          to access full features.
-        </>
+        <>{t("you-are-logged-in-as-a-guest-user-please")}{' '}
+          <button className="underline font-semibold" onClick={handleSignupClick}>{t("sign-up-2")}</button>{' '}{t("or")}{' '}
+          <button className="underline font-semibold" onClick={handleSigninClick}>{t("sign-in-2")}</button>{' '}{t("to-access-full-features")}</>
       }
       onClose={() => setBannerVisible(false)}
       className="rounded-md "

@@ -4,6 +4,7 @@ import { LuLanguages } from 'react-icons/lu';
 import LandingLogo from './LandingLogo';
 import type { LandingTranslations } from '../../pages/Landing/translations';
 
+
 interface LandingNavbarProps {
   lang: 'en' | 'ar';
   setLang: (lang: 'en' | 'ar') => void;
@@ -66,13 +67,13 @@ const LandingNavbar = ({ lang, setLang, t }: LandingNavbarProps) => {
           <button onClick={toggleLang} className="text-slate-300 font-bold text-xs">
             {lang === 'en' ? 'AR' : 'EN'}
           </button>
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white p-1" aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white p-1" aria-label={mobileMenuOpen ? t.nav.closeMenu : t.nav.openMenu}>
             {mobileMenuOpen ? <MdClose size={24} /> : <MdMenu size={24} />}
           </button>
         </div>
       </div>
       {mobileMenuOpen && (
-        <div className="lg:hidden absolute top-full left-0 right-0 bg-brand-card border-b border-white/10 p-6 flex flex-col gap-4 shadow-2xl">
+        <div className="lg:hidden absolute top-full start-0 end-0 bg-brand-card border-b border-white/10 p-6 flex flex-col gap-4 shadow-2xl">
           <a
             href="#features"
             onClick={() => setMobileMenuOpen(false)}

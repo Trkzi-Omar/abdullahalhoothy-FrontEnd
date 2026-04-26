@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { useOTP } from '../../context/OTPContext';
+import { t } from '../../i18n';
+
 
 const OTPModal: React.FC = () => {
   const { state, isModalOpen, verifyOTP, resendOTP, closeOTPModal } = useOTP();
@@ -58,6 +60,14 @@ const OTPModal: React.FC = () => {
     }
   }, [otp, state.codeLength]);
 
+  // Handle verify
+  const handleVerify = useCallback(async () => {
+    const code = otp.join('');
+    if (code.length === state.codeLength) {
+      await verifyOTP(code);
+    }
+  }, [otp, state.codeLength, verifyOTP]);
+
   // Handle keydown for backspace navigation
   const handleKeyDown = useCallback((index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace') {
@@ -75,7 +85,7 @@ const OTPModal: React.FC = () => {
     } else if (e.key === 'Enter') {
       handleVerify();
     }
-  }, [otp, state.codeLength]);
+  }, [otp, state.codeLength, handleVerify]);
 
   // Handle paste
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
@@ -94,14 +104,6 @@ const OTPModal: React.FC = () => {
       inputRefs.current[focusIndex]?.focus();
     }
   }, [state.codeLength]);
-
-  // Handle verify
-  const handleVerify = useCallback(async () => {
-    const code = otp.join('');
-    if (code.length === state.codeLength) {
-      await verifyOTP(code);
-    }
-  }, [otp, state.codeLength, verifyOTP]);
 
   // Handle resend
   const handleResend = useCallback(async () => {
@@ -132,8 +134,8 @@ const OTPModal: React.FC = () => {
         <button
           onClick={closeOTPModal}
           disabled={isVerifying || isSending}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed z-10"
-          aria-label="Close"
+          className="absolute top-4 end-4 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed z-10"
+          aria-label={t("close")}
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round"/>
@@ -154,11 +156,11 @@ const OTPModal: React.FC = () => {
             )}
           </div>
           <h2 className="text-2xl font-bold mb-2">
-            {isSuccess ? 'Verified!' : 'Verify Your Phone'}
+            {isSuccess ?t("verified") :t("verify-your-phone")}
           </h2>
           <p className="text-white/80 text-sm">
             {isSuccess 
-              ? 'Your phone number has been verified successfully.'
+              ?t("your-phone-number-has-been-verified-successfully")
               : `We've sent a ${state.codeLength}-digit code to`
             }
           </p>
@@ -174,11 +176,11 @@ const OTPModal: React.FC = () => {
             {isSending && (
               <div className="flex items-center justify-center gap-2 text-primary mb-6">
                 <Spinner />
-                <span>Sending verification code...</span>
+                <span>{t("sending-verification-code")}</span>
               </div>
             )}
 
-            {state.status === 'sent' || state.status === 'error' || isVerifying ? (
+            {state.status ==="sent" || state.status ==="error" || isVerifying ? (
               <>
                 {/* OTP Input */}
                 <div className="flex justify-center gap-3 mb-6" onPaste={handlePaste}>
@@ -236,39 +238,35 @@ const OTPModal: React.FC = () => {
                   {isVerifying ? (
                     <>
                       <Spinner />
-                      <span>Verifying...</span>
+                      <span>{t("verifying")}</span>
                     </>
                   ) : (
-                    <span>Verify Code</span>
+                    <span>{t("verify-code")}</span>
                   )}
                 </button>
 
                 {/* Resend section */}
                 <div className="mt-6 text-center">
-                  <p className="text-gray-500 text-sm mb-2">Didn't receive the code?</p>
+                  <p className="text-gray-500 text-sm mb-2">{t("didn-t-receive-the-code")}</p>
                   {canResend ? (
                     <button
                       onClick={handleResend}
                       disabled={isVerifying}
                       className="text-primary font-semibold hover:underline transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Resend Code
-                    </button>
+                    >{t("resend-code")}</button>
                   ) : state.resendCooldown > 0 ? (
-                    <span className="text-gray-400">
-                      Resend in{' '}
+                    <span className="text-gray-400">{t("resend-in")}{' '}
                       <span className="font-mono text-primary">
                         {Math.floor(state.resendCooldown / 60)}:{(state.resendCooldown % 60).toString().padStart(2, '0')}
                       </span>
                     </span>
                   ) : (
-                    <span className="text-gray-400 text-sm">Maximum attempts reached</span>
+                    <span className="text-gray-400 text-sm">{t("maximum-attempts-reached")}</span>
                   )}
                   
                   {/* Retry counter */}
                   {state.retryCount > 0 && state.retryCount < state.maxRetries && (
-                    <p className="text-xs text-gray-400 mt-2">
-                      Attempts: {state.retryCount} / {state.maxRetries}
+                    <p className="text-xs text-gray-400 mt-2">{t("attempts")}{' '}{state.retryCount} / {state.maxRetries}
                     </p>
                   )}
                 </div>
@@ -285,7 +283,7 @@ const OTPModal: React.FC = () => {
                 <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <p className="text-gray-600">Redirecting...</p>
+            <p className="text-gray-600">{t("redirecting")}</p>
           </div>
         )}
       </div>
@@ -318,6 +316,5 @@ const Spinner: React.FC = () => (
 );
 
 export default OTPModal;
-
 
 

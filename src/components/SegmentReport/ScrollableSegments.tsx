@@ -72,14 +72,14 @@ function ScrollableSegments({
                     }}
                   />
                   {/* Numbered Badge */}
-                  <div className="absolute top-0 left-0 bg-[#582c83] text-white text-xs font-semibold size-[18px] text-center">
+                  <div className="absolute top-0 start-0 bg-[#582c83] text-white text-xs font-semibold size-[18px] text-center">
                     {(index + 1).toString().padStart(2, '0')}
                   </div>
                 </div>
 
                 {/* Card Footer with Title */}
                 <div
-                  className={`px-3 py-2 text-center transition-colors  bg-[linear-gradient(180deg,#582c8300_20%,#582c83_100%)] absolute bottom-0 left-0 h-full flex items-end justify-center w-full`}
+                  className={`px-3 py-2 text-center transition-colors  bg-[linear-gradient(180deg,#582c8300_20%,#582c83_100%)] absolute bottom-0 start-0 h-full flex items-end justify-center w-full`}
                 >
                   <h3 className="text-sm font-semibold truncate text-white">{segment.name}</h3>
                 </div>

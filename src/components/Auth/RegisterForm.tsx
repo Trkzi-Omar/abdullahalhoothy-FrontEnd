@@ -13,6 +13,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useOTP } from '../../context/OTPContext';
 import { PhoneInput } from '../common/PhoneInput';
 import styles from '../../pages/Auth/Auth.module.css';
+import { t } from '../../i18n';
+
 
 interface RegisterFormProps {
   onSuccess: () => void;
@@ -49,11 +51,12 @@ export const RegisterForm = ({ onSuccess, source }: RegisterFormProps) => {
         phone: form.phone || '',
         source: source || '',
       });
-      toast.success('Registration successful! Please verify your email.', { duration: 3000 });
+      toast.success(t("registration-successful-please-verify-your-email"), { duration: 3000 });
       logout();
       onSuccess();
-    } catch (e: any) {
-      const msg = e.message || 'Registration failed. Please try again.';
+    } catch (e: unknown) {
+      const error = e as { message?: string };
+      const msg = error.message || t("registration-failed-please-try-again");
       setError(msg);
       toast.error(msg, { duration: 3000 });
     } finally {
@@ -98,7 +101,7 @@ export const RegisterForm = ({ onSuccess, source }: RegisterFormProps) => {
           doRegistration();
         },
         () => {
-          toast.info('Phone verification skipped. You can verify later in your profile.');
+          toast.info(t("phone-verification-skipped-you-can-verify-later-in-your-profile"));
           doRegistration();
         }
       );
@@ -119,7 +122,7 @@ export const RegisterForm = ({ onSuccess, source }: RegisterFormProps) => {
               <FaEnvelope className={styles.icon} />
               <input
                 type="email"
-                placeholder="Email"
+                placeholder={t("email")}
                 value={form.email}
                 onChange={e => updateForm('email', e.target.value)}
                 className={styles.authInput}
@@ -134,7 +137,7 @@ export const RegisterForm = ({ onSuccess, source }: RegisterFormProps) => {
               <FaLock className={styles.icon} />
               <input
                 type="password"
-                placeholder="Password"
+                placeholder={t("password")}
                 value={form.password}
                 onChange={e => updateForm('password', e.target.value)}
                 className={styles.authInput}
@@ -149,7 +152,7 @@ export const RegisterForm = ({ onSuccess, source }: RegisterFormProps) => {
               <FaLock className={styles.icon} />
               <input
                 type="password"
-                placeholder="Confirm Password"
+                placeholder={t("confirm-password")}
                 value={form.confirmPassword}
                 onChange={e => updateForm('confirmPassword', e.target.value)}
                 className={styles.authInput}
@@ -163,9 +166,7 @@ export const RegisterForm = ({ onSuccess, source }: RegisterFormProps) => {
             type="submit"
             className="px-4 py-2.5 sm:py-3 text-base sm:text-lg text-white bg-[#155315] rounded-md hover:bg-[#1a651a] disabled:bg-gray-400 disabled:cursor-not-allowed"
             disabled={!isRegisterStep1Valid(form.email, form.password, form.confirmPassword)}
-          >
-            Continue with email
-          </button>
+          >{t("continue-with-email")}</button>
         </form>
       </>
     );
@@ -178,10 +179,10 @@ export const RegisterForm = ({ onSuccess, source }: RegisterFormProps) => {
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <div>
           <div className="flex items-center bg-[#f0f8f0] rounded-md">
-            <FaUser className="text-[#006400] ml-3" />
+            <FaUser className="text-[#006400] ms-3" />
             <input
               type="text"
-              placeholder="Full Name"
+              placeholder={t("full-name")}
               value={form.name}
               onChange={e => updateForm('name', e.target.value)}
               className="flex-1 px-3 py-2 text-base sm:text-lg bg-transparent outline-none"
@@ -192,9 +193,7 @@ export const RegisterForm = ({ onSuccess, source }: RegisterFormProps) => {
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Phone Number (Optional)
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t("phone-number-optional")}</label>
           <PhoneInput
             value={form.phone}
             onChange={handlePhoneChange}
@@ -206,15 +205,13 @@ export const RegisterForm = ({ onSuccess, source }: RegisterFormProps) => {
             type="button"
             onClick={() => setRegisterStep(1)}
             className="px-4 py-2.5 sm:py-3 text-base sm:text-lg text-[#006400] bg-white border border-[#006400] rounded-md hover:bg-[#f0f8f0]"
-          >
-            Back
-          </button>
+          >{t("back")}</button>
           <button
             type="submit"
             className="flex-1 px-4 py-2.5 sm:py-3 text-base sm:text-lg text-white bg-[#155315] rounded-md hover:bg-[#1a651a] disabled:bg-gray-400 disabled:cursor-not-allowed"
             disabled={isLoading || !isRegisterStep2Valid(form.name, form.phone)}
           >
-            {isLoading ? 'Creating Account...' : 'Create Account'}
+            {isLoading ?t("creating-account") :t("create-account")}
           </button>
         </div>
       </form>

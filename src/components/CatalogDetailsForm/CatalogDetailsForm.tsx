@@ -1,6 +1,8 @@
 import { useState, ChangeEvent } from 'react';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { HiCheck } from 'react-icons/hi';
+import { t } from '../../i18n';
+
 
 function CatalogDetailsForm() {
   const {
@@ -24,7 +26,7 @@ function CatalogDetailsForm() {
 
   function validateForm() {
     if (!name) {
-      setError('Name is required.');
+      setError(t("name-is-required"));
       return false;
     }
     setError(null);
@@ -61,14 +63,12 @@ function CatalogDetailsForm() {
   }
 
   return (
-    <div className="flex flex-col h-full w-full lg:pr-1.5">
+    <div className="flex flex-col h-full w-full lg:pe-1.5">
       <div className="flex flex-col mt-7 px-4">
         {error && <p className=" text-red-500 font-semibold">{error}</p>}
 
         <div className="mb-5 flex flex-col w-full">
-          <label className="block mb-2 text-md font-medium text-black" htmlFor="legendlist">
-            Legend List
-          </label>
+          <label className="block mb-2 text-md font-medium text-black" htmlFor="legendlist">{t("legend-list")}</label>
           <textarea
             id="legendlist"
             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
@@ -79,9 +79,7 @@ function CatalogDetailsForm() {
           ></textarea>
         </div>
         <div className="mb-5 flex flex-col w-full">
-          <label className="block mb-2 text-md font-medium text-black" htmlFor="name">
-            Name *
-          </label>
+          <label className="block mb-2 text-md font-medium text-black" htmlFor="name">{t("name")}</label>
           <input
             type="text"
             id="name"
@@ -92,9 +90,7 @@ function CatalogDetailsForm() {
         </div>
 
         <div className="mb-5 flex flex-col w-full">
-          <label className="block mb-2 text-md font-medium text-black" htmlFor="description">
-            Description
-          </label>
+          <label className="block mb-2 text-md font-medium text-black" htmlFor="description">{t("description")}</label>
           <textarea
             id="description"
             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
@@ -106,9 +102,8 @@ function CatalogDetailsForm() {
         {markers.length > 0 && (
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
             <p className="text-sm text-blue-800">
-              <span className="font-medium">Note:</span> {markers.length}{' '}
-              {markers.length === 1 ? 'location' : 'locations'} will be saved with this catalog.
-            </p>
+              <span className="font-medium">{t("note")}</span> {markers.length}{' '}
+              {markers.length === 1 ?t("location") :t("locations")}{' '}{t("will-be-saved-with-this-catalog")}</p>
           </div>
         )}
       </div>
@@ -116,15 +111,13 @@ function CatalogDetailsForm() {
       {isError && <p className="text-red-500 font-semibold px-4">{isError.message}</p>}
 
       <div className="w-full flex-col h-[7%] flex px-2 py-2 select-none border-t">
-        <div className="flex h-full w-full space-x-2">
+        <div className="flex h-full w-full gap-2">
           <button
             onClick={handleDiscardClick}
             className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
                  hover:bg-white transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-slate-100 disabled:cursor-not-allowed"
             disabled={isLoading}
-          >
-            Discard
-          </button>
+          >{t("discard")}</button>
 
           <button
             onClick={handleButtonClick}
@@ -153,16 +146,11 @@ function CatalogDetailsForm() {
                     fill="currentColor"
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
-                </svg>
-                Saving
-              </span>
+                </svg>{t("saving")}</span>
             ) : saveResponse ? (
               <>
-                <HiCheck className="h-5 w-5" />
-                Saved
-              </>
-            ) : (
-              'Save'
+                <HiCheck className="h-5 w-5" />{t("saved")}</>
+            ) : (t("save")
             )}
           </button>
         </div>

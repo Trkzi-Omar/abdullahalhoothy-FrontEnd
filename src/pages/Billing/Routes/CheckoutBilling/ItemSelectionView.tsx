@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getYesterdayDate } from '../../../../utils/helperFunctions';
+import { t } from '../../../../i18n';
+
 
 interface DataVariable {
   key: string;
@@ -62,10 +64,8 @@ function ItemSelectionView({
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
           />
         </svg>
-        <h3 className="text-xl font-semibold text-gray-700 mb-2">No Item Selected</h3>
-        <p className="text-sm text-gray-500 max-w-md">
-          Select an item from the left panel to view its description and available data variables.
-        </p>
+        <h3 className="text-xl font-semibold text-gray-700 mb-2">{t("no-item-selected")}</h3>
+        <p className="text-sm text-gray-500 max-w-md">{t("select-an-item-from-the-side-panel-to-view-details")}</p>
       </div>
     );
   }
@@ -80,12 +80,12 @@ function ItemSelectionView({
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-2xl font-semibold text-gray-900">{selectedItem.name}</h2>
           {isLoading ? (
-            <span className="text-lg font-bold text-gray-400 animate-pulse">Loading...</span>
+            <span className="text-lg font-bold text-gray-400 animate-pulse">{t("loading")}</span>
           ) : selectedItem.price !== undefined ? (
             <span
               className={`text-lg font-bold ${selectedItem.price === 0 ? 'text-green-600' : 'text-green-700'}`}
             >
-              {selectedItem.price === 0 ? 'Already Owned' : formatPrice(selectedItem.price)}
+              {selectedItem.price === 0 ?t("already-owned") : formatPrice(selectedItem.price)}
             </span>
           ) : null}
         </div>
@@ -94,21 +94,18 @@ function ItemSelectionView({
             {selectedItem.type}
           </span>
           {selectedItem.isCurrentlyOwned && (
-            <span className="inline-block px-3 py-1 text-xs font-semibold uppercase tracking-wide text-green-700 bg-green-100 rounded-full">
-              Owned
-            </span>
+            <span className="inline-block px-3 py-1 text-xs font-semibold uppercase tracking-wide text-green-700 bg-green-100 rounded-full">{t("owned")}</span>
           )}
         </div>
         {selectedItem.explanation && (
           <p className="mt-2 text-sm text-gray-600 italic">{selectedItem.explanation}</p>
         )}
         {selectedItem.expiration && (
-          <p className="mt-1 text-xs text-gray-500">
-            Expires: {new Date(selectedItem.expiration).toLocaleDateString()}
+          <p className="mt-1 text-xs text-gray-500">{t("expires")}{' '}{new Date(selectedItem.expiration).toLocaleDateString()}
           </p>
         )}
         <p className="text-xs">
-          <span className="text-gray-500">Updated on:</span>{' '}
+          <span className="text-gray-500">{t("updated-on")}</span>{' '}
           <span className="text-[#115740] font-medium">{getYesterdayDate()}</span>
         </p>
       </div>
@@ -123,9 +120,7 @@ function ItemSelectionView({
                 ? 'border-[#115740] text-[#115740]'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
-          >
-            Description
-          </button>
+          >{t("description")}</button>
           <button
             onClick={() => setActiveTab('dataVariables')}
             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
@@ -133,8 +128,7 @@ function ItemSelectionView({
                 ? 'border-[#115740] text-[#115740]'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
-          >
-            Data Variables ({selectedItem.dataVariables.length})
+          >{t("data-variables")}{selectedItem.dataVariables.length})
           </button>
         </div>
       </div>
@@ -144,9 +138,9 @@ function ItemSelectionView({
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="w-8 h-8 border-4 border-[#115740] border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-gray-500">Loading item details...</p>
+            <p className="text-gray-500">{t("loading-item-details")}</p>
           </div>
-        ) : activeTab === 'description' ? (
+        ) : activeTab ==="description" ? (
           <div className="prose max-w-none">
             <p
               className="text-gray-700 leading-relaxed whitespace-pre-line"
@@ -155,7 +149,7 @@ function ItemSelectionView({
           </div>
         ) : (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Data Variables</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t("available-data-variables")}</h3>
             {selectedItem.dataVariables.length > 0 ? (
               <ul className="space-y-3">
                 {selectedItem.dataVariables.map((variable, index) => (
@@ -170,7 +164,7 @@ function ItemSelectionView({
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-500 italic">No data variables available for this item.</p>
+              <p className="text-gray-500 italic">{t("no-data-variables-available-for-this-item")}</p>
             )}
           </div>
         )}
@@ -192,21 +186,14 @@ function ItemSelectionView({
                   strokeWidth={2}
                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                 />
-              </svg>
-              Remove from Cart
-            </button>
+              </svg>{t("remove-from-cart")}</button>
           ) : (
             <div className="w-full space-y-2">
               {addToCartMessage && addToCartDisabled && (
                 <p className="text-sm text-amber-700" role="status">
                   {showSignInLink ? (
-                    <>
-                      Please{' '}
-                      <Link to="/auth" className="text-[#115740] font-semibold underline hover:no-underline">
-                        sign in
-                      </Link>{' '}
-                      to add items to cart.
-                    </>
+                    <>{t("please")}{' '}
+                      <Link to="/auth" className="text-[#115740] font-semibold underline hover:no-underline">{t("sign-in-2")}</Link>{' '}{t("to-add-items-to-cart")}</>
                   ) : (
                     addToCartMessage
                   )}
@@ -225,9 +212,7 @@ function ItemSelectionView({
                     strokeWidth={2}
                     d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                   />
-                </svg>
-                Add to Cart
-              </button>
+                </svg>{t("add-to-cart")}</button>
             </div>
           )}
         </div>

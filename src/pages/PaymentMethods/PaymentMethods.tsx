@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import urls from '../../urls.json';
@@ -7,6 +7,8 @@ import { PiX } from 'react-icons/pi';
 import { PaymentMethod, DialogProps, UserProfile } from '../../types/allTypesAndInterfaces';
 import { useOTP } from '../../context/OTPContext';
 import { toast } from 'sonner';
+import { t } from '../../i18n';
+
 
 const paymentBrandIcons = {
   visa: '/card-brands/visa.svg',
@@ -17,7 +19,7 @@ const paymentBrandIcons = {
 };
 
 export default function PaymentMethods() {
-  const { isAuthenticated, authResponse } = useAuth();
+  const { authResponse } = useAuth();
   const { openOTPModal } = useOTP();
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [defaultPaymentMethodId, setDefaultPaymentMethodId] = useState<string | null>(null);
@@ -63,6 +65,35 @@ export default function PaymentMethods() {
     fetchProfile();
   }, [authResponse]);
 
+  const fetchDefaultPaymentMethodId = useCallback(async (): Promise<string | null> => {
+    try {
+      const res = await apiRequest({
+        url: urls.get_stripe_customer,
+        method: 'post',
+        isAuthRequest: true,
+        body: { user_id: authResponse?.localId },
+      });
+      return res.data.data || null;
+    } catch (error) {
+      console.error('Failed to fetch Stripe customer default payment method ID', error);
+      return null;
+    }
+  }, [authResponse?.localId]);
+
+  const fetchPaymentMethods = useCallback(async (defaultId: string) => {
+    try {
+      const res = await apiRequest({
+        url: `${urls.list_stripe_payment_methods}?user_id=${authResponse?.localId}`,
+        method: 'get',
+        isAuthRequest: true,
+      });
+      setPaymentMethods(res.data.data);
+      setDefaultPaymentMethodId(defaultId);
+    } catch (error) {
+      console.error('Failed to fetch payment methods', error);
+    }
+  }, [authResponse?.localId]);
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -80,36 +111,7 @@ export default function PaymentMethods() {
       }
     };
     fetchData();
-  }, [authResponse]);
-
-  const fetchDefaultPaymentMethodId = async (): Promise<string | null> => {
-    try {
-      const res = await apiRequest({
-        url: urls.get_stripe_customer,
-        method: 'post',
-        isAuthRequest: true,
-        body: { user_id: authResponse?.localId },
-      });
-      return res.data.data || null;
-    } catch (error) {
-      console.error('Failed to fetch Stripe customer default payment method ID', error);
-      return null;
-    }
-  };
-
-  const fetchPaymentMethods = async (defaultId: string) => {
-    try {
-      const res = await apiRequest({
-        url: `${urls.list_stripe_payment_methods}?user_id=${authResponse?.localId}`,
-        method: 'get',
-        isAuthRequest: true,
-      });
-      setPaymentMethods(res.data.data);
-      setDefaultPaymentMethodId(defaultId);
-    } catch (error) {
-      console.error('Failed to fetch payment methods', error);
-    }
-  };
+  }, [authResponse, fetchDefaultPaymentMethodId, fetchPaymentMethods]);
 
   // Function to actually remove the payment method
   const removePaymentMethod = async (methodId: string) => {
@@ -122,10 +124,10 @@ export default function PaymentMethods() {
       });
       setPaymentMethods(methods => methods.filter(method => method.id !== methodId));
       setDialogOpen(false);
-      toast.success('Payment method removed successfully!');
+      toast.success(t("payment-method-removed-successfully"));
     } catch (error) {
       console.error('Failed to remove payment method', error);
-      toast.error('Failed to remove payment method');
+      toast.error(t("failed-to-remove-payment-method"));
     } finally {
       setSubmitting(false);
       setMethodToRemove(null);
@@ -137,7 +139,7 @@ export default function PaymentMethods() {
     
     // Check if user has a phone number for OTP verification
     if (!userPhone) {
-      toast.error('Please add a phone number to your profile for verification.');
+      toast.error(t("please-add-a-phone-number-to-your-profile-for-verification"));
       setDialogOpen(false);
       setMethodToRemove(null);
       return;
@@ -156,7 +158,7 @@ export default function PaymentMethods() {
       () => {
         // On cancel
         setMethodToRemove(null);
-        toast.info('Payment method removal cancelled.');
+        toast.info(t("payment-method-removal-cancelled"));
       }
     );
   };
@@ -182,7 +184,7 @@ export default function PaymentMethods() {
   if (isLoading)
     return (
       <div className="text-lg text-primary text-center mt-14 font-semibold">
-        <h1>Loading Payment Methods...</h1>
+        <h1>{t("loading-payment-methods")}</h1>
       </div>
     );
 
@@ -191,10 +193,10 @@ export default function PaymentMethods() {
       <div className="flex items-center mb-6">
         <Link
           to="/profile/payment-methods/add"
-          className="flex items-center text-blue-600 mr-4 text-sm font-medium"
+          className="flex items-center text-blue-600 me-4 text-sm font-medium"
         >
           <svg
-            className="w-4 h-4 mr-2"
+            className="w-4 h-4 me-2"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -203,14 +205,12 @@ export default function PaymentMethods() {
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="16"></line>
             <line x1="8" y1="12" x2="16" y2="12"></line>
-          </svg>
-          Add payment method
-        </Link>
+          </svg>{t("add-payment-method-2")}</Link>
       </div>
       {/* Success message */}
       {showSuccessMessage && (
         <div className="flex items-center justify-between mb-4 p-2 text-green-800 bg-green-100 border border-green-200 rounded relative">
-          <p>Payment method added successfully!</p>
+          <p>{t("payment-method-added-successfully")}</p>
           <button
             onClick={() => {
               setShowSuccessMessage(false);
@@ -223,7 +223,7 @@ export default function PaymentMethods() {
         </div>
       )}
 
-      <h2 className="text-xl font-semibold mb-6">Payment methods</h2>
+      <h2 className="text-xl font-semibold mb-6">{t("payment-methods")}</h2>
 
       {/* Default Payment Method Component */}
       <DefaultPaymentMethod
@@ -234,23 +234,20 @@ export default function PaymentMethods() {
         }}
       />
 
-      <h3 className="font-semibold mb-2">Your credit and debit cards</h3>
-      <p className="text-sm text-gray-600 mb-4">
-        Here's a list of your personal credit and debit cards. Select the ellipsis (...) to delete a
-        card or make it the default payment method.
-      </p>
+      <h3 className="font-semibold mb-2">{t("your-credit-and-debit-cards")}</h3>
+      <p className="text-sm text-gray-600 mb-4">{t("here-s-a-list-of-your-personal-credit-and-debit-cards-select-the-ellipsis-to-del")}</p>
       <div className="rounded-md shadow-sm border">
         <table className="w-full">
           <thead>
-            <tr className="text-left text-sm text-gray-600 border-b">
-              <th className="p-2">No.</th>
-              <th className="p-2">Name on Card</th>
-              <th className="p-2">Expires on</th>
-              <th className="p-2 text-right ">Actions</th>
+            <tr className="text-start text-sm text-gray-600 border-b">
+              <th className="p-2">{t("no-2")}</th>
+              <th className="p-2">{t("name-on-card-2")}</th>
+              <th className="p-2">{t("expires-on")}</th>
+              <th className="p-2 text-end ">{t("actions")}</th>
             </tr>
           </thead>
           <tbody>
-            {paymentMethods.map((method, index) => (
+            {paymentMethods.map(method => (
               <tr key={method.id} className="border-b last:border-none text-sm">
                 <td className="p-2 flex items-center gap-2">
                   <img
@@ -260,11 +257,11 @@ export default function PaymentMethods() {
                   />
                   {method.card.brand.toUpperCase()} ****{method.card.last4}
                 </td>
-                <td className="p-2">{method.billing_details.name || 'Unknown'}</td>
+                <td className="p-2">{method.billing_details.name || t("unknown")}</td>
                 <td className="p-2">
                   {method.card.exp_month}/{method.card.exp_year}
                 </td>
-                <td className="p-2 text-right relative">
+                <td className="p-2 text-end relative">
                   <ActionDropdown
                     isOpen={dropdownOpen === method.id}
                     setDropdownOpen={() =>
@@ -284,9 +281,7 @@ export default function PaymentMethods() {
             ))}
             {paymentMethods.length === 0 && (
               <tr>
-                <td colSpan={4} className="h-36 text-center text-sm font-semibold py-4">
-                  No payment methods available
-                </td>
+                <td colSpan={4} className="h-36 text-center text-sm font-semibold py-4">{t("no-payment-methods-available")}</td>
               </tr>
             )}
           </tbody>
@@ -294,10 +289,10 @@ export default function PaymentMethods() {
       </div>
       <Dialog
         isOpen={dialogOpen}
-        title="Confirm Remove Payment Method"
-        message="Are you sure you want to remove this payment method? This action cannot be undone."
-        confirmText="Remove"
-        cancelText="Cancel"
+        title={t("confirm-remove-payment-method")}
+        message={t("are-you-sure-you-want-to-remove-this-payment-method-this-action-cannot-be-undone")}
+        confirmText={t("remove")}
+        cancelText={t("cancel")}
         submitting={submitting}
         onConfirm={handleRemove}
         onCancel={() => setDialogOpen(false)}
@@ -324,23 +319,20 @@ function DefaultPaymentMethod({
   return paymentMethod ? (
     <div className="flex flex-col justify-between border rounded shadow-sm p-4 max-w-sm mb-4">
       <div className="flex items-start">
-        <div className="mr-3 ">{renderPaymentBrandIcon(paymentMethod.card.brand)}</div>
+        <div className="me-3 ">{renderPaymentBrandIcon(paymentMethod.card.brand)}</div>
         <div className="uppercase">
           <p className="font-semibold">
             {paymentMethod.card.brand} ****{paymentMethod.card.last4}
           </p>
-          <p className="text-sm text-gray-600">
-            Expires on {paymentMethod.card.exp_month}/{paymentMethod.card.exp_year}
+          <p className="text-sm text-gray-600">{t("expires-on")}{' '}{paymentMethod.card.exp_month}/{paymentMethod.card.exp_year}
           </p>
-          <button className="text-blue-600 text-sm font-medium" onClick={onRemove}>
-            Remove
-          </button>
+          <button className="text-blue-600 text-sm font-medium" onClick={onRemove}>{t("remove")}</button>
         </div>
       </div>
     </div>
   ) : (
     <div className="flex flex-col justify-between border rounded shadow-sm p-4 max-w-sm mb-4">
-      <p className="text-sm text-gray-500">No default payment method set.</p>
+      <p className="text-sm text-gray-500">{t("no-default-payment-method-set")}</p>
     </div>
   );
 }
@@ -441,27 +433,23 @@ function ActionDropdown({
       </button>
       {isOpen && (
         <div
-          className={`absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-sm z-10 transition-all duration-300 transform ${
+          className={`absolute end-0 mt-2 w-48 bg-white border rounded-md shadow-sm z-10 transition-all duration-300 transform ${
             isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
           }`}
           style={{ display: isOpen ? 'block' : 'none' }}
         >
           {!isDefault && (
             <button
-              className="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 w-full text-left disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 w-full text-start disabled:cursor-not-allowed disabled:opacity-50"
               onClick={onSetDefault}
               disabled={submitting}
             >
-              {submitting && <Spinner />}
-              Set as Default
-            </button>
+              {submitting && <Spinner />}{t("set-as-default")}</button>
           )}
           <button
-            className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-start disabled:cursor-not-allowed disabled:opacity-50"
             onClick={onRemove}
-          >
-            Remove
-          </button>
+          >{t("remove")}</button>
         </div>
       )}
     </div>
@@ -481,11 +469,11 @@ function Dialog({
   if (!isOpen) return null;
 
   return (
-    <div className="text-left fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="text-start fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="bg-white rounded-md shadow-lg max-w-lg w-full p-4 mx-4">
         <h3 className="text-lg font-semibold mb-1">{title}</h3>
         <p className="text-gray-600 mb-6">{message}</p>
-        <div className="flex justify-end space-x-2">
+        <div className="flex justify-end gap-2">
           <button
             onClick={onCancel}
             className="h-9 flex items-center px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"

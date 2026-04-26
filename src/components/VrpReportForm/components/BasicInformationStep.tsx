@@ -8,6 +8,8 @@ import {
   FaPlus,
 } from 'react-icons/fa';
 import { CITY_OPTIONS } from '../constants';
+import { t } from '../../../i18n';
+
 
 const formatCategoryName = (category: string): string =>
   category
@@ -73,11 +75,11 @@ const BasicInformationStep = ({
 
   const validateCustomValue = (value: string): { valid: boolean; error?: string } => {
     if (value.length < 2) {
-      return { valid: false, error: 'Business type must be at least 2 characters' };
+      return { valid: false, error: t("business-type-must-be-at-least-2-characters") };
     }
 
     if (value.length > 50) {
-      return { valid: false, error: 'Business type must be at most 50 characters' };
+      return { valid: false, error: t("business-type-must-be-at-most-50-characters") };
     }
 
     return { valid: true };
@@ -116,13 +118,13 @@ const BasicInformationStep = ({
     const normalizedValue = normalizeValue(value);
 
     if (!normalizedValue) {
-      setCategoryError('Please enter a business type');
+      setCategoryError(t("please-enter-a-business-type"));
       return;
     }
 
     const validation = validateCustomValue(normalizedValue);
     if (!validation.valid) {
-      setCategoryError(validation.error || 'Invalid business type');
+      setCategoryError(validation.error || t("invalid-business-type"));
       return;
     }
 
@@ -144,10 +146,8 @@ const BasicInformationStep = ({
   return (
     <div className="space-y-3 animate-fade-in-up">
       <div className="text-center mb-3">
-        <h3 className="text-lg font-bold text-gray-900 mb-1">Basic Information</h3>
-        <p className="text-sm text-gray-600">
-          Let's start with the basic details for your expansion report
-        </p>
+        <h3 className="text-lg font-bold text-gray-900 mb-1">{t("basic-information")}</h3>
+        <p className="text-sm text-gray-600">{t("let-s-start-with-the-basic-details-for-your-expansion-report")}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -155,9 +155,7 @@ const BasicInformationStep = ({
         <div className="space-y-3">
           <label htmlFor="country_name" className="block text-sm font-semibold text-gray-700">
             <span className="flex items-center">
-              <FaGlobe className="w-4 h-4 mr-2 text-primary" />
-              Country
-            </span>
+              <FaGlobe className="w-4 h-4 me-2 text-primary" />{t("country")}</span>
           </label>
           <input
             type="text"
@@ -172,9 +170,7 @@ const BasicInformationStep = ({
         <div className="space-y-3">
           <label htmlFor="city_name" className="block text-sm font-semibold text-gray-700">
             <span className="flex items-center">
-              <FaMapMarkerAlt className="w-4 h-4 mr-2 text-primary" />
-              City
-              <span className="text-red-500 ml-1">*</span>
+              <FaMapMarkerAlt className="w-4 h-4 me-2 text-primary" />{t("city")}<span className="text-red-500 ms-1">*</span>
             </span>
           </label>
           <select
@@ -198,7 +194,7 @@ const BasicInformationStep = ({
           </select>
           {errors.city_name && (
             <p className="mt-2 text-sm text-red-600 flex items-center">
-              <FaExclamationTriangle className="w-4 h-4 mr-1" />
+              <FaExclamationTriangle className="w-4 h-4 me-1" />
               {errors.city_name}
             </p>
           )}
@@ -209,18 +205,16 @@ const BasicInformationStep = ({
       <div className="space-y-3">
         <label htmlFor="Type" className="block text-sm font-semibold text-gray-700">
           <span className="flex items-center">
-            <FaBuilding className="w-4 h-4 mr-2 text-primary" />
-            What kind of business is yours?
-          </span>
+            <FaBuilding className="w-4 h-4 me-2 text-primary" />{t("what-kind-of-business-is-yours")}</span>
         </label>
 
         <div className="space-y-3">
           <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <FaSearch className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
               id="Type"
-              placeholder="Search categories or enter a custom business type..."
+              placeholder={t("search-categories-or-enter-a-custom-business-type")}
               value={categorySearchTerm}
               onChange={e => {
                 setCategorySearchTerm(e.target.value);
@@ -238,7 +232,7 @@ const BasicInformationStep = ({
               }}
               onKeyDown={handleCategorySearchKeyDown}
               disabled={disabled}
-              className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
+              className={`w-full ps-10 pe-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
                 disabled
                   ? 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60'
                   : errors.Type
@@ -250,7 +244,7 @@ const BasicInformationStep = ({
 
           {categoryError && (
             <p className="text-sm text-red-600 flex items-center">
-              <FaExclamationTriangle className="w-4 h-4 mr-1" />
+              <FaExclamationTriangle className="w-4 h-4 me-1" />
               {categoryError}
             </p>
           )}
@@ -265,8 +259,7 @@ const BasicInformationStep = ({
                   disabled={disabled}
                   className="w-full flex items-center justify-center px-4 py-3 bg-primary/10 text-primary border border-primary/20 rounded-xl hover:bg-primary/15 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <FaPlus className="w-3.5 h-3.5 mr-2" />
-                  Add "{normalizedSearchTerm}"
+                  <FaPlus className="w-3.5 h-3.5 me-2" />{t("add-2")}{normalizedSearchTerm}"
                 </button>
               )}
 
@@ -280,9 +273,9 @@ const BasicInformationStep = ({
                         onMouseDown={event => event.preventDefault()}
                         onClick={() => applyCategoryValue(category)}
                         disabled={disabled}
-                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors duration-150 ${
+                        className={`w-full text-start px-4 py-3 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors duration-150 ${
                           formData.Type.toLowerCase() === category.toLowerCase()
-                            ? 'bg-primary/10 border-l-4 border-primary text-primary font-medium'
+                            ? 'bg-primary/10 border-s-4 border-primary text-primary font-medium'
                             : 'text-gray-700'
                         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
@@ -290,8 +283,7 @@ const BasicInformationStep = ({
                       </button>
                     ))
                   ) : (
-                    <div className="px-4 py-3 text-gray-500 text-center">
-                      No categories found matching "{normalizedSearchTerm}"
+                    <div className="px-4 py-3 text-gray-500 text-center">{t("no-categories-found-matching")}{normalizedSearchTerm}"
                     </div>
                   )}
                 </div>
@@ -302,7 +294,7 @@ const BasicInformationStep = ({
 
         {errors.Type && !categoryError && (
           <p className="mt-2 text-sm text-red-600 flex items-center">
-            <FaExclamationTriangle className="w-4 h-4 mr-1" />
+            <FaExclamationTriangle className="w-4 h-4 me-1" />
             {errors.Type}
           </p>
         )}
@@ -313,13 +305,11 @@ const BasicInformationStep = ({
         <div className="p-4 bg-gray-50 rounded-xl">
           <div className="flex items-center justify-between mb-3">
             <div className="flex-1">
-              <h4 className="text-sm font-semibold text-gray-900 mb-1">Advanced Configuration</h4>
-              <p id="advanced-config-description" className="text-xs text-gray-600">
-                Customize evaluation metrics, add specific locations, and set your current position
-              </p>
+              <h4 className="text-sm font-semibold text-gray-900 mb-1">{t("advanced-configuration")}</h4>
+              <p id="advanced-config-description" className="text-xs text-gray-600">{t("customize-evaluation-metrics-add-specific-locations-and-set-your-current-positio")}</p>
             </div>
             <label className="flex items-center cursor-pointer">
-              <span className="sr-only">Enable Advanced Configuration</span>
+              <span className="sr-only">{t("enable-advanced-configuration")}</span>
               <button
                 type="button"
                 onClick={() => onToggleAdvancedMode(!isAdvancedMode)}
@@ -331,12 +321,12 @@ const BasicInformationStep = ({
                       ? 'bg-primary'
                       : 'bg-gray-300'
                 }`}
-                aria-label={`${isAdvancedMode ? 'Disable' : 'Enable'} Advanced Configuration`}
+                aria-label={isAdvancedMode ? t("disable-advanced-configuration") : t("enable-advanced-configuration")}
                 aria-pressed={isAdvancedMode}
               >
                 <span
                   className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${
-                    isAdvancedMode ? 'translate-x-6' : 'translate-x-1'
+                    isAdvancedMode ? 'translate-x-6 rtl:-translate-x-6' : 'translate-x-1 rtl:-translate-x-1'
                   }`}
                 />
               </button>
@@ -353,20 +343,18 @@ const BasicInformationStep = ({
                 : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-primary hover:text-primary focus:ring-primary/20'
             }`}
             aria-label={
-              isAdvancedMode ? 'Advanced Configuration is enabled' : 'Enable Advanced Configuration'
+              isAdvancedMode ? t("advanced-configuration-is-enabled") : t("enable-advanced-configuration")
             }
             aria-describedby="advanced-config-description"
           >
-            {isAdvancedMode ? '✓ Advanced Mode Enabled' : 'Enable Advanced Configuration'}
+            {isAdvancedMode ?t("advanced-mode-enabled") :t("enable-advanced-configuration")}
           </button>
         </div>
 
         {isAdvancedMode && (
           <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-xs text-blue-700">
-              <strong>Advanced mode enabled:</strong> You'll be able to customize evaluation
-              metrics, add custom locations, and set your current position in the following steps.
-            </p>
+              <strong>{t("advanced-mode-enabled-2")}</strong>{' '}{t("you-ll-be-able-to-customize-evaluation-metrics-add-custom-locations-and-set-your")}</p>
           </div>
         )}
       </div>

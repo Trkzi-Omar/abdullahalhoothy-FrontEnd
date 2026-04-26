@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaBoxOpen, FaLayerGroup } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import LayerFormLoader from '../../components/LayerFormLoader/LayerFormLoader';
@@ -11,6 +11,8 @@ import BottomDrawer from '../../components/BottomDrawer/BottomDrawer';
 import { useLayerContext } from '../../context/LayerContext';
 import { useMeasurement } from '../../hooks/useMeasurement';
 import { Spinner } from '../../components/common';
+import { t } from '../../i18n';
+
 
 const Home = () => {
   const { isAuthenticated, authLoading } = useAuth();
@@ -19,11 +21,11 @@ const Home = () => {
   const [selectedTab] = useState<'LAYER' | 'CATALOG'>('LAYER');
 
   const { openModal } = useUIContext();
-  const [_, setHasOpened] = useState(false);
+  const [, setHasOpened] = useState(false);
 
   const { setSelectedContainerType } = useCatalogContext();
 
-  const initilizeHomeDialog = async () => {
+  const initilizeHomeDialog = useCallback(async () => {
     await setSelectedContainerType('Home');
     await openModal(<DataContainer />, {
       darkBackground: true,
@@ -31,11 +33,11 @@ const Home = () => {
       isHome: true,
     });
     await setHasOpened(true);
-  };
+  }, [openModal, setSelectedContainerType]);
 
   useEffect(() => {
     initilizeHomeDialog();
-  }, []);
+  }, [initilizeHomeDialog]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated && selectedTab === 'CATALOG') {
@@ -47,14 +49,14 @@ const Home = () => {
   return (
     <>
       {!isMobile && (
-        <div className="lg:block hidden w-96 h-full pr-1 pb-1 bg-[#115740]">
+        <div className="lg:block hidden w-96 h-full pe-1 pb-1 bg-[#115740]">
           <HomeContent />
         </div>
       )}
       {isMobile && (
         <>
           <button
-            className="bg-white border p-2.5 fixed w-full bottom-0 left-0 right-0 z-[5] flex items-center gap-2 text-gray-400 font-normal"
+            className="bg-white border p-2.5 fixed w-full bottom-0 start-0 end-0 z-[5] flex items-center gap-2 text-gray-400 font-normal"
             onClick={() => setIsDrawerOpen(true)}
           >
             <svg
@@ -72,9 +74,7 @@ const Home = () => {
                 stroke-linecap="round"
                 stroke-linejoin="round"
               />
-            </svg>
-            Tap to see more options
-          </button>
+            </svg>{t("tap-to-see-more-options")}</button>
           <HomerDrawer />
         </>
       )}
@@ -125,7 +125,7 @@ export function HomeContent() {
   return (
     <div className="flex-1 h-full flex flex-col relative overflow-hidden ">
       {/* Tabs */}
-      <div className="flex  pt-1 select-none space-x-1 font-semibold border-b">
+      <div className="flex  pt-1 select-none gap-1 font-semibold border-b">
         <div
           className={
             'flex justify-center items-center rounded-t-lg w-full h-10 border border-slate-300 transition-all ' +
@@ -136,9 +136,7 @@ export function HomeContent() {
           onClick={() => {
             handleTabSwitch('LAYER');
           }}
-        >
-          Layer
-          <span className="ml-2">
+        >{t("layer")}<span className="ms-2">
             <FaLayerGroup />
           </span>
         </div>
@@ -153,9 +151,7 @@ export function HomeContent() {
           onClick={() => {
             handleTabSwitch('CATALOG');
           }}
-        >
-          Catalog
-          <span className="ml-2">
+        >{t("catalog-2")}<span className="ms-2">
             <FaBoxOpen />
           </span>
         </div>
@@ -163,11 +159,11 @@ export function HomeContent() {
 
       {/* Container */}
       <div className="flex-1 flex flex-col  border-slate-300 lg:border border-t-0 bg-white overflow-hidden">
-        {selectedHomeTab === 'LAYER' && (
+        {selectedHomeTab ==="LAYER" && (
           <>
             <LayerFormLoader />
             {isLoadingDataset && (
-              <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-30 z-50">
+              <div className="absolute top-0 start-0 w-full h-full bg-black bg-opacity-30 z-50">
                 <div className="flex justify-center items-center h-full">
                   <Spinner className="border-white border-4 size-32" />
                 </div>
@@ -175,14 +171,14 @@ export function HomeContent() {
             )}
           </>
         )}
-        {selectedHomeTab === 'CATALOG' && <CatalogFormLoader />}
+        {selectedHomeTab ==="CATALOG" && <CatalogFormLoader />}
       </div>
     </div>
   );
 }
 
 function HomerDrawer() {
-  const snapPoints = [0, 0.25, 0.5, 1];
+  const snapPoints = useMemo(() => [0, 0.25, 0.5, 1], []);
   const [snap, setSnap] = useState<number>(snapPoints[1]);
   const { createLayerformStage } = useLayerContext();
   const { isDrawerOpen, isModalOpen, setIsDrawerOpen } = useUIContext();
@@ -204,7 +200,7 @@ function HomerDrawer() {
     } else {
       setSnap(snapPoints[1]);
     }
-  }, [createLayerformStage]);
+  }, [createLayerformStage, snapPoints]);
 
   return (
     <>

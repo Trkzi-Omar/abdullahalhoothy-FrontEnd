@@ -8,11 +8,12 @@ import { handleWhatsAppClick, processCityData } from '../../utils/helperFunction
 import { City } from '../../types/allTypesAndInterfaces';
 import urls from '../../urls.json';
 import apiRequest from '../../services/apiRequest';
+import { t } from '../../i18n';
+
 
 const whatsapp = {
   phoneNumber: '966558188632',
-  message:
-    "Hello! I'm interested in learning more about S-Locator's location intelligence solutions for optimizing distribution routes and supply chain visibility.",
+  message:t("hello-i-m-interested-in-learning-more-about-s-locator-s-location-intelligence-so"),
 };
 
 const Billing = () => {
@@ -30,7 +31,7 @@ const Billing = () => {
         <>
           <BillingDrawer />
           <button
-            className="bg-white border p-2.5 fixed w-full bottom-0 left-0 right-0 z-[5] flex items-center gap-2 text-gray-400 font-normal"
+            className="bg-white border p-2.5 fixed w-full bottom-0 start-0 end-0 z-[5] flex items-center gap-2 text-gray-400 font-normal"
             onClick={() => setIsDrawerOpen(true)}
           >
             <svg
@@ -48,9 +49,7 @@ const Billing = () => {
                 stroke-linecap="round"
                 stroke-linejoin="round"
               />
-            </svg>
-            Tap to see more options
-          </button>
+            </svg>{t("tap-to-see-more-options")}</button>
         </>
       ) : (
         <div className="h-full w-96 bg-[#115740] px-1 py-1">
@@ -73,9 +72,9 @@ function BillingContent() {
   const [error, setError] = useState<string | null>(null);
 
   const tabs = [
-    { id: 'area-intelligence', label: 'Area Intelligence', path: '/billing' },
-    { id: 'datasets', label: 'Datasets', path: '/billing/datasets' },
-    { id: 'reports', label: 'Reports', path: '/billing/reports' },
+    { id: 'area-intelligence', label:t("area-intelligence"), path: '/billing' },
+    { id: 'datasets', label:t("datasets"), path: '/billing/datasets' },
+    { id: 'reports', label:t("reports"), path: '/billing/reports' },
   ];
 
   const getActiveTab = () => {
@@ -132,7 +131,7 @@ function BillingContent() {
 
   return (
     <div className="flex flex-col h-full justify-between">
-      <div className="text-2xl pl-6 pt-4 font-semibold mb-4">Acquire</div>
+      <div className="text-2xl ps-6 pt-4 font-semibold mb-4">{t("acquire")}</div>
 
       <div className="flex-1 flex flex-col justify-center items-center gap-3">
         {tabs.map(tab => {
@@ -156,35 +155,27 @@ function BillingContent() {
       <div className="flex-1 flex items-center justify-center w-full my-4">
         <button
           onClick={() => handleWhatsAppClick(whatsapp)}
-          aria-label="Contact us on WhatsApp"
-          title="Chat with us on WhatsApp"
+          aria-label={t("contact-us-on-whatsapp")}
+          title={t("chat-with-us-on-whatsapp")}
           className="group relative w-[85%] overflow-hidden rounded-2xl bg-gem-dark p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-secondary/20 ring-1 ring-white/10"
         >
           {/* Background Gradient/Pattern */}
-          <div className="absolute top-0 right-0 -mt-8 -mr-8 h-32 w-32 rounded-full bg-secondary/10 blur-3xl transition-all duration-500 group-hover:bg-secondary/20"></div>
-          <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-32 w-32 rounded-full bg-gem/10 blur-3xl transition-all duration-500 group-hover:bg-gem/20"></div>
+          <div className="absolute top-0 end-0 -mt-8 -me-8 h-32 w-32 rounded-full bg-secondary/10 blur-3xl transition-all duration-500 group-hover:bg-secondary/20"></div>
+          <div className="absolute bottom-0 start-0 -mb-8 -ms-8 h-32 w-32 rounded-full bg-gem/10 blur-3xl transition-all duration-500 group-hover:bg-gem/20"></div>
 
           <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="flex h-2 w-2 rounded-full bg-secondary animate-pulse"></span>
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-secondary">
-                  Support
-                </p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-secondary">{t("support")}</p>
               </div>
-              <p className="text-xs text-gray-400 font-medium text-left">
-                Didn't find what you need?
-              </p>
+              <p className="text-xs text-gray-400 font-medium text-start">{t("didn-t-find-what-you-need")}</p>
             </div>
 
             <div className="flex items-end justify-between">
               <div>
-                <h3 className="text-lg font-bold text-white leading-tight group-hover:text-secondary transition-colors">
-                  How can we help you?
-                </h3>
-                <p className="mt-1 text-[10px] text-gray-500 font-medium group-hover:text-gray-400 transition-colors text-left">
-                  Replies within 24 hours
-                </p>
+                <h3 className="text-lg font-bold text-white leading-tight group-hover:text-secondary transition-colors">{t("how-can-we-help-you")}</h3>
+                <p className="mt-1 text-[10px] text-gray-500 font-medium group-hover:text-gray-400 transition-colors text-start">{t("replies-within-24-hours")}</p>
               </div>
 
               {/* Action Button Visual */}
@@ -216,18 +207,14 @@ function BillingContent() {
           </div>
         )}
         <div className="mb-4">
-          <label htmlFor="country-select" className="block mb-2 text-md font-medium text-black">
-            Country:
-          </label>
+          <label htmlFor="country-select" className="block mb-2 text-md font-medium text-black">{t("country-2")}</label>
           <select
             id="country-select"
             value={checkout.country_name}
             onChange={handleCountryChange}
             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
           >
-            <option value="" disabled>
-              Select a country
-            </option>
+            <option value="" disabled>{t("select-a-country")}</option>
             {countries.map(country => (
               <option key={country} value={country}>
                 {country}
@@ -236,9 +223,7 @@ function BillingContent() {
           </select>
         </div>
         <div>
-          <label htmlFor="city-select" className="block mb-2 text-md font-medium text-black">
-            City:
-          </label>
+          <label htmlFor="city-select" className="block mb-2 text-md font-medium text-black">{t("city-2")}</label>
           <select
             id="city-select"
             value={checkout.city_name}
@@ -246,9 +231,7 @@ function BillingContent() {
             disabled={!checkout.country_name}
             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
           >
-            <option value="" disabled>
-              Select a city
-            </option>
+            <option value="" disabled>{t("select-a-city")}</option>
             {cities.map(city => (
               <option key={city.name} value={city.name}>
                 {city.name}

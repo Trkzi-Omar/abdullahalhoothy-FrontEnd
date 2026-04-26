@@ -1,4 +1,6 @@
 import React from 'react';
+import { t } from '../../i18n';
+
 
 interface MeasurementFormProps {
   onSubmit: (name: string, description: string) => void;
@@ -26,12 +28,11 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
 
   return (
     <div className="p-0 w-44">
-      <h2 className="text-xl font-bold mb-2">Measurement</h2>
+      <h2 className="text-xl font-bold mb-2">{t("measurement")}</h2>
 
       <form onSubmit={handleSubmit}>
         <div className="mb-2">
-          <label htmlFor="name" className="block mb-2 font-medium">
-            Name <span className="text-red-500">*</span>
+          <label htmlFor="name" className="block mb-2 font-medium">{t("name-2")}{' '}<span className="text-red-500">*</span>
           </label>
           <input
             id="name"
@@ -40,20 +41,18 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
             className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
             aria-required="true"
-            placeholder="Enter a name"
+            placeholder={t("enter-a-name")}
             defaultValue={initialName}
           />
         </div>
 
         <div className="mb-2">
-          <label htmlFor="description" className="block mb-2 font-medium">
-            Description
-          </label>
+          <label htmlFor="description" className="block mb-2 font-medium">{t("description")}</label>
           <textarea
             id="description"
             name="description"
             rows={2}
-            placeholder="Enter a description"
+            placeholder={t("enter-a-description")}
             className="w-full p-2 border rounded-md resize-none"
             defaultValue={initialDescription}
           />
@@ -64,15 +63,11 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
             type="button"
             onClick={onCancel}
             className="w-full px-4 py-2 shadow-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-          >
-            Cancel
-          </button>
+          >{t("cancel")}</button>
           <button
             type="submit"
             className="w-full px-4 py-2 shadow-sm bg-gem-gradient text-white rounded-md"
-          >
-            Save
-          </button>
+          >{t("save")}</button>
         </div>
       </form>
     </div>

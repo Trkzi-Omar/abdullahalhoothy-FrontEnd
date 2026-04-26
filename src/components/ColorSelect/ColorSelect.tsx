@@ -6,6 +6,8 @@ import { useUIContext } from '../../context/UIContext';
 import { MdKeyboardArrowDown } from 'react-icons/md';
 import { colorOptions, colorMap, getDefaultLayerColor } from '../../utils/helperFunctions';
 import { ColorSelectProps } from '../../types/allTypesAndInterfaces';
+import { t } from '../../i18n';
+
 
 function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
   const { sidebarMode } = useUIContext();
@@ -31,6 +33,7 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
     currentGeoPoint?.color ||
     getDefaultLayerColor(layerId);
   const colorName = colorMap.get(colorHex) || '';
+  const selectedColorHex = layerState?.selectedColor?.hex;
 
   const isGradient = geoPoints[layerId]?.is_gradient || false;
 
@@ -45,7 +48,7 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
       layerColors[layerId] ||
       getDefaultLayerColor(layerId);
 
-    if (initialColor && initialColor !== layerState?.selectedColor?.hex) {
+    if (initialColor && initialColor !== selectedColorHex) {
       updateLayerState(layerId, {
         selectedColor: {
           name: colorMap.get(initialColor) || '',
@@ -53,7 +56,7 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
         },
       });
     }
-  }, [layerId, geoPoints, layerColors]);
+  }, [layerId, geoPoints, layerColors, selectedColorHex, updateLayerState]);
 
   function handleOptionClick(optionName: string, hex: string, event: ReactMouseEvent) {
     event.stopPropagation();
@@ -115,9 +118,9 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
           } ${showLoaderTopup ? styles.disabledOption : ''}`}
           onClick={e => handleOptionClick(name, hex, e)}
         >
-          {sidebarMode !== 'catalog' && <span className="mr-2.5">{name}</span>}
+          {sidebarMode !=="catalog" && <span className="me-2.5">{name}</span>}
           <span
-            className={`w-[14px] h-[14px] rounded-full absolute left-[80px]  ${
+            className={`w-[14px] h-[14px] rounded-full absolute start-[80px]  ${
               sidebarMode === 'catalog' ? 'w-[14px] h-[14px] static' : ''
             }`}
             style={{ backgroundColor: hex }}
@@ -145,16 +148,16 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
             style={{ backgroundColor: isGradient ? 'transparent' : colorHex }}
           />
           <span className="font-medium">
-            {isGradient ? 'Custom' : colorName || 'Select a color'}
+            {isGradient ?t("custom") : colorName ||"Select a color"}
           </span>
         </div>
         <MdKeyboardArrowDown className={`text-2xl ${isOpen ? 'rotate-180' : ''}`} />
       </div>
       {isOpen && (
         <div
-          className={`absolute top-full left-0 right-0 border rounded z-[1] ${
+          className={`absolute top-full start-0 end-0 border rounded z-[1] ${
             sidebarMode === 'catalog'
-              ? 'bg-transparent border-none max-w-[35px] left-[5px] top-[30px] flex flex-col justify-center py-[4px]'
+              ? 'bg-transparent border-none max-w-[35px] start-[5px] top-[30px] flex flex-col justify-center py-[4px]'
               : 'bg-white border-[#ccc]'
           }`}
         >

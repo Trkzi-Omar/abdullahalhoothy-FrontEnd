@@ -1,8 +1,10 @@
-import React, { useEffect, MouseEvent as ReactMouseEvent, useState } from 'react';
+import React, { useEffect, MouseEvent as ReactMouseEvent } from 'react';
 
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useLayerContext } from '../../context/LayerContext';
 import { DropdownColorSelectProps } from '../../types/allTypesAndInterfaces';
+import { t } from '../../i18n';
+
 
 function DropdownColorSelect({ layerIndex }: DropdownColorSelectProps) {
   const catalogContext = useCatalogContext();
@@ -23,13 +25,13 @@ function DropdownColorSelect({ layerIndex }: DropdownColorSelectProps) {
 
   useEffect(() => {
     setChosenPallet(null);
-  }, []);
+  }, [setChosenPallet]);
   useEffect(() => {
     // Only update the layer color if layerIndex is provided
     if (layerIndex !== undefined && layerIndex !== null && chosenPallet != null) {
       updateLayerColor(layerIndex, colors[chosenPallet][0]);
     }
-  }, [chosenPallet, colors]);
+  }, [chosenPallet, colors, layerIndex, updateLayerColor]);
 
   function handleOptionClick(optionIndex, event: ReactMouseEvent) {
     event.stopPropagation();
@@ -62,8 +64,8 @@ function DropdownColorSelect({ layerIndex }: DropdownColorSelectProps) {
         }}
       ></button>
       <div className="flex justify-between text-sm text-slate-500">
-        <span>Low</span>
-        <span>High</span>
+        <span>{t("low")}</span>
+        <span>{t("high")}</span>
       </div>
       {/* Dropdown menu */}
       {isOpen && (

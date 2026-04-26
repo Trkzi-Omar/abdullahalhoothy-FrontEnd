@@ -2,6 +2,8 @@ import React from 'react';
 import { FaFile } from 'react-icons/fa';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { CustomSegment } from '../../types';
+import { t } from '../../i18n';
+
 
 interface DetailedSegmentProps {
   segmentReportData: CustomSegment[] | null;
@@ -27,11 +29,9 @@ function DetailedSegment({
             <FaFile className="text-center mx-auto text-gray-400" />{' '}
           </div>
 
-          <h3 className="text-xl font-semibold text-neutral-800 ">Nothing Here Yet</h3>
+          <h3 className="text-xl font-semibold text-neutral-800 ">{t("nothing-here-yet")}</h3>
 
-          <p className="text-sm text-neutral-500 mt-2">
-            This section doesn't have any data available.
-          </p>
+          <p className="text-sm text-neutral-500 mt-2">{t("this-section-doesn-t-have-any-data-available")}</p>
         </div>
       </div>
     );
@@ -90,29 +90,29 @@ function DetailedSegment({
             <div className="flex border-b-2 border-gray-100">
               <button
                 onClick={() => setActiveTab('who_they_are')}
-                className={`flex-1 relative font-semibold text-sm py-4 px-4 border-r-[1px] border-gray-300 transition-all duration-200 ${activeTab === 'who_they_are'
+                className={`flex-1 relative font-semibold text-sm py-4 px-4 border-e-[1px] border-gray-300 transition-all duration-200 ${activeTab === 'who_they_are'
                     ? 'text-[#582c83] bg-[#e3dbea]'
                     : 'text-gray-600 hover:text-[#582c83] hover:bg-gray-50'
                   }`}
                 type="button"
               >
-                <span className="block">WHO THEY ARE</span>
+                <span className="block">{t("who-they-are")}</span>
                 <div
-                  className={`absolute bottom-0 left-0 right-0 h-1 bg-[#582c83] transition-transform duration-300 ${activeTab === 'who_they_are' ? 'scale-100' : 'scale-0'
+                  className={`absolute bottom-0 start-0 end-0 h-1 bg-[#582c83] transition-transform duration-300 ${activeTab === 'who_they_are' ? 'scale-100' : 'scale-0'
                     }`}
                 ></div>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('evaluation_metrics')}
-                className={`flex-1 relative group font-semibold text-sm py-4 px-4 border-r-[1px] border-gray-300 transition-all duration-200 ${activeTab === 'evaluation_metrics'
+                className={`flex-1 relative group font-semibold text-sm py-4 px-4 border-e-[1px] border-gray-300 transition-all duration-200 ${activeTab === 'evaluation_metrics'
                     ? 'text-[#582c83] bg-[#e3dbea]'
                     : 'text-gray-600 hover:text-[#582c83] hover:bg-gray-50'
                   }`}
               >
-                <span className="block">Evaluation Metrics</span>
+                <span className="block">{t("evaluation-metrics")}</span>
                 <div
-                  className={`absolute bottom-0 left-0 right-0 h-1 bg-[#582c83] transition-transform duration-300 ${activeTab === 'evaluation_metrics' ? 'scale-100' : 'scale-0 group-hover:scale-100'
+                  className={`absolute bottom-0 start-0 end-0 h-1 bg-[#582c83] transition-transform duration-300 ${activeTab === 'evaluation_metrics' ? 'scale-100' : 'scale-0 group-hover:scale-100'
                     }`}
                 ></div>
               </button>
@@ -124,9 +124,9 @@ function DetailedSegment({
                     : 'text-gray-600 hover:text-[#582c83] hover:bg-gray-50'
                   }`}
               >
-                <span className="block">HOW THEY LIVE</span>
+                <span className="block">{t("how-they-live")}</span>
                 <div
-                  className={`absolute bottom-0 left-0 right-0 h-1 bg-[#582c83] transition-transform duration-300 ${activeTab === 'how_they_live' ? 'scale-100' : 'scale-0 group-hover:scale-100'
+                  className={`absolute bottom-0 start-0 end-0 h-1 bg-[#582c83] transition-transform duration-300 ${activeTab === 'how_they_live' ? 'scale-100' : 'scale-0 group-hover:scale-100'
                     }`}
                 ></div>
               </button>
@@ -135,24 +135,21 @@ function DetailedSegment({
 
           {/* Content */}
           <div className="py-2 bg-white rounded-b-lg">
-            {activeTab === 'who_they_are' && (
+            {activeTab ==="who_they_are" && (
               <div>
                 {/* Description Section */}
                 <div className="bg-gray-50 rounded-lg p-6">
                   <p className="leading-relaxed text-gray-700">
-                    {selectedSegment.description}. This group typically falls within the{' '}
+                    {selectedSegment.description}{t("this-group-typically-falls-within-the")}{' '}
                     <span className="font-semibold text-gray-900">
                       {selectedSegment.demographic_profile.age_range}
-                    </span>{' '}
-                    age range with a household size of{' '}
+                    </span>{' '}{t("age-range-with-a-household-size-of")}{' '}
                     <span className="font-semibold text-gray-900">
                       {selectedSegment.demographic_profile.household_size}
-                    </span>
-                    . Their lifestyle is described as{' '}
+                    </span>{t("their-lifestyle-is-described-as")}{' '}
                     <span className="font-semibold text-gray-900">
                       {selectedSegment.demographic_profile.lifestyle}
-                    </span>
-                    , and they tend to spend on{' '}
+                    </span>{t("and-they-tend-to-spend-on")}{' '}
                     <span className="font-semibold text-gray-900">
                       {selectedSegment.demographic_profile.spending_habits}
                     </span>
@@ -164,9 +161,7 @@ function DetailedSegment({
                 <div className="grid grid-cols-3 gap-4">
                   {/* Average Household Income */}
                   <div className="bg-gradient-to-br from-white to-purple-50 border border-purple-100 rounded-lg p-4">
-                    <div className="text-[#582c83] text-xs font-semibold mb-2 tracking-wide uppercase">
-                      AVERAGE INCOME
-                    </div>
+                    <div className="text-[#582c83] text-xs font-semibold mb-2 tracking-wide uppercase">{t("average-income")}</div>
                     <div className="text-gray-900 font-bold text-lg capitalize">
                       {selectedSegment.demographic_profile.income}
                     </div>
@@ -174,9 +169,7 @@ function DetailedSegment({
 
                   {/* Family Size */}
                   <div className="bg-gradient-to-br from-white to-purple-50 border border-purple-100 rounded-lg p-4">
-                    <div className="text-[#582c83] text-xs font-semibold mb-2 tracking-wide uppercase">
-                      FAMILY SIZE
-                    </div>
+                    <div className="text-[#582c83] text-xs font-semibold mb-2 tracking-wide uppercase">{t("family-size")}</div>
                     <div className="text-gray-900 font-bold text-lg">
                       {selectedSegment.demographic_profile.household_size}
                     </div>
@@ -184,9 +177,7 @@ function DetailedSegment({
 
                   {/* Average Age */}
                   <div className="bg-gradient-to-br from-white to-purple-50 border border-purple-100 rounded-lg p-4">
-                    <div className="text-[#582c83] text-xs font-semibold mb-2 tracking-wide uppercase">
-                      AVERAGE AGE
-                    </div>
+                    <div className="text-[#582c83] text-xs font-semibold mb-2 tracking-wide uppercase">{t("average-age")}</div>
                     <div className="text-gray-900 font-bold text-lg">
                       {selectedSegment.demographic_profile.age_range}
                     </div>
@@ -195,7 +186,7 @@ function DetailedSegment({
               </div>
             )}
 
-            {activeTab === 'evaluation_metrics' && (
+            {activeTab ==="evaluation_metrics" && (
               <div>
                 <div className="flex gap-2">
                   {Object.entries(selectedSegment.attributes.evaluation_metrics).map(
@@ -228,18 +219,16 @@ function DetailedSegment({
               </div>
             )}
 
-            {activeTab === 'how_they_live' && (
+            {activeTab ==="how_they_live" && (
               <div>
                 <div className="text-center mb-8">
-                  <h3 className="text-xl font-bold text-[#582c83] mb-2">
-                    Lifestyle & Shopping Patterns
-                  </h3>
+                  <h3 className="text-xl font-bold text-[#582c83] mb-2">{t("lifestyle-and-shopping-patterns")}</h3>
                 </div>
 
                 <div className="flex gap-2">
                   {selectedSegment.attributes.cross_shopping_categories &&
                     selectedSegment.attributes.cross_shopping_categories.length > 0 && (
-                      <div className="bg-gradient-to-br from-white to-blue-50 border-l-4 border-blue-500 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
+                      <div className="bg-gradient-to-br from-white to-blue-50 border-s-4 border-blue-500 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
                             <svg
@@ -257,10 +246,8 @@ function DetailedSegment({
                             </svg>
                           </div>
                           <div>
-                            <h4 className="text-blue-700 font-bold text-base tracking-wide">
-                              Cross Shopping Categories
-                            </h4>
-                            <p className="text-xs text-gray-600">Alternative shopping destinations</p>
+                            <h4 className="text-blue-700 font-bold text-base tracking-wide">{t("cross-shopping-categories")}</h4>
+                            <p className="text-xs text-gray-600">{t("alternative-shopping-destinations")}</p>
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -279,7 +266,7 @@ function DetailedSegment({
                     )}
                   {selectedSegment.attributes.complementary_categories &&
                     selectedSegment.attributes.complementary_categories.length > 0 && (
-                      <div className="bg-gradient-to-br from-white to-green-50 border-l-4 border-green-500 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
+                      <div className="bg-gradient-to-br from-white to-green-50 border-s-4 border-green-500 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
                             <svg
@@ -297,12 +284,8 @@ function DetailedSegment({
                             </svg>
                           </div>
                           <div>
-                            <h4 className="text-green-700 font-bold text-base tracking-wide">
-                              Complementary Categories
-                            </h4>
-                            <p className="text-xs text-gray-600">
-                              Businesses that enhance the experience
-                            </p>
+                            <h4 className="text-green-700 font-bold text-base tracking-wide">{t("complementary-categories")}</h4>
+                            <p className="text-xs text-gray-600">{t("businesses-that-enhance-the-experience")}</p>
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-2">

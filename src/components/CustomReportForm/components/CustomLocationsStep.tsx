@@ -3,6 +3,8 @@ import MapLocationPicker from '../../MapLocationPicker/MapLocationPicker';
 import { CustomLocation, FormErrors } from '../../../types/allTypesAndInterfaces';
 import { getBusinessTypeConfig } from '../constants';
 import { BusinessTypeConfig } from '../services/businessMetricsService';
+import { t } from '../../../i18n';
+
 
 interface CustomLocationsStepProps {
   formData: {
@@ -34,22 +36,22 @@ const CustomLocationsStep = ({
   const config = businessConfig ? getBusinessTypeConfig(businessConfig) : null;
 
   if (!config) {
-    return <div>Loading...</div>;
+    return <div>{t("loading")}</div>;
   }
 
   return (
     <div className="space-y-4 mb-4 animate-fade-in-up">
       <div className="text-center">
         <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">
-          {isRequired ? 'Location to Evaluate' : 'Custom Locations'}{' '}
+          {isRequired ?t("location-to-evaluate") :t("custom-locations")}{' '}
           <span className={`text-sm font-normal ${isRequired ? 'text-red-500' : 'text-gray-500'}`}>
-            ({isRequired ? 'Required' : 'Optional'})
+            ({isRequired ?t("required") :t("optional-2")})
           </span>
         </h3>
         <p className="text-sm text-gray-600">
           {isRequired
-            ? `Select the location you want to evaluate for ${config.displayName.toLowerCase()} potential`
-            : `Add specific locations you want to analyze for ${config.displayName.toLowerCase()} placement`}
+            ? t("select-the-location-you-want-to-evaluate-for-business-potential", { business: config.displayName.toLowerCase() })
+            : t("add-specific-locations-you-want-to-analyze-for-business-placement", { business: config.displayName.toLowerCase() })}
         </p>
       </div>
       <div>
@@ -62,9 +64,7 @@ const CustomLocationsStep = ({
             : 'border-gray-300 text-gray-600 hover:border-primary hover:text-primary'
             }`}
         >
-          <FaPlus className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
-          Add Another Location
-        </button>
+          <FaPlus className="w-4 h-4 me-2 group-hover:scale-110 transition-transform duration-200" />{t("add-another-location")}</button>
       </div>
       <div className=" flex  gap-4 flex-wrap justify-center">
         {formData.custom_locations.map((location, index) => (
@@ -74,12 +74,12 @@ const CustomLocationsStep = ({
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mr-3">
+                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center me-3">
                   <span className="text-primary font-bold text-sm">{index + 1}</span>
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-900 text-sm">Location {index + 1}</h4>
-                  <p className="text-xs text-gray-600">Select a specific area to analyze</p>
+                  <h4 className="font-semibold text-gray-900 text-sm">{t("location-2")}{' '}{index + 1}</h4>
+                  <p className="text-xs text-gray-600">{t("select-a-specific-area-to-analyze")}</p>
                 </div>
               </div>
               {formData.custom_locations.length > 1 && (
@@ -92,9 +92,7 @@ const CustomLocationsStep = ({
                     : 'bg-red-100 text-red-700 hover:bg-red-200'
                     }`}
                 >
-                  <FaTrash className="w-3 h-3 mr-1" />
-                  Remove
-                </button>
+                  <FaTrash className="w-3 h-3 me-1" />{t("remove")}</button>
               )}
             </div>
 
@@ -115,7 +113,7 @@ const CustomLocationsStep = ({
                 lat: location.lat || 0,
                 lng: location.lng || 0,
               }}
-              title={`Custom Location ${index + 1}`}
+              title={t("custom-location-index", { index: index + 1 })}
               error={errors[`custom_location_${index}`]}
               rentPrice={location.properties?.price}
               disabled={disabled}

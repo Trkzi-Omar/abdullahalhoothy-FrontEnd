@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { HiArrowRight, HiX } from 'react-icons/hi';
 import Loader from '../../../Loader/Loader';
+import { t } from '../../../../i18n';
+
 
 interface ReportAIChatPanelProps {
   messages: Array<{
@@ -51,11 +53,11 @@ function ReportAIChatPanel({
     let bubbleClass: string;
     if (message.isBlocked) {
       bubbleClass =
-        'bg-amber-50 rounded-2xl p-4 rounded-tl-none border border-amber-200 text-amber-900';
+        'bg-amber-50 rounded-2xl p-4 rounded-ss-none border border-amber-200 text-amber-900';
     } else if (isBot) {
-      bubbleClass = 'bg-gray-100 rounded-2xl p-4 rounded-tl-none border border-gray-200';
+      bubbleClass = 'bg-gray-100 rounded-2xl p-4 rounded-ss-none border border-gray-200';
     } else {
-      bubbleClass = 'bg-gem-gradient text-white rounded-2xl p-4 rounded-tr-none';
+      bubbleClass = 'bg-gem-gradient text-white rounded-2xl p-4 rounded-se-none';
     }
 
     return (
@@ -74,18 +76,18 @@ function ReportAIChatPanel({
 
   return (
     <div
-      className={`fixed bottom-40 right-4 lg:bottom-40 lg:right-6
+      className={`fixed bottom-40 end-4 lg:bottom-40 lg:end-6
         lg:w-[400px] w-[95vw] max-h-[70vh] bg-white rounded-2xl shadow-xl
         transform-gpu transition-all duration-500 ease-out z-20
         ${isOpen ? '-translate-x-0 scale-100 opacity-100' : '-translate-x-1/4 scale-95 opacity-0 pointer-events-none'}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between bg-gem-gradient-animated bg-200% animate-gradient-shift p-4 rounded-t-2xl">
-        <h2 className="text-gray-100 font-semibold">AI Assistant</h2>
+        <h2 className="text-gray-100 font-semibold">{t("ai-assistant")}</h2>
         <button
           onClick={onClose}
           className="text-gray-100 hover:text-white transition-colors"
-          aria-label="Close chat"
+          aria-label={t("close-chat")}
         >
           <HiX className="w-6 h-6" />
         </button>
@@ -100,7 +102,7 @@ function ReportAIChatPanel({
         {messages.map(renderMessage)}
         {isLoading && (
           <div className="flex justify-start animate-fade-in-up">
-            <div className="bg-gray-100 rounded-2xl p-4 rounded-tl-none border border-gray-200">
+            <div className="bg-gray-100 rounded-2xl p-4 rounded-ss-none border border-gray-200">
               <Loader />
             </div>
           </div>
@@ -115,7 +117,7 @@ function ReportAIChatPanel({
             ref={inputRef}
             value={input}
             onChange={e => setInput(e.target.value)}
-            placeholder="Type your message..."
+            placeholder={t("type-your-message")}
             className="flex-1 min-w-0 p-2 border-none focus:ring-0 focus:outline-none resize-none min-h-[40px] h-[40px] max-h-24 leading-6 overflow-y-auto scrollbar-hide"
             onInput={e => {
               const target = e.target as HTMLTextAreaElement;
@@ -139,9 +141,9 @@ function ReportAIChatPanel({
                 ? 'text-gray-300 cursor-not-allowed'
                 : 'text-gem-green hover:text-gem-green/80 transition-colors'
             }`}
-            aria-label="Send message"
+            aria-label={t("send-message")}
           >
-            <HiArrowRight className="w-5 h-5" />
+            <HiArrowRight className="w-5 h-5 rtl:rotate-180" />
           </button>
         </div>
       </form>

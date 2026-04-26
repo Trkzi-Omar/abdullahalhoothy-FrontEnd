@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { businessMetricsService, BusinessTypeConfig } from '../services/businessMetricsService';
+import { t } from '../../../i18n';
 
 interface UseBusinessTypeConfigReturn {
   config: BusinessTypeConfig | null;
@@ -13,7 +14,7 @@ export const useBusinessTypeConfig = (businessType: string): UseBusinessTypeConf
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchConfig = async () => {
+  const fetchConfig = useCallback(async () => {
     if (!businessType) return;
 
     setLoading(true);
@@ -24,17 +25,17 @@ export const useBusinessTypeConfig = (businessType: string): UseBusinessTypeConf
       setConfig(businessConfig);
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : 'Failed to load business type configuration';
+        err instanceof Error ? err.message : t("failed-to-load-business-type-configuration");
       setError(errorMessage);
       console.error('Error loading business type config:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [businessType]);
 
   useEffect(() => {
     fetchConfig();
-  }, [businessType]);
+  }, [fetchConfig]);
 
   return {
     config,

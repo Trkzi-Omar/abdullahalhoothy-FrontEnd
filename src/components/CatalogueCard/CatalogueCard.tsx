@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
-import styles from './CatalogueCard.module.css';
 import { CatalogueCardProps } from '../../types/allTypesAndInterfaces';
 import { useCatalogContext } from '../../context/CatalogContext';
 import placeholderImage from '../../placeholderImage/catalogue.png';
+import { t } from '../../i18n';
+
 
 function Component({
-  id,
   name,
   description,
   thumbnail_url,
   records_number,
   can_access,
   onMoreInfo,
-  typeOfCard,
 }: CatalogueCardProps) {
   const { selectedContainerType: containerType } = useCatalogContext();
   const [isImageError, setIsImageError] = useState(false);
@@ -28,9 +27,7 @@ function Component({
           <div
             onClick={onMoreInfo}
             className="cursor-pointer inline-flex items-center text-[#1890ff] hover:text-[#40a9ff]"
-          >
-            + Add
-          </div>
+          >{t("add")}</div>
         </li>
       );
     } else {
@@ -41,9 +38,9 @@ function Component({
               onClick={onMoreInfo}
               className="cursor-pointer inline-flex items-center text-[#1890ff]"
             >
-              {can_access ? <>Load Data</> : <>Subscribe</>}
+              {can_access ? <>{t("load-data")}</> : <>{t("subscribe")}</>}
             </div>
-            <span role="img" aria-label="info-circle" className="anticon anticon-info-circle">
+            <span role="img" aria-label={t("info-circle")} className="anticon anticon-info-circle">
               <svg
                 viewBox="64 64 896 896"
                 focusable="false"
@@ -63,10 +60,8 @@ function Component({
               <div
                 onClick={onMoreInfo}
                 className="cursor-pointer inline-flex items-center text-[#1890ff] hover:text-[#40a9ff]"
-              >
-                Request Access
-              </div>
-              <span role="img" aria-label="info-circle" className="anticon anticon-info-circle">
+              >{t("request-access")}</div>
+              <span role="img" aria-label={t("info-circle")} className="anticon anticon-info-circle">
                 <svg
                   viewBox="64 64 896 896"
                   focusable="false"
@@ -89,8 +84,8 @@ function Component({
 
   return (
     <div className="relative transition-all">
-      <div className="absolute top-0 left-0 z-10 bg-[#ff0000] text-white py-1.5 px-3 rounded-tl rounded-br">
-        <span>{can_access ? 'Free' : 'Paid'}</span>
+      <div className="absolute top-0 start-0 z-10 bg-[#ff0000] text-white py-1.5 px-3 rounded-ss rounded-ee">
+        <span>{can_access ?t("free") :t("paid")}</span>
       </div>
       <div className="border border-[#f0f0f0] rounded overflow-hidden bg-white flex flex-col h-full">
         <div className="overflow-hidden flex justify-center items-center h-[200px]">
@@ -112,7 +107,7 @@ function Component({
             </div>
           </div>
           <div className="mt-2 flex-grow">
-            <span className="block text-sm text-[#888]">{records_number || 0} points</span>
+            <span className="block text-sm text-[#888]">{records_number || 0}{' '}{t("points")}</span>
             <p className="m-0 text-sm text-[#555]">{description}</p>
           </div>
         </div>

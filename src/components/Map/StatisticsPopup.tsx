@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useCatalogContext } from '../../context/CatalogContext';
 import * as turf from '@turf/turf';
 import { useUIContext } from '../../context/UIContext';
 import { PolygonFeature } from '../../types/allTypesAndInterfaces';
 import { formatLargeNumber } from '../../utils/formatters';
+import { t } from '../../i18n';
+
 
 function calculatePercentageDifference(number: number, benchmark: number) {
   if (!number || !benchmark) return 0;
@@ -48,7 +50,7 @@ function CloseButton({ polygon }: { polygon: PolygonFeature }) {
   );
 }
 
-export default function StatisticsPopup({ polygon }: { polygon: any }) {
+export default function StatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
   const { isMobile } = useUIContext();
 
   return (
@@ -74,7 +76,7 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
     setIsDragging(true);
   };
 
-  const handleMouseMove = e => {
+  const handleMouseMove = useCallback((e: MouseEvent) => {
     if (isDragging) {
       const deltaX = e.movementX;
       const deltaY = e.movementY;
@@ -83,11 +85,11 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
         y: prevPosition.y + deltaY,
       }));
     }
-  };
+  }, [isDragging]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  };
+  }, []);
   useEffect(() => {
     if (isDragging) {
       window.addEventListener('mousemove', handleMouseMove);
@@ -101,7 +103,7 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging]);
+  }, [isDragging, handleMouseMove, handleMouseUp]);
 
   useEffect(() => {
     if (polygon.pixelPosition) {
@@ -137,17 +139,17 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
       <div className="bg-white mx-auto font-sans">
         <div className="flex justify-between items-center mb-4">
           <div></div>
-          <div className="flex space-x-1">
+          <div className="flex gap-1">
             <CloseButton polygon={polygon} />
           </div>
         </div>
         <table className="w-full text-xs border-collapse">
           <thead>
             <tr>
-              <th className="text-left font-normal text-blue-600 w-1/4" colSpan={2}>
+              <th className="text-start font-normal text-blue-600 w-1/4" colSpan={2}>
                 <img
                   src="/slocator.png"
-                  alt="Logo"
+                  alt={t("logo")}
                   width={40}
                   height={40}
                   className="w-16 h-16 rounded"
@@ -161,7 +163,7 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
                       : 'justify-end'
                   }`}
                 >
-                  {polygonSections.areas.map((area, index) => {
+                  {polygonSections.areas.map(area => {
                     return (
                       <div
                         key={area}
@@ -172,24 +174,16 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
                         }`}
                       >
                         <div className="bg-blue-600 text-white text-center mb-1 h-12 w-full flex items-center justify-center ">
-                          {area === 'Unknown'
+                          {area ==="Unknown"
                             ? `Area ${(turf.area(polygon) / 100000).toFixed(3)} km²`
                             : area}
                         </div>
                         <div className="flex justify-between text-xs gap-0.5">
-                          <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">
-                            Count
-                          </span>
-                          <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">
-                            Sum
-                          </span>
+                          <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">{t("count")}</span>
+                          <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">{t("sum")}</span>
                           <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">%</span>
-                          <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">
-                            Avg
-                          </span>
-                          <span className="bg-blue-600 text-white p-1.5 w-auto text-center text-nowrap">
-                            vs Benchmark
-                          </span>
+                          <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">{t("avg")}</span>
+                          <span className="bg-blue-600 text-white p-1.5 w-auto text-center text-nowrap">{t("vs-benchmark")}</span>
                         </div>
                       </div>
                     );
@@ -199,7 +193,7 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
             </tr>
           </thead>
           <tbody>
-            {polygonSections.sections.map((section, sectionIndex) => {
+            {polygonSections.sections.map(section => {
               const benchmark = benchmarks.find(benchmark => benchmark.title === section.title);
               return (
                 <React.Fragment key={section.category}>
@@ -236,24 +230,22 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
                                   : 'w-[64%]'
                               }`}
                             >
-                              <div className="text-right py-1 px-1.5 w-1/4">{data.count}</div>
-                              <div className="text-right py-1 px-1.5 w-1/4">
+                              <div className="text-end py-1 px-1.5 w-1/4">{data.count}</div>
+                              <div className="text-end py-1 px-1.5 w-1/4">
                                 {formatLargeNumber(data.sum.toFixed(2))}
                               </div>
-                              <div className="text-right py-1 px-1.5 w-1/4">{data.percentage}%</div>
-                              <div className="text-right py-1 px-2 w-1/4">
+                              <div className="text-end py-1 px-1.5 w-1/4">{data.percentage}%</div>
+                              <div className="text-end py-1 px-2 w-1/4">
                                 {formatLargeNumber(data.avg)}
                               </div>
-                              <div className="text-right min-w-[84px] w-auto h-full">
+                              <div className="text-end min-w-[84px] w-auto h-full">
                                 {benchmark?.value === '' && (
                                   <button
                                     className="text-nowrap h-full"
                                     onClick={() =>
                                       setIsBenchmarkControlOpen(!isBenchmarkControlOpen)
                                     }
-                                  >
-                                    Set Benchmark
-                                  </button>
+                                  >{t("set-benchmark")}</button>
                                 )}
                                 {benchmark?.value !== '' && (
                                   <div
@@ -283,16 +275,9 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
   );
 }
 
-const MobileStatisticsPopup = ({ polygon }) => {
-  const { sections, benchmarks, setBenchmarks, isBenchmarkControlOpen, setIsBenchmarkControlOpen } =
+const MobileStatisticsPopup = ({ polygon }: { polygon: PolygonFeature }) => {
+  const { sections, benchmarks, isBenchmarkControlOpen, setIsBenchmarkControlOpen } =
     useCatalogContext();
-  const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    if (polygon?.isStatisticsPopupOpen) {
-      setIsOpen(true);
-    }
-  }, [polygon]);
 
   if (!polygon || !polygon.isStatisticsPopupOpen || !sections) return null;
 
@@ -307,13 +292,13 @@ const MobileStatisticsPopup = ({ polygon }) => {
 
   return (
     <div
-      className="fixed top-1/2 -translate-y-1/2 mx-4 my-2 left-0 right-0 bg-white shadow-lg rounded-lg p-4 z-50 overflow-y-auto text-sm"
+      className="fixed top-1/2 -translate-y-1/2 mx-4 my-2 start-0 end-0 bg-white shadow-lg rounded-lg p-4 z-50 overflow-y-auto text-sm"
       style={{
         height: '80vh',
       }}
     >
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-bold text-blue-600">Statistics</h3>
+        <h3 className="text-lg font-bold text-blue-600">{t("statistics")}</h3>
         <CloseButton polygon={polygon} />
       </div>
       <div className="space-y-6">
@@ -321,7 +306,7 @@ const MobileStatisticsPopup = ({ polygon }) => {
           <div key={areaIndex} className="w-full border-t pt-4 space-y-4">
             {/* Header for the Area */}
             <div className="bg-blue-600 text-white text-center mb-4 h-9 w-full flex items-center justify-center">
-              {area === 'Unknown' ? `Area ${(turf.area(polygon) / 100000).toFixed(3)} km²` : area}
+              {area ==="Unknown" ? `Area ${(turf.area(polygon) / 100000).toFixed(3)} km²` : area}
             </div>
             {/* Data for the Area */}
             {polygonSections.sections.map((section, sectionIndex) => {
@@ -346,31 +331,29 @@ const MobileStatisticsPopup = ({ polygon }) => {
                         {/* Layer Name */}
                         <div className="font-medium text-gray-800 mb-2">{point.layer_name}</div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">Count:</span>
+                          <span className="text-gray-700 font-medium">{t("count-2")}</span>
                           <span className="text-gray-700">{dataForArea.count}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">Sum:</span>
+                          <span className="text-gray-700 font-medium">{t("sum-2")}</span>
                           <span className="text-gray-700">{dataForArea.sum}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">Percentage:</span>
+                          <span className="text-gray-700 font-medium">{t("percentage")}</span>
                           <span className="text-gray-700">{dataForArea.percentage}%</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">Average:</span>
+                          <span className="text-gray-700 font-medium">{t("average")}</span>
                           <span className="text-gray-700">{dataForArea.avg}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">vs Benchmark:</span>
+                          <span className="text-gray-700 font-medium">{t("vs-benchmark-2")}</span>
                           <span>
                             {benchmark?.value === '' ? (
                               <button
                                 className="text-blue-500 underline"
                                 onClick={() => setIsBenchmarkControlOpen(!isBenchmarkControlOpen)}
-                              >
-                                Set Benchmark
-                              </button>
+                              >{t("set-benchmark")}</button>
                             ) : (
                               <div
                                 className={`text-center p-1 rounded ${

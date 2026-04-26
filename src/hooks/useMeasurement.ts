@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps */
 import { useState, useCallback, useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import apiRequest from '../services/apiRequest';
@@ -10,6 +11,8 @@ import { MeasurementForm } from '../components/MeasurementForm/MeasurementForm';
 import React from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { MarkerType } from '../types';
+import { t } from '../i18n';
+
 
 export interface MeasurementState {
   isMeasuring: boolean;
@@ -348,7 +351,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                       <br />
                       <strong>Drive Time:</strong> ${savedMeasurement.duration.toFixed(0)} min
                     </div>
-                    <div class="mt-3 flex justify-end space-x-2">
+                    <div class="mt-3 flex justify-end gap-2">
                       <button
                         class="delete-measurement-hook px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
                       >
@@ -373,7 +376,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                   popup.remove();
                   openModal(
                     React.createElement(MeasurementForm, {
-                      onSubmit: (name, description) => {
+                      onSubmit: () => {
                         closeModal();
                       },
                       onCancel: closeModal,
@@ -422,7 +425,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                     <br />
                     <strong>Drive Time:</strong> ${savedMeasurement.duration.toFixed(0)} min
                   </div>
-                  <div class="mt-3 flex justify-end space-x-2">
+                  <div class="mt-3 flex justify-end gap-2">
                     <button
                       class="delete-measurement-hook px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
                     >
@@ -447,7 +450,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                 popup.remove();
                 openModal(
                   React.createElement(MeasurementForm, {
-                    onSubmit: (name, description) => {
+                    onSubmit: () => {
                       // Here you would update the measurement in your catalog
                       // For now, we'll just close the modal
                       closeModal();
@@ -522,7 +525,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
         .setHTML(
           `
         <div class="p-2 flex items-center bg-white rounded-lg shadow-sm">
-          <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 mr-2"></div>
+          <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 me-2"></div>
           <span>Calculating route...</span>
         </div>
       `
@@ -602,7 +605,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
             if (typeof apiResult.data.drive_polygon === 'string') {
               try {
                 routeData = JSON.parse(apiResult.data.drive_polygon);
-              } catch (parseError) {
+              } catch {
                 const coordinates = decodePolyline(apiResult.data.drive_polygon);
                 routeData = {
                   type: 'Feature',
@@ -629,7 +632,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
           }
         }
 
-        toast.success('Measurement saved successfully');
+        toast.success(t("measurement-saved-successfully"));
         closeModal();
 
         setIsMeasuring(false);
@@ -700,7 +703,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
               <br />
               <strong>Drive Time:</strong> ${(apiResult.data?.drive_time_in_min ?? 0).toFixed(0)} min
             </div>
-            <div class="mt-3 flex justify-end space-x-2">
+            <div class="mt-3 flex justify-end gap-2">
               <button
                 class="exit-measure-mode-hook px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs"
               >
@@ -927,8 +930,8 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
         };
 
         if (measureSourcePoint.lat === e.lngLat.lat && measureSourcePoint.lng === e.lngLat.lng) {
-          toast.warning('Measurement API Call: Source and Destination points are identical.', {
-            description: 'Please select different points.',
+          toast.warning(t("measurement-api-call-source-and-destination-points-are-identical"), {
+            description:t("please-select-different-points"),
           });
           console.warn('Measurement API Call: Source and Destination points are identical.', body);
         }
@@ -1209,5 +1212,3 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
     setMeasurementResult,
   };
 };
-
-

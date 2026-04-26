@@ -13,6 +13,8 @@ import {
 import { IoNavigate } from 'react-icons/io5';
 import { BiSearch } from 'react-icons/bi';
 import clsx from 'clsx';
+import { t } from '../../i18n';
+
 
 type MenuPlacement = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
 
@@ -33,21 +35,21 @@ interface MapMenuProps {
 
 const menuItems = [
   { id: 'coords', isHeader: true },
-  { id: 'save', icon: <FaBookmark size={18} />, text: 'Save this location', enabled: true },
-  { id: 'share', icon: <FaShare size={18} />, text: 'Share this location' },
-  { id: 'directions_from', icon: <IoNavigate size={18} />, text: 'Directions from here' },
+  { id: 'save', icon: <FaBookmark size={18} />, text:t("save-this-location"), enabled: true },
+  { id: 'share', icon: <FaShare size={18} />, text:t("share-this-location") },
+  { id: 'directions_from', icon: <IoNavigate size={18} />, text:t("directions-from-here") },
   {
     id: 'directions_to',
     icon: <IoNavigate size={18} className="rotate-180" />,
-    text: 'Directions to here',
+    text:t("directions-to-here"),
   },
-  { id: 'whats_here', icon: <FaMapMarkerAlt size={18} />, text: "What's here?" },
-  { id: 'search_nearby', icon: <BiSearch size={20} />, text: 'Search nearby' },
-  { id: 'print', icon: <FaPrint size={18} />, text: 'Print' },
-  { id: 'add_missing', icon: <FaPlusCircle size={18} />, text: 'Add a missing place' },
-  { id: 'add_business', icon: <FaBuilding size={18} />, text: 'Add your business' },
-  { id: 'report_problem', icon: <FaFlag size={18} />, text: 'Report a data problem' },
-  { id: 'measure_distance', icon: <FaRuler size={18} />, text: 'Measure distance', enabled: true },
+  { id: 'whats_here', icon: <FaMapMarkerAlt size={18} />, text:t("what-s-here") },
+  { id: 'search_nearby', icon: <BiSearch size={20} />, text:t("search-nearby") },
+  { id: 'print', icon: <FaPrint size={18} />, text:t("print") },
+  { id: 'add_missing', icon: <FaPlusCircle size={18} />, text:t("add-a-missing-place") },
+  { id: 'add_business', icon: <FaBuilding size={18} />, text:t("add-your-business") },
+  { id: 'report_problem', icon: <FaFlag size={18} />, text:t("report-a-data-problem") },
+  { id: 'measure_distance', icon: <FaRuler size={18} />, text:t("measure-distance"), enabled: true },
 ];
 
 const MapMenu: React.FC<MapMenuProps> = ({
@@ -282,7 +284,7 @@ const MapMenu: React.FC<MapMenuProps> = ({
               {item.icon && (
                 <span
                   className={clsx(
-                    'mr-3 w-4 h-4 flex items-center justify-center',
+                    'me-3 w-4 h-4 flex items-center justify-center',
                     isEnabled ? 'text-gray-500' : 'text-gray-400'
                   )}
                 >

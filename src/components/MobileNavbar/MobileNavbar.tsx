@@ -41,14 +41,17 @@ export default function MobileNavbar() {
 
   return (
     <div className="lg:hidden bg-white ">
-      <div className="flex justify-between items-center px-4 py-2 border-b">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <img src="/slocator.png" alt={t("google-logo")} className="w-7" />
-          </div>
+      <div className="relative flex items-center justify-center px-4 py-2 border-b h-11">
+        <button
+          className="absolute left-4 flex items-center p-1"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          <BiMenu className="text-2xl" />
+        </button>
+        <Link to="/">
+          <img src="/slocator.png" alt={t("google-logo")} className="w-7" />
         </Link>
-        <div className="flex items-center gap-3">
-          {/* Cart Icon - Only show on billing routes */}
+        <div className="absolute right-4 flex items-center gap-3">
           {isBillingRoute && cartItemCount > 0 && (
             <button
               onClick={handleCartClick}
@@ -76,40 +79,26 @@ export default function MobileNavbar() {
             </button>
           )}
           {isAuthenticated ? (
-            <div className="flex items-center gap-2">
-              <Link to="/profile">
-                <div className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 ">
-                  <span className="text-gray-500 text-sm font-medium">{t("jd")}</span>
-                </div>
-              </Link>
-            </div>
+            <Link to="/profile">
+              <div className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-200">
+                <span className="text-gray-500 text-sm font-medium">{t("jd")}</span>
+              </div>
+            </Link>
           ) : (
-            <div className="flex items-center gap-2">
-              <Link to="/auth" className="text-base">{t("login")}</Link>
-            </div>
+            <Link to="/auth" className="text-base">{t("login")}</Link>
           )}
         </div>
-      </div>
-      <div className="px-4 py-2">
-        <button
-          className="flex items-center gap-2"
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        >
-          <BiMenu className="text-2xl" />
-        </button>
       </div>
       <>
         {isSidebarOpen && (
           <div
-            className={`fixed inset-0 z-30 bg-black transition-opacity duration-300 ${
-              isSidebarOpen ? 'opacity-40' : 'opacity-0 pointer-events-none'
-            }`}
+            className="fixed inset-0 z-30 bg-black opacity-40"
             onClick={() => setIsSidebarOpen(false)}
-          ></div>
+          />
         )}
         <div
           className={`fixed start-0 top-0 bottom-2 z-30 outline-none h-full bg-primary w-[310px] flex transition-transform duration-300 ${
-            isSidebarOpen ? 'translate-x-0' : 'translate-x-[-100%]'
+            isSidebarOpen ? 'translate-x-0' : 'ltr:-translate-x-full rtl:translate-x-full'
           }`}
         >
           <div className="grow py-4 mt-4 flex flex-col bg-primary text-white">

@@ -1,4 +1,5 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+/* eslint-disable react-refresh/only-export-components */
+import axios, { AxiosInstance } from 'axios';
 import urls from '../urls.json';
 import { t } from '../i18n';
 
@@ -22,7 +23,7 @@ export async function HttpReq<T>(
   setLoading: (loading: boolean) => void,
   setError: (error: Error | null) => void,
   method: 'get' | 'post' | 'put' | 'delete' | 'patch' = 'get',
-  body?: any,
+  body?: unknown,
   token?: string,
   defaultErrorValue?: T // Add this parameter to specify error fallback value
 ) {
@@ -56,12 +57,12 @@ export async function HttpReq<T>(
     setResId(request_id);
     setLoading(false);
     setError(null);
-  } catch (fetchError: any) {
+  } catch (fetchError: unknown) {
     // Use provided default error value, or fallback to empty object
     setResData(defaultErrorValue !== undefined ? defaultErrorValue : ({} as T));
     setResMessage('');
     setResId('');
     setLoading(false);
-    setError(fetchError);
+    setError(fetchError instanceof Error ? fetchError : new Error(String(fetchError)));
   }
 }

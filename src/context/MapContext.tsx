@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useContext,
@@ -6,12 +7,11 @@ import {
   useState,
   useMemo,
   useEffect,
-  useCallback,
 } from 'react';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { MapContextType } from '../types/allTypesAndInterfaces';
-import { zoomToGridSize, getMapScale, mapToBackendZoom } from '../utils/mapZoomUtils';
+import { zoomToGridSize, mapToBackendZoom } from '../utils/mapZoomUtils';
 import { defaultMapConfig } from '../hooks/map/useMapInitialization';
 import debounce from 'lodash/debounce';
 import { t } from '../i18n';
@@ -30,11 +30,10 @@ export function MapProvider({ children }: { children: ReactNode }) {
     gridSize: defaultMapConfig.gridSize,
   });
 
-  const handleZoomChange = useCallback(
-    debounce(() => {
+  const handleZoomChange = useMemo(
+    () => debounce(() => {
       if (!mapRef.current) return;
 
-      const scaleInfo = getMapScale(mapRef.current);
       const mapboxZoom = mapRef.current.getZoom();
       // const backendZoom = mapMetersPerPixelToZoom(Math.floor(scaleInfo.metersPerPixel));
       const backendZoom = mapToBackendZoom(Math.floor(mapboxZoom));

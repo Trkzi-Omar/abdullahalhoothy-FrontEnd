@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router';
 import { Link } from 'react-router-dom';
@@ -8,7 +8,7 @@ import { t } from '../../i18n';
 
 
 const Organization = () => {
-  const { isMobile, isDrawerOpen, setIsDrawerOpen } = useUIContext();
+  const { isMobile, setIsDrawerOpen } = useUIContext();
   const { isAuthenticated } = useAuth();
   const nav = useNavigate();
 

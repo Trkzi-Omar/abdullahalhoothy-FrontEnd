@@ -2,19 +2,14 @@ import React, { useState } from 'react';
 import styles from './SaveOptions.module.css';
 import { useLayerContext } from '../../context/LayerContext';
 import { useCatalogContext } from '../../context/CatalogContext';
-import { useNavigate } from 'react-router';
 import SavedIconFeedback from '../SavedIconFeedback/SavedIconFeedback';
-import ErrorIconFeedback from '../ErrorIconFeedback/ErrorIconFeedback';
-import { useUIContext } from '../../context/UIContext';
 import { t } from '../../i18n';
 
 
 function SaveOptions() {
-  const nav = useNavigate();
   const [selectedOption, setSelectedOption] = useState('');
   const layerContext = useLayerContext();
   const catalogContext = useCatalogContext();
-  const { sidebarMode, setSidebarMode } = useUIContext();
 
   const isLayerContextActive = layerContext.createLayerformStage === 'thirdStep';
 
@@ -26,7 +21,7 @@ function SaveOptions() {
     ? layerContext.handleSaveLayer
     : catalogContext.handleSaveLayer;
 
-  const { saveResponse, isError } = isLayerContextActive ? layerContext : catalogContext;
+  const { saveResponse } = isLayerContextActive ? layerContext : catalogContext;
 
   function handleOptionChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { value } = event.target;
@@ -43,7 +38,7 @@ function SaveOptions() {
 
   return (
     <div className={styles.container}>
-      {!!saveResponse ? (
+      {saveResponse ? (
         <SavedIconFeedback />
       ) : (
         <>

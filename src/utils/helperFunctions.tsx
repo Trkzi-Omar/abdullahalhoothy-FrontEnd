@@ -51,7 +51,10 @@ export function fuzzyMatchCategoryType(type: string, searchQuery: string): boole
   );
 }
 
-export function processCityData(data: any, setData: Function): string[] {
+export function processCityData(
+  data: Record<string, unknown>,
+  setData: (value: Record<string, unknown>) => void
+): string[] {
   if (typeof data === 'object' && data !== null) {
     const keys = Object.keys(data);
     setData(data);

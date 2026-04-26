@@ -1,4 +1,4 @@
-import React, { useEffect, MouseEvent as ReactMouseEvent, useState } from 'react';
+import React, { useEffect, MouseEvent as ReactMouseEvent } from 'react';
 
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useLayerContext } from '../../context/LayerContext';
@@ -25,13 +25,13 @@ function DropdownColorSelect({ layerIndex }: DropdownColorSelectProps) {
 
   useEffect(() => {
     setChosenPallet(null);
-  }, []);
+  }, [setChosenPallet]);
   useEffect(() => {
     // Only update the layer color if layerIndex is provided
     if (layerIndex !== undefined && layerIndex !== null && chosenPallet != null) {
       updateLayerColor(layerIndex, colors[chosenPallet][0]);
     }
-  }, [chosenPallet, colors]);
+  }, [chosenPallet, colors, layerIndex, updateLayerColor]);
 
   function handleOptionClick(optionIndex, event: ReactMouseEvent) {
     event.stopPropagation();

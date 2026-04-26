@@ -25,7 +25,7 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
   subtitle,
   compact = false,
 }) => {
-  const { sendOTP, verifyOTP, state, resetState, isModalOpen, closeOTPModal } = useOTP();
+  const { isModalOpen, closeOTPModal } = useOTP();
   
   // Store original phone number to use after verification (since OTP context might reset)
   const phoneNumberRef = useRef<string>('');
@@ -45,16 +45,6 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
       closeOTPModal();
     }
   }, [isModalOpen, closeOTPModal]);
-
-  // Initialize component - ensure modal is closed but don't reset state completely
-  // (resetting state might interfere with our local step management)
-  useEffect(() => {
-    // Ensure modal is closed on mount
-    if (isModalOpen) {
-      closeOTPModal();
-    }
-    // Don't reset state here as it might interfere with our local state management
-  }, []); // Only run on mount
 
   // Handle phone number submission
   const handleSendOTP = async (e?: React.FormEvent) => {
@@ -88,8 +78,9 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
       // If successful, show OTP input form
       setStep('otp');
       toast.success(t("verification-code-sent-to-your-phone"));
-    } catch (err: any) {
-      const errorMessage = err?.message || t("failed-to-send-verification-code-please-try-again");
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      const errorMessage = error.message || t("failed-to-send-verification-code-please-try-again");
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -115,7 +106,7 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
       // Call the OTP verification API directly to avoid triggering global callbacks
       // We'll handle the verification ourselves without using the context's verifyOTP
       // which might have callbacks that cause navigation
-      const response = await apiRequest({
+      await apiRequest({
         url: urls.sms_verify_otp,
         method: 'POST',
         body: {
@@ -127,11 +118,12 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
       // If verification succeeds, update our local state and call our success callback
       setStep('verified');
       onVerificationSuccess(phoneToVerify);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { status?: number }; message?: string };
       // Check for 404 (invalid code)
-      const errorMessage = err?.response?.status === 404 
+      const errorMessage = error.response?.status === 404
         ? t("invalid-verification-code-please-try-again")
-        : err?.message || t("verification-failed-please-try-again");
+        : error.message || t("verification-failed-please-try-again");
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -327,6 +319,4 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
 };
 
 export default PhoneVerificationStep;
-
-
 

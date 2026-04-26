@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useCatalogContext } from '../../context/CatalogContext';
 import * as turf from '@turf/turf';
 import { useUIContext } from '../../context/UIContext';
@@ -50,7 +50,7 @@ function CloseButton({ polygon }: { polygon: PolygonFeature }) {
   );
 }
 
-export default function StatisticsPopup({ polygon }: { polygon: any }) {
+export default function StatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
   const { isMobile } = useUIContext();
 
   return (
@@ -76,7 +76,7 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
     setIsDragging(true);
   };
 
-  const handleMouseMove = e => {
+  const handleMouseMove = useCallback((e: MouseEvent) => {
     if (isDragging) {
       const deltaX = e.movementX;
       const deltaY = e.movementY;
@@ -85,11 +85,11 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
         y: prevPosition.y + deltaY,
       }));
     }
-  };
+  }, [isDragging]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  };
+  }, []);
   useEffect(() => {
     if (isDragging) {
       window.addEventListener('mousemove', handleMouseMove);
@@ -103,7 +103,7 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging]);
+  }, [isDragging, handleMouseMove, handleMouseUp]);
 
   useEffect(() => {
     if (polygon.pixelPosition) {
@@ -163,7 +163,7 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
                       : 'justify-end'
                   }`}
                 >
-                  {polygonSections.areas.map((area, index) => {
+                  {polygonSections.areas.map(area => {
                     return (
                       <div
                         key={area}
@@ -193,7 +193,7 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
             </tr>
           </thead>
           <tbody>
-            {polygonSections.sections.map((section, sectionIndex) => {
+            {polygonSections.sections.map(section => {
               const benchmark = benchmarks.find(benchmark => benchmark.title === section.title);
               return (
                 <React.Fragment key={section.category}>
@@ -275,16 +275,9 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
   );
 }
 
-const MobileStatisticsPopup = ({ polygon }) => {
-  const { sections, benchmarks, setBenchmarks, isBenchmarkControlOpen, setIsBenchmarkControlOpen } =
+const MobileStatisticsPopup = ({ polygon }: { polygon: PolygonFeature }) => {
+  const { sections, benchmarks, isBenchmarkControlOpen, setIsBenchmarkControlOpen } =
     useCatalogContext();
-  const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    if (polygon?.isStatisticsPopupOpen) {
-      setIsOpen(true);
-    }
-  }, [polygon]);
 
   if (!polygon || !polygon.isStatisticsPopupOpen || !sections) return null;
 

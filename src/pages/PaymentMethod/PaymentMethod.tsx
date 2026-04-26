@@ -1,6 +1,5 @@
 import {
   CardCvcElement,
-  CardElement,
   CardExpiryElement,
   CardNumberElement,
   Elements,
@@ -9,7 +8,7 @@ import {
 } from '@stripe/react-stripe-js';
 
 import { loadStripe } from '@stripe/stripe-js';
-import React, { useState, FormEvent, useLayoutEffect, useEffect, useCallback } from 'react';
+import React, { useState, FormEvent, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import apiRequest from '../../services/apiRequest';
@@ -20,6 +19,13 @@ import { toast } from 'sonner';
 import { UserProfile } from '../../types/allTypesAndInterfaces';
 import { t } from '../../i18n';
 
+
+type StripeElementChangeEvent = {
+  brand?: string;
+  error?: {
+    message?: string;
+  };
+};
 
 const PaymentMethodForm: React.FC = () => {
   const { authResponse } = useAuth();
@@ -67,21 +73,16 @@ const PaymentMethodForm: React.FC = () => {
     fetchProfile();
   }, [authResponse]);
 
-  const handleCardChange = (event: any) => {
-    setCardBrand(event.brand); // Update the brand based on user input
+  const handleCardChange = (event: StripeElementChangeEvent) => {
+    setCardBrand(event.brand || 'unknown'); // Update the brand based on user input
     setCardNumberError(event.error ? event.error.message : null);
   };
 
-  // Handlers for displaying errors for each field
-  const handleCardNumberChange = (event: any) => {
-    setCardNumberError(event.error ? event.error.message : null);
-  };
-
-  const handleCardExpiryChange = (event: any) => {
+  const handleCardExpiryChange = (event: StripeElementChangeEvent) => {
     setCardExpiryError(event.error ? event.error.message : null);
   };
 
-  const handleCardCvcChange = (event: any) => {
+  const handleCardCvcChange = (event: StripeElementChangeEvent) => {
     setCardCvcError(event.error ? event.error.message : null);
   };
 
@@ -376,19 +377,6 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 const PaymentMethod: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const snapPoints = ['256', 1];
-  const [isMobile, setIsMobile] = useState(false);
-  const [snap, setSnap] = useState<number | string | null>(snapPoints[0]);
-
-  useLayoutEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   if (!isAuthenticated) {
     navigate('/auth');

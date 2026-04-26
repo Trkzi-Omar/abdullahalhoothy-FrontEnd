@@ -32,7 +32,7 @@ export const getStepDefinitions = (
   const baseSteps =
     reportType === 'full' ? FULL_REPORT_STEP_DEFINITIONS : LOCATION_REPORT_STEP_DEFINITIONS;
   
-  let steps = isAdvancedMode ? [...baseSteps] : baseSteps.filter(step => !step.isAdvanced);
+  const steps = isAdvancedMode ? [...baseSteps] : baseSteps.filter(step => !step.isAdvanced);
 
   if (needsPhoneVerification) {
     // Insert Phone Verification step before the last step (Report Tier)

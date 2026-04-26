@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps */
 import { useState, useCallback, useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import apiRequest from '../services/apiRequest';
@@ -375,7 +376,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                   popup.remove();
                   openModal(
                     React.createElement(MeasurementForm, {
-                      onSubmit: (name, description) => {
+                      onSubmit: () => {
                         closeModal();
                       },
                       onCancel: closeModal,
@@ -449,7 +450,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                 popup.remove();
                 openModal(
                   React.createElement(MeasurementForm, {
-                    onSubmit: (name, description) => {
+                    onSubmit: () => {
                       // Here you would update the measurement in your catalog
                       // For now, we'll just close the modal
                       closeModal();
@@ -604,7 +605,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
             if (typeof apiResult.data.drive_polygon === 'string') {
               try {
                 routeData = JSON.parse(apiResult.data.drive_polygon);
-              } catch (parseError) {
+              } catch {
                 const coordinates = decodePolyline(apiResult.data.drive_polygon);
                 routeData = {
                   type: 'Feature',
@@ -1211,4 +1212,3 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
     setMeasurementResult,
   };
 };
-

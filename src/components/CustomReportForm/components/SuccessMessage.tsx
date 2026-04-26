@@ -6,11 +6,10 @@ import { t } from '../../../i18n';
 
 interface SuccessMessageProps {
   show: boolean;
-  businessType: string;
   businessConfig?: BusinessTypeConfig | null;
 }
 
-const SuccessMessage = ({ show, businessType, businessConfig }: SuccessMessageProps) => {
+const SuccessMessage = ({ show, businessConfig }: SuccessMessageProps) => {
   if (!show) return null;
 
   const config = businessConfig ? getBusinessTypeConfig(businessConfig) : null;

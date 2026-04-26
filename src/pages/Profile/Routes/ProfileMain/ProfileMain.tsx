@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
 import {
   FaTimes,
@@ -222,7 +223,7 @@ const ProfileMain: React.FC = () => {
   };
 
   // Render nested object data
-  const renderNestedObject = (data: Record<string, any>, title?: string): JSX.Element => {
+  const renderNestedObject = (data: Record<string, any>): JSX.Element => {
     const entries = Object.entries(data);
     
     if (entries.length === 0) {
@@ -235,7 +236,7 @@ const ProfileMain: React.FC = () => {
     }
 
     // Check if this is an object with nested report entries (like standard reports)
-    const hasNestedReports = entries.every(([_, v]) => 
+    const hasNestedReports = entries.every(([, v]) =>
       typeof v === 'object' && v !== null && !Array.isArray(v) && 
       (v.report_link || v.purchase_date)
     );

@@ -29,6 +29,8 @@ interface PhoneInputProps {
   inputClassName?: string;
 }
 
+const preferredCountryCodes: CountryIso2[] = ['sa', 'ae', 'us', 'gb'];
+
 const PhoneInput: React.FC<PhoneInputProps> = ({
   value,
   onChange,
@@ -43,9 +45,6 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Preferred countries at the top
-  const preferredCountryCodes: CountryIso2[] = ['sa', 'ae', 'us', 'gb'];
 
   // Parse countries data
   const countries: ParsedCountry[] = useMemo(() => {

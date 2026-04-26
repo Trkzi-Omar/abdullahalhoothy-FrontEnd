@@ -33,6 +33,7 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
     currentGeoPoint?.color ||
     getDefaultLayerColor(layerId);
   const colorName = colorMap.get(colorHex) || '';
+  const selectedColorHex = layerState?.selectedColor?.hex;
 
   const isGradient = geoPoints[layerId]?.is_gradient || false;
 
@@ -47,7 +48,7 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
       layerColors[layerId] ||
       getDefaultLayerColor(layerId);
 
-    if (initialColor && initialColor !== layerState?.selectedColor?.hex) {
+    if (initialColor && initialColor !== selectedColorHex) {
       updateLayerState(layerId, {
         selectedColor: {
           name: colorMap.get(initialColor) || '',
@@ -55,7 +56,7 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
         },
       });
     }
-  }, [layerId, geoPoints, layerColors]);
+  }, [layerId, geoPoints, layerColors, selectedColorHex, updateLayerState]);
 
   function handleOptionClick(optionName: string, hex: string, event: ReactMouseEvent) {
     event.stopPropagation();

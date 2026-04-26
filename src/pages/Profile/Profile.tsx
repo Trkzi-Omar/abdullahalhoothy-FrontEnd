@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
@@ -8,7 +8,7 @@ import { t } from '../../i18n';
 
 
 const Profile = () => {
-  const { isMobile, isDrawerOpen, setIsDrawerOpen } = useUIContext();
+  const { isMobile, setIsDrawerOpen } = useUIContext();
   const { isAuthenticated } = useAuth();
   const nav = useNavigate();
   const location = useLocation();
@@ -86,15 +86,8 @@ function ProfileContent() {
 }
 
 function ProfileDrawer() {
-  const snapPoints = ['192', 1];
-  const [snap, setSnap] = useState<number | string | null>(snapPoints[0]);
-  const location = useLocation();
   const contentRef = React.useRef<HTMLDivElement>(null);
   const { isDrawerOpen, setIsDrawerOpen } = useUIContext();
-
-  useEffect(() => {
-    setSnap(snapPoints[0]);
-  }, [location.pathname]);
 
   useEffect(() => {
     const drawerContent = contentRef.current;

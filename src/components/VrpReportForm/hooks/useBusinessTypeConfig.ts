@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { businessMetricsService, BusinessTypeConfig } from '../services/businessMetricsService';
 import { t } from '../../../i18n';
 
@@ -14,7 +14,7 @@ export const useBusinessTypeConfig = (businessType: string): UseBusinessTypeConf
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchConfig = async () => {
+  const fetchConfig = useCallback(async () => {
     if (!businessType) return;
 
     setLoading(true);
@@ -31,11 +31,11 @@ export const useBusinessTypeConfig = (businessType: string): UseBusinessTypeConf
     } finally {
       setLoading(false);
     }
-  };
+  }, [businessType]);
 
   useEffect(() => {
     fetchConfig();
-  }, [businessType]);
+  }, [fetchConfig]);
 
   return {
     config,

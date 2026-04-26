@@ -1,16 +1,12 @@
 import React from 'react';
-import styles from './UserLayerCard.module.css';
 import placeHolderImage from '../../placeholderImage/layer.png';
 import { UserLayerCardProps } from '../../types/allTypesAndInterfaces';
-import { useCatalogContext } from '../../context/CatalogContext';
 import { Progress } from '../common';
 import { FaCheckCircle } from 'react-icons/fa';
 import { t } from '../../i18n';
 
 
 function UserLayerCard(props: UserLayerCardProps) {
-  const { geoPoints } = useCatalogContext();
-
   function handleMoreInfo() {
     props.onMoreInfo({
       id: props.id,

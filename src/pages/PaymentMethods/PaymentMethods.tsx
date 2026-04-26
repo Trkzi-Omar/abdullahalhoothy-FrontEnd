@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import urls from '../../urls.json';
@@ -19,7 +19,7 @@ const paymentBrandIcons = {
 };
 
 export default function PaymentMethods() {
-  const { isAuthenticated, authResponse } = useAuth();
+  const { authResponse } = useAuth();
   const { openOTPModal } = useOTP();
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [defaultPaymentMethodId, setDefaultPaymentMethodId] = useState<string | null>(null);
@@ -65,6 +65,35 @@ export default function PaymentMethods() {
     fetchProfile();
   }, [authResponse]);
 
+  const fetchDefaultPaymentMethodId = useCallback(async (): Promise<string | null> => {
+    try {
+      const res = await apiRequest({
+        url: urls.get_stripe_customer,
+        method: 'post',
+        isAuthRequest: true,
+        body: { user_id: authResponse?.localId },
+      });
+      return res.data.data || null;
+    } catch (error) {
+      console.error('Failed to fetch Stripe customer default payment method ID', error);
+      return null;
+    }
+  }, [authResponse?.localId]);
+
+  const fetchPaymentMethods = useCallback(async (defaultId: string) => {
+    try {
+      const res = await apiRequest({
+        url: `${urls.list_stripe_payment_methods}?user_id=${authResponse?.localId}`,
+        method: 'get',
+        isAuthRequest: true,
+      });
+      setPaymentMethods(res.data.data);
+      setDefaultPaymentMethodId(defaultId);
+    } catch (error) {
+      console.error('Failed to fetch payment methods', error);
+    }
+  }, [authResponse?.localId]);
+
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -82,36 +111,7 @@ export default function PaymentMethods() {
       }
     };
     fetchData();
-  }, [authResponse]);
-
-  const fetchDefaultPaymentMethodId = async (): Promise<string | null> => {
-    try {
-      const res = await apiRequest({
-        url: urls.get_stripe_customer,
-        method: 'post',
-        isAuthRequest: true,
-        body: { user_id: authResponse?.localId },
-      });
-      return res.data.data || null;
-    } catch (error) {
-      console.error('Failed to fetch Stripe customer default payment method ID', error);
-      return null;
-    }
-  };
-
-  const fetchPaymentMethods = async (defaultId: string) => {
-    try {
-      const res = await apiRequest({
-        url: `${urls.list_stripe_payment_methods}?user_id=${authResponse?.localId}`,
-        method: 'get',
-        isAuthRequest: true,
-      });
-      setPaymentMethods(res.data.data);
-      setDefaultPaymentMethodId(defaultId);
-    } catch (error) {
-      console.error('Failed to fetch payment methods', error);
-    }
-  };
+  }, [authResponse, fetchDefaultPaymentMethodId, fetchPaymentMethods]);
 
   // Function to actually remove the payment method
   const removePaymentMethod = async (methodId: string) => {
@@ -247,7 +247,7 @@ export default function PaymentMethods() {
             </tr>
           </thead>
           <tbody>
-            {paymentMethods.map((method, index) => (
+            {paymentMethods.map(method => (
               <tr key={method.id} className="border-b last:border-none text-sm">
                 <td className="p-2 flex items-center gap-2">
                   <img

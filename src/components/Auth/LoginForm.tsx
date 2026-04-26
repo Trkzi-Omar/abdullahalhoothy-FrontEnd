@@ -44,8 +44,9 @@ export const LoginForm = ({ onSuccess, onForgotPassword }: LoginFormProps) => {
         password: form.password,
       });
       onSuccess();
-    } catch (e: any) {
-      const message = e.response?.data?.detail || e.message || 'Login failed';
+    } catch (e: unknown) {
+      const error = e as { response?: { data?: { detail?: string } }; message?: string };
+      const message = error.response?.data?.detail || error.message || 'Login failed';
       setError(message);
       toast.error(message, { duration: 3000 });
     } finally {

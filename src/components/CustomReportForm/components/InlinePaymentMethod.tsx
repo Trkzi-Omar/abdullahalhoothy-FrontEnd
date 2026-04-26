@@ -14,6 +14,13 @@ import { toast } from 'sonner';
 import { t } from '../../../i18n';
 
 
+type StripeElementChangeEvent = {
+  brand?: string;
+  error?: {
+    message?: string;
+  };
+};
+
 interface InlinePaymentMethodProps {
   onPaymentMethodAdded: () => void;
   onCancel?: () => void;
@@ -39,20 +46,16 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
   const [cardholderName, setCardholderName] = useState('');
   const [nameError, setNameError] = useState<string | null>(null);
 
-  const handleCardChange = (event: any) => {
-    setCardBrand(event.brand);
+  const handleCardChange = (event: StripeElementChangeEvent) => {
+    setCardBrand(event.brand || 'unknown');
     setCardNumberError(event.error ? event.error.message : null);
   };
 
-  const handleCardNumberChange = (event: any) => {
-    setCardNumberError(event.error ? event.error.message : null);
-  };
-
-  const handleCardExpiryChange = (event: any) => {
+  const handleCardExpiryChange = (event: StripeElementChangeEvent) => {
     setCardExpiryError(event.error ? event.error.message : null);
   };
 
-  const handleCardCvcChange = (event: any) => {
+  const handleCardCvcChange = (event: StripeElementChangeEvent) => {
     setCardCvcError(event.error ? event.error.message : null);
   };
 
@@ -297,7 +300,6 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
 };
 
 export default InlinePaymentMethod;
-
 
 
 

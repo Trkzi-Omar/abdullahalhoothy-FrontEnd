@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { AuthContextType, AuthResponse, AuthSuccessResponse } from '../types/allTypesAndInterfaces';
 import apiRequest from '../services/apiRequest';
@@ -14,7 +15,7 @@ export const isGuestUser = (authResponse: AuthResponse | null): boolean => {
   return (
     email === 'guest' ||
     email === 'guest@slocator.com' ||
-    (authResponse as any).registered === false ||
+    (authResponse as AuthResponse & { registered?: boolean }).registered === false ||
     authResponse.localId?.startsWith('guest_') === true
   );
 };
@@ -88,7 +89,7 @@ export const performLogin = async (
   }
 
   if (options.isGuest && isGuestUser(data) && options.source) {
-    (data as any).source = options.source;
+    (data as AuthResponse & { source?: string }).source = options.source;
   }
 
   setAuthResponse(data);
@@ -142,7 +143,7 @@ export const performRegistration = async (
     return authData;
   }
 
-  throw new Error(responseData?.detail || 'Registration failed');
+  throw new Error(responseData?.detail || t("registration-failed-please-try-again"));
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -202,7 +203,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
     initializeAuth();
-  }, [urlAuth]);
+  }, [urlAuth, urlSource]);
 
   const isAuthenticated = !!(authResponse && 'idToken' in authResponse);
   const [authLoading, setAuthLoading] = useState(() => {

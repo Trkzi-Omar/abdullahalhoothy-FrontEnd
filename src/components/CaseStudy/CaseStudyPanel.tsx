@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { useEffect, useState, useRef } from 'react';
 import { createContext, useContext } from 'react';
 import RichTextEditor from '../ReportBuilder/RichTextEditor';
@@ -156,8 +157,9 @@ export const CaseStudyPanel: React.FC = () => {
       let processedText = text;
 
       if (isRTL && fontNameToUse === ARABIC_FONT_NAME) {
-        if ((pdf as any).processArabic) {
-          processedText = (pdf as any).processArabic(text);
+        const arabicPdf = pdf as jsPDF & { processArabic?: (value: string) => string };
+        if (arabicPdf.processArabic) {
+          processedText = arabicPdf.processArabic(text);
         }
       }
 
@@ -201,10 +203,10 @@ export const CaseStudyPanel: React.FC = () => {
         effectiveAlign = isRTL ? 'right' : 'left';
       }
 
-      const textOptions: any = {
+      const textOptions = {
         baseline: 'top',
         align: effectiveAlign,
-      };
+      } as const;
 
       const xPos =
         effectiveAlign === 'right'
@@ -238,7 +240,7 @@ export const CaseStudyPanel: React.FC = () => {
         } else if (node.children && node.children.length > 0) {
           const nodeText = node.children
             .filter(child => Text.isText(child))
-            .map(child => (child as any).text)
+            .map(child => child.text)
             .join('');
 
           if (containsArabic(nodeText)) {

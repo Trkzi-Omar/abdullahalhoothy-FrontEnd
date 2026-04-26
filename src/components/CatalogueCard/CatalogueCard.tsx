@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import styles from './CatalogueCard.module.css';
 import { CatalogueCardProps } from '../../types/allTypesAndInterfaces';
 import { useCatalogContext } from '../../context/CatalogContext';
 import placeholderImage from '../../placeholderImage/catalogue.png';
@@ -7,14 +6,12 @@ import { t } from '../../i18n';
 
 
 function Component({
-  id,
   name,
   description,
   thumbnail_url,
   records_number,
   can_access,
   onMoreInfo,
-  typeOfCard,
 }: CatalogueCardProps) {
   const { selectedContainerType: containerType } = useCatalogContext();
   const [isImageError, setIsImageError] = useState(false);

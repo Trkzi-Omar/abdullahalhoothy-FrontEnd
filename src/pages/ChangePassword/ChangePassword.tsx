@@ -12,7 +12,7 @@ import { t } from '../../i18n';
 
 
 const ChangePassword: React.FC = () => {
-  const { isAuthenticated, authResponse } = useAuth();
+  const { authResponse } = useAuth();
 
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState<boolean>(false);

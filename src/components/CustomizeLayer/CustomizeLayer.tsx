@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useLayerContext } from '../../context/LayerContext';
-import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router';
 import { LayerCustomization } from '../../types/allTypesAndInterfaces';
 import LayerCustomizationItem from '../LayerCustomizationItem/LayerCustomizationItem';
 import { useCatalogContext } from '../../context/CatalogContext';
@@ -10,7 +8,15 @@ import { getDefaultLayerColor } from '../../utils/helperFunctions';
 import { t } from '../../i18n';
 
 
-function autoFillLegendFormat(data: any) {
+interface LegendAutoFillData {
+  selectedCountry?: string;
+  selectedCity?: string;
+  action: string;
+  includedTypes: string[];
+  excludedTypes: string[];
+}
+
+function autoFillLegendFormat(data: LegendAutoFillData) {
   if (!data.selectedCountry || !data.selectedCity) return '';
 
   const actionAbbreviation = data.action.split(' ')[0];
@@ -38,10 +44,6 @@ function autoFillLegendFormat(data: any) {
 }
 
 function CustomizeLayer() {
-  const nav = useNavigate();
-
-  const { isAuthenticated } = useAuth();
-
   const {
     resetFormStage,
     resetFetchDatasetForm,
@@ -130,7 +132,7 @@ function CustomizeLayer() {
     if (!layer?.name || !layer?.legend) {
       setErrors(prev => ({
         ...prev,
-        [layerId]: 'Name and legend are required.',
+          [layerId]: t("name-and-legend-are-required"),
       }));
       return false;
     }
@@ -148,7 +150,7 @@ function CustomizeLayer() {
           await handleSaveLayer({ layers: [layerData] });
           setSavedLayers(prev => new Set(prev).add(layerId));
         }
-      } catch (error) {
+      } catch {
         setErrors(prev => ({
           ...prev,
           [layerId]: t("failed-to-save-layer-please-try-again"),
@@ -175,7 +177,7 @@ function CustomizeLayer() {
         await handleSaveLayer({ layers: layerCustomizations });
 
         setSavedLayers(new Set(layerIds));
-      } catch (error) {
+      } catch {
         setGlobalSaveError(t("failed-to-save-layers-please-try-again"));
         setErrors(prev => ({
           ...prev,
@@ -209,7 +211,11 @@ function CustomizeLayer() {
   const toggleCollapse = (layerId: number) => {
     setCollapsedLayers(prev => {
       const newSet = new Set(prev);
-      prev.has(layerId) ? newSet.delete(layerId) : newSet.add(layerId);
+      if (prev.has(layerId)) {
+        newSet.delete(layerId);
+      } else {
+        newSet.add(layerId);
+      }
       return newSet;
     });
   };

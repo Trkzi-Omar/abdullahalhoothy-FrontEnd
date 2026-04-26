@@ -38,7 +38,11 @@ const Auth = () => {
     const params = new URLSearchParams(location.search);
     const redirectUrl = params.get('redirect_url');
     setTimeout(() => {
-      redirectUrl ? window.location.replace(redirectUrl) : nav('/');
+      if (redirectUrl) {
+        window.location.replace(redirectUrl);
+      } else {
+        nav('/');
+      }
     }, 100);
   };
 
@@ -61,8 +65,9 @@ const Auth = () => {
       try {
         await performGoogleLogin(setAuthResponse, tokenResponse.access_token, sourceLocal);
         handleRedirect();
-      } catch (e: any) {
-        setGoogleError(e.response?.data?.detail || e.message || t("google-login-failed"));
+      } catch (e: unknown) {
+        const error = e as { response?: { data?: { detail?: string } }; message?: string };
+        setGoogleError(error.response?.data?.detail || error.message || t("google-login-failed"));
       }
     },
     onError: () => {

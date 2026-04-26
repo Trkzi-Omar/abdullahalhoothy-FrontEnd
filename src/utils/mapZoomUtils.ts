@@ -95,7 +95,7 @@ export function getViewportDistance(map: mapboxgl.Map) {
  */
 export function mapMetersPerPixelToZoom(metersPerPixel: number): number {
   const zoomLevel = Object.entries(metersPerPixelRanges).find(
-    ([_, range]) => metersPerPixel >= Number(range[1]) && metersPerPixel <= Number(range[0])
+    ([, range]) => metersPerPixel >= Number(range[1]) && metersPerPixel <= Number(range[0])
   );
   return zoomLevel ? Number(zoomLevel[0]) : 1;
 }

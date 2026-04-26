@@ -209,11 +209,4 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   );
 };
 
-export const initialValue: Descendant[] = [
-  {
-    type: 'paragraph',
-    children: [{ text: '' }],
-  },
-];
-
 export default RichTextEditor;

@@ -1,6 +1,5 @@
 import React from 'react';
 import { MdCheckCircleOutline } from 'react-icons/md';
-import styles from './SavedIconFeedback.module.css';
 import { t } from '../../i18n';
 
 

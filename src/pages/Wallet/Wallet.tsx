@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import urls from '../../urls.json';
 import apiRequest from '../../services/apiRequest';
@@ -12,17 +12,18 @@ export default function Wallet() {
   const [balance, setBalance] = useState(0.0);
 
   // Check for success query parameter
-  const getWallet = async () => {
+  const getWallet = useCallback(async () => {
+    if (!authResponse?.localId) return;
     const res = await apiRequest({
       url: urls.fetch_wallet + `?user_id=${authResponse.localId}`,
       method: 'get',
       isAuthRequest: true,
     });
     setBalance(res.data.data.balance.toFixed(2));
-  };
+  }, [authResponse?.localId]);
   useEffect(() => {
     getWallet();
-  }, []);
+  }, [getWallet]);
 
   useEffect(() => {
     setIsLoading(false);

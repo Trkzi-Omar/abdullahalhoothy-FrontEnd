@@ -60,6 +60,14 @@ const OTPModal: React.FC = () => {
     }
   }, [otp, state.codeLength]);
 
+  // Handle verify
+  const handleVerify = useCallback(async () => {
+    const code = otp.join('');
+    if (code.length === state.codeLength) {
+      await verifyOTP(code);
+    }
+  }, [otp, state.codeLength, verifyOTP]);
+
   // Handle keydown for backspace navigation
   const handleKeyDown = useCallback((index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace') {
@@ -77,7 +85,7 @@ const OTPModal: React.FC = () => {
     } else if (e.key === 'Enter') {
       handleVerify();
     }
-  }, [otp, state.codeLength]);
+  }, [otp, state.codeLength, handleVerify]);
 
   // Handle paste
   const handlePaste = useCallback((e: React.ClipboardEvent) => {
@@ -96,14 +104,6 @@ const OTPModal: React.FC = () => {
       inputRefs.current[focusIndex]?.focus();
     }
   }, [state.codeLength]);
-
-  // Handle verify
-  const handleVerify = useCallback(async () => {
-    const code = otp.join('');
-    if (code.length === state.codeLength) {
-      await verifyOTP(code);
-    }
-  }, [otp, state.codeLength, verifyOTP]);
 
   // Handle resend
   const handleResend = useCallback(async () => {
@@ -316,6 +316,5 @@ const Spinner: React.FC = () => (
 );
 
 export default OTPModal;
-
 
 

@@ -7,7 +7,7 @@ import { t } from '../../i18n';
 
 
 interface ChartMapping {
-  [key: string]: React.FC<any>;
+  [key: string]: React.FC<Record<string, unknown>>;
 }
 
 type ChartDataType = {
@@ -22,7 +22,7 @@ type ChartDataType = {
     saudiPopulation: number;
     averageIncome: number;
   };
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 const chartComponents: ChartMapping = {
@@ -111,4 +111,3 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({ chartId, title, className
 };
 
 export default ChartRenderer;
-export { chartComponents, chartData };

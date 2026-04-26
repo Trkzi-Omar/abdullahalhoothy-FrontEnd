@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { MdOutlineErrorOutline } from 'react-icons/md';
-import styles from './ErrorIconFeedback.module.css';
 import { t } from '../../i18n';
 
 

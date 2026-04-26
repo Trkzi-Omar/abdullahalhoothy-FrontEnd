@@ -54,8 +54,9 @@ export const RegisterForm = ({ onSuccess, source }: RegisterFormProps) => {
       toast.success(t("registration-successful-please-verify-your-email"), { duration: 3000 });
       logout();
       onSuccess();
-    } catch (e: any) {
-      const msg = e.message || t("registration-failed-please-try-again");
+    } catch (e: unknown) {
+      const error = e as { message?: string };
+      const msg = error.message || t("registration-failed-please-try-again");
       setError(msg);
       toast.error(msg, { duration: 3000 });
     } finally {

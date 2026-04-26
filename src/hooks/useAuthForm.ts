@@ -108,7 +108,7 @@ export function useAuthForm({ mode, registerStep = 1 }: UseAuthFormOptions) {
   }, []);
 
   const validateForm = useCallback(async (
-    schema: yup.ObjectSchema<any>,
+    schema: yup.ObjectSchema<Record<string, unknown>>,
     data: Partial<FormState>
   ): Promise<boolean> => {
     try {

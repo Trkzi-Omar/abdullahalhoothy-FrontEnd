@@ -131,7 +131,7 @@ const MapLocationPicker = ({
         map.current = null;
       }
     };
-  }, [isLoaded, city]);
+  }, [isLoaded, city, memoizedOnChange]);
 
   useEffect(() => {
     if (!map.current || !selectedLocation) return;

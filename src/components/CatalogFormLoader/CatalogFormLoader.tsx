@@ -12,7 +12,7 @@ const CatalogFormLoader = () => {
   useEffect(() => {
     resetFormStage('catalog');
     setSidebarMode('catalog');
-  }, []);
+  }, [resetFormStage, setSidebarMode]);
 
   return (
     <div className="flex-1 lg:h-full">

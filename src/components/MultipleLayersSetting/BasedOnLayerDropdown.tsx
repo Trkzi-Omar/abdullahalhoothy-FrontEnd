@@ -39,18 +39,6 @@ export default function BasedOnLayerDropdown({
   }));
   
   const [selectedColor, setSelectedColor] = useState('#ff0000');
-  const filterableProperties = [
-    'id',
-    'phone',
-    'address',
-    'priceLevel',
-    'primaryType',
-    'rating',
-    'heatmap_weight',
-    'user_ratings_total',
-    'popularity_score_category',
-    'popularity_score',
-  ];
   const availableTypes = [
     ...new Set(
       geoPoints.flatMap(layer => layer.features.flatMap(feature => feature.properties.types))
@@ -311,7 +299,7 @@ export default function BasedOnLayerDropdown({
                         <option key={index} value={type}>
                           {type
                             .replace(/_/g, ' ')
-                            .replace(/\b\w/g, (char: any) => char.toUpperCase())}
+                            .replace(/\b\w/g, (char: string) => char.toUpperCase())}
                         </option>
                       ))}
                     </select>
@@ -449,7 +437,7 @@ export default function BasedOnLayerDropdown({
                         <option key={index} value={type}>
                           {type
                             .replace(/_/g, ' ')
-                            .replace(/\b\w/g, (char: any) => char.toUpperCase())}
+                            .replace(/\b\w/g, (char: string) => char.toUpperCase())}
                         </option>
                       ))}
                     </select>

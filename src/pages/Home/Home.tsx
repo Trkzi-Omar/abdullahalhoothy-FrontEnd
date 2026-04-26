@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaBoxOpen, FaLayerGroup } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import LayerFormLoader from '../../components/LayerFormLoader/LayerFormLoader';
@@ -21,11 +21,11 @@ const Home = () => {
   const [selectedTab] = useState<'LAYER' | 'CATALOG'>('LAYER');
 
   const { openModal } = useUIContext();
-  const [_, setHasOpened] = useState(false);
+  const [, setHasOpened] = useState(false);
 
   const { setSelectedContainerType } = useCatalogContext();
 
-  const initilizeHomeDialog = async () => {
+  const initilizeHomeDialog = useCallback(async () => {
     await setSelectedContainerType('Home');
     await openModal(<DataContainer />, {
       darkBackground: true,
@@ -33,11 +33,11 @@ const Home = () => {
       isHome: true,
     });
     await setHasOpened(true);
-  };
+  }, [openModal, setSelectedContainerType]);
 
   useEffect(() => {
     initilizeHomeDialog();
-  }, []);
+  }, [initilizeHomeDialog]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated && selectedTab === 'CATALOG') {
@@ -178,7 +178,7 @@ export function HomeContent() {
 }
 
 function HomerDrawer() {
-  const snapPoints = [0, 0.25, 0.5, 1];
+  const snapPoints = useMemo(() => [0, 0.25, 0.5, 1], []);
   const [snap, setSnap] = useState<number>(snapPoints[1]);
   const { createLayerformStage } = useLayerContext();
   const { isDrawerOpen, isModalOpen, setIsDrawerOpen } = useUIContext();
@@ -200,7 +200,7 @@ function HomerDrawer() {
     } else {
       setSnap(snapPoints[1]);
     }
-  }, [createLayerformStage]);
+  }, [createLayerformStage, snapPoints]);
 
   return (
     <>

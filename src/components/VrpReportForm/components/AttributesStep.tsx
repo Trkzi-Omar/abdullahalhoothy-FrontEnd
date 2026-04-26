@@ -1,6 +1,4 @@
 import {
-  FaUsers,
-  FaLayerGroup,
   FaHandshake,
   FaExclamationTriangle,
 } from "react-icons/fa";
@@ -27,38 +25,22 @@ interface SetAttributeStepProps {
   inputCategories: string[];
 }
 
-const INCOME_OPTIONS = ["Low", "Medium", "High"];
-
 const SetAttributeStep = ({
   formData,
-  errors = {},
   onInputChange,
   disabled = false,
   inputCategories,
 }: SetAttributeStepProps) => {
-  const [age, setTargetAge] = useState<number>(formData.target_age || 0);
-  const [targetIncome, setTargetIncome] = useState<string>(
-    formData.target_income_level || "",
-  );
-
   const [searchComplementary, setSearchComplementary] = useState("");
-  const [searchCompetition, setSearchCompetition] = useState("");
-  const [searchCross, setSearchCross] = useState("");
 
   const [selectedComplementary, setSelectedComplementary] = useState<
     CategoryItem[]
   >([]);
-  const [selectedCompetition, setSelectedCompetition] = useState<
-    CategoryItem[]
-  >([]);
-  const [selectedCross, setSelectedCross] = useState<CategoryItem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
 
   const [complementaryError, setComplementaryError] = useState<string | null>(
     null,
   );
-  const [competitionError, setCompetitionError] = useState<string | null>(null);
-  const [crossError, setCrossError] = useState<string | null>(null);
 
   // Helper: Parse API format to internal CategoryItem format
   const parseFromApiFormat = (categories: string[]): CategoryItem[] => {
@@ -173,19 +155,9 @@ const SetAttributeStep = ({
 
   useEffect(() => {
     if (formData) {
-      setSelectedCompetition(
-        parseFromApiFormat([
-          ...new Set(formData?.competition_categories ?? []),
-        ]),
-      );
       setSelectedComplementary(
         parseFromApiFormat([
           ...new Set(formData?.complementary_categories ?? []),
-        ]),
-      );
-      setSelectedCross(
-        parseFromApiFormat([
-          ...new Set(formData?.cross_shopping_categories ?? []),
         ]),
       );
     }
@@ -194,12 +166,6 @@ const SetAttributeStep = ({
   useEffect(() => {
     setCategories(inputCategories);
   }, [inputCategories]);
-
-  const onAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number(e.target.value);
-    onInputChange("target_age", value);
-    setTargetAge(value);
-  };
 
   const getOrderedCategories = (
     query: string,
@@ -245,18 +211,6 @@ const SetAttributeStep = ({
     onInputChange(key, transformToApiFormat(updated));
   };
 
-  // Chip selector handler
-  const handleTagSelect = (
-    setSelected: React.Dispatch<React.SetStateAction<string>>,
-    field: string,
-    value: string,
-  ) => {
-    const updated = value;
-
-    setSelected(updated);
-    onInputChange(field, updated.toLowerCase());
-  };
-  
   return (
   
         <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-4 flex flex-col overflow-hidden max-h-[60vh]">

@@ -7,7 +7,7 @@ import { t } from '../../../i18n';
 interface DeliveryInStoreStepProps {
   formData: CustomReportData;
   errors: FormErrors;
-  onInputChange: (field: string, value: any) => void;
+  onInputChange: (field: string, value: unknown) => void;
   disabled?: boolean;
 }
 
@@ -93,7 +93,6 @@ export const DeliveryInStoreStep = ({
               disabled ? 'opacity-60 cursor-not-allowed' : ''
             }`}
             style={{
-              // @ts-ignore - Custom property for track gradient
               background: `linear-gradient(to right, ${deliveryColor} 0%, ${deliveryColor} ${
                 deliveryWeight * 100
               }%, ${inStoreColor} ${deliveryWeight * 100}%, ${inStoreColor} 100%)`,

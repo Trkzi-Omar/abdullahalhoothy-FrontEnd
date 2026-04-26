@@ -9,7 +9,6 @@ import {
   BusinessCategoryMetrics,
   CustomReportData,
   FormErrors,
-  MetricKey,
   UserProfile,
 } from '../../types/allTypesAndInterfaces';
 import { ReportSubmissionRequestBody } from '../../types/reportSubmission';
@@ -17,13 +16,9 @@ import { CustomSegment, CustomSegmentReportResponse } from '../../types';
 import { getTotalSteps, getInitialFormData, getStepDefinitions } from './constants';
 import { useBusinessTypeConfig } from './hooks/useBusinessTypeConfig';
 import { useAdditionalCost } from './hooks/useReportPricing';
-import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
-import InlinePaymentMethod from './components/InlinePaymentMethod';
 
 // Import step components
 import BasicInformationStep from './components/BasicInformationStep';
-import { EvaluationMetricsStep } from './components/EvaluationMetricsStep';
 import SetAttributeStep from './components/AttributesStep';
 import { formatBusinessTypeForApi } from './utils/businessTypeApi';
 
@@ -34,7 +29,6 @@ import Control from 'ol/control/Control';
 import Draw from 'ol/interaction/Draw';
 import {Stroke, Circle, Fill, Style} from 'ol/style';
 import {defaults as defaultControls } from 'ol/control/defaults';
-import GeoJSON from 'ol/format/GeoJSON';
 import { useMap, Map, View, TileLayer, VectorLayer } from 'react-openlayers';
 import 'react-openlayers/dist/index.css';
 import { t } from '../../i18n';
@@ -46,16 +40,7 @@ const DRAW_CONTROL_STYLE = `
 .draw-control-active > button { outline: 1px solid black; }
 `;
 
- 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
-
 type FormInputValue = CustomReportData[keyof CustomReportData];
-type LocationUpdate = { lat: number; lng: number; properties?: { price?: number } };
-type CurrentLocationUpdate = {
-  lat: number;
-  lng: number;
-  properties?: { price?: number; avg_order_value?: number };
-};
 
 type ApiErrorShape = {
   response?: {
@@ -94,7 +79,7 @@ class DrawControl extends Control {
   /**
    * @param {Object} [opt_options] Control options.
    */
-  constructor(opt_options) {
+  constructor(opt_options?: { letter?: string; target?: HTMLElement }) {
     const options = opt_options || {};
 
     const button = document.createElement('button');
@@ -109,7 +94,7 @@ class DrawControl extends Control {
       target: options.target,
     });
 
-    button.addEventListener('click', function(ev) {
+    button.addEventListener('click', function() {
     	Array.from(document.querySelectorAll(".draw-control-active"))
 	    	.forEach(v => element !== v && v.classList.toggle("draw-control-active"));
     	element.classList.toggle("draw-control-active");
@@ -146,9 +131,14 @@ const endStyle = new Style({
 	}),
 });
 
-const VrpMapDraw = ({source, handleInputChange}) => {
+type VrpMapDrawProps = {
+  source: VectorSource;
+  handleInputChange: (field: string, value: FormInputValue) => void;
+};
+
+const VrpMapDraw = ({source, handleInputChange}: VrpMapDrawProps) => {
   const map = useMap();
-  const [drawers, _] = useState([
+  const [drawers] = useState(() => [
 	  new Draw({
 	  	source: source,
 			type: "Polygon",
@@ -198,7 +188,7 @@ const VrpMapDraw = ({source, handleInputChange}) => {
 		  	return true
 		  });
   	});
-  }, []);
+  }, [drawers, handleInputChange, source]);
   useEffect(() => {
   	if(!map) return;
   	// [drawClass, drawPointClass].map(draw ? map.addInteraction : map.removeInteraction);
@@ -214,11 +204,11 @@ const VrpMapDraw = ({source, handleInputChange}) => {
 	  	else if(letter === "E")
 	  		setDraw(draw === 3 ? 0 : 3);
   	})
-  }, [draw, map]); 
+  }, [draw, drawers, map]);
   return 
 };
 
-const VrpMap = ({formData, handleInputChange}) => {
+const VrpMap = ({handleInputChange}: { handleInputChange: VrpMapDrawProps['handleInputChange'] }) => {
   const mapRef = useRef();
   const drawSource = new VectorSource({wrapX: false});
 	return (
@@ -277,7 +267,7 @@ const CustomReportForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [, setCompletedSteps] = useState<number[]>([]);
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
   const [businessMetrics, setBusinessMetrics] = useState<BusinessCategoryMetrics | null>(null);
   const businessType = formData?.Type || 'pharmacy';
@@ -290,9 +280,8 @@ const CustomReportForm = () => {
   } = useBusinessTypeConfig(businessType);
 
   // New state for report type selection
-  const [reportType, setReportType] = useState<'full' | 'location' | null>(null);
+  const [reportType] = useState<'full' | 'location' | null>(null);
   const [hasUsedFreeLocationReport, setHasUsedFreeLocationReport] = useState<boolean>(false);
-  const [locationPriceAvailable, setLocationPriceAvailable] = useState<boolean>(true);
 
   // Segment Report State
   const [segmentReportData, setSegmentReport] = useState<CustomSegmentReportResponse | null>(null);
@@ -302,9 +291,8 @@ const CustomReportForm = () => {
 
   // Payment method state
   const [showPaymentMethodForm, setShowPaymentMethodForm] = useState(false);
-  const [userPhone, setUserPhone] = useState<string | null>(null);
-  const [pendingSubmission, setPendingSubmission] = useState<ReportSubmissionRequestBody | null>(null);
-  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [, setPendingSubmission] = useState<ReportSubmissionRequestBody | null>(null);
+  const [phoneVerified] = useState(false);
   // Track if phone verification was needed at the start (to prevent dynamic step changes)
   const [needsPhoneVerificationInitial, setNeedsPhoneVerificationInitial] = useState(false);
   const [profileLoaded, setProfileLoaded] = useState(false);
@@ -343,7 +331,6 @@ const CustomReportForm = () => {
         const hasUsedFree = profile?.has_used_free_location_report || false;
         setHasUsedFreeLocationReport(hasUsedFree);
         const phone = profile?.phone || null;
-        setUserPhone(phone);
         
         // Set phone verification need based on whether phone exists
         // Check if phone is null, undefined, empty string, or just whitespace
@@ -437,7 +424,7 @@ const CustomReportForm = () => {
     }
   }, [selectedSegment, businessMetrics]);
 
-  const handleCategoryLoad = async () => {
+  const handleCategoryLoad = useCallback(async () => {
     try {
       const res = await apiRequest({
         url: urls.nearby_categories,
@@ -458,11 +445,11 @@ const CustomReportForm = () => {
       console.error('Error loading categories:', error);
       setCategories([]);
     }
-  };
+  }, []);
 
   useEffect(() => {
     handleCategoryLoad();
-  }, []);
+  }, [handleCategoryLoad]);
 
 
   // Handle advanced mode toggle - adjust steps if needed
@@ -539,15 +526,6 @@ const CustomReportForm = () => {
       setSegmentReportLoading(false);
     }
   }, [formData?.city_name]);
-
-  const handleSegmentSelect = (segmentId: string | null) => {
-    if (!segmentReportData || !segmentId) {
-      setSelectedSegment(null);
-      return;
-    }
-    const segment = segmentReportData.find(s => s.segment_id === segmentId);
-    setSelectedSegment(segment || null);
-  };
 
   useEffect(() => {
     // Load segment report when user reaches the segment selection step
@@ -642,65 +620,6 @@ const CustomReportForm = () => {
   }, [formData, isAdvancedMode, reportType]);
 
   // Separate validation function that doesn't update state (for use during render)
-  const validateFormWithoutStateUpdate = (): boolean => {
-    if (!formData) return false;
-
-    // Validate city selection
-    if (!formData.city_name) {
-      return false;
-    }
-
-    if (!formData.Type?.trim()) {
-      return false;
-    }
-
-    // In advanced mode, also validate report tier
-    if (isAdvancedMode && !formData.report_tier) {
-      return false;
-    }
-
-    // In advanced mode, validate evaluation metrics
-    // In simple mode, users use default metrics and skip this step
-    if (isAdvancedMode) {
-      // Validate evaluation metrics sum to 100% (now 1.0)
-      const metricsSum = Object.values(formData.evaluation_metrics).reduce(
-        (sum, value) => sum + value,
-        0
-      );
-      if (Math.abs(metricsSum - 1) > 0.001) {
-        return false;
-      }
-
-      // Validate individual metrics are not negative
-      const hasNegativeMetrics = Object.values(formData.evaluation_metrics).some(
-        value => value < 0
-      );
-      if (hasNegativeMetrics) {
-        return false;
-      }
-
-      // Validate delivery/dine-in weights
-      const deliverySum = (formData.delivery_weight || 0) + (formData.dine_in_weight || 0);
-      if (Math.abs(deliverySum - 1) > 0.001) {
-        return false;
-      }
-    }
-
-    // Current location is optional for all report types
-
-    // Custom locations are required for location reports, optional for full reports
-    if (reportType === 'location') {
-      const hasValidCustomLocation = formData.custom_locations.some(
-        loc => loc.lat !== 0 && loc.lng !== 0
-      );
-      if (!hasValidCustomLocation) {
-        return false;
-      }
-    }
-
-    return true;
-  };
-
   const handleInputChange = (field: string, value: FormInputValue) => {
     setFormData(prev =>
       prev
@@ -725,28 +644,6 @@ const CustomReportForm = () => {
     }
   };
 
-  const handleMetricsChange = (metric: MetricKey, value: number) => {
-    setFormData(prev =>
-      prev
-        ? {
-            ...prev,
-            evaluation_metrics: {
-              ...prev.evaluation_metrics,
-              [metric]: value,
-            },
-          }
-        : null
-    );
-
-    // Clear metrics error when user changes values
-    if (errors.evaluation_metrics) {
-      setErrors(prev => ({
-        ...prev,
-        evaluation_metrics: '',
-      }));
-    }
-  };
-
   const handleAttributeChange = (key: string, value: number | string | string[]) => {
     setFormData(prev =>
       prev
@@ -757,11 +654,6 @@ const CustomReportForm = () => {
         : null
     );
   };
-
-  // Handle location report price loading state changes
-  const handlePriceLoadingChange = useCallback((isLoading: boolean, priceAvailable: boolean) => {
-    setLocationPriceAvailable(priceAvailable);
-  }, []);
 
   // Determine if we're on the attributes step
   const stepDefinitions = reportType ? getStepDefinitions(reportType, isAdvancedMode) : [];
@@ -797,7 +689,7 @@ const CustomReportForm = () => {
   }, [formData, businessType, categories]);
 
   // Use the new pricing hook for additional cost calculation
-  const { cost: additionalCost, isLoading: isCalculatingCost } = useAdditionalCost({
+  useAdditionalCost({
     country: formData?.country_name || null,
     city: formData?.city_name || null,
     datasets: allDatasets,
@@ -807,97 +699,6 @@ const CustomReportForm = () => {
     enabled: isAttributesStep && allDatasets.length > 0,
   });
 
-  const addCustomLocation = () => {
-    if (!formData) return;
-    setFormData(prev => ({
-      ...prev!,
-      custom_locations: [...prev!.custom_locations, { lat: 0, lng: 0, properties: { price: 0 } }],
-    }));
-  };
-
-  const removeCustomLocation = (index: number) => {
-    if (!formData || formData.custom_locations.length <= 1) return;
-    setFormData(prev => ({
-      ...prev!,
-      custom_locations: prev!.custom_locations.filter((_, i) => i !== index),
-    }));
-  };
-
-  // Memoized callback for custom location selection
-  const handleCustomLocationSelect = useCallback(
-    (
-      index: number,
-      newLocation: LocationUpdate
-    ) => {
-      setFormData(prev =>
-        prev
-          ? {
-              ...prev,
-              custom_locations: prev.custom_locations.map((loc, i) =>
-                i === index
-                  ? {
-                      ...newLocation,
-                      properties: {
-                        price: newLocation.properties?.price ?? loc.properties?.price ?? 0,
-                      },
-                    }
-                  : loc
-              ),
-            }
-          : null
-      );
-
-      // Clear location error when user changes values
-      setErrors(prev => {
-        if (prev[`custom_location_${index}`]) {
-          return {
-            ...prev,
-            [`custom_location_${index}`]: '',
-          };
-        }
-        return prev;
-      });
-    },
-    [] // Empty deps OK: uses functional setState, no external dependencies
-  );
-
-  // Memoized callback for current location selection
-  const handleCurrentLocationSelect = useCallback(
-    (
-      newLocation: CurrentLocationUpdate
-    ) => {
-      setFormData(prev =>
-        prev
-          ? {
-              ...prev,
-              current_location: {
-                ...newLocation,
-                properties: {
-                  price: newLocation.properties?.price ?? prev.current_location?.properties?.price ?? 0,
-                  avg_order_value:
-                    newLocation.properties?.avg_order_value ??
-                    prev.current_location?.properties?.avg_order_value ??
-                    30,
-                },
-              },
-            }
-          : null
-      );
-
-      // Clear current location error when user changes values
-      setErrors(prev => {
-        if (prev.current_location) {
-          return {
-            ...prev,
-            current_location: '',
-          };
-        }
-        return prev;
-      });
-    },
-    [] // Empty deps OK: uses functional setState, no external dependencies
-  );
-
   const handleSubmit = useCallback(async (reportTierOverride?: 'basic' | 'standard' | 'premium') => {
     if (!formData || !validateForm()) {
       return;
@@ -905,16 +706,17 @@ const CustomReportForm = () => {
 
     // Additional safety check for report type
     if (!reportType) {
-      setSubmitError('Please select a report type before submitting');
+      setSubmitError(t("please-select-a-report-type-before-submitting"));
       return;
     }
 
     setIsSubmitting(true);
     setSubmitError(null);
+    let submissionData: ReportSubmissionRequestBody | null = null;
 
     try {
       // Prepare form data with default values for optional locations
-      const submissionData: ReportSubmissionRequestBody = {
+      submissionData = {
         user_id: formData.user_id,
         city_name: formData.city_name,
         country_name: formData.country_name,
@@ -982,7 +784,9 @@ const CustomReportForm = () => {
 
       if (isPaymentIntentError) {
         // Store submission data for retry after payment method is added
-        setPendingSubmission(submissionData);
+        if (submissionData) {
+          setPendingSubmission(submissionData);
+        }
         // Show payment method form instead of error
         setShowPaymentMethodForm(true);
         setSubmitError(null);
@@ -1002,80 +806,6 @@ const CustomReportForm = () => {
     validateForm,
   ]);
 
-  // Retry submission after payment method is added
-  const retrySubmission = useCallback(async () => {
-    if (!pendingSubmission) return;
-
-    setIsSubmitting(true);
-    setSubmitError(null);
-    setShowPaymentMethodForm(false);
-
-    try {
-      const res = await apiRequest({
-        url: urls.smart_site_report,
-        method: 'Post',
-        body: pendingSubmission,
-      });
-
-      const reportUrlResponse = res?.data?.data?.html_file_path;
-
-      // Update free report status for location reports
-      if (reportType === 'location' && !hasUsedFreeLocationReport) {
-        setHasUsedFreeLocationReport(true);
-      }
-
-      // Redirect to the report URL immediately
-      if (reportUrlResponse) {
-        navigate(`/${reportUrlResponse.replace(/^\/+/, '')}`);
-      } else {
-        navigate('/');
-      }
-    } catch (error: unknown) {
-      const errorMessage = extractErrorMessage(error);
-      const isPaymentIntentError = isPaymentIntentErrorMessage(errorMessage);
-
-      if (isPaymentIntentError) {
-        // Keep payment method form visible
-        setShowPaymentMethodForm(true);
-        setSubmitError(null);
-      } else {
-        setSubmitError(errorMessage);
-        setShowPaymentMethodForm(false);
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [pendingSubmission, reportType, hasUsedFreeLocationReport, navigate]);
-
-  const metricsSum = formData
-    ? Object.values(formData.evaluation_metrics).reduce((sum, value) => sum + value, 0)
-    : 0;
-
-  const handleReportTypeSelect = (type: 'full' | 'location') => {
-    setReportType(type);
-    setCurrentStep(1); // Move to first actual step
-  };
-
-  // When user clicks "Purchase Report" or "Claim Free Report" on location card:
-  // Submit directly — if it's free, the backend succeeds without payment.
-  // If payment is required and fails, handleSubmit's catch block stores
-  // pendingSubmission and shows the payment form for retry.
-  const onPurchaseReportClick = async () => {
-    if (!formData || !validateForm()) return;
-    setSubmitError(null);
-    handleSubmit();
-  };
-
- const renderCurrentStep = () => 
-      (<BasicInformationStep
-        formData={formData}
-        errors={errors}
-        onInputChange={handleInputChange}
-        isAdvancedMode={isAdvancedMode}
-        onToggleAdvancedMode={setIsAdvancedMode}
-        disabled={isSubmitting}
-        categories={categories}
-      />);
   // Show loading state while fetching business configuration
   if (configLoading && !businessConfig) {
     return (
@@ -1214,7 +944,10 @@ const CustomReportForm = () => {
       {/* Content Area - No scrolling, fits viewport */}
       <div className="flex-1 overflow-hidden flex flex-col">
         <div className={`flex-1 ${isLastStep ? 'overflow-hidden' : 'overflow-y-auto'} px-4 sm:px-6 py-4 ${formData && currentStep > 0 && !isLastStep ? 'pb-24' : ''}`}>
-          <form className="h-full flex flex-col" onSubmit={e => e.preventDefault()}>
+	          <form className="h-full flex flex-col" onSubmit={e => {
+              e.preventDefault();
+              handleSubmit();
+            }}>
             {/* Current Step Content */}
             <div className={`flex-1 gap-2 py-4 flex flex-col ${isLastStep ? 'overflow-hidden' : ''}`}>
               {<BasicInformationStep
@@ -1309,6 +1042,6 @@ const CustomReportForm = () => {
   );
 };
 
-export default function() {
-	return <CustomReportForm />;
+export default function VrpReportForm() {
+		return <CustomReportForm />;
 }

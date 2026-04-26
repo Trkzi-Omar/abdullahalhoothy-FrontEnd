@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import excludedPropertiesJson from '../pages/MapContainer/excludedProperties.json';
 import * as turf from '@turf/turf';
 import {
@@ -13,12 +14,11 @@ import {
   PolygonFeature,
   Benchmark,
   Section,
-  GeoPoint,
   PolygonData,
 } from '../types';
 import urls from '../urls.json';
 import userIdData from '../currentUserId.json';
-import { createContext, useContext, useState, ReactNode, useEffect, useRef, useMemo } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import apiRequest from '../services/apiRequest';
 import html2canvas from 'html2canvas';
@@ -125,6 +125,28 @@ const defaultCaseStudyContent: Descendant[] = [
 
 const CatalogContext = createContext<CatalogContextType | undefined>(undefined);
 
+type GeoJsonFeatureLike = {
+  geometry?: {
+    coordinates?: unknown;
+    type?: string;
+  };
+  properties?: Record<string, unknown>;
+};
+
+type PopupElement = Element & {
+  _mapboxgl_popup?: {
+    remove?: () => void;
+  };
+};
+
+type MapElement = Element & {
+  _map?: {
+    getSource: (id: string) => unknown;
+    removeLayer: (id: string) => void;
+    removeSource: (id: string) => void;
+  };
+};
+
 export function CatalogProvider(props: { children: ReactNode }) {
   const {
     viewport,
@@ -222,7 +244,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
 
   
   useEffect(() => {
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+    const handleBeforeUnload = () => {
       if (geoPoints.length > 0) {
         console.log('Saving draft before unload - geoPoints count:', geoPoints.length);
         handleStoreUnsavedGeoPoint(geoPoints);
@@ -252,6 +274,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('pagehide', handlePageHide);
     };
+    // handleStoreUnsavedGeoPoint intentionally uses the latest draft state from this provider.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [geoPoints]);
 
   useEffect(() => {
@@ -262,7 +286,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
 
       const excludedProperties = new Set(excludedPropertiesJson?.excludedProperties || []);
 
-      const getPolygonShape = (coordinates: any[], type: string) => {
+      const getPolygonShape = (coordinates: unknown[], type: string) => {
         if (type === 'MultiPolygon') {
           return coordinates.map(circle => {
             const ring = circle[0];
@@ -306,7 +330,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
           polygonShapes.forEach((polygonShape, index) => {
             const areaName = polygonData.areas[index];
             const matchingFeatures =
-              geoPoint.features?.filter((feature: any) => {
+	              geoPoint.features?.filter((feature: GeoJsonFeatureLike) => {
                 if (
                   !feature.geometry?.coordinates ||
                   !Array.isArray(feature.geometry.coordinates)
@@ -369,15 +393,16 @@ export function CatalogProvider(props: { children: ReactNode }) {
                     return true;
                   }
                   return false;
-                } catch (error: any) {
-                  console.error('Error processing feature:', error?.message || 'Unknown error');
+                } catch (error: unknown) {
+                  const apiError = error as { message?: string };
+                  console.error('Error processing feature:', apiError.message || 'Unknown error');
                   console.error('Problematic coordinates:', feature.geometry?.coordinates);
                   console.error('Feature type:', feature.geometry?.type);
                   return false;
                 }
               }) || [];
 
-            matchingFeatures.forEach((feature: any) => {
+            matchingFeatures.forEach((feature: GeoJsonFeatureLike) => {
               Object.entries(feature.properties || {}).forEach(([key, val]) => {
                 if (!excludedProperties.has(key)) {
                   const numVal = Number(val);
@@ -467,7 +492,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
     if (newBenchmarks.length > 0) {
       setBenchmarks(prev => [...prev, ...newBenchmarks]);
     }
-  }, [geoPoints]);
+  }, [geoPoints, benchmarks]);
 
   const onColorChange = (color: string) => {
     console.log('Color changed:', color);
@@ -682,14 +707,14 @@ export function CatalogProvider(props: { children: ReactNode }) {
     }
   }
 
-  function handleStoreUnsavedGeoPoint(geoPoints: any) {
+  function handleStoreUnsavedGeoPoint(geoPoints: MapFeatures[]) {
     if (selectedHomeTab !== 'CATALOG' || geoPoints.length === 0) return;
 
     setIsDraftSaving(true);
 
     try {
       const draftData = {
-        geoPoints: geoPoints.filter((layer: any) => !isIntelligentLayer(layer)),
+        geoPoints: geoPoints.filter((layer: MapFeatures) => !isIntelligentLayer(layer)),
         markers: markers,
         measurements: measurements,
         caseStudyContent: caseStudyContent,
@@ -913,21 +938,6 @@ export function CatalogProvider(props: { children: ReactNode }) {
     });
   }
 
-
-
-  function updateLayerVisualization(layerIndex: number, mode: VisualizationMode) {
-    setGeoPoints(function (prevGeoPoints) {
-      const updatedGeoPoints = prevGeoPoints.slice();
-      updatedGeoPoints[layerIndex] = {
-        ...updatedGeoPoints[layerIndex],
-        visualization_mode: mode,
-        is_heatmap: mode === 'heatmap',
-        is_grid: mode === 'grid',
-      };
-      return updatedGeoPoints;
-    });
-  }
-
   async function setGeoPointsWithCb(
     geoPoints: MapFeatures[] | ((prev: MapFeatures[]) => MapFeatures[]),
     cB?: (city: string, country: string) => void
@@ -1101,7 +1111,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
     description: string,
     sourcePoint: [number, number],
     destinationPoint: [number, number],
-    route: any,
+    route: unknown,
     distance: number,
     duration: number,
     measurementId?: string
@@ -1131,7 +1141,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
 
     // Close any popups related to this measurement
     document.querySelectorAll('.measurement-popup').forEach(popup => {
-      const popupInstance = (popup as any)._mapboxgl_popup;
+      const popupInstance = (popup as PopupElement)._mapboxgl_popup;
       if (popupInstance && popupInstance.remove) {
         popupInstance.remove();
       } else {
@@ -1165,7 +1175,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
 
     // Remove the route layer from the map if it exists
     const mapElement = document.querySelector('#map-container');
-    const map = mapElement ? (mapElement as any)._map : null;
+    const map = mapElement ? (mapElement as MapElement)._map : null;
     if (map) {
       if (map.getSource(`measure-route-${id}`)) {
         map.removeLayer(`measure-route-line-${id}`);
@@ -1478,7 +1488,14 @@ export function useCatalogContext() {
   return context;
 }
 
-export function calculatePolygonStats(polygon: any, geoPoints: any[]) {
+export function calculatePolygonStats(
+  polygon: Parameters<typeof turf.booleanPointInPolygon>[1],
+  geoPoints: Array<{
+    layer_name?: string;
+    layer_legend?: string;
+    features: GeoJsonFeatureLike[];
+  }>
+) {
   // Process points within polygon
   const pointsWithin = geoPoints.map(layer => {
     console.log(
@@ -1486,7 +1503,7 @@ export function calculatePolygonStats(polygon: any, geoPoints: any[]) {
     );
     console.log(`Layer has ${layer.features?.length || 0} features`);
 
-    const matchingPoints = layer.features.filter((point: any) => {
+    const matchingPoints = layer.features.filter((point: GeoJsonFeatureLike) => {
       try {
         // Check if coordinates exist
         if (!point.geometry?.coordinates || !Array.isArray(point.geometry.coordinates)) {
@@ -1535,8 +1552,9 @@ export function calculatePolygonStats(polygon: any, geoPoints: any[]) {
         }
 
         return turf.booleanPointInPolygon(turfPoint, polygon);
-      } catch (error: any) {
-        console.error('Error in point-in-polygon check:', error?.message || 'Unknown error');
+      } catch (error: unknown) {
+        const apiError = error as { message?: string };
+        console.error('Error in point-in-polygon check:', apiError.message || 'Unknown error');
         console.error('Problematic point geometry:', point.geometry);
         return false;
       }

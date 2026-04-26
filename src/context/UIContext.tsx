@@ -1,9 +1,9 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, {
   createContext,
   useContext,
   useState,
   ReactNode,
-  useLayoutEffect,
   useRef,
   useEffect,
 } from 'react';
@@ -39,7 +39,6 @@ export function UIProvider({ children }: { children: ReactNode }) {
     saveResponse: catalogIsSaved,
     isError: catalogIsError,
     setSaveResponse: setCatalogIsSaved,
-    setIsError: setCatalogIsError,
     resetFormStage,
     resetState,
   } = useCatalogContext();
@@ -133,6 +132,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
       return;
     }
     closeModal();
+    // closeModal depends on several provider setters; this effect intentionally tracks route changes only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   return (

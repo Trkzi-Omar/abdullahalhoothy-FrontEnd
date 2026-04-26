@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useReducer, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import i18next, { getLanguageDirection } from './i18n';
@@ -24,6 +24,15 @@ function AppToaster() {
 }
 
 function App() {
+  const [, forceRerender] = useReducer((x: number) => x + 1, 0);
+
+  useEffect(() => {
+    i18next.on('languageChanged', forceRerender);
+    return () => {
+      i18next.off('languageChanged', forceRerender);
+    };
+  }, []);
+
   return (
     <BrowserRouter>
       <AppToaster />

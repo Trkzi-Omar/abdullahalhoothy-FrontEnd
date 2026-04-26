@@ -5,6 +5,8 @@ import apiRequest from '../../services/apiRequest';
 import urls from '../../urls.json';
 
 import { FaArrowLeft, FaExclamationTriangle } from 'react-icons/fa';
+import { LuLanguages } from 'react-icons/lu';
+import { useLanguage } from '../../hooks/useLanguage';
 import {
   BusinessCategoryMetrics,
   CustomReportData,
@@ -90,6 +92,7 @@ const CustomReportForm = () => {
 
   const { authResponse } = useAuth();
   const navigate = useNavigate();
+  const { lang, toggleLanguage } = useLanguage();
   // TODO: Dynamic business type from URL params - currently disabled
   // const { businessType } = useParams<{ businessType: string }>();
 
@@ -1370,7 +1373,15 @@ const CustomReportForm = () => {
               </h1>
             </div>
           )}
-          {!isLastStep && <div className="w-16"></div>} {/* Spacer for centering */}
+          <button
+            type="button"
+            onClick={toggleLanguage}
+            className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-all duration-200 w-16 justify-center"
+            title={lang === 'en' ? 'العربية' : 'English'}
+          >
+            <LuLanguages className="w-3 h-3" />
+            <span>{lang === 'en' ? 'AR' : 'EN'}</span>
+          </button>
         </div>
       </div>
 

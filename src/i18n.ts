@@ -2,6 +2,7 @@ import i18next from 'i18next';
 import ar from './locales/ar.json';
 import en from './locales/en.json';
 
+const LANG_STORAGE_KEY = 'landing-lang';
 const RTL_LANGUAGES = new Set(['ar']);
 
 const getBaseLanguage = (language?: string) => (language || 'en').split('-')[0];
@@ -17,8 +18,10 @@ const applyDocumentLanguage = (language?: string) => {
   document.documentElement.dir = getLanguageDirection(baseLanguage);
 };
 
+const savedLang = typeof localStorage !== 'undefined' ? localStorage.getItem(LANG_STORAGE_KEY) : null;
+
 void i18next.init({
-  lng: 'en',
+  lng: savedLang === 'ar' ? 'ar' : 'en',
   fallbackLng: 'en',
   resources: {
     ar: {

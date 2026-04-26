@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { FaAngleRight, FaNetworkWired } from 'react-icons/fa';
 import { MdInfo, MdLogout, MdMap, MdPerson, MdTableChart } from 'react-icons/md';
+import { LuLanguages } from 'react-icons/lu';
 import { Link, useNavigate } from 'react-router-dom';
 import { HiCurrencyDollar } from 'react-icons/hi';
 import { isGuestUser, useAuth } from '../../context/AuthContext';
 import { t } from '../../i18n';
+import { useLanguage } from '../../hooks/useLanguage';
 
 
 const SideBar = () => {
@@ -12,6 +14,7 @@ const SideBar = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const navigate = useNavigate();
   const shouldShowLogout = isAuthenticated && !isGuestUser(authResponse);
+  const { lang, toggleLanguage } = useLanguage();
 
   return (
     <>
@@ -93,6 +96,13 @@ const SideBar = () => {
             {!isCollapsed && <span className="ms-2 text-white truncate">{t("about-us")}</span>}
           </a>
 
+          <div className="sidebar-icon" onClick={toggleLanguage} title={lang === 'en' ? 'العربية' : 'English'}>
+            <div>
+              <LuLanguages className="w-6 h-6 transition-all text-white" />
+            </div>
+            {!isCollapsed && <span className="ms-2 text-white truncate">{lang === 'en' ? 'AR' : 'EN'}</span>}
+          </div>
+
           {shouldShowLogout ? (
             <div
               className="sidebar-icon"
@@ -117,6 +127,7 @@ const SideBar = () => {
 
 export const SideBarContent = () => {
   const navigate = useNavigate();
+  const { lang, toggleLanguage } = useLanguage();
 
   return (
     <>
@@ -167,6 +178,13 @@ export const SideBarContent = () => {
           </div>
           <span className="ms-2 truncate">{t("about-us")}</span>
         </a>
+
+        <div className="sidebar-icon" onClick={toggleLanguage} title={lang === 'en' ? 'العربية' : 'English'}>
+          <div>
+            <LuLanguages className="w-6 h-6 transition-all" />
+          </div>
+          <span className="ms-2 truncate">{lang === 'en' ? 'AR' : 'EN'}</span>
+        </div>
 
         {/* <div
           className="sidebar-icon"

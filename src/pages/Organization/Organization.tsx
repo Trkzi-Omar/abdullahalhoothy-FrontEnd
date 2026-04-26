@@ -21,7 +21,7 @@ const Organization = () => {
         <>
           <OrganizationDrawer />
           <button
-            className="bg-white border p-2.5 fixed w-full bottom-0 left-0 right-0 z-[5] flex items-center gap-2 text-gray-400 font-normal"
+            className="bg-white border p-2.5 fixed w-full bottom-0 start-0 end-0 z-[5] flex items-center gap-2 text-gray-400 font-normal"
             onClick={() => setIsDrawerOpen(true)}
           >
             <svg
@@ -54,10 +54,10 @@ function OrganizationContent() {
   return (
     <>
       <div className="w-full h-full bg-white rounded">
-        <div className="text-2xl pl-6 pt-4 font-semibold mb-4">{t("organization")}</div>
+        <div className="text-2xl ps-6 pt-4 font-semibold mb-4">{t("organization")}</div>
         <div className="flex flex-col justify-center items-center">
           <Link
-            className="text-[#115740] w-full py-2 pl-8  mb-2 font-bold hover:bg-gray-100 transition-all"
+            className="text-[#115740] w-full py-2 ps-8  mb-2 font-bold hover:bg-gray-100 transition-all"
             to={'/organization'}
           >{t("organization")}</Link>
         </div>

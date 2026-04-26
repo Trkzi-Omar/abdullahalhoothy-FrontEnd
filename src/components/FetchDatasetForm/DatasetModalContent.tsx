@@ -32,7 +32,7 @@ function DatasetModalContent() {
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-medium text-gray-900 truncate">{layerName}</h4>
                   </div>
-                  <div className="flex-shrink-0 ml-4">
+                  <div className="flex-shrink-0 ms-4">
                     <span className="text-sm font-semibold text-[#115740]">{progress}%</span>
                   </div>
                 </div>

@@ -25,7 +25,7 @@ const SuccessMessage = ({ show, businessType, businessConfig }: SuccessMessagePr
         <div className="flex-shrink-0">
           <FaCheck className="h-6 w-6 text-green-400" />
         </div>
-        <div className="ml-3">
+        <div className="ms-3">
           <h3 className="text-base font-semibold text-green-800">{t("report-generated-successfully")}</h3>
           <p className="text-sm text-green-700">{t("your")}{' '}{config.displayName.toLowerCase()}{' '}{t("location-report-has-been-created-and-is-ready-for-review")}</p>
           <p className="text-xs text-green-600 mt-1">{t("redirecting-to-your-report")}</p>

@@ -270,7 +270,7 @@ const SetAttributeStep = ({
         {/* Demographics Section */}
         <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-4 flex flex-col overflow-hidden max-h-[60vh]">
           <h4 className="text-base font-semibold text-gray-800 mb-3 flex items-center flex-shrink-0">
-            <FaUsers className="w-4 h-4 mr-2 text-primary" />{t("demographics")}</h4>
+            <FaUsers className="w-4 h-4 me-2 text-primary" />{t("demographics")}</h4>
           {/* Population Counter */}
           <div className="mb-3 flex-shrink-0">
             <div className="flex flex-col">
@@ -308,7 +308,7 @@ const SetAttributeStep = ({
             </div>
             {errors.target_income && (
               <p className="mt-2 text-sm text-red-600 flex items-center">
-                <FaExclamationTriangle className="w-4 h-4 mr-1" />
+                <FaExclamationTriangle className="w-4 h-4 me-1" />
                 {errors.target_income}
               </p>
             )}
@@ -318,7 +318,7 @@ const SetAttributeStep = ({
         {/* Complementary Section */}
         <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-4 flex flex-col overflow-hidden max-h-[60vh]">
           <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center flex-shrink-0">
-            <FaHandshake className="w-4 h-4 mr-2 text-primary" />{t("complementary")}</h3>
+            <FaHandshake className="w-4 h-4 me-2 text-primary" />{t("complementary")}</h3>
 
           <input
             type="text"
@@ -354,12 +354,12 @@ const SetAttributeStep = ({
 
           {complementaryError && (
             <div className="text-xs text-red-600 mb-2 px-3 flex items-center">
-              <FaExclamationTriangle className="mr-1" />
+              <FaExclamationTriangle className="me-1" />
               {complementaryError}
             </div>
           )}
 
-          <div className="flex flex-wrap gap-1 max-h-52 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <div className="flex flex-wrap gap-1 max-h-52 overflow-y-auto pe-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {getOrderedCategories(
               searchComplementary,
               inputCategories,
@@ -401,7 +401,7 @@ const SetAttributeStep = ({
         {/* Competition Section */}
         <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-4 flex flex-col overflow-hidden max-h-[60vh]">
           <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center flex-shrink-0">
-            <FaLayerGroup className="w-4 h-4 mr-2 text-primary" />{t("competition")}</h3>
+            <FaLayerGroup className="w-4 h-4 me-2 text-primary" />{t("competition")}</h3>
 
           <input
             type="text"
@@ -437,12 +437,12 @@ const SetAttributeStep = ({
 
           {competitionError && (
             <div className="text-xs text-red-600 mb-2 px-3 flex items-center">
-              <FaExclamationTriangle className="mr-1" />
+              <FaExclamationTriangle className="me-1" />
               {competitionError}
             </div>
           )}
 
-          <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto pe-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {getOrderedCategories(
               searchCompetition,
               inputCategories,
@@ -484,7 +484,7 @@ const SetAttributeStep = ({
         {/* Cross Shopping Section */}
         <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-4 flex flex-col overflow-hidden max-h-[60vh]">
           <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center flex-shrink-0">
-            <FaUsers className="w-4 h-4 mr-2 text-primary" />{t("cross-shopping")}</h3>
+            <FaUsers className="w-4 h-4 me-2 text-primary" />{t("cross-shopping")}</h3>
 
           <input
             type="text"
@@ -519,12 +519,12 @@ const SetAttributeStep = ({
 
           {crossError && (
             <div className="text-xs text-red-600 mb-2 px-3 flex items-center">
-              <FaExclamationTriangle className="mr-1" />
+              <FaExclamationTriangle className="me-1" />
               {crossError}
             </div>
           )}
 
-          <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <div className="flex flex-wrap gap-2 max-h-52 overflow-y-auto pe-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {getOrderedCategories(
               searchCross,
               inputCategories,

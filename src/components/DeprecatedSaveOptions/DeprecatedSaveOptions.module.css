@@ -32,7 +32,7 @@
 }
 
 .radioButton {
-  margin-right: 15px; /* Increased spacing */
+  margin-inline-end: 15px; /* Increased spacing */
   width: 16px;
   height: 16px;
   appearance: none;

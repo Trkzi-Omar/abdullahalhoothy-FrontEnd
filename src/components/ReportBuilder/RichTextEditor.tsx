@@ -93,7 +93,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       case 'block-quote':
         return (
           <blockquote
-            className="pl-4 border-l-4 border-gem-dark italic text-gray-700"
+            className="ps-4 border-s-4 border-gem-dark italic text-gray-700"
             {...attributes}
             style={elementStyle}
           >

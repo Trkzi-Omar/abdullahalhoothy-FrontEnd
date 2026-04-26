@@ -13,7 +13,7 @@ interface ChatTriggerProps {
 }
 
 const defaultProps: ChatTriggerProps = {
-  position: 'fixed lg:bottom-6 lg:right-6 bottom-4 right-4',
+  position: 'fixed lg:bottom-6 lg:end-6 bottom-4 end-4',
   size: 'w-16 h-16',
   colors: 'bg-[#28A745]',
   cN: '',

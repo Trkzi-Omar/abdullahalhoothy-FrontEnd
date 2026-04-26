@@ -135,7 +135,7 @@ const ReportTierStep = ({
     if (isLoadingLocationPrice) {
       const skeletonCard = (
         <div className="relative border-2 border-[#e5e7eb] rounded-2xl p-6 bg-white shadow-[0_0.25rem_1rem_rgba(0,0,0,0.05)]">
-          <Skeleton className="absolute top-4 right-4 h-6 w-24 rounded-full" />
+          <Skeleton className="absolute top-4 end-4 h-6 w-24 rounded-full" />
           <Skeleton className="h-8 w-20 mb-2 rounded" />
           <Skeleton className="h-4 w-32 mb-3 rounded" />
           <Skeleton className="h-4 w-full mb-1 rounded" />
@@ -196,7 +196,7 @@ const ReportTierStep = ({
             <div className="grid grid-cols-[repeat(auto-fit,minmax(18rem,1fr))] gap-4">
               {/* Free Report Card - Already Used */}
               <div className="relative border-2 border-[#d1d5db] rounded-2xl p-6 bg-gradient-to-br from-[rgba(156,163,175,0.1)] to-[#f9fafb] shadow-[0_0.25rem_1rem_rgba(0,0,0,0.05)] opacity-75 cursor-pointer transition-all duration-[250ms] ease-in-out">
-                <span className="absolute top-4 right-4 bg-[#9ca3af] text-white py-[0.35rem] px-[0.85rem] rounded-full text-xs font-bold tracking-[0.03em] used-pill-text">{t("first-report")}</span>
+                <span className="absolute top-4 end-4 bg-[#9ca3af] text-white py-[0.35rem] px-[0.85rem] rounded-full text-xs font-bold tracking-[0.03em] used-pill-text">{t("first-report")}</span>
                 <div className="text-[2rem] font-extrabold text-[#9ca3af] mb-[0.35rem]">{t("free-2")}</div>
                 <div className="text-[#666] mb-3 font-semibold">{t("single-location")}</div>
                 <p className="text-[#666] text-[0.95rem] mb-4 leading-relaxed">{t("you-ve-already-used-your-free-location-report")}</p>
@@ -214,7 +214,7 @@ const ReportTierStep = ({
 
               {/* Paid Report Card - Active */}
               <div className="relative border-[3px] border-[rgba(125,0,184,0.7)] rounded-2xl p-6 shadow-[0_0.5rem_1.5rem_rgba(125,0,184,0.25)] transition-all duration-[250ms] ease-in-out hover:-translate-y-[3px] hover:shadow-[0_0.5rem_1.5rem_rgba(0,0,0,0.08)]" style={{ background: 'linear-gradient(135deg, rgba(125,0,184,0.06), rgba(72,158,70,0.08))' }}>
-                <span className="absolute top-4 right-4 bg-gem text-white py-[0.35rem] px-[0.85rem] rounded-full text-xs font-bold tracking-[0.03em]">{t("available-now")}</span>
+                <span className="absolute top-4 end-4 bg-gem text-white py-[0.35rem] px-[0.85rem] rounded-full text-xs font-bold tracking-[0.03em]">{t("available-now")}</span>
                 <div className="text-[2rem] font-extrabold text-brand-green mb-[0.35rem]">{priceDisplay}</div>
                 <div className="text-[#666] mb-3 font-semibold">{t("evaluate-your-location")}</div>
                 <p className="text-[#666] text-[0.95rem] mb-4 leading-relaxed">
@@ -262,7 +262,7 @@ const ReportTierStep = ({
 
           <div className="grid grid-cols-[repeat(auto-fit,minmax(18rem,1fr))] gap-4">
             <div className="relative border-2 border-[rgba(72,158,70,0.35)] rounded-2xl p-6 bg-white shadow-[0_0.25rem_1rem_rgba(0,0,0,0.05)] transition-all duration-[250ms] ease-in-out hover:-translate-y-[3px] hover:shadow-[0_0.5rem_1.5rem_rgba(0,0,0,0.08)]" style={{ background: 'linear-gradient(120deg, rgba(72,158,70,0.12), #fff)' }}>
-              <span className="absolute top-4 right-4 bg-brand-green text-white py-[0.35rem] px-[0.85rem] rounded-full text-xs font-bold tracking-[0.03em]">{t("first-report")}</span>
+              <span className="absolute top-4 end-4 bg-brand-green text-white py-[0.35rem] px-[0.85rem] rounded-full text-xs font-bold tracking-[0.03em]">{t("first-report")}</span>
               <div className="text-[2rem] font-extrabold text-brand-green mb-[0.35rem]">{priceDisplay}</div>
               <div className="text-[#666] mb-3 font-semibold">{t("single-location")}</div>
               <p className="text-[#666] text-[0.95rem] mb-4 leading-relaxed">
@@ -307,7 +307,7 @@ const ReportTierStep = ({
           <div className="text-center mb-4">
             <p className="text-xs text-gray-500 flex items-center justify-center">
               <svg
-                className="animate-spin -ml-1 mr-2 h-3 w-3 text-gray-400"
+                className="animate-spin -ms-1 me-2 h-3 w-3 text-gray-400"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -367,7 +367,7 @@ const ReportTierStep = ({
                   <FaUsers className="text-[0.9rem]" />
                   <div>
                     <div className="text-xs font-semibold whitespace-nowrap">{t("population")}</div>
-                    <span className="block text-[0.625rem] text-[#666] leading-tight ml-1">{t("smart-population-data")}</span>
+                    <span className="block text-[0.625rem] text-[#666] leading-tight ms-1">{t("smart-population-data")}</span>
                   </div>
                 </div>
               </div>
@@ -426,7 +426,7 @@ const ReportTierStep = ({
               }
             }}
           >
-            <div className="absolute -top-3 right-5 inline-flex items-center gap-[0.375rem] text-white py-[0.375rem] px-4 rounded-xl text-[0.6875rem] font-bold font-rajdhani tracking-[0.0312rem] shadow-[0_0.25rem_0.75rem_rgba(125,0,184,0.25)] z-10 max-md:absolute max-md:-top-[0.6rem] max-md:right-[0.9rem] max-md:py-[0.3125rem] max-md:px-3 max-md:text-[0.625rem]" style={{ background: 'linear-gradient(135deg, #7D00B8 0%, #7E22CE 100%)' }}>
+            <div className="absolute -top-3 end-5 inline-flex items-center gap-[0.375rem] text-white py-[0.375rem] px-4 rounded-xl text-[0.6875rem] font-bold font-rajdhani tracking-[0.0312rem] shadow-[0_0.25rem_0.75rem_rgba(125,0,184,0.25)] z-10 max-md:absolute max-md:-top-[0.6rem] max-md:end-[0.9rem] max-md:py-[0.3125rem] max-md:px-3 max-md:text-[0.625rem]" style={{ background: 'linear-gradient(135deg, #7D00B8 0%, #7E22CE 100%)' }}>
               <FaStar className="text-xs" />{t("most-popular")}</div>
             <div className="mb-6">
               <div className="font-rajdhani text-[1.375rem] font-bold mb-2 text-[#1a1a1a] max-md:text-xl max-[30rem]:text-lg">{t("standard")}</div>
@@ -451,7 +451,7 @@ const ReportTierStep = ({
                   <FaUsers className="text-[0.9rem]" />
                   <div>
                     <div className="text-xs font-semibold whitespace-nowrap">{t("population")}</div>
-                    <span className="block text-[0.625rem] text-[#666] leading-tight ml-1">{t("smart-population-data")}</span>
+                    <span className="block text-[0.625rem] text-[#666] leading-tight ms-1">{t("smart-population-data")}</span>
                   </div>
                 </div>
               </div>
@@ -510,7 +510,7 @@ const ReportTierStep = ({
               }
             }}
           >
-            <div className="absolute -top-3 right-5 inline-flex items-center gap-[0.375rem] text-white py-[0.375rem] px-[0.9rem] rounded-xl text-[0.6875rem] font-bold font-rajdhani tracking-[0.0312rem] shadow-[0_0.25rem_0.75rem_rgba(125,0,184,0.35),0_0_1.25rem_rgba(125,0,184,0.35)] z-10 max-md:absolute max-md:-top-[0.6rem] max-md:right-[0.9rem] max-md:py-[0.3125rem] max-md:px-[0.7rem] max-md:text-[0.625rem]" style={{ background: 'linear-gradient(135deg, #7D00B8 0%, #7E22CE 100%)' }}>
+            <div className="absolute -top-3 end-5 inline-flex items-center gap-[0.375rem] text-white py-[0.375rem] px-[0.9rem] rounded-xl text-[0.6875rem] font-bold font-rajdhani tracking-[0.0312rem] shadow-[0_0.25rem_0.75rem_rgba(125,0,184,0.35),0_0_1.25rem_rgba(125,0,184,0.35)] z-10 max-md:absolute max-md:-top-[0.6rem] max-md:end-[0.9rem] max-md:py-[0.3125rem] max-md:px-[0.7rem] max-md:text-[0.625rem]" style={{ background: 'linear-gradient(135deg, #7D00B8 0%, #7E22CE 100%)' }}>
               <FaChartLine className="text-xs" />{t("highest-roi")}</div>
             <div className="mb-6 featured-header-aura">
               <div className="font-rajdhani text-[1.375rem] font-bold mb-2 text-[#1a1a1a] max-md:text-xl max-[30rem]:text-lg">{t("premium")}</div>
@@ -535,14 +535,14 @@ const ReportTierStep = ({
                   <FaUsers className="text-[0.9rem]" />
                   <div>
                     <div className="text-xs font-semibold whitespace-nowrap">{t("population")}</div>
-                    <span className="block text-[0.625rem] text-[rgba(125,0,184,0.7)] leading-tight ml-1">{t("smart-population-data")}</span>
+                    <span className="block text-[0.625rem] text-[rgba(125,0,184,0.7)] leading-tight ms-1">{t("smart-population-data")}</span>
                   </div>
                 </div>
                 <div className="inline-flex flex-col items-start gap-1 w-full bg-[rgba(125,0,184,0.12)] border border-[rgba(125,0,184,0.35)] text-gem py-[0.3125rem] px-[0.625rem] rounded-lg transition-all duration-300 min-h-[2.25rem] hover:bg-[rgba(125,0,184,0.18)] hover:border-[rgba(125,0,184,0.5)]">
                   <FaDollarSign className="text-[0.9rem]" />
                   <div>
                     <div className="text-xs font-semibold whitespace-nowrap">{t("income")}</div>
-                    <span className="block text-[0.625rem] text-[rgba(125,0,184,0.7)] leading-tight ml-1">{t("smart-income-data")}</span>
+                    <span className="block text-[0.625rem] text-[rgba(125,0,184,0.7)] leading-tight ms-1">{t("smart-income-data")}</span>
                   </div>
                 </div>
               </div>

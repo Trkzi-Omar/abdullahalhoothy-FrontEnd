@@ -295,7 +295,7 @@ export const AreaIntelligeneControl: React.FC = () => {
         </button>
 
         {isOpen && (
-          <div className="absolute left-0 mt-2 w-[min(calc(100vw-1rem),20rem)] sm:min-w-[26rem] sm:max-w-[42rem] z-50">
+          <div className="absolute start-0 mt-2 w-[min(calc(100vw-1rem),20rem)] sm:min-w-[26rem] sm:max-w-[42rem] z-50">
             <div
               className={`
                 relative flex flex-col p-3 sm:p-4 rounded-lg border
@@ -442,7 +442,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                       `}
                     >{t("full-2")}</button>
                   </div>
-                  <div className="relative flex-shrink-0 ml-1 sm:ml-0">
+                  <div className="relative flex-shrink-0 ms-1 sm:ms-0">
                     <input
                       id="population-toggle-map"
                       type="checkbox"
@@ -463,7 +463,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                         after:content-['']
                         after:absolute
                         after:top-[2px]
-                        after:left-[2px]
+                        after:start-[2px]
                         after:bg-white
                         after:border-gray-300
                         after:border
@@ -554,7 +554,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                       `}
                     >{t("full-2")}</button>
                   </div>
-                  <div className="relative flex-shrink-0 ml-1 sm:ml-0">
+                  <div className="relative flex-shrink-0 ms-1 sm:ms-0">
                     <input
                       id="income-toggle-map"
                       type="checkbox"
@@ -575,7 +575,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                         after:content-['']
                         after:absolute
                         after:top-[2px]
-                        after:left-[2px]
+                        after:start-[2px]
                         after:bg-white
                         after:border-gray-300
                         after:border
@@ -666,7 +666,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                       `}
                     >{t("full-2")}</button>
                   </div>
-                  <div className="relative flex-shrink-0 ml-1 sm:ml-0">
+                  <div className="relative flex-shrink-0 ms-1 sm:ms-0">
                     <input
                       id="real-estate-toggle-map"
                       type="checkbox"
@@ -687,7 +687,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                         after:content-['']
                         after:absolute
                         after:top-[2px]
-                        after:left-[2px]
+                        after:start-[2px]
                         after:bg-white
                         after:border-gray-300
                         after:border

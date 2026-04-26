@@ -46,16 +46,16 @@ const MetricItem = ({
             htmlFor={`metrics_${metricKey}`}
             className="flex items-center text-sm font-semibold text-gray-700 capitalize"
           >
-            <span className="text-primary mr-2">
+            <span className="text-primary me-2">
               {getMetricIcon(metricKey, businessType, businessConfig)}
             </span>
-            <span className="mr-1">{metricKey.replace('_', ' ')}</span>
+            <span className="me-1">{metricKey.replace('_', ' ')}</span>
             {businessConfig?.metrics?.[metricKey]?.description && (
-              <div className="group relative ml-1">
+              <div className="group relative ms-1">
                 <FaInfoCircle className="text-gray-400 hover:text-primary transition-colors cursor-help w-3.5 h-3.5" />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-gray-900/90 backdrop-blur-sm text-white text-xs font-normal rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 text-center shadow-lg transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
+                <div className="absolute bottom-full start-1/2 -translate-x-1/2 rtl:translate-x-1/2 mb-2 w-48 p-2 bg-gray-900/90 backdrop-blur-sm text-white text-xs font-normal rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 text-center shadow-lg transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
                   {businessConfig.metrics[metricKey].description}
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900/90"></div>
+                  <div className="absolute top-full start-1/2 -translate-x-1/2 rtl:translate-x-1/2 border-4 border-transparent border-t-gray-900/90"></div>
                 </div>
               </div>
             )}
@@ -89,7 +89,7 @@ const MetricItem = ({
             max="100"
             step="1"
             disabled={disabled}
-            className={`w-full px-3 py-2 pr-8 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
+            className={`w-full px-3 py-2 pe-8 border-2 rounded-lg text-center font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
               disabled
                 ? 'bg-gray-100 cursor-not-allowed opacity-60'
                 : error
@@ -97,14 +97,14 @@ const MetricItem = ({
                   : 'border-gray-200'
             }`}
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold pointer-events-none">
+          <span className="absolute end-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold pointer-events-none">
             %
           </span>
         </div>
 
         {error && (
           <p className="text-sm text-red-600 flex items-center">
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -151,7 +151,7 @@ export const EvaluationMetricsStep = ({
       <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-4 border border-gray-200">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center">
-            <FaChartBar className="w-5 h-5 text-primary mr-2" />
+            <FaChartBar className="w-5 h-5 text-primary me-2" />
             <span className="text-base font-semibold text-gray-900">{t("total-weight")}</span>
           </div>
           <div
@@ -163,7 +163,7 @@ export const EvaluationMetricsStep = ({
                   : 'bg-yellow-100 text-yellow-800'
             }`}
           >
-            <span className="text-lg font-bold mr-1">{(metricsSum * 100).toFixed(0)}%</span>
+            <span className="text-lg font-bold me-1">{(metricsSum * 100).toFixed(0)}%</span>
             {isBalanced ? (
               <FaCheck className="w-4 h-4" />
             ) : (
@@ -247,7 +247,7 @@ export const EvaluationMetricsStep = ({
       {errors.evaluation_metrics && (
         <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl">
           <p className="text-sm font-medium flex items-center">
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

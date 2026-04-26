@@ -62,7 +62,7 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
                       {purchaseData.report.message}
                     </p>
                   </div>
-                  <div className="text-right ml-4">
+                  <div className="text-end ms-4">
                     <div className="text-lg font-bold text-[#115740]">
                       {formatPrice(purchaseData.report.charged_usd)}
                     </div>
@@ -96,7 +96,7 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
                           </p>
                         )}
                       </div>
-                      <div className="text-right ml-4">
+                      <div className="text-end ms-4">
                         {item.intelligence.free_as_part_of_package ? (
                           <div className="text-lg font-bold text-green-600">{t("free")}</div>
                         ) : (
@@ -141,7 +141,7 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
                           </p>
                         )}
                       </div>
-                      <div className="text-right ml-4">
+                      <div className="text-end ms-4">
                         {item.dataset.free_as_part_of_package ? (
                           <div className="text-lg font-bold text-green-600">{t("free")}</div>
                         ) : (

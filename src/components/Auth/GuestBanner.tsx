@@ -44,7 +44,7 @@ export default function GuestBanner() {
     toast.custom(
       toastId => (
         <div className="w-[min(24rem,calc(100vw-1.5rem))] rounded-2xl border border-sky-200 bg-white px-4 py-4 shadow-2xl sm:px-5">
-          <div className="relative min-w-0 pr-8">
+          <div className="relative min-w-0 pe-8">
             <div>
               <p className="text-lg font-semibold leading-7 text-slate-900">{t("you-are-logged-in-as-a-guest-user")}</p>
               <p className="mt-1 text-base leading-7 text-slate-700">{t("sign-up-or-sign-in-to-access-full-features")}</p>
@@ -72,7 +72,7 @@ export default function GuestBanner() {
 
             <button
               aria-label={t("dismiss-guest-notice")}
-              className="absolute right-0 top-0 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+              className="absolute end-0 top-0 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
               onClick={() => toast.dismiss(toastId)}
               type="button"
             >
@@ -99,7 +99,7 @@ export default function GuestBanner() {
         id: GUEST_TOAST_ID,
         duration: Infinity,
         style: {
-          right: '2rem',
+          insetInlineEnd: '2rem',
         },
       }
     );

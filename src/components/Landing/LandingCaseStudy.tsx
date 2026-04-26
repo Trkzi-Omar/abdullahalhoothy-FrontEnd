@@ -12,7 +12,7 @@ const LandingCaseStudy = ({ t }: LandingCaseStudyProps) => {
       <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand-green/20 to-transparent"></div>
       <div className="container mx-auto px-6">
         <div className="bg-brand-dark border border-white/10 rounded-3xl p-8 lg:p-12 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-purple/10 via-transparent to-transparent opacity-50"></div>
+          <div className="absolute top-0 end-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-purple/10 via-transparent to-transparent opacity-50"></div>
           <div className="flex flex-col lg:flex-row gap-12 relative z-10">
             <div className="lg:w-1/2 flex flex-col justify-center">
               <div className="flex items-center gap-2 mb-4">

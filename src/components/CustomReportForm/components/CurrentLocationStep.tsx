@@ -40,9 +40,9 @@ export const CurrentLocationStep = ({
         <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">
           {title}
           {isRequired ? (
-            <span className="text-red-500 ml-1">*</span>
+            <span className="text-red-500 ms-1">*</span>
           ) : (
-            <span className="text-sm font-normal text-gray-500 ml-1">{t("optional")}</span>
+            <span className="text-sm font-normal text-gray-500 ms-1">{t("optional")}</span>
           )}
         </h3>
         <p className="text-sm text-gray-600">{helpText}</p>
@@ -50,7 +50,7 @@ export const CurrentLocationStep = ({
 
       <div className="bg-white border-2 border-gray-100 rounded-lg p-4 hover:border-primary/30 transition-all duration-200">
         <div className="flex items-center mb-4">
-          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mr-3">
+          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center me-3">
             <FaMapMarkerAlt className="w-4 h-4 text-primary" />
           </div>
           <div>

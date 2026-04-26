@@ -233,7 +233,7 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">{t("phone-number")}</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 start-0 ps-3 flex items-center pointer-events-none">
                   <FaPhone className="text-gray-400" />
                 </div>
                 <input
@@ -242,7 +242,7 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder={t("966-5x-xxx-xxxx")}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-gem focus:border-gem transition-colors"
+                  className="block w-full ps-10 pe-3 py-3 border border-gray-300 rounded-lg focus:ring-gem focus:border-gem transition-colors"
                   disabled={isLoading || disabled}
                 />
               </div>
@@ -251,7 +251,7 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
 
             {error && (
               <div className="flex items-center p-4 bg-red-50 rounded-lg text-red-700 text-sm">
-                <FaExclamationTriangle className="flex-shrink-0 mr-3" />
+                <FaExclamationTriangle className="flex-shrink-0 me-3" />
                 {error}
               </div>
             )}
@@ -296,7 +296,7 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
 
             {error && (
               <div className="flex items-center p-4 bg-red-50 rounded-lg text-red-700 text-sm">
-                <FaExclamationTriangle className="flex-shrink-0 mr-3" />
+                <FaExclamationTriangle className="flex-shrink-0 me-3" />
                 {error}
               </div>
             )}

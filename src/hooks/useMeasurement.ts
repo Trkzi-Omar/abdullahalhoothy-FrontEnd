@@ -350,7 +350,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                       <br />
                       <strong>Drive Time:</strong> ${savedMeasurement.duration.toFixed(0)} min
                     </div>
-                    <div class="mt-3 flex justify-end space-x-2">
+                    <div class="mt-3 flex justify-end gap-2">
                       <button
                         class="delete-measurement-hook px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
                       >
@@ -424,7 +424,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                     <br />
                     <strong>Drive Time:</strong> ${savedMeasurement.duration.toFixed(0)} min
                   </div>
-                  <div class="mt-3 flex justify-end space-x-2">
+                  <div class="mt-3 flex justify-end gap-2">
                     <button
                       class="delete-measurement-hook px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
                     >
@@ -524,7 +524,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
         .setHTML(
           `
         <div class="p-2 flex items-center bg-white rounded-lg shadow-sm">
-          <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 mr-2"></div>
+          <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 me-2"></div>
           <span>Calculating route...</span>
         </div>
       `
@@ -702,7 +702,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
               <br />
               <strong>Drive Time:</strong> ${(apiResult.data?.drive_time_in_min ?? 0).toFixed(0)} min
             </div>
-            <div class="mt-3 flex justify-end space-x-2">
+            <div class="mt-3 flex justify-end gap-2">
               <button
                 class="exit-measure-mode-hook px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-xs"
               >

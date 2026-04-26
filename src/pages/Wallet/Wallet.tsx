@@ -40,7 +40,7 @@ export default function Wallet() {
       <h2 className="text-xl font-semibold mb-6">{t("credits")}</h2>
       <div className="rounded-md shadow-sm border p-4">
         <h3 className="font-semibold mb-2">{t("summary")}</h3>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-4">
           <div>
             <p className="text-sm font-bold text-gray-600">{t("total-amount-remaining")}</p>
             <p className="text-sm text-gray-600">${balance}</p>
@@ -48,7 +48,7 @@ export default function Wallet() {
           <div className="w-px h-10 bg-gray-300"></div>
           <Link
             to="/profile/wallet/add"
-            className="flex items-center text-blue-600 mr-4 text-sm font-medium"
+            className="flex items-center text-blue-600 me-4 text-sm font-medium"
           >
             <button className="h-10 px-6 py-2 bg-[#115740] text-white font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer m-2">{t("add-funds")}</button>
           </Link>

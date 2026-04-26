@@ -70,7 +70,7 @@ const CategoriesBrowserSubCategories = ({
                               e.preventDefault();
                               onRemoveType(type, layerId, true);
                             }}
-                            className="text-xs opacity-75 hover:opacity-100 mr-1 bg-black/10 px-1.5 rounded-md"
+                            className="text-xs opacity-75 hover:opacity-100 me-1 bg-black/10 px-1.5 rounded-md"
                           >
                             {layerId}
                           </button>
@@ -130,7 +130,7 @@ const CategoriesBrowserSubCategories = ({
                               e.preventDefault();
                               onRemoveType(type, layerId, false);
                             }}
-                            className="text-xs opacity-75 hover:opacity-100 ml-1 bg-black/10 px-1.5 rounded-md"
+                            className="text-xs opacity-75 hover:opacity-100 ms-1 bg-black/10 px-1.5 rounded-md"
                           >
                             {layerId}
                           </button>

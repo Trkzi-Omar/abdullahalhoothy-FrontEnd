@@ -32,7 +32,7 @@ export const SelectableCard: React.FC<SelectableCardProps> = ({
       onClick={comingSoon ? undefined : onClick}
       disabled={comingSoon}
       className={`
-        relative w-full text-left p-6 rounded-xl border-2 transition-all duration-300
+        relative w-full text-start p-6 rounded-xl border-2 transition-all duration-300
         ${
           comingSoon
             ? 'border-gray-300 bg-gray-100/60 cursor-not-allowed opacity-60'
@@ -53,12 +53,12 @@ export const SelectableCard: React.FC<SelectableCardProps> = ({
       )}
       {/* Coming Soon Badge */}
       {comingSoon && (
-        <div className="absolute top-2 right-2 bg-purple-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm z-10">{t("coming-soon")}</div>
+        <div className="absolute top-2 end-2 bg-purple-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-sm z-10">{t("coming-soon")}</div>
       )}
 
       {/* Badge */}
       {badge && !comingSoon && (
-        <div className="pointer-events-none absolute -top-3 -right-3 bg-green-700 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
+        <div className="pointer-events-none absolute -top-3 -end-3 bg-green-700 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
           {badge}
         </div>
       )}
@@ -100,9 +100,9 @@ export const SelectableCard: React.FC<SelectableCardProps> = ({
       {/* Hover indicator */}
       {!comingSoon && (
         <div
-          className={`pointer-events-none relative z-10 mt-4 font-medium text-sm opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 flex items-center gap-1 ${recommended ? 'text-white' : 'text-primary'}`}
+          className={`pointer-events-none relative z-10 mt-4 font-medium text-sm opacity-0 -translate-x-2 rtl:translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 flex items-center gap-1 ${recommended ? 'text-white' : 'text-primary'}`}
         >{t("select-this-option")}<svg
-            className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300"
+            className="w-4 h-4 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1 transition-transform duration-300"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -128,7 +128,7 @@ export const BackButton: React.FC<BackButtonProps> = ({ onClick }) => {
       onClick={onClick}
       className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
     >
-      <FaArrowLeft className="w-3 h-3" />{t("back")}</button>
+      <FaArrowLeft className="w-3 h-3 rtl:rotate-180" />{t("back")}</button>
   );
 };
 

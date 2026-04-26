@@ -31,7 +31,7 @@ const Billing = () => {
         <>
           <BillingDrawer />
           <button
-            className="bg-white border p-2.5 fixed w-full bottom-0 left-0 right-0 z-[5] flex items-center gap-2 text-gray-400 font-normal"
+            className="bg-white border p-2.5 fixed w-full bottom-0 start-0 end-0 z-[5] flex items-center gap-2 text-gray-400 font-normal"
             onClick={() => setIsDrawerOpen(true)}
           >
             <svg
@@ -131,7 +131,7 @@ function BillingContent() {
 
   return (
     <div className="flex flex-col h-full justify-between">
-      <div className="text-2xl pl-6 pt-4 font-semibold mb-4">{t("acquire")}</div>
+      <div className="text-2xl ps-6 pt-4 font-semibold mb-4">{t("acquire")}</div>
 
       <div className="flex-1 flex flex-col justify-center items-center gap-3">
         {tabs.map(tab => {
@@ -160,8 +160,8 @@ function BillingContent() {
           className="group relative w-[85%] overflow-hidden rounded-2xl bg-gem-dark p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-secondary/20 ring-1 ring-white/10"
         >
           {/* Background Gradient/Pattern */}
-          <div className="absolute top-0 right-0 -mt-8 -mr-8 h-32 w-32 rounded-full bg-secondary/10 blur-3xl transition-all duration-500 group-hover:bg-secondary/20"></div>
-          <div className="absolute bottom-0 left-0 -mb-8 -ml-8 h-32 w-32 rounded-full bg-gem/10 blur-3xl transition-all duration-500 group-hover:bg-gem/20"></div>
+          <div className="absolute top-0 end-0 -mt-8 -me-8 h-32 w-32 rounded-full bg-secondary/10 blur-3xl transition-all duration-500 group-hover:bg-secondary/20"></div>
+          <div className="absolute bottom-0 start-0 -mb-8 -ms-8 h-32 w-32 rounded-full bg-gem/10 blur-3xl transition-all duration-500 group-hover:bg-gem/20"></div>
 
           <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
             <div className="space-y-1">
@@ -169,13 +169,13 @@ function BillingContent() {
                 <span className="flex h-2 w-2 rounded-full bg-secondary animate-pulse"></span>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-secondary">{t("support")}</p>
               </div>
-              <p className="text-xs text-gray-400 font-medium text-left">{t("didn-t-find-what-you-need")}</p>
+              <p className="text-xs text-gray-400 font-medium text-start">{t("didn-t-find-what-you-need")}</p>
             </div>
 
             <div className="flex items-end justify-between">
               <div>
                 <h3 className="text-lg font-bold text-white leading-tight group-hover:text-secondary transition-colors">{t("how-can-we-help-you")}</h3>
-                <p className="mt-1 text-[10px] text-gray-500 font-medium group-hover:text-gray-400 transition-colors text-left">{t("replies-within-24-hours")}</p>
+                <p className="mt-1 text-[10px] text-gray-500 font-medium group-hover:text-gray-400 transition-colors text-start">{t("replies-within-24-hours")}</p>
               </div>
 
               {/* Action Button Visual */}

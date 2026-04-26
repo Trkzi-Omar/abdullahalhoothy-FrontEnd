@@ -51,7 +51,7 @@
 
 .icon {
   color: #006400;
-  margin-left: 10px;
+  margin-inline-start: 10px;
 }
 
 .authInput {

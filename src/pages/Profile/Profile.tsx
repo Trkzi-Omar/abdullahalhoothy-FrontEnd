@@ -24,7 +24,7 @@ const Profile = () => {
           <>
             <ProfileDrawer />
             <button
-              className="bg-white border p-2.5 fixed w-full bottom-0 left-0 right-0 z-[5] flex items-center gap-2 text-gray-400 font-normal"
+              className="bg-white border p-2.5 fixed w-full bottom-0 start-0 end-0 z-[5] flex items-center gap-2 text-gray-400 font-normal"
               onClick={() => setIsDrawerOpen(true)}
             >
               <svg
@@ -67,7 +67,7 @@ function ProfileContent() {
 
   return (
     <>
-      <div className="text-2xl pl-6 pt-4 font-semibold mb-4">{t("account")}</div>
+      <div className="text-2xl ps-6 pt-4 font-semibold mb-4">{t("account")}</div>
       <div className="flex flex-col justify-center items-center">
         <MenuItem label={t("account")} to="/profile" />
         <MenuItem label={t("change-password")} to="/profile/change-password" />
@@ -126,7 +126,7 @@ function MenuItem({ label, to }: { label: string; to: string }) {
   return (
     <Link
       to={to}
-      className="text-primary w-full py-2 pl-8  mb-2 font-bold hover:bg-gray-100 transition-all"
+      className="text-primary w-full py-2 ps-8  mb-2 font-bold hover:bg-gray-100 transition-all"
     >
       {label}
     </Link>
@@ -148,10 +148,10 @@ function ExpandableMenuItem({
     <>
       <button
         onClick={onClick}
-        className="flex items-center justify-between w-full px-4 text-base text-primary py-2 pl-8 font-bold mb-2 hover:bg-gray-200"
+        className="flex items-center justify-between w-full px-4 text-base text-primary py-2 ps-8 font-bold mb-2 hover:bg-gray-200"
       >
         {label}
-        <span className="ml-2">
+        <span className="ms-2">
           {isExpanded ? (
             <svg
               width="20"
@@ -190,7 +190,7 @@ function ExpandableMenuItem({
 
 function SubMenuItem({ label, to }: { label: string; to: string }) {
   return (
-    <Link to={to} className="block px-4 pl-12 py-2 text-sm hover:bg-gray-200">
+    <Link to={to} className="block px-4 ps-12 py-2 text-sm hover:bg-gray-200">
       {label}
     </Link>
   );

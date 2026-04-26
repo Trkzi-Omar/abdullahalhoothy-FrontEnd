@@ -63,7 +63,7 @@ function CatalogDetailsForm() {
   }
 
   return (
-    <div className="flex flex-col h-full w-full lg:pr-1.5">
+    <div className="flex flex-col h-full w-full lg:pe-1.5">
       <div className="flex flex-col mt-7 px-4">
         {error && <p className=" text-red-500 font-semibold">{error}</p>}
 
@@ -111,7 +111,7 @@ function CatalogDetailsForm() {
       {isError && <p className="text-red-500 font-semibold px-4">{isError.message}</p>}
 
       <div className="w-full flex-col h-[7%] flex px-2 py-2 select-none border-t">
-        <div className="flex h-full w-full space-x-2">
+        <div className="flex h-full w-full gap-2">
           <button
             onClick={handleDiscardClick}
             className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg

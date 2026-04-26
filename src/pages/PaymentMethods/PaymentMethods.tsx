@@ -193,10 +193,10 @@ export default function PaymentMethods() {
       <div className="flex items-center mb-6">
         <Link
           to="/profile/payment-methods/add"
-          className="flex items-center text-blue-600 mr-4 text-sm font-medium"
+          className="flex items-center text-blue-600 me-4 text-sm font-medium"
         >
           <svg
-            className="w-4 h-4 mr-2"
+            className="w-4 h-4 me-2"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -239,11 +239,11 @@ export default function PaymentMethods() {
       <div className="rounded-md shadow-sm border">
         <table className="w-full">
           <thead>
-            <tr className="text-left text-sm text-gray-600 border-b">
+            <tr className="text-start text-sm text-gray-600 border-b">
               <th className="p-2">{t("no-2")}</th>
               <th className="p-2">{t("name-on-card-2")}</th>
               <th className="p-2">{t("expires-on")}</th>
-              <th className="p-2 text-right ">{t("actions")}</th>
+              <th className="p-2 text-end ">{t("actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -261,7 +261,7 @@ export default function PaymentMethods() {
                 <td className="p-2">
                   {method.card.exp_month}/{method.card.exp_year}
                 </td>
-                <td className="p-2 text-right relative">
+                <td className="p-2 text-end relative">
                   <ActionDropdown
                     isOpen={dropdownOpen === method.id}
                     setDropdownOpen={() =>
@@ -319,7 +319,7 @@ function DefaultPaymentMethod({
   return paymentMethod ? (
     <div className="flex flex-col justify-between border rounded shadow-sm p-4 max-w-sm mb-4">
       <div className="flex items-start">
-        <div className="mr-3 ">{renderPaymentBrandIcon(paymentMethod.card.brand)}</div>
+        <div className="me-3 ">{renderPaymentBrandIcon(paymentMethod.card.brand)}</div>
         <div className="uppercase">
           <p className="font-semibold">
             {paymentMethod.card.brand} ****{paymentMethod.card.last4}
@@ -433,21 +433,21 @@ function ActionDropdown({
       </button>
       {isOpen && (
         <div
-          className={`absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-sm z-10 transition-all duration-300 transform ${
+          className={`absolute end-0 mt-2 w-48 bg-white border rounded-md shadow-sm z-10 transition-all duration-300 transform ${
             isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
           }`}
           style={{ display: isOpen ? 'block' : 'none' }}
         >
           {!isDefault && (
             <button
-              className="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 w-full text-left disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 w-full text-start disabled:cursor-not-allowed disabled:opacity-50"
               onClick={onSetDefault}
               disabled={submitting}
             >
               {submitting && <Spinner />}{t("set-as-default")}</button>
           )}
           <button
-            className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-start disabled:cursor-not-allowed disabled:opacity-50"
             onClick={onRemove}
           >{t("remove")}</button>
         </div>
@@ -469,11 +469,11 @@ function Dialog({
   if (!isOpen) return null;
 
   return (
-    <div className="text-left fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="text-start fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="bg-white rounded-md shadow-lg max-w-lg w-full p-4 mx-4">
         <h3 className="text-lg font-semibold mb-1">{title}</h3>
         <p className="text-gray-600 mb-6">{message}</p>
-        <div className="flex justify-end space-x-2">
+        <div className="flex justify-end gap-2">
           <button
             onClick={onCancel}
             className="h-9 flex items-center px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"

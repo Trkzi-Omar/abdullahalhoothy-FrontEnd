@@ -16,7 +16,7 @@ interface ChatProps {
 }
 
 const defaultProps = {
-  position: `fixed lg:bottom-6 lg:right-6 bottom-4 right-4 `,
+  position: `fixed lg:bottom-6 lg:end-6 bottom-4 end-4 `,
   topic: topics.DEFAULT,
 };
 
@@ -204,8 +204,8 @@ function Chat(props: ChatProps = defaultProps) {
         <div
           className={`${
             isBot
-              ? 'bg-gray-100 rounded-2xl p-4 rounded-tl-none border border-gray-200'
-              : 'bg-gem-gradient text-white rounded-2xl p-4 rounded-tr-none'
+              ? 'bg-gray-100 rounded-2xl p-4 rounded-ss-none border border-gray-200'
+              : 'bg-gem-gradient text-white rounded-2xl p-4 rounded-se-none'
           } ${isInvalidResponse ? 'bg-amber-50 border-amber-200' : ''} max-w-[85%]`}
         >
           {/* Message content */}
@@ -217,7 +217,7 @@ function Chat(props: ChatProps = defaultProps) {
           {isInvalidResponse && message.responseData.suggestions && (
             <div className="mt-2 text-sm">
               <p className="font-semibold">{t("suggestions")}</p>
-              <ul className="list-disc pl-5 mt-1">
+              <ul className="list-disc ps-5 mt-1">
                 {message.responseData.suggestions.map((suggestion, i) => (
                   <li key={i}>{suggestion}</li>
                 ))}
@@ -353,7 +353,7 @@ function Chat(props: ChatProps = defaultProps) {
         {messages.map(renderMessage)}
         {isLoading && (
           <div className="flex justify-start animate-fade-in-up">
-            <div className="bg-gray-100 rounded-2xl p-4 rounded-tl-none border border-gray-200">
+            <div className="bg-gray-100 rounded-2xl p-4 rounded-ss-none border border-gray-200">
               <Loader />
             </div>
           </div>
@@ -402,7 +402,7 @@ function Chat(props: ChatProps = defaultProps) {
             }`}
             aria-label={t("send-message")}
           >
-            <HiArrowRight className="w-5 h-5" />
+            <HiArrowRight className="w-5 h-5 rtl:rotate-180" />
           </button>
         </div>
       </form>

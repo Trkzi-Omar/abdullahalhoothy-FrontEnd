@@ -53,11 +53,11 @@ function ReportAIChatPanel({
     let bubbleClass: string;
     if (message.isBlocked) {
       bubbleClass =
-        'bg-amber-50 rounded-2xl p-4 rounded-tl-none border border-amber-200 text-amber-900';
+        'bg-amber-50 rounded-2xl p-4 rounded-ss-none border border-amber-200 text-amber-900';
     } else if (isBot) {
-      bubbleClass = 'bg-gray-100 rounded-2xl p-4 rounded-tl-none border border-gray-200';
+      bubbleClass = 'bg-gray-100 rounded-2xl p-4 rounded-ss-none border border-gray-200';
     } else {
-      bubbleClass = 'bg-gem-gradient text-white rounded-2xl p-4 rounded-tr-none';
+      bubbleClass = 'bg-gem-gradient text-white rounded-2xl p-4 rounded-se-none';
     }
 
     return (
@@ -76,7 +76,7 @@ function ReportAIChatPanel({
 
   return (
     <div
-      className={`fixed bottom-40 right-4 lg:bottom-40 lg:right-6
+      className={`fixed bottom-40 end-4 lg:bottom-40 lg:end-6
         lg:w-[400px] w-[95vw] max-h-[70vh] bg-white rounded-2xl shadow-xl
         transform-gpu transition-all duration-500 ease-out z-20
         ${isOpen ? '-translate-x-0 scale-100 opacity-100' : '-translate-x-1/4 scale-95 opacity-0 pointer-events-none'}`}
@@ -102,7 +102,7 @@ function ReportAIChatPanel({
         {messages.map(renderMessage)}
         {isLoading && (
           <div className="flex justify-start animate-fade-in-up">
-            <div className="bg-gray-100 rounded-2xl p-4 rounded-tl-none border border-gray-200">
+            <div className="bg-gray-100 rounded-2xl p-4 rounded-ss-none border border-gray-200">
               <Loader />
             </div>
           </div>
@@ -143,7 +143,7 @@ function ReportAIChatPanel({
             }`}
             aria-label={t("send-message")}
           >
-            <HiArrowRight className="w-5 h-5" />
+            <HiArrowRight className="w-5 h-5 rtl:rotate-180" />
           </button>
         </div>
       </form>

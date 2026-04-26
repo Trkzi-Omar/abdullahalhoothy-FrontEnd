@@ -49,14 +49,14 @@ const Home = () => {
   return (
     <>
       {!isMobile && (
-        <div className="lg:block hidden w-96 h-full pr-1 pb-1 bg-[#115740]">
+        <div className="lg:block hidden w-96 h-full pe-1 pb-1 bg-[#115740]">
           <HomeContent />
         </div>
       )}
       {isMobile && (
         <>
           <button
-            className="bg-white border p-2.5 fixed w-full bottom-0 left-0 right-0 z-[5] flex items-center gap-2 text-gray-400 font-normal"
+            className="bg-white border p-2.5 fixed w-full bottom-0 start-0 end-0 z-[5] flex items-center gap-2 text-gray-400 font-normal"
             onClick={() => setIsDrawerOpen(true)}
           >
             <svg
@@ -125,7 +125,7 @@ export function HomeContent() {
   return (
     <div className="flex-1 h-full flex flex-col relative overflow-hidden ">
       {/* Tabs */}
-      <div className="flex  pt-1 select-none space-x-1 font-semibold border-b">
+      <div className="flex  pt-1 select-none gap-1 font-semibold border-b">
         <div
           className={
             'flex justify-center items-center rounded-t-lg w-full h-10 border border-slate-300 transition-all ' +
@@ -136,7 +136,7 @@ export function HomeContent() {
           onClick={() => {
             handleTabSwitch('LAYER');
           }}
-        >{t("layer")}<span className="ml-2">
+        >{t("layer")}<span className="ms-2">
             <FaLayerGroup />
           </span>
         </div>
@@ -151,7 +151,7 @@ export function HomeContent() {
           onClick={() => {
             handleTabSwitch('CATALOG');
           }}
-        >{t("catalog-2")}<span className="ml-2">
+        >{t("catalog-2")}<span className="ms-2">
             <FaBoxOpen />
           </span>
         </div>
@@ -163,7 +163,7 @@ export function HomeContent() {
           <>
             <LayerFormLoader />
             {isLoadingDataset && (
-              <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-30 z-50">
+              <div className="absolute top-0 start-0 w-full h-full bg-black bg-opacity-30 z-50">
                 <div className="flex justify-center items-center h-full">
                   <Spinner className="border-white border-4 size-32" />
                 </div>

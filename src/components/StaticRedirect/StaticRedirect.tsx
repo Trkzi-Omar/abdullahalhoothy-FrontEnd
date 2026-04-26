@@ -59,7 +59,7 @@ const StaticRedirect = () => {
       />
       <button
         onClick={() => navigate('/')}
-        className="fixed bottom-4 left-4 z-50 flex items-center gap-2 bg-[#115740] text-white px-4 py-2 rounded-full shadow-lg hover:bg-[#0d4532] transition-colors"
+        className="fixed bottom-4 start-4 z-50 flex items-center gap-2 bg-[#115740] text-white px-4 py-2 rounded-full shadow-lg hover:bg-[#0d4532] transition-colors"
       >
         <MdHome size={20} />
         <span className="text-sm font-medium">{t("home")}</span>

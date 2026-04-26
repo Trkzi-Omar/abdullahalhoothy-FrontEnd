@@ -38,7 +38,13 @@ import GeoJSON from 'ol/format/GeoJSON';
 import { useMap, Map, View, TileLayer, VectorLayer } from 'react-openlayers';
 import 'react-openlayers/dist/index.css';
 import { t } from '../../i18n';
- // for css
+
+const DRAW_CONTROL_STYLE = `
+.draw-control { top: 65px; inset-inline-start: .5em; }
+.draw-control-S { top: 95px; inset-inline-start: .5em; }
+.draw-control-E { top: 125px; inset-inline-start: .5em; }
+.draw-control-active > button { outline: 1px solid black; }
+`;
 
  
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -217,7 +223,7 @@ const VrpMap = ({formData, handleInputChange}) => {
   const drawSource = new VectorSource({wrapX: false});
 	return (
 		<>
-		<style>{t("draw-control-top-65px-left-5em-draw-control-s-top-95px-left-5em-draw-control-e-t")}</style>
+		<style>{DRAW_CONTROL_STYLE}</style>
 	  <Map ref={mapRef} controls={defaultControls().extend(["P", "S", "E"].map(v => new DrawControl({
 	  	'letter': v,
 	  })))}>
@@ -1090,7 +1096,7 @@ const CustomReportForm = () => {
             <p className="text-gray-600 mb-4">{t("setting-up-the-form-for-your")}{' '}{businessType}{' '}{t("location-analysis")}</p>
 
             {/* Loading dots animation */}
-            <div className="flex justify-center space-x-1">
+            <div className="flex justify-center gap-1">
               <div
                 className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
                 style={{ animationDelay: '0ms' }}
@@ -1165,7 +1171,7 @@ const CustomReportForm = () => {
             <p className="text-gray-600 mb-4">{t("finalizing-your")}{' '}{businessType}{' '}{t("report-setup")}</p>
 
             {/* Loading dots animation */}
-            <div className="flex justify-center space-x-1">
+            <div className="flex justify-center gap-1">
               <div
                 className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
                 style={{ animationDelay: '0ms' }}
@@ -1198,7 +1204,7 @@ const CustomReportForm = () => {
             onClick={() => navigate(-1)}
             className="flex items-center px-2 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-200"
           >
-            <FaArrowLeft className="w-3 h-3 mr-1" />
+            <FaArrowLeft className="w-3 h-3 me-1 rtl:rotate-180" />
             <span>{t("back")}</span>
           </button>
           {!isLastStep && <div className="w-16"></div>} {/* Spacer for centering */}
@@ -1260,7 +1266,7 @@ const CustomReportForm = () => {
                       </svg>
                     </div>
                   </div>
-                  <div className="ml-3 flex-1">
+                  <div className="ms-3 flex-1">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-gray-900">{t("generating-your")}{' '}{businessType}{' '}{t("report")}</p>
                       <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full">{t("3-15-min")}</span>
@@ -1279,7 +1285,7 @@ const CustomReportForm = () => {
                   <div className="flex-shrink-0">
                     <FaExclamationTriangle className="h-6 w-6 text-red-400" />
                   </div>
-                  <div className="ml-3 flex-1">
+                  <div className="ms-3 flex-1">
                     {submitError.includes('|') ? (
                       <>
                         <h3 className="text-sm font-semibold text-red-800 mb-1">

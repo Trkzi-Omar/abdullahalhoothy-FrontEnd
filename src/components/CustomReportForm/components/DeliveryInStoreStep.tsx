@@ -79,7 +79,7 @@ export const DeliveryInStoreStep = ({
         {/* Custom Range Slider Container */}
         <div className="relative h-14 flex items-center mb-2 px-2">
           {/* Track Background Visuals - Optional Markers */}
-          <div className="absolute left-0 right-0 h-2 bg-gray-100 rounded-full overflow-hidden pointer-events-none"></div>
+          <div className="absolute start-0 end-0 h-2 bg-gray-100 rounded-full overflow-hidden pointer-events-none"></div>
 
           <input
             type="range"
@@ -119,7 +119,7 @@ export const DeliveryInStoreStep = ({
       {(errors.delivery_weight || errors.dine_in_weight) && (
         <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl animate-fade-in">
           <p className="text-sm font-medium flex items-center">
-            <FaExclamationTriangle className="w-4 h-4 mr-2" />
+            <FaExclamationTriangle className="w-4 h-4 me-2" />
             {errors.delivery_weight || errors.dine_in_weight}
           </p>
         </div>

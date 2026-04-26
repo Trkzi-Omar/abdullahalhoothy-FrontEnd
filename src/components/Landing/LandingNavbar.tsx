@@ -73,7 +73,7 @@ const LandingNavbar = ({ lang, setLang, t }: LandingNavbarProps) => {
         </div>
       </div>
       {mobileMenuOpen && (
-        <div className="lg:hidden absolute top-full left-0 right-0 bg-brand-card border-b border-white/10 p-6 flex flex-col gap-4 shadow-2xl">
+        <div className="lg:hidden absolute top-full start-0 end-0 bg-brand-card border-b border-white/10 p-6 flex flex-col gap-4 shadow-2xl">
           <a
             href="#features"
             onClick={() => setMobileMenuOpen(false)}

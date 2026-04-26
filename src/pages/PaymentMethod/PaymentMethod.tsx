@@ -252,7 +252,7 @@ const PaymentMethodForm: React.FC = () => {
           {!userPhone && (
             <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">{t("a-verified-phone-number-is-required-to-add-a-payment-method")}<button
                 onClick={() => navigate('/profile')}
-                className="ml-1 text-primary underline hover:no-underline"
+                className="ms-1 text-primary underline hover:no-underline"
               >{t("add-phone-number")}</button>
             </div>
           )}
@@ -287,7 +287,7 @@ const PaymentMethodForm: React.FC = () => {
                   <img
                     src={cardBrands[cardBrand] || '/placeholder.svg?height=24&width=24'}
                     alt={cardBrand}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                    className="absolute end-3 top-1/2 transform -translate-y-1/2"
                     width={24}
                     height={24}
                   />
@@ -321,14 +321,14 @@ const PaymentMethodForm: React.FC = () => {
               disabled={!stripe || !elements || submitting}
               className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-wait transition duration-200 ease-in-out flex items-center justify-center"
             >
-              {/* <CreditCard className="inline-block mr-2 h-5 w-5" /> */}
+              {/* <CreditCard className="inline-block me-2 h-5 w-5" /> */}
               <svg
                 width="20"
                 height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                className="inline-block mr-2 h-5 w-5"
+                className="inline-block me-2 h-5 w-5"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path

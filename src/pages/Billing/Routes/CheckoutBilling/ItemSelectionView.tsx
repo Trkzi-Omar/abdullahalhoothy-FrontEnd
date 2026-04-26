@@ -65,7 +65,7 @@ function ItemSelectionView({
           />
         </svg>
         <h3 className="text-xl font-semibold text-gray-700 mb-2">{t("no-item-selected")}</h3>
-        <p className="text-sm text-gray-500 max-w-md">{t("select-an-item-from-the-left-panel-to-view-its-description-and-available-data-va")}</p>
+        <p className="text-sm text-gray-500 max-w-md">{t("select-an-item-from-the-side-panel-to-view-details")}</p>
       </div>
     );
   }

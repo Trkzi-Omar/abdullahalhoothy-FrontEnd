@@ -28,11 +28,11 @@ function LayerCustomizationItem({
         className="flex justify-between items-center cursor-pointer"
         style={getHeaderStyle(layer.color)}
       >
-        <div className="flex items-center space-x-3 p-4">
+        <div className="flex items-center gap-3 p-4">
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: layer.color }} />
           <h3 className="font-medium text-gray-900">{layer.name || `Layer ${layer.layerId}`}</h3>
         </div>
-        <div className="pr-4">
+        <div className="pe-4">
           <svg
             className={`w-5 h-5 transform transition-transform duration-200 ${
               isCollapsed ? '' : 'rotate-180'
@@ -98,7 +98,7 @@ function LayerCustomizationItem({
               />
             </div>
 
-            <div className="flex justify-end space-x-3 pt-2">
+            <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => onDiscard(layer.layerId)}
                 disabled={isSaved}

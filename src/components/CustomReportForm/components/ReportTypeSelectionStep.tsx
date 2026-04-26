@@ -48,11 +48,11 @@ const ReportTypeSelectionStep = ({
         <button
           onClick={() => onSelectReportType('location')}
           disabled={disabled}
-          className="group relative bg-white border-2 border-gray-300 rounded-2xl p-8 hover:border-primary/30 hover:shadow-2xl shadow-lg transition-all duration-300 text-left disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:shadow-lg transform hover:-translate-y-1"
+          className="group relative bg-white border-2 border-gray-300 rounded-2xl p-8 hover:border-primary/30 hover:shadow-2xl shadow-lg transition-all duration-300 text-start disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:shadow-lg transform hover:-translate-y-1"
         >
           {/* Popular Badge */}
-          <div className="absolute -top-3 -right-3 bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center">
-            <FaStar className="w-3 h-3 mr-1" />{t("popular")}</div>
+          <div className="absolute -top-3 -end-3 bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center">
+            <FaStar className="w-3 h-3 me-1" />{t("popular")}</div>
 
           {/* Icon */}
           <div className="flex items-center justify-center w-20 h-20 bg-gray-100 rounded-2xl mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md">
@@ -69,7 +69,7 @@ const ReportTypeSelectionStep = ({
           <div className="mt-6">
             <div className="w-full bg-primary text-white font-bold text-center px-6 py-4 rounded-xl group-hover:bg-gem-green transition-all duration-300 shadow-md group-hover:shadow-xl">
               <span className="flex items-center justify-center">{t("evaluate-my-location")}<svg
-                  className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
+                  className="w-5 h-5 ms-2 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1 transition-transform"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -90,7 +90,7 @@ const ReportTypeSelectionStep = ({
         <button
           onClick={() => onSelectReportType('full')}
           disabled={disabled}
-          className="group relative bg-white border-2 border-gray-300 rounded-2xl p-8 hover:border-gem/20 hover:shadow-2xl shadow-lg transition-all duration-300 text-left disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:shadow-lg transform hover:-translate-y-1"
+          className="group relative bg-white border-2 border-gray-300 rounded-2xl p-8 hover:border-gem/20 hover:shadow-2xl shadow-lg transition-all duration-300 text-start disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:shadow-lg transform hover:-translate-y-1"
         >
           {/* Icon */}
           <div className="flex items-center justify-center w-20 h-20 bg-gray-100 rounded-2xl mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-md">
@@ -107,7 +107,7 @@ const ReportTypeSelectionStep = ({
           <div className="mt-6">
             <div className="w-full bg-gem-gradient text-white font-bold text-center px-6 py-4 rounded-xl group-hover:opacity-90 transition-all duration-300 shadow-md group-hover:shadow-xl">
               <span className="flex items-center justify-center">{t("find-best-locations")}<svg
-                  className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
+                  className="w-5 h-5 ms-2 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1 transition-transform"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"

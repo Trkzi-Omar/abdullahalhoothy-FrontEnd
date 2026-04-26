@@ -261,7 +261,7 @@ const SetAttributeStep = ({
   
         <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-4 flex flex-col overflow-hidden max-h-[60vh]">
           <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center flex-shrink-0">
-            <FaHandshake className="w-4 h-4 mr-2 text-primary" />{t("excluded-categories")}</h3>
+            <FaHandshake className="w-4 h-4 me-2 text-primary" />{t("excluded-categories")}</h3>
 
           <input
             type="text"
@@ -297,12 +297,12 @@ const SetAttributeStep = ({
 
           {complementaryError && (
             <div className="text-xs text-red-600 mb-2 px-3 flex items-center">
-              <FaExclamationTriangle className="mr-1" />
+              <FaExclamationTriangle className="me-1" />
               {complementaryError}
             </div>
           )}
 
-          <div className="flex flex-wrap gap-1 max-h-52 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <div className="flex flex-wrap gap-1 max-h-52 overflow-y-auto pe-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             {getOrderedCategories(
               searchComplementary,
               inputCategories,

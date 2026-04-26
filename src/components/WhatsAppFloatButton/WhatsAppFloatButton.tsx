@@ -17,7 +17,7 @@ interface WhatsAppFloatButtonProps {
 const defaultProps: WhatsAppFloatButtonProps = {
   phoneNumber: '966558188632',
   message:t("hello-i-m-interested-in-learning-more-about-s-locator-s-location-intelligence-so"),
-  position: 'fixed lg:bottom-6 lg:right-6',
+  position: 'fixed lg:bottom-6 lg:end-6',
   size: 'w-16 h-16',
   colors: 'bg-[#25D366]',
   className: '',
@@ -40,14 +40,14 @@ function WhatsAppFloatButton(props: WhatsAppFloatButtonProps = defaultProps) {
 
   return (
     <div
-      className={`${position} bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 group`}
+      className={`${position} bottom-4 end-4 sm:bottom-6 sm:end-6 z-50 group`}
       style={{
         paddingBottom: 'env(safe-area-inset-bottom, 0)',
       }}
     >
       <button
         onClick={handleClose}
-        className="absolute -top-1 -right-1 w-7 h-7 bg-red-500 hover:bg-red-600 
+        className="absolute -top-1 -end-1 w-7 h-7 bg-red-500 hover:bg-red-600 
           rounded-full flex items-center justify-center shadow-lg
           transition-all duration-200
           z-10 border-2 border-white"

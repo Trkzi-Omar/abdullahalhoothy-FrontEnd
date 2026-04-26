@@ -284,7 +284,7 @@ const MapMenu: React.FC<MapMenuProps> = ({
               {item.icon && (
                 <span
                   className={clsx(
-                    'mr-3 w-4 h-4 flex items-center justify-center',
+                    'me-3 w-4 h-4 flex items-center justify-center',
                     isEnabled ? 'text-gray-500' : 'text-gray-400'
                   )}
                 >

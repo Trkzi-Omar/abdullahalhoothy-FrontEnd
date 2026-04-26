@@ -79,7 +79,7 @@ const ColorPicker: React.FC<{
         onClick={() => setShowPicker(!showPicker)}
         className="p-2 mx-1 rounded hover:bg-gray-200 transition-colors flex items-center"
       >
-        <span className="mr-1">{format ==="color" ?t("a") :t("bg")}</span>
+        <span className="me-1">{format ==="color" ?t("a") :t("bg")}</span>
         <div
           className="w-4 h-4 border border-gray-300"
           style={{
@@ -89,7 +89,7 @@ const ColorPicker: React.FC<{
       </button>
 
       {showPicker && (
-        <div className="absolute top-full left-0 mt-1 p-2 bg-white shadow-lg rounded-md border border-gray-200 z-20 w-48">
+        <div className="absolute top-full start-0 mt-1 p-2 bg-white shadow-lg rounded-md border border-gray-200 z-20 w-48">
           <div className="text-sm font-medium text-gray-700 mb-2">
             {format ==="color" ?t("text-color") :t("background-color")}:
           </div>
@@ -155,7 +155,7 @@ const FontSizeSelector: React.FC<{
       </button>
 
       {showSelector && (
-        <div className="absolute top-full left-0 mt-1 p-2 bg-white shadow-lg rounded-md border border-gray-200 z-20 w-32">
+        <div className="absolute top-full start-0 mt-1 p-2 bg-white shadow-lg rounded-md border border-gray-200 z-20 w-32">
           <div className="text-sm font-medium text-gray-700 mb-2">{t("font-size-2")}</div>
           <div className="flex flex-col gap-1">
             {fontSizeOptions.map(size => (
@@ -165,7 +165,7 @@ const FontSizeSelector: React.FC<{
                   onChange(size);
                   setShowSelector(false);
                 }}
-                className={`px-2 py-1 text-left rounded hover:bg-gray-100 ${
+                className={`px-2 py-1 text-start rounded hover:bg-gray-100 ${
                   currentValue === size ? 'bg-gray-100 font-medium' : ''
                 }`}
               >
@@ -177,7 +177,7 @@ const FontSizeSelector: React.FC<{
                 onChange('');
                 setShowSelector(false);
               }}
-              className="px-2 py-1 text-left rounded hover:bg-gray-100"
+              className="px-2 py-1 text-start rounded hover:bg-gray-100"
             >{t("default")}</button>
           </div>
         </div>
@@ -501,23 +501,23 @@ const EditorToolbar: React.FC = () => {
           />
 
           {showChartOptions && (
-            <div className="absolute top-full left-0 mt-1 p-2 bg-white shadow-lg rounded-md border border-gray-200 z-10">
+            <div className="absolute top-full start-0 mt-1 p-2 bg-white shadow-lg rounded-md border border-gray-200 z-10">
               <div className="text-sm font-medium text-gray-700 mb-2">{t("select-chart-type")}</div>
               <div className="space-y-1">
                 <button
-                  className="block w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100"
+                  className="block w-full text-start px-3 py-2 text-sm rounded hover:bg-gray-100"
                   onClick={() => insertChart('demographic-chart')}
                 >{t("age-distribution")}</button>
                 <button
-                  className="block w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100"
+                  className="block w-full text-start px-3 py-2 text-sm rounded hover:bg-gray-100"
                   onClick={() => insertChart('population-pyramid')}
                 >{t("population-pyramid")}</button>
                 <button
-                  className="block w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100"
+                  className="block w-full text-start px-3 py-2 text-sm rounded hover:bg-gray-100"
                   onClick={() => insertChart('trend-chart')}
                 >{t("demographic-trends")}</button>
                 <button
-                  className="block w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100"
+                  className="block w-full text-start px-3 py-2 text-sm rounded hover:bg-gray-100"
                   onClick={() => insertChart('demographic-card')}
                 >{t("demographic-info-card")}</button>
               </div>

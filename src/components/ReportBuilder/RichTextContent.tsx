@@ -86,7 +86,7 @@ const RichTextContent: React.FC<RichTextContentProps> = ({ value, className = ''
         return (
           <blockquote
             key={index}
-            className="pl-4 border-l-4 border-gem-dark italic text-gray-700 my-4"
+            className="ps-4 border-s-4 border-gem-dark italic text-gray-700 my-4"
             style={elementStyle}
             {...elementProps}
           >

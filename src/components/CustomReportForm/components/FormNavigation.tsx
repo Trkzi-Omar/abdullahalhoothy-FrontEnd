@@ -86,11 +86,11 @@ const FormNavigation = ({
         aria-disabled={currentStep === 0}
         className="flex items-center px-4 py-2.5 text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100"
       >
-        <FaArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
+        <FaArrowLeft className="w-4 h-4 me-2 rtl:rotate-180" aria-hidden="true" />
         <span>{t("previous")}</span>
       </button>
 
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center gap-3">
         {!isLastStep ? (
           <button
             type="button"
@@ -105,7 +105,7 @@ const FormNavigation = ({
             }`}
           >
             <span>{nextButtonText}</span>
-            <FaArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
+            <FaArrowRight className="w-4 h-4 ms-2 rtl:rotate-180" aria-hidden="true" />
           </button>
         ) : (
           <button
@@ -120,7 +120,7 @@ const FormNavigation = ({
             {isSubmitting ? (
               <>
                 <svg
-                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  className="animate-spin -ms-1 me-2 h-4 w-4 text-white"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -143,7 +143,7 @@ const FormNavigation = ({
               </>
             ) : (
               <>
-                <FaCheck className="w-4 h-4 mr-2" />
+                <FaCheck className="w-4 h-4 me-2" />
                 <span>{t("generate-report")}</span>
               </>
             )}

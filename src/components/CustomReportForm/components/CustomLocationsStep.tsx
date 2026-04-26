@@ -64,7 +64,7 @@ const CustomLocationsStep = ({
             : 'border-gray-300 text-gray-600 hover:border-primary hover:text-primary'
             }`}
         >
-          <FaPlus className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-200" />{t("add-another-location")}</button>
+          <FaPlus className="w-4 h-4 me-2 group-hover:scale-110 transition-transform duration-200" />{t("add-another-location")}</button>
       </div>
       <div className=" flex  gap-4 flex-wrap justify-center">
         {formData.custom_locations.map((location, index) => (
@@ -74,7 +74,7 @@ const CustomLocationsStep = ({
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mr-3">
+                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center me-3">
                   <span className="text-primary font-bold text-sm">{index + 1}</span>
                 </div>
                 <div>
@@ -92,7 +92,7 @@ const CustomLocationsStep = ({
                     : 'bg-red-100 text-red-700 hover:bg-red-200'
                     }`}
                 >
-                  <FaTrash className="w-3 h-3 mr-1" />{t("remove")}</button>
+                  <FaTrash className="w-3 h-3 me-1" />{t("remove")}</button>
               )}
             </div>
 

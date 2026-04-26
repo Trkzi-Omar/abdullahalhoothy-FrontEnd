@@ -166,7 +166,7 @@ const ProfileMain: React.FC = () => {
                 style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
               />
             </div>
-            <span className="text-sm font-semibold text-[#115740] min-w-[45px] text-right">{value}%</span>
+            <span className="text-sm font-semibold text-[#115740] min-w-[45px] text-end">{value}%</span>
           </div>
         );
       }
@@ -184,7 +184,7 @@ const ProfileMain: React.FC = () => {
         return (
           <div className="flex flex-col gap-0.5">
             <span className="font-medium text-gray-700">
-              <FaCalendarAlt size={12} className="inline mr-1.5 opacity-60" />
+              <FaCalendarAlt size={12} className="inline me-1.5 opacity-60" />
               {main}
             </span>
             {relative && <span className="text-xs text-gray-500">{relative}</span>}
@@ -374,9 +374,9 @@ const ProfileMain: React.FC = () => {
         }}
       >
         <div className="bg-gradient-to-br from-white to-[#f8fdf8] p-0 rounded-2xl max-w-[min(600px,90vw)] max-h-[85vh] overflow-hidden relative shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),0_0_0_1px_rgba(17,87,64,0.1)] animate-slide-up">
-          <div className="bg-gradient-to-r from-[#115740] to-[#1a7a5a] px-6 py-5 pr-12 relative">
+          <div className="bg-gradient-to-r from-[#115740] to-[#1a7a5a] px-6 py-5 pe-12 relative">
             <button 
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-white/15 border-none rounded-lg text-base cursor-pointer text-white transition-all duration-200 hover:bg-white/25 hover:scale-105 active:scale-95" 
+              className="absolute top-4 end-4 w-8 h-8 flex items-center justify-center bg-white/15 border-none rounded-lg text-base cursor-pointer text-white transition-all duration-200 hover:bg-white/25 hover:scale-105 active:scale-95" 
               onClick={() => setPopupInfo(null)}
             >
               <FaTimes />
@@ -443,7 +443,7 @@ const ProfileMain: React.FC = () => {
                 </span>
                 {/* Conditionally render the delete icon */}
                 {type.includes("layer") || type.includes("catalog") ? (
-                  <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                  <div className="flex items-center gap-2 flex-shrink-0 ms-2">
                     <div className="h-5 w-px bg-gray-300" />
                     <FaTrash
                       className="cursor-pointer text-[#ff4d4f] hover:text-[#ff7875]"
@@ -491,21 +491,21 @@ const ProfileMain: React.FC = () => {
             onClick={handleLogout}
             className="flex items-center px-4 py-2 bg-[#f44336] text-white border-none rounded cursor-pointer text-base hover:bg-[#d32f2f]"
           >
-            <FaSignOutAlt className="mr-2" />{' '}{t("logout")}</button>
+            <FaSignOutAlt className="me-2" />{' '}{t("logout")}</button>
         </div>
         <div className="bg-white p-5 rounded-lg mb-5">
           <div className="flex items-start mb-2.5">
-            <FaUser className="mr-2.5 text-[#006400]" />
-            <span className="font-bold mr-1.5 min-w-[100px]">{t("username")}</span>
+            <FaUser className="me-2.5 text-[#006400]" />
+            <span className="font-bold me-1.5 min-w-[100px]">{t("username")}</span>
             {profile.username}
           </div>
           <div className="flex items-start mb-2.5">
-            <FaEnvelope className="mr-2.5 text-[#006400]" />
-            <span className="font-bold mr-1.5 min-w-[100px]">{t("email-2")}</span>
+            <FaEnvelope className="me-2.5 text-[#006400]" />
+            <span className="font-bold me-1.5 min-w-[100px]">{t("email-2")}</span>
             {profile.email}
           </div>
           <div className="flex items-start mb-2.5">
-            <span className="font-bold mr-1.5 min-w-[100px]">{t("phone-2")}</span>
+            <span className="font-bold me-1.5 min-w-[100px]">{t("phone-2")}</span>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center flex-1 gap-2 w-full sm:w-auto">
               <input
                 type="tel"
@@ -563,7 +563,7 @@ const ProfileMain: React.FC = () => {
                   );
                 }}
                 disabled={isSavingPhone || phoneInput === (profile.phone || '')}
-                className="sm:ml-2 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
+                className="sm:ms-2 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 {isSavingPhone ?t("saving-2") :t("save")}
               </button>
@@ -595,7 +595,7 @@ const ProfileMain: React.FC = () => {
                     },
                   });
                 }}
-                className="mr-2 h-4 w-4 border-gray-300 rounded focus:ring-green-600 text-green-700"
+                className="me-2 h-4 w-4 border-gray-300 rounded focus:ring-green-600 text-green-700"
               />
               <span className="text-gray-700 font-medium">{t("show-price")}</span>
             </label>

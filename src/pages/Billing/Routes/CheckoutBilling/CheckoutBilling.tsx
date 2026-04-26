@@ -1382,14 +1382,14 @@ function CheckoutBilling({ Name }: { Name: string }) {
               <div className="relative">
                 {/* Search input */}
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute inset-y-0 start-0 ps-3 flex items-center pointer-events-none">
                     <MdSearch className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     type="text"
                     id="reportBusinessTypeSearch"
                     name="reportBusinessTypeSearch"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-10 p-2.5"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 pe-10 p-2.5"
                     placeholder={t("search-for-business-type")}
                     value={businessTypeSearchTerm}
                     onChange={e => {
@@ -1409,7 +1409,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                         dispatch({ type: 'setReportPotentialBusinessType', payload: '' });
                         setBusinessTypeSearchTerm('');
                       }}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      className="absolute inset-y-0 end-0 pe-3 flex items-center"
                     >
                       <MdClose className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                     </button>
@@ -1429,9 +1429,9 @@ function CheckoutBilling({ Name }: { Name: string }) {
                             setBusinessTypeSearchTerm('');
                             setIsBusinessTypeDropdownOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-2 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors duration-150 ${
+                          className={`w-full text-start px-4 py-2 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors duration-150 ${
                             checkout.report_potential_business_type === businessType
-                              ? 'bg-[#115740]/10 border-l-4 border-[#115740] text-[#115740] font-medium'
+                              ? 'bg-[#115740]/10 border-s-4 border-[#115740] text-[#115740] font-medium'
                               : 'text-gray-700'
                           }`}
                         >
@@ -1490,7 +1490,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                       key={tier.id}
                       className="relative border rounded-xl shadow-md w-full bg-gray-100/60 overflow-hidden border-gray-300 cursor-not-allowed"
                     >
-                      <div className="absolute top-3 right-3 z-10">
+                      <div className="absolute top-3 end-3 z-10">
                         <span className="text-xs bg-purple-500 text-white px-3 py-1.5 rounded-full font-semibold shadow-sm">{t("coming-soon")}</span>
                       </div>
                       <div className="p-3 opacity-50">
@@ -1517,7 +1517,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                     className={`relative border rounded-xl shadow-md hover:shadow-lg transition-all w-full bg-white overflow-hidden ${borderClass}`}
                   >
                     {tier.isMostPopular && (
-                      <div className="absolute top-0 right-0 bg-purple-600 text-white px-4 py-1.5 text-xs font-semibold rounded-bl-lg z-10">{t("most-popular-2")}<div className="absolute -right-2 top-0 w-0 h-0 border-l-[10px] border-l-transparent border-t-[10px] border-t-green-500"></div>
+                      <div className="absolute top-0 end-0 bg-purple-600 text-white px-4 py-1.5 text-xs font-semibold rounded-es-lg z-10">{t("most-popular-2")}<div className="absolute -end-2 top-0 w-0 h-0 border-s-[10px] border-s-transparent border-t-[10px] border-t-green-500"></div>
                       </div>
                     )}
                     <summary className="cursor-pointer p-3 flex flex-col items-start font-semibold list-none [&::-webkit-details-marker]:hidden">
@@ -1618,7 +1618,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                             <span className="text-sm text-gray-700">{t("poi-point-of-interest")}</span>
                           </div>
                           {(tier.datasetLimit !== undefined || tier.additionalDatasetCost !== undefined) && (
-                            <div className="text-xs text-gray-500 ml-7 mt-0.5">
+                            <div className="text-xs text-gray-500 ms-7 mt-0.5">
                               {tier.datasetLimit !== undefined && (
                                 <>{t("includes-up-to")}{' '}{tier.datasetLimit}{' '}{t("dataset-2")}{tier.datasetLimit !== 1 ?t("s") : ''}. </>
                               )}
@@ -1714,7 +1714,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 />
               </div>
             </div>
-            <div className="sticky bottom-0 w-full bg-white flex justify-center items-center space-x-4 border-t pt-2 lg:h-[10%] flex-shrink-0">
+            <div className="sticky bottom-0 w-full bg-white flex justify-center items-center gap-4 border-t pt-2 lg:h-[10%] flex-shrink-0">
               {/* <button
                 type="button"
                 className={`w-48 lg:h-16 h-12 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg transition-all cursor-pointer ${isCalculatingCost || !canCalculateCost
@@ -1732,7 +1732,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
       </div>
 
       {/* Item Selection View panel */}
-      <div className="w-full lg:w-2/3 flex flex-col justify-center items-center border-l-0 lg:border-l border-gray-200">
+      <div className="w-full lg:w-2/3 flex flex-col justify-center items-center border-s-0 lg:border-s border-gray-200">
         <ItemSelectionView
           selectedItem={selectedItem}
           isLoading={isCalculatingPrices && !!selectedItemKey}
@@ -1784,7 +1784,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
 
       {/* View Checkout Button - Fixed at bottom center - Show only if user has selected items */}
       {(checkout.datasets.length > 0 || checkout.intelligences.length > 0 || checkout.report) && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-20">
+        <div className="fixed bottom-6 start-1/2 transform -translate-x-1/2 rtl:translate-x-1/2 z-20">
           <button
             type="button"
             onClick={() => setShowCheckoutModal(true)}

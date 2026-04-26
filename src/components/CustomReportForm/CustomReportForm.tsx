@@ -1066,7 +1066,7 @@ const CustomReportForm = () => {
           return (
             <div className="flex flex-col items-center justify-center py-12 px-4">
               <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-4 flex items-center shadow-sm border border-red-100">
-                <FaExclamationTriangle className="mr-3 h-5 w-5" />
+                <FaExclamationTriangle className="me-3 h-5 w-5" />
                 <span className="font-medium">{t("failed-to-load-segment-report")}</span>
               </div>
               <button
@@ -1248,7 +1248,7 @@ const CustomReportForm = () => {
             <p className="text-gray-600 mb-4">{t("setting-up-the-form-for-your")}{' '}{businessType}{' '}{t("location-analysis")}</p>
 
             {/* Loading dots animation */}
-            <div className="flex justify-center space-x-1">
+            <div className="flex justify-center gap-1">
               <div
                 className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
                 style={{ animationDelay: '0ms' }}
@@ -1323,7 +1323,7 @@ const CustomReportForm = () => {
             <p className="text-gray-600 mb-4">{t("finalizing-your")}{' '}{businessType}{' '}{t("report-setup")}</p>
 
             {/* Loading dots animation */}
-            <div className="flex justify-center space-x-1">
+            <div className="flex justify-center gap-1">
               <div
                 className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
                 style={{ animationDelay: '0ms' }}
@@ -1356,7 +1356,7 @@ const CustomReportForm = () => {
             onClick={() => navigate(-1)}
             className="flex items-center px-2 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-200"
           >
-            <FaArrowLeft className="w-3 h-3 mr-1" />
+            <FaArrowLeft className="w-3 h-3 me-1 rtl:rotate-180" />
             <span>{t("back")}</span>
           </button>
           {!isLastStep && (
@@ -1426,7 +1426,7 @@ const CustomReportForm = () => {
                       </svg>
                     </div>
                   </div>
-                  <div className="ml-3 flex-1">
+                  <div className="ms-3 flex-1">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-gray-900">{t("generating-your")}{' '}{businessType}{' '}{t("report")}</p>
                       <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full">{t("3-15-min")}</span>
@@ -1461,7 +1461,7 @@ const CustomReportForm = () => {
                   <div className="flex-shrink-0">
                     <FaExclamationTriangle className="h-6 w-6 text-red-400" />
                   </div>
-                  <div className="ml-3 flex-1">
+                  <div className="ms-3 flex-1">
                     {submitError.includes('|') ? (
                       <>
                         <h3 className="text-sm font-semibold text-red-800 mb-1">
@@ -1490,7 +1490,7 @@ const CustomReportForm = () => {
                       {isCalculatingCost ? (
                         <div className="flex items-center text-blue-700">
                           <svg
-                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600"
+                            className="animate-spin -ms-1 me-2 h-4 w-4 text-blue-600"
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"

@@ -237,7 +237,7 @@ function DataContainer() {
     <div className={`lg:p-6 h-full ${selectedContainerType === 'Home' ? 'px-2 py-1' : 'p-2'}`}>
       {/* when add layer or category */}
       {isLoading && (
-        <div className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-30 z-50">
+        <div className="fixed top-0 start-0 w-screen h-screen bg-black bg-opacity-30 z-50">
           <Spinner className="size-32 border-white border-4" />
         </div>
       )}

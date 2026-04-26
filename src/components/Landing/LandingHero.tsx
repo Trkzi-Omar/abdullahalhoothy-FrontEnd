@@ -94,17 +94,17 @@ const LandingHero = ({ t: copy }: LandingHeroProps) => {
     <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden min-h-screen flex items-center">
       {/* Ambient glow effects */}
       <div
-        className="absolute w-[500px] h-[500px] bg-brand-purple/20 top-[-10%] left-[-10%] blur-[120px] rounded-full opacity-40"
+        className="absolute w-[500px] h-[500px] bg-brand-purple/20 top-[-10%] start-[-10%] blur-[120px] rounded-full opacity-40"
         style={{ filter: 'blur(100px)' }}
       ></div>
       <div
-        className="absolute w-[600px] h-[600px] bg-brand-green/10 bottom-[-10%] right-[-10%] blur-[120px] rounded-full opacity-40"
+        className="absolute w-[600px] h-[600px] bg-brand-green/10 bottom-[-10%] end-[-10%] blur-[120px] rounded-full opacity-40"
         style={{ filter: 'blur(100px)' }}
       ></div>
 
       <div className="container mx-auto px-6 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          <div className="text-center lg:text-start lg:rtl:text-right animate-fade-in-up">
+          <div className="text-center lg:text-start lg:rtl:text-end animate-fade-in-up">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 text-xs font-medium mb-6">
               <MdInfo size={14} className="text-slate-400" /> {copy.hero.alert}
             </div>
@@ -170,7 +170,7 @@ const LandingHero = ({ t: copy }: LandingHeroProps) => {
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center group-hover/play:bg-red-700 transition-colors shadow-lg">
-                      <svg viewBox="0 0 24 24" className="w-8 h-8 text-white fill-current ml-1">
+                      <svg viewBox="0 0 24 24" className="w-8 h-8 text-white fill-current ms-1">
                         <path d="M8 5v14l11-7z"/>
                       </svg>
                     </div>
@@ -184,8 +184,8 @@ const LandingHero = ({ t: copy }: LandingHeroProps) => {
                 />
               )}
             </div>
-            <div className="absolute -z-10 top-[-20px] right-[-20px] w-24 h-24 bg-brand-green/20 rounded-full blur-2xl"></div>
-            <div className="absolute -z-10 bottom-[-20px] left-[-20px] w-32 h-32 bg-brand-purple/20 rounded-full blur-2xl"></div>
+            <div className="absolute -z-10 top-[-20px] end-[-20px] w-24 h-24 bg-brand-green/20 rounded-full blur-2xl"></div>
+            <div className="absolute -z-10 bottom-[-20px] start-[-20px] w-32 h-32 bg-brand-purple/20 rounded-full blur-2xl"></div>
           </div>
         </div>
       </div>

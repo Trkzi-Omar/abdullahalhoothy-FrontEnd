@@ -590,7 +590,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
           }
         >
           <button
-            className="bg-transparent border-none text-[#ff4d4f] text-base cursor-pointer absolute top-[2px] right-[2px] rounded-full h-5 w-5 flex justify-center items-center transition-colors duration-300 hover:bg-[#ff4d4f] hover:text-white"
+            className="bg-transparent border-none text-[#ff4d4f] text-base cursor-pointer absolute top-[2px] end-[2px] rounded-full h-5 w-5 flex justify-center items-center transition-colors duration-300 hover:bg-[#ff4d4f] hover:text-white"
             onClick={handleRemoveLayer}
           >
             <FaTrash />

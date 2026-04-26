@@ -50,7 +50,7 @@ const SideBar = () => {
           <div>
             <MdMap className="w-6 h-6 transition-all fill-white" />
           </div>
-          {!isCollapsed && <span className="ml-2 text-white truncate">{t("map")}</span>}
+          {!isCollapsed && <span className="ms-2 text-white truncate">{t("map")}</span>}
         </div>
 
         {/* Tabluar View Button */}
@@ -58,7 +58,7 @@ const SideBar = () => {
           <div>
             <MdTableChart className="w-6 h-6 transition-all fill-white" />
           </div>
-          {!isCollapsed && <span className="ml-2 text-white truncate">{t("tabular-view")}</span>}
+          {!isCollapsed && <span className="ms-2 text-white truncate">{t("tabular-view")}</span>}
         </Link>
 
         {/* Organization View Button */}
@@ -66,7 +66,7 @@ const SideBar = () => {
           <div>
             <FaNetworkWired className="w-6 h-6 transition-all fill-white" />
           </div>
-          {!isCollapsed && <span className="ml-2 text-white">{t("organization")}</span>}
+          {!isCollapsed && <span className="ms-2 text-white">{t("organization")}</span>}
         </Link>
 
         {/* Billing View Button */}
@@ -74,7 +74,7 @@ const SideBar = () => {
           <div>
             <HiCurrencyDollar className="w-6 h-6 transition-all fill-white" />
           </div>
-          {!isCollapsed && <span className="ml-2 text-white">{t("checkout")}</span>}
+          {!isCollapsed && <span className="ms-2 text-white">{t("checkout")}</span>}
         </Link>
 
         {/* Bottom Icons */}
@@ -83,14 +83,14 @@ const SideBar = () => {
             <div>
               <MdPerson className="w-6 h-6 transition-all fill-white" />
             </div>
-            {!isCollapsed && <span className="ml-2 text-white truncate">{t("account")}</span>}
+            {!isCollapsed && <span className="ms-2 text-white truncate">{t("account")}</span>}
           </Link>
 
           <a className="sidebar-icon" href="https://s-locator.com/" title={t("about-us")} target="_blank">
             <div>
               <MdInfo className="w-6 h-6 transition-all fill-white" />
             </div>
-            {!isCollapsed && <span className="ml-2 text-white truncate">{t("about-us")}</span>}
+            {!isCollapsed && <span className="ms-2 text-white truncate">{t("about-us")}</span>}
           </a>
 
           {shouldShowLogout ? (
@@ -106,7 +106,7 @@ const SideBar = () => {
               <div>
                 <MdLogout className="w-6 h-6 transition-all fill-white" />
               </div>
-              {!isCollapsed && <span className="ml-2 text-white truncate">{t("logout")}</span>}
+              {!isCollapsed && <span className="ms-2 text-white truncate">{t("logout")}</span>}
             </div>
           ) : null}
         </div>
@@ -125,7 +125,7 @@ export const SideBarContent = () => {
         <div>
           <MdMap className="w-6 h-6 transition-all " />
         </div>
-        <span className="ml-2 truncate">{t("map")}</span>
+        <span className="ms-2 truncate">{t("map")}</span>
       </div>
 
       {/* Tabluar View Button */}
@@ -133,7 +133,7 @@ export const SideBarContent = () => {
         <div>
           <MdTableChart className="w-6 h-6 transition-all " />
         </div>
-        <span className="ml-2 truncate">{t("tabular-view")}</span>
+        <span className="ms-2 truncate">{t("tabular-view")}</span>
       </Link>
 
       {/* Organization View Button */}
@@ -141,7 +141,7 @@ export const SideBarContent = () => {
         <div>
           <FaNetworkWired className="w-6 h-6 transition-all " />
         </div>
-        <span className="ml-2 ">{t("organization")}</span>{' '}
+        <span className="ms-2 ">{t("organization")}</span>{' '}
       </Link>
 
       {/* Billing View Button */}
@@ -149,7 +149,7 @@ export const SideBarContent = () => {
         <div>
           <HiCurrencyDollar className="w-6 h-6 transition-all " />
         </div>
-        <span className="ml-2 ">{t("billing-and-cost-management")}</span>
+        <span className="ms-2 ">{t("billing-and-cost-management")}</span>
       </Link>
 
       {/* Bottom Icons */}
@@ -158,14 +158,14 @@ export const SideBarContent = () => {
           <div>
             <MdPerson className="w-6 h-6 transition-all " />
           </div>
-          <span className="ml-2 truncate">{t("account")}</span>
+          <span className="ms-2 truncate">{t("account")}</span>
         </Link>
 
         <a className="sidebar-icon" href="https://s-locator.com/" title={t("about-us")}>
           <div>
             <MdInfo className="w-6 h-6 transition-all " />
           </div>
-          <span className="ml-2 truncate">{t("about-us")}</span>
+          <span className="ms-2 truncate">{t("about-us")}</span>
         </a>
 
         {/* <div
@@ -180,7 +180,7 @@ export const SideBarContent = () => {
             <MdLogout className="w-6 h-6 transition-all fill-white" />
           </div>
           {!isColabsed && (
-            <span className="ml-2 text-white truncate">
+            <span className="ms-2 text-white truncate">
               {!isAuthenticated ? <>Login</> : <>Logout</>}
             </span>
           )}

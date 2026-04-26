@@ -117,9 +117,9 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
           } ${showLoaderTopup ? styles.disabledOption : ''}`}
           onClick={e => handleOptionClick(name, hex, e)}
         >
-          {sidebarMode !=="catalog" && <span className="mr-2.5">{name}</span>}
+          {sidebarMode !=="catalog" && <span className="me-2.5">{name}</span>}
           <span
-            className={`w-[14px] h-[14px] rounded-full absolute left-[80px]  ${
+            className={`w-[14px] h-[14px] rounded-full absolute start-[80px]  ${
               sidebarMode === 'catalog' ? 'w-[14px] h-[14px] static' : ''
             }`}
             style={{ backgroundColor: hex }}
@@ -154,9 +154,9 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
       </div>
       {isOpen && (
         <div
-          className={`absolute top-full left-0 right-0 border rounded z-[1] ${
+          className={`absolute top-full start-0 end-0 border rounded z-[1] ${
             sidebarMode === 'catalog'
-              ? 'bg-transparent border-none max-w-[35px] left-[5px] top-[30px] flex flex-col justify-center py-[4px]'
+              ? 'bg-transparent border-none max-w-[35px] start-[5px] top-[30px] flex flex-col justify-center py-[4px]'
               : 'bg-white border-[#ccc]'
           }`}
         >

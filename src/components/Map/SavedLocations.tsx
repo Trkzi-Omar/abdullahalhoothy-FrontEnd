@@ -811,7 +811,7 @@ const SavedLocations: React.FC = () => {
       )}
 
       {isMeasuring && (
-        <div className="absolute bottom-4 right-4 p-2 rounded z-10">
+        <div className="absolute bottom-4 end-4 p-2 rounded z-10">
           <button
             className="shadow px-3 py-1 bg-rose-700 text-white rounded hover:bg-rose-600 text-sm"
             onClick={exitMeasureMode}

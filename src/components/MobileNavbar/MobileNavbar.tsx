@@ -69,7 +69,7 @@ export default function MobileNavbar() {
                 />
               </svg>
               {cartItemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-1 -end-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                   {cartItemCount}
                 </span>
               )}
@@ -108,7 +108,7 @@ export default function MobileNavbar() {
           ></div>
         )}
         <div
-          className={`fixed left-0 top-0 bottom-2 z-30 outline-none h-full bg-primary w-[310px] flex transition-transform duration-300 ${
+          className={`fixed start-0 top-0 bottom-2 z-30 outline-none h-full bg-primary w-[310px] flex transition-transform duration-300 ${
             isSidebarOpen ? 'translate-x-0' : 'translate-x-[-100%]'
           }`}
         >

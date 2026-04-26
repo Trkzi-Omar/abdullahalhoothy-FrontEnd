@@ -45,7 +45,7 @@ const BenchmarkControl = () => {
       >{t("set-benchmark")}</button>
       {isBenchmarkControlOpen && (
         <div className={`
-          absolute left-0 top-full mt-2
+          absolute start-0 top-full mt-2
           ${isMobile ? 'w-[calc(100vw-2rem)] max-w-[16rem]' : 'w-[430px] '} 
           flex flex-col rounded-md shadow-lg bg-white z-[200]
           ${isMobile ? 'p-3 gap-2  ' : 'p-4 gap-4'}

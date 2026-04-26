@@ -139,14 +139,14 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
       <div className="bg-white mx-auto font-sans">
         <div className="flex justify-between items-center mb-4">
           <div></div>
-          <div className="flex space-x-1">
+          <div className="flex gap-1">
             <CloseButton polygon={polygon} />
           </div>
         </div>
         <table className="w-full text-xs border-collapse">
           <thead>
             <tr>
-              <th className="text-left font-normal text-blue-600 w-1/4" colSpan={2}>
+              <th className="text-start font-normal text-blue-600 w-1/4" colSpan={2}>
                 <img
                   src="/slocator.png"
                   alt={t("logo")}
@@ -230,15 +230,15 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
                                   : 'w-[64%]'
                               }`}
                             >
-                              <div className="text-right py-1 px-1.5 w-1/4">{data.count}</div>
-                              <div className="text-right py-1 px-1.5 w-1/4">
+                              <div className="text-end py-1 px-1.5 w-1/4">{data.count}</div>
+                              <div className="text-end py-1 px-1.5 w-1/4">
                                 {formatLargeNumber(data.sum.toFixed(2))}
                               </div>
-                              <div className="text-right py-1 px-1.5 w-1/4">{data.percentage}%</div>
-                              <div className="text-right py-1 px-2 w-1/4">
+                              <div className="text-end py-1 px-1.5 w-1/4">{data.percentage}%</div>
+                              <div className="text-end py-1 px-2 w-1/4">
                                 {formatLargeNumber(data.avg)}
                               </div>
-                              <div className="text-right min-w-[84px] w-auto h-full">
+                              <div className="text-end min-w-[84px] w-auto h-full">
                                 {benchmark?.value === '' && (
                                   <button
                                     className="text-nowrap h-full"
@@ -299,7 +299,7 @@ const MobileStatisticsPopup = ({ polygon }) => {
 
   return (
     <div
-      className="fixed top-1/2 -translate-y-1/2 mx-4 my-2 left-0 right-0 bg-white shadow-lg rounded-lg p-4 z-50 overflow-y-auto text-sm"
+      className="fixed top-1/2 -translate-y-1/2 mx-4 my-2 start-0 end-0 bg-white shadow-lg rounded-lg p-4 z-50 overflow-y-auto text-sm"
       style={{
         height: '80vh',
       }}

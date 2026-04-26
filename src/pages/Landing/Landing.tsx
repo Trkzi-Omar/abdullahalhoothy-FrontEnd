@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import i18next from '../../i18n';
 import { getLandingTranslations } from './translations';
 import LandingNavbar from '../../components/Landing/LandingNavbar';
@@ -29,11 +29,6 @@ const Landing = () => {
     setLangState(newLang);
     localStorage.setItem(LANG_STORAGE_KEY, newLang);
   }, []);
-  
-  useEffect(() => {
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-  }, [lang]);
-
   const copy = getLandingTranslations(lang);
 
   return (

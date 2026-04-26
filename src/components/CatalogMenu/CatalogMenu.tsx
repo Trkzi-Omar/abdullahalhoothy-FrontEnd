@@ -172,7 +172,7 @@ function CatalogMenu() {
   }
 
   return (
-    <div className="flex flex-col justify-between h-full w-full pt-3 lg:pr-1.5">
+    <div className="flex flex-col justify-between h-full w-full pt-3 lg:pe-1.5">
       <div className={`flex flex-col justify-start my-3 flex-1 min-h-0`}>
         <CaseStudyToggle />
         <div className="flex justify-between items-center mx-8 my-2">
@@ -205,14 +205,14 @@ function CatalogMenu() {
               beforeIcon={<FaWandMagicSparkles />}
               afterIcon={<></>}
             />
-            <Chat topic={topics.RECOLOR} position="fixed bottom-16 lg:bottom-auto left-[2.5vw] lg:left-[27.5rem] z-50" />
+            <Chat topic={topics.RECOLOR} position="fixed bottom-16 lg:bottom-auto start-[2.5vw] lg:start-[27.5rem] z-50" />
           </div>
         )}
 
         {showRestorePrompt && (
           <div className="ms-8 me-8 m-auto border-solid rounded border-2 border-[#115740] p-2 mt-5 ">
             <p className="text-lg text-center font-semibold flex pb-3">{t("you-have-unsaved-data-would-you-like-to-restore-it")}</p>
-            <div className="flex w-full space-x-2">
+            <div className="flex w-full gap-2">
               <button
                 onClick={() => {
                   if (geoPoints.length > 0) {
@@ -244,7 +244,7 @@ function CatalogMenu() {
         </div>
       </div>
       <div className="w-full flex-col flex px-2 py-2 select-none border-t lg:mb-0 mb-14">
-        <div className="flex w-full space-x-2">
+        <div className="flex w-full gap-2">
           <button
             disabled={!(safeGeoPoints.length > 0)}
             onClick={handleDiscardClick}

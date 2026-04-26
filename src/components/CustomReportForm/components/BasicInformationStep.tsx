@@ -155,7 +155,7 @@ const BasicInformationStep = ({
         <div className="space-y-3">
           <label htmlFor="country_name" className="block text-sm font-semibold text-gray-700">
             <span className="flex items-center">
-              <FaGlobe className="w-4 h-4 mr-2 text-primary" />{t("country")}</span>
+              <FaGlobe className="w-4 h-4 me-2 text-primary" />{t("country")}</span>
           </label>
           <input
             type="text"
@@ -170,7 +170,7 @@ const BasicInformationStep = ({
         <div className="space-y-3">
           <label htmlFor="city_name" className="block text-sm font-semibold text-gray-700">
             <span className="flex items-center">
-              <FaMapMarkerAlt className="w-4 h-4 mr-2 text-primary" />{t("city")}<span className="text-red-500 ml-1">*</span>
+              <FaMapMarkerAlt className="w-4 h-4 me-2 text-primary" />{t("city")}<span className="text-red-500 ms-1">*</span>
             </span>
           </label>
           <select
@@ -194,7 +194,7 @@ const BasicInformationStep = ({
           </select>
           {errors.city_name && (
             <p className="mt-2 text-sm text-red-600 flex items-center">
-              <FaExclamationTriangle className="w-4 h-4 mr-1" />
+              <FaExclamationTriangle className="w-4 h-4 me-1" />
               {errors.city_name}
             </p>
           )}
@@ -205,12 +205,12 @@ const BasicInformationStep = ({
       <div className="space-y-3">
         <label htmlFor="Type" className="block text-sm font-semibold text-gray-700">
           <span className="flex items-center">
-            <FaBuilding className="w-4 h-4 mr-2 text-primary" />{t("what-kind-of-business-are-you-looking-to-expand")}</span>
+            <FaBuilding className="w-4 h-4 me-2 text-primary" />{t("what-kind-of-business-are-you-looking-to-expand")}</span>
         </label>
 
         <div className="space-y-3">
           <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <FaSearch className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
               id="Type"
@@ -232,7 +232,7 @@ const BasicInformationStep = ({
               }}
               onKeyDown={handleCategorySearchKeyDown}
               disabled={disabled}
-              className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
+              className={`w-full ps-10 pe-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
                 disabled
                   ? 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60'
                   : errors.Type
@@ -244,7 +244,7 @@ const BasicInformationStep = ({
 
           {categoryError && (
             <p className="text-sm text-red-600 flex items-center">
-              <FaExclamationTriangle className="w-4 h-4 mr-1" />
+              <FaExclamationTriangle className="w-4 h-4 me-1" />
               {categoryError}
             </p>
           )}
@@ -259,7 +259,7 @@ const BasicInformationStep = ({
                   disabled={disabled}
                   className="w-full flex items-center justify-center px-4 py-3 bg-primary/10 text-primary border border-primary/20 rounded-xl hover:bg-primary/15 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <FaPlus className="w-3.5 h-3.5 mr-2" />{t("add-2")}{normalizedSearchTerm}"
+                  <FaPlus className="w-3.5 h-3.5 me-2" />{t("add-2")}{normalizedSearchTerm}"
                 </button>
               )}
 
@@ -273,9 +273,9 @@ const BasicInformationStep = ({
                         onMouseDown={event => event.preventDefault()}
                         onClick={() => applyCategoryValue(category)}
                         disabled={disabled}
-                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors duration-150 ${
+                        className={`w-full text-start px-4 py-3 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 transition-colors duration-150 ${
                           formData.Type.toLowerCase() === category.toLowerCase()
-                            ? 'bg-primary/10 border-l-4 border-primary text-primary font-medium'
+                            ? 'bg-primary/10 border-s-4 border-primary text-primary font-medium'
                             : 'text-gray-700'
                         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
@@ -294,7 +294,7 @@ const BasicInformationStep = ({
 
         {errors.Type && !categoryError && (
           <p className="mt-2 text-sm text-red-600 flex items-center">
-            <FaExclamationTriangle className="w-4 h-4 mr-1" />
+            <FaExclamationTriangle className="w-4 h-4 me-1" />
             {errors.Type}
           </p>
         )}
@@ -326,7 +326,7 @@ const BasicInformationStep = ({
               >
                 <span
                   className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${
-                    isAdvancedMode ? 'translate-x-6' : 'translate-x-1'
+                    isAdvancedMode ? 'translate-x-6 rtl:-translate-x-6' : 'translate-x-1 rtl:-translate-x-1'
                   }`}
                 />
               </button>

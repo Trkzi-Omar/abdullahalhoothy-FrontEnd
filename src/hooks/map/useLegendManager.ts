@@ -15,7 +15,7 @@ export function useLegendManager() {
     if (!legendRef.current) {
       legendRef.current = document.createElement('div');
       legendRef.current.className =
-        'absolute bottom-[10px] right-[10px] z-10 bg-white border shadow min-w-[200px] rounded-md overflow-y-auto max-h-[calc(100vh-200px)]';
+        'absolute bottom-[10px] end-[10px] z-10 bg-white border shadow min-w-[200px] rounded-md overflow-y-auto max-h-[calc(100vh-200px)]';
     }
   }, [shouldInitializeFeatures]);
 

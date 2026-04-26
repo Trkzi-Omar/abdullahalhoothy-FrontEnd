@@ -260,7 +260,7 @@ export default function BasedOnLayerDropdown({
             id="enableSecondFilter"
             checked={enableSecondSentence}
             onChange={handleSecondSentenceToggle}
-            className="mr-2"
+            className="me-2"
           />
           <label htmlFor="enableSecondFilter" className="text-sm text-gray-700">{t("add-additional-filter-condition")}</label>
         </div>
@@ -399,7 +399,7 @@ export default function BasedOnLayerDropdown({
             id="enableSecondRecolor"
             checked={enableSecondSentence}
             onChange={handleSecondSentenceToggle}
-            className="mr-2"
+            className="me-2"
           />
           <label htmlFor="enableSecondRecolor" className="text-sm text-gray-700">{t("add-additional-recolor-condition")}</label>
         </div>
@@ -465,7 +465,7 @@ export default function BasedOnLayerDropdown({
                             {name}
                             <button
                               onClick={() => handleRemoveName(index)}
-                              className="ml-2 text-red-500 font-bold text-xs shadow-sm p-1"
+                              className="ms-2 text-red-500 font-bold text-xs shadow-sm p-1"
                             >
                               ✕
                             </button>
@@ -506,7 +506,7 @@ export default function BasedOnLayerDropdown({
                 onClick={() => setIsOpen(!isOpen)}
               />
               {isOpen && (
-                <div className="absolute top-10 left-0 bg-white p-2 border border-gray-300 shadow-lg rounded-md z-50">
+                <div className="absolute top-10 start-0 bg-white p-2 border border-gray-300 shadow-lg rounded-md z-50">
                   <HexColorPicker color={selectedColor} onChange={handleColorChange} />
                 </div>
               )}

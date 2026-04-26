@@ -238,7 +238,7 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
               <img
                 src={cardBrands[cardBrand] || '/card-brands/credit-card.svg'}
                 alt={cardBrand}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                className="absolute end-3 top-1/2 transform -translate-y-1/2"
                 width={24}
                 height={24}
               />

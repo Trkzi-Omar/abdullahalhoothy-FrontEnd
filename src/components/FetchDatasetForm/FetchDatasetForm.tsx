@@ -526,7 +526,7 @@ const FetchDatasetForm = () => {
                 beforeIcon={<FaWandMagicSparkles />}
                 afterIcon={<></>}
               />
-              <Chat topic={topics.DATASET} position="fixed bottom-16 lg:bottom-auto left-[2.5vw] lg:left-[27.5rem] z-50" />
+              <Chat topic={topics.DATASET} position="fixed bottom-16 lg:bottom-auto start-[2.5vw] lg:start-[27.5rem] z-50" />
             </div>
           </div>
           <div>
@@ -672,7 +672,7 @@ const FetchDatasetForm = () => {
         </div>
       </div>
       <div className="flex-col flex  px-2 py-2 select-none border-t lg:mb-0 mb-14 relative">
-        <div className="flex space-x-2">
+        <div className="flex gap-2">
           <button
             onClick={e => {
               onButtonClick('sample', e);
@@ -707,7 +707,7 @@ const FetchDatasetForm = () => {
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 bg-gray-100  border-b border-gray-300">
               <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                <span className="mr-2">⚠️</span>{' '}{t("warning")}</h3>
+                <span className="me-2">⚠️</span>{' '}{t("warning")}</h3>
               <button
                 onClick={() => setShowErrorMessage(false)}
                 className="text-gray-800 hover:text-gray-600 focus:outline-none"

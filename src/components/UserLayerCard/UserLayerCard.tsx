@@ -23,10 +23,10 @@ function UserLayerCard(props: UserLayerCardProps) {
     <div className="relative transition-all">
       {/* Progress + Percentage */}
       {props.progress && props.progress > 0 && (
-        <div className="absolute top-0 left-0 z-[1] w-full p-2 flex items-center gap-2 bg-white/70">
+        <div className="absolute top-0 start-0 z-[1] w-full p-2 flex items-center gap-2 bg-white/70">
           <Progress value={props.progress} className="w-full" />
           {props.progress < 100 ? (
-            <p className="text-sm text-gray-600 min-w-[40px] text-right">{props.progress}%</p>
+            <p className="text-sm text-gray-600 min-w-[40px] text-end">{props.progress}%</p>
           ) : (
             <FaCheckCircle className="text-green-500" />
           )}

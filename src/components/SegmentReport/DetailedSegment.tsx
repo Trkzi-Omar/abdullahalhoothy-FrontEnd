@@ -90,7 +90,7 @@ function DetailedSegment({
             <div className="flex border-b-2 border-gray-100">
               <button
                 onClick={() => setActiveTab('who_they_are')}
-                className={`flex-1 relative font-semibold text-sm py-4 px-4 border-r-[1px] border-gray-300 transition-all duration-200 ${activeTab === 'who_they_are'
+                className={`flex-1 relative font-semibold text-sm py-4 px-4 border-e-[1px] border-gray-300 transition-all duration-200 ${activeTab === 'who_they_are'
                     ? 'text-[#582c83] bg-[#e3dbea]'
                     : 'text-gray-600 hover:text-[#582c83] hover:bg-gray-50'
                   }`}
@@ -98,21 +98,21 @@ function DetailedSegment({
               >
                 <span className="block">{t("who-they-are")}</span>
                 <div
-                  className={`absolute bottom-0 left-0 right-0 h-1 bg-[#582c83] transition-transform duration-300 ${activeTab === 'who_they_are' ? 'scale-100' : 'scale-0'
+                  className={`absolute bottom-0 start-0 end-0 h-1 bg-[#582c83] transition-transform duration-300 ${activeTab === 'who_they_are' ? 'scale-100' : 'scale-0'
                     }`}
                 ></div>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('evaluation_metrics')}
-                className={`flex-1 relative group font-semibold text-sm py-4 px-4 border-r-[1px] border-gray-300 transition-all duration-200 ${activeTab === 'evaluation_metrics'
+                className={`flex-1 relative group font-semibold text-sm py-4 px-4 border-e-[1px] border-gray-300 transition-all duration-200 ${activeTab === 'evaluation_metrics'
                     ? 'text-[#582c83] bg-[#e3dbea]'
                     : 'text-gray-600 hover:text-[#582c83] hover:bg-gray-50'
                   }`}
               >
                 <span className="block">{t("evaluation-metrics")}</span>
                 <div
-                  className={`absolute bottom-0 left-0 right-0 h-1 bg-[#582c83] transition-transform duration-300 ${activeTab === 'evaluation_metrics' ? 'scale-100' : 'scale-0 group-hover:scale-100'
+                  className={`absolute bottom-0 start-0 end-0 h-1 bg-[#582c83] transition-transform duration-300 ${activeTab === 'evaluation_metrics' ? 'scale-100' : 'scale-0 group-hover:scale-100'
                     }`}
                 ></div>
               </button>
@@ -126,7 +126,7 @@ function DetailedSegment({
               >
                 <span className="block">{t("how-they-live")}</span>
                 <div
-                  className={`absolute bottom-0 left-0 right-0 h-1 bg-[#582c83] transition-transform duration-300 ${activeTab === 'how_they_live' ? 'scale-100' : 'scale-0 group-hover:scale-100'
+                  className={`absolute bottom-0 start-0 end-0 h-1 bg-[#582c83] transition-transform duration-300 ${activeTab === 'how_they_live' ? 'scale-100' : 'scale-0 group-hover:scale-100'
                     }`}
                 ></div>
               </button>
@@ -228,7 +228,7 @@ function DetailedSegment({
                 <div className="flex gap-2">
                   {selectedSegment.attributes.cross_shopping_categories &&
                     selectedSegment.attributes.cross_shopping_categories.length > 0 && (
-                      <div className="bg-gradient-to-br from-white to-blue-50 border-l-4 border-blue-500 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
+                      <div className="bg-gradient-to-br from-white to-blue-50 border-s-4 border-blue-500 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
                             <svg
@@ -266,7 +266,7 @@ function DetailedSegment({
                     )}
                   {selectedSegment.attributes.complementary_categories &&
                     selectedSegment.attributes.complementary_categories.length > 0 && (
-                      <div className="bg-gradient-to-br from-white to-green-50 border-l-4 border-green-500 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
+                      <div className="bg-gradient-to-br from-white to-green-50 border-s-4 border-green-500 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
                             <svg

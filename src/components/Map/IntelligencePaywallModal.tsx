@@ -258,7 +258,7 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
                 {inlineView !=="main" && (
                   <button
                     onClick={() => { setInlineView('main'); setError(null); }}
-                    className="text-white/70 hover:text-white transition-colors mr-1"
+                    className="text-white/70 hover:text-white transition-colors me-1"
                     aria-label={t("back")}
                   >
                     <MdArrowBack size={22} />
@@ -368,7 +368,7 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
                             </p>
                           )}
                         </div>
-                        <div className="text-right ml-4">
+                        <div className="text-end ms-4">
                           {item.free_as_part_of_package ? (
                             <span className="text-lg font-bold text-green-600">{t("free")}</span>
                           ) : (

@@ -87,7 +87,7 @@ function Component({
 
   return (
     <div className="relative transition-all">
-      <div className="absolute top-0 left-0 z-10 bg-[#ff0000] text-white py-1.5 px-3 rounded-tl rounded-br">
+      <div className="absolute top-0 start-0 z-10 bg-[#ff0000] text-white py-1.5 px-3 rounded-ss rounded-ee">
         <span>{can_access ?t("free") :t("paid")}</span>
       </div>
       <div className="border border-[#f0f0f0] rounded overflow-hidden bg-white flex flex-col h-full">

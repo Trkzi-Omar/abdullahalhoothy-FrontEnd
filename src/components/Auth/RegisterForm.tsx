@@ -178,7 +178,7 @@ export const RegisterForm = ({ onSuccess, source }: RegisterFormProps) => {
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <div>
           <div className="flex items-center bg-[#f0f8f0] rounded-md">
-            <FaUser className="text-[#006400] ml-3" />
+            <FaUser className="text-[#006400] ms-3" />
             <input
               type="text"
               placeholder={t("full-name")}

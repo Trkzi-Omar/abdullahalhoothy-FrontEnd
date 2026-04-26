@@ -466,12 +466,12 @@ export const CaseStudyPanel: React.FC = () => {
   return (
     <div
       className={`
-        flex-1 flex-col sm:flex-row bg-white border-l border-gray-200
+        flex-1 flex-col sm:flex-row bg-white border-s border-gray-200
         overflow-hidden transition-all duration-500 ease-in-out
         ${showCaseStudy ? 'translate-x-0 opacity-100 shadow-xl' : 'translate-x-full opacity-0'}
         ${isInitialRender ? 'transition-none' : ''}
         ${showCaseStudy ? 'pointer-events-auto' : 'pointer-events-none'}
-        absolute top-0 right-0 bottom-0 z-20
+        absolute top-0 end-0 bottom-0 z-20
         h-full
         w-full ${isPanelExpanded ? ' md:max-w-none' : 'md:w-3/5 max-w-[750px]'}
       `}
@@ -561,7 +561,7 @@ export const CaseStudyPanel: React.FC = () => {
               className="min-h-[500px]"
             />
           ) : (
-            <RichTextContent value={caseStudyContent} className="space-y-4 text-right" />
+            <RichTextContent value={caseStudyContent} className="space-y-4 text-end" />
           )}
         </div>
       </div>

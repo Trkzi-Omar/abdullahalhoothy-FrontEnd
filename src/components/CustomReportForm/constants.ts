@@ -1,6 +1,8 @@
 import { CustomReportData, SegmentEvaluationMetrics } from '../../types/allTypesAndInterfaces';
 import mapConfig from '../../mapConfig.json';
 import { BusinessTypeConfig } from './services/businessMetricsService';
+import { t } from '../../i18n';
+
 
 export const CITY_OPTIONS = ['Riyadh', 'Mecca', 'Jeddah'];
 
@@ -37,8 +39,8 @@ export const getStepDefinitions = (
     const lastStepIndex = steps.length - 1;
     const phoneStep = {
         id: steps.length + 100, // Temporary ID to avoid conflict, will be re-indexed if needed, but display logic relies on index
-        title: 'Phone Verification',
-        description: 'Verify your phone number',
+        title:t("phone-verification-2"),
+        description:t("verify-your-phone-number"),
         content: 'phone-verification',
     };
     
@@ -53,101 +55,101 @@ export const getStepDefinitions = (
 export const FULL_REPORT_STEP_DEFINITIONS = [
   {
     id: 1,
-    title: 'Basic Information',
-    description: 'City and location details',
+    title:t("basic-information"),
+    description:t("city-and-location-details"),
     content: 'basic-info',
   },
   {
     id: 2,
-    title: 'Segment Selection',
-    description: 'Select segment type',
+    title:t("segment-selection"),
+    description:t("select-segment-type"),
     content: 'segment-selection',
   },
   {
     id: 3,
-    title: 'Delivery vs In-Store',
-    description: 'Set delivery preferences',
+    title:t("delivery-vs-in-store"),
+    description:t("set-delivery-preferences"),
     content: 'delivery-in-store',
     isAdvanced: true,
   },
   {
     id: 4,
-    title: 'Evaluation Metrics',
-    description: 'Set importance weights',
+    title:t("evaluation-metrics"),
+    description:t("set-importance-weights"),
     content: 'evaluation-metrics',
     isAdvanced: true,
   },
   {
     id: 5,
-    title: 'Set Attributes',
-    description: 'Set required attributes',
+    title:t("set-attributes"),
+    description:t("set-required-attributes"),
     content: 'attributes',
     isAdvanced: true,
   },
   {
     id: 6,
-    title: 'Custom Locations',
-    description: 'Add specific locations',
+    title:t("custom-locations"),
+    description:t("add-specific-locations"),
     content: 'custom-locations',
     isAdvanced: true,
   },
   {
     id: 7,
-    title: 'Current Location',
-    description: 'Set your current position',
+    title:t("current-location"),
+    description:t("set-your-current-position"),
     content: 'current-location',
     isAdvanced: true,
   },
-  { id: 8, title: 'Report Tier', description: 'Choose report tier', content: 'report-tier' },
+  { id: 8, title:t("report-tier"), description:t("choose-report-tier"), content: 'report-tier' },
 ];
 
 export const LOCATION_REPORT_STEP_DEFINITIONS = [
   {
     id: 1,
-    title: 'Basic Information',
-    description: 'City and location details',
+    title:t("basic-information"),
+    description:t("city-and-location-details"),
     content: 'basic-info',
   },
   {
     id: 2,
-    title: 'Segment Selection',
-    description: 'Select segment type',
+    title:t("segment-selection"),
+    description:t("select-segment-type"),
     content: 'segment-selection',
   },
   {
     id: 3,
-    title: 'Delivery vs In-Store',
-    description: 'Set delivery preferences',
+    title:t("delivery-vs-in-store"),
+    description:t("set-delivery-preferences"),
     content: 'delivery-in-store',
     isAdvanced: true,
   },
   {
     id: 4,
-    title: 'Evaluation Metrics',
-    description: 'Set importance weights',
+    title:t("evaluation-metrics"),
+    description:t("set-importance-weights"),
     content: 'evaluation-metrics',
     isAdvanced: true,
   },
   {
     id: 5,
-    title: 'Set Attributes',
-    description: 'Set required attributes',
+    title:t("set-attributes"),
+    description:t("set-required-attributes"),
     content: 'attributes',
     isAdvanced: true,
   },
   {
     id: 6,
-    title: 'Custom Location',
-    description: 'Location to evaluate',
+    title:t("custom-location"),
+    description:t("location-to-evaluate-2"),
     content: 'custom-locations',
   },
   {
     id: 7,
-    title: 'Current Location',
-    description: 'Set your current position',
+    title:t("current-location"),
+    description:t("set-your-current-position"),
     content: 'current-location',
   },
-  { id: 8, title: 'Report Tier', description: 'Choose report tier', content: 'report-tier' },
+  { id: 8, title:t("report-tier"), description:t("choose-report-tier"), content: 'report-tier' },
 ];
 
 export const getInitialFormData = (

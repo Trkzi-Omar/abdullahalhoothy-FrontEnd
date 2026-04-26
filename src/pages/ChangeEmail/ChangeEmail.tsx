@@ -4,6 +4,8 @@ import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import urls from './../../urls.json';
 import apiRequest from '../../services/apiRequest';
+import { t } from '../../i18n';
+
 
 const ChangeEmail: React.FC = () => {
   const { isAuthenticated, authResponse } = useAuth();
@@ -20,7 +22,7 @@ const ChangeEmail: React.FC = () => {
     const data = Object.fromEntries(formData.entries());
     if (data.new_email === '' || data.confirm_email === '' || data.password === '') {
       setError({
-        message: 'All fields are required',
+        message:t("all-fields-are-required"),
         name: 'All fields are required',
       });
       return;
@@ -28,7 +30,7 @@ const ChangeEmail: React.FC = () => {
 
     if (data.new_email !== data.confirm_email) {
       setError({
-        message: 'Emails do not match',
+        message:t("emails-do-not-match"),
         name: 'Emails do not match',
       });
       return;
@@ -38,7 +40,7 @@ const ChangeEmail: React.FC = () => {
       data.new_email.toLowerCase() === authResponse?.email?.toLowerCase()
     ) {
       setError({
-        message: 'New email must be different from current email',
+        message:t("new-email-must-be-different-from-current-email"),
         name: 'New email must be different from current email',
       });
       return;
@@ -54,7 +56,7 @@ const ChangeEmail: React.FC = () => {
         body: data,
         isAuthRequest: true,
       });
-      toast.success('Email changed successfully! Please use your new email next time you sign in.');
+      toast.success(t("email-changed-successfully-please-use-your-new-email-next-time-you-sign-in"));
       navigate('/profile');
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -73,16 +75,14 @@ const ChangeEmail: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
       <div className="mx-2 max-w-96 space-y-1 mb-4">
-        <h2 className="text-2xl font-semibold text-gray-700 ">Change Email</h2>
+        <h2 className="text-2xl font-semibold text-gray-700 ">{t("change-email")}</h2>
       </div>
       <form
         className="p-4 sm:rounded-lg border bg-white shadow mx-2 w-full sm:max-w-96"
         onSubmit={handleSubmit}
       >
         <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="email">
-            New Email
-          </label>
+          <label className="block text-gray-700 mb-2" htmlFor="email">{t("new-email")}</label>
           <input
             type="email"
             id="email"
@@ -94,9 +94,7 @@ const ChangeEmail: React.FC = () => {
         </div>
 
         <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="confirm-email">
-            Confirm New Email
-          </label>
+          <label className="block text-gray-700 mb-2" htmlFor="confirm-email">{t("confirm-new-email")}</label>
           <input
             type="email"
             id="confirm-email"
@@ -109,9 +107,7 @@ const ChangeEmail: React.FC = () => {
 
         {/* password */}
         <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="password">
-            Password
-          </label>
+          <label className="block text-gray-700 mb-2" htmlFor="password">{t("password")}</label>
           <input
             type="password"
             id="password"
@@ -133,11 +129,8 @@ const ChangeEmail: React.FC = () => {
         >
           {loading ? (
             <span className="inline-flex items-center gap-2">
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              Changing Email...
-            </span>
-          ) : (
-            'Change Email'
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />{t("changing-email")}</span>
+          ) : (t("change-email")
           )}
         </button>
       </form>

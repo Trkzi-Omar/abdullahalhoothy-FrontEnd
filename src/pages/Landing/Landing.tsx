@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { translations } from './translations';
+import i18next from '../../i18n';
+import { getLandingTranslations } from './translations';
 import LandingNavbar from '../../components/Landing/LandingNavbar';
 import LandingHero from '../../components/Landing/LandingHero';
 import LandingFeatures from '../../components/Landing/LandingFeatures';
@@ -17,9 +18,14 @@ function getSavedLang(): 'en' | 'ar' {
 }
 
 const Landing = () => {
-  const [lang, setLangState] = useState<'en' | 'ar'>(getSavedLang);
+  const [lang, setLangState] = useState<'en' | 'ar'>(() => {
+    const savedLang = getSavedLang();
+    void i18next.changeLanguage(savedLang);
+    return savedLang;
+  });
 
   const setLang = useCallback((newLang: 'en' | 'ar') => {
+    void i18next.changeLanguage(newLang);
     setLangState(newLang);
     localStorage.setItem(LANG_STORAGE_KEY, newLang);
   }, []);
@@ -28,7 +34,7 @@ const Landing = () => {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   }, [lang]);
 
-  const t = translations[lang];
+  const copy = getLandingTranslations(lang);
 
   return (
     <div
@@ -36,16 +42,16 @@ const Landing = () => {
         lang === 'ar' ? 'font-arabic' : 'font-sans'
       }`}
     >
-      <LandingNavbar lang={lang} setLang={setLang} t={t} />
+      <LandingNavbar lang={lang} setLang={setLang} t={copy} />
       <main className="flex-grow">
-        <LandingHero t={t} />
-        <LandingFeatures t={t} />
-        <LandingReportGrid t={t} />
-        <LandingCaseStudy t={t} />
-        <LandingDataSources t={t} />
-        <LandingCTA t={t} />
+        <LandingHero t={copy} />
+        <LandingFeatures t={copy} />
+        <LandingReportGrid t={copy} />
+        <LandingCaseStudy t={copy} />
+        <LandingDataSources t={copy} />
+        <LandingCTA t={copy} />
       </main>
-      <LandingFooter t={t} />
+      <LandingFooter t={copy} />
     </div>
   );
 };

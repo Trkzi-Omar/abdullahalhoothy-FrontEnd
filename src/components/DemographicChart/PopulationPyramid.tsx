@@ -10,6 +10,8 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
+import { t } from '../../i18n';
+
 
 const defaultData = [
   { ageGroup: '0-14', male: -10, female: 9 },
@@ -73,8 +75,8 @@ const PopulationPyramid: React.FC<PopulationPyramidProps> = ({
         </ResponsiveContainer>
       </div>
       <div className="flex justify-between mt-1 text-sm text-gray-500">
-        <div>Male</div>
-        <div>Female</div>
+        <div>{t("male")}</div>
+        <div>{t("female")}</div>
       </div>
     </div>
   );

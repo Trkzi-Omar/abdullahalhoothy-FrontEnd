@@ -11,6 +11,8 @@ import apiRequest from '../../../services/apiRequest';
 import urls from '../../../urls.json';
 
 import { toast } from 'sonner';
+import { t } from '../../../i18n';
+
 
 interface InlinePaymentMethodProps {
   onPaymentMethodAdded: () => void;
@@ -61,8 +63,8 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
 
   const validateName = (name: string): string | null => {
     const trimmed = name.trim();
-    if (trimmed.length < 2) return 'Name must be at least 2 characters.';
-    if (!/^[a-zA-Z\s'-]+$/.test(trimmed)) return 'Name can only contain letters, spaces, hyphens, and apostrophes.';
+    if (trimmed.length < 2) return t("name-must-be-at-least-2-characters");
+    if (!/^[a-zA-Z\s'-]+$/.test(trimmed)) return t("name-can-only-contain-letters-spaces-hyphens-and-apostrophes");
     return null;
   };
 
@@ -81,7 +83,7 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
 
   const savePaymentMethod = useCallback(async () => {
     if (!stripe || !elements) {
-      setErrorMessage('Stripe has not loaded correctly.');
+      setErrorMessage(t("stripe-has-not-loaded-correctly"));
       return;
     }
 
@@ -90,7 +92,7 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
     const cardCvcElement = elements.getElement(CardCvcElement);
 
     if (!cardNumberElement || !cardExpiryElement || !cardCvcElement) {
-      setErrorMessage('One or more card fields are not loaded.');
+      setErrorMessage(t("one-or-more-card-fields-are-not-loaded"));
       return;
     }
 
@@ -108,14 +110,14 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
 
       if (stripeError) {
         setErrorMessage(
-          stripeError.message || 'Failed to create the payment method. Please try again.'
+          stripeError.message || t("failed-to-create-the-payment-method-please-try-again")
         );
         setSubmitting(false);
         return;
       }
 
       if (!paymentMethod) {
-        setErrorMessage('No payment method was created.');
+        setErrorMessage(t("no-payment-method-was-created"));
         setSubmitting(false);
         return;
       }
@@ -140,11 +142,11 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
         });
       }
 
-      toast.success('Payment method added successfully!');
+      toast.success(t("payment-method-added-successfully"));
       onPaymentMethodAdded();
     } catch (error) {
       console.error('Payment method error:', error);
-      setErrorMessage('An unexpected error occurred. Please try again later.');
+      setErrorMessage(t("an-unexpected-error-occurred-please-try-again-later"));
       setSubmitting(false);
     }
   }, [stripe, elements, cardholderName, authResponse, onPaymentMethodAdded]);
@@ -153,7 +155,7 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
     e.preventDefault();
 
     if (!stripe || !elements) {
-      setErrorMessage('Stripe has not loaded correctly.');
+      setErrorMessage(t("stripe-has-not-loaded-correctly"));
       return;
     }
 
@@ -162,7 +164,7 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
     const cardCvcElement = elements.getElement(CardCvcElement);
 
     if (!cardNumberElement || !cardExpiryElement || !cardCvcElement) {
-      setErrorMessage('One or more card fields are not loaded.');
+      setErrorMessage(t("one-or-more-card-fields-are-not-loaded"));
       return;
     }
 
@@ -173,7 +175,7 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
     }
 
     if (!userPhone) {
-      toast.error('Please add a phone number to your profile before adding a payment method.');
+      toast.error(t("please-add-a-phone-number-to-your-profile-before-adding-a-payment-method"));
       return;
     }
 
@@ -200,24 +202,17 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Add Payment Method</h3>
-        <p className="text-sm text-gray-600">
-          To continue with your report, please add a payment method.
-        </p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">{t("add-payment-method")}</h3>
+        <p className="text-sm text-gray-600">{t("to-continue-with-your-report-please-add-a-payment-method")}</p>
       </div>
 
       {!userPhone && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">
-          ⚠️ A verified phone number is required to add a payment method. Please add a phone number
-          to your profile first.
-        </div>
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">{t("a-verified-phone-number-is-required-to-add-a-payment-method-please-add-a-phone-n")}</div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="cardholder-name" className="block text-sm font-medium text-gray-700 mb-1">
-            Name on card
-          </label>
+          <label htmlFor="cardholder-name" className="block text-sm font-medium text-gray-700 mb-1">{t("name-on-card")}</label>
           <input
             id="cardholder-name"
             type="text"
@@ -225,14 +220,14 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
             onChange={handleNameChange}
             onBlur={handleNameBlur}
             className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary ${nameError ? 'border-red-400' : 'border-gray-300'}`}
-            placeholder="Name on card"
+            placeholder={t("name-on-card")}
             required
           />
           {nameError && <p className="text-red-500 text-sm mt-1">{nameError}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Card number</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t("card-number")}</label>
           <div className="relative">
             <CardNumberElement
               options={elementStyles}
@@ -254,7 +249,7 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Expiry</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("expiry")}</label>
             <CardExpiryElement
               options={elementStyles}
               onChange={handleCardExpiryChange}
@@ -263,7 +258,7 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
             {cardExpiryError && <p className="text-red-500 text-sm mt-1">{cardExpiryError}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">CVC</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("cvc")}</label>
             <CardCvcElement
               options={elementStyles}
               onChange={handleCardCvcChange}
@@ -286,16 +281,14 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
               onClick={onCancel}
               disabled={submitting}
               className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-            >
-              Cancel
-            </button>
+            >{t("cancel")}</button>
           )}
           <button
             type="submit"
             disabled={!stripe || !elements || submitting || !userPhone}
             className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200"
           >
-            {submitting ? 'Adding...' : 'Add Payment Method'}
+            {submitting ?t("adding") :t("add-payment-method")}
           </button>
         </div>
       </form>
@@ -304,7 +297,6 @@ const InlinePaymentMethod: React.FC<InlinePaymentMethodProps> = ({
 };
 
 export default InlinePaymentMethod;
-
 
 
 

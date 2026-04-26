@@ -24,6 +24,8 @@ import { useDatasetPrices } from '../../hooks/useDatasetPrices';
 import { toast } from 'sonner';
 
 import DatasetModalContent from './DatasetModalContent';
+import { t } from '../../i18n';
+
 
 const FetchDatasetForm = () => {
   const nav = useNavigate();
@@ -154,7 +156,7 @@ const FetchDatasetForm = () => {
       setCostEstimate(totalCost);
     } catch (error) {
       console.error('Error calculating cart cost:', error);
-      toast.error('Error calculating cart cost.');
+      toast.error(t("error-calculating-cart-cost"));
       setCostEstimate(0.0);
     }
   }, [authResponse?.localId, allDatasets, selectedCity, selectedCountry]);
@@ -358,7 +360,7 @@ const FetchDatasetForm = () => {
   // Replace handleAddToIncluded and handleAddToExcluded with:
   const handleAddToIncluded = (type: string) => {
     if (!selectedCountry || !selectedCity) {
-      toast.error('Please select a country and city before adding datasets.');
+      toast.error(t("please-select-a-country-and-city-before-adding-datasets"));
       return;
     }
 
@@ -367,7 +369,7 @@ const FetchDatasetForm = () => {
 
   const handleAddToExcluded = (type: string) => {
     if (!selectedCountry || !selectedCity) {
-      toast.error('Please select a country and city before adding datasets.');
+      toast.error(t("please-select-a-country-and-city-before-adding-datasets"));
       return;
     }
 
@@ -488,7 +490,7 @@ const FetchDatasetForm = () => {
     }
 
     if (!selectedCountry || !selectedCity) {
-      toast.error('Please select Country and city first.');
+      toast.error(t("please-select-country-and-city-first"));
       return;
     }
 
@@ -513,12 +515,10 @@ const FetchDatasetForm = () => {
       <div className="flex-1 flex flex-col justify-between overflow-y-auto relative">
         <div className="w-full p-4 overflow-y-auto ">
           <div className="mb-6">
-            <label className="block mb-2 text-base font-medium text-black" htmlFor="ai-fetch">
-              AI-Powered Dataset Finder
-            </label>
+            <label className="block mb-2 text-base font-medium text-black" htmlFor="ai-fetch">{t("ai-powered-dataset-finder")}</label>
             <div className="flex relative w-full">
               <ChatTrigger
-                title="AI Dataset Finder"
+                title={t("ai-dataset-finder")}
                 position="auto"
                 cN="flex-grow"
                 size="h-14"
@@ -530,9 +530,7 @@ const FetchDatasetForm = () => {
             </div>
           </div>
           <div>
-            <label className="block mb-2 text-md font-medium text-black" htmlFor="country">
-              Country
-            </label>
+            <label className="block mb-2 text-md font-medium text-black" htmlFor="country">{t("country")}</label>
             <select
               id="country"
               name="selectedCountry"
@@ -543,9 +541,7 @@ const FetchDatasetForm = () => {
                 handleCountryCitySelection(e);
               }}
             >
-              <option value="" disabled>
-                Select a country
-              </option>
+              <option value="" disabled>{t("select-a-country")}</option>
               {countries.map(country => (
                 <option value={country} key={country}>
                   {country}
@@ -555,9 +551,7 @@ const FetchDatasetForm = () => {
           </div>
 
           <div className="pt-4">
-            <label className="block mb-2 text-md font-medium text-black" htmlFor="city">
-              City
-            </label>
+            <label className="block mb-2 text-md font-medium text-black" htmlFor="city">{t("city")}</label>
             <select
               id="city"
               name="selectedCity"
@@ -569,9 +563,7 @@ const FetchDatasetForm = () => {
               }}
               disabled={!selectedCountry}
             >
-              <option value="" disabled>
-                Select a city
-              </option>
+              <option value="" disabled>{t("select-a-city")}</option>
               {cities.map(city => (
                 <option key={city.name} value={city.name}>
                   {city.name}
@@ -581,9 +573,7 @@ const FetchDatasetForm = () => {
           </div>
 
           <div className={`${!selectedCountry || !selectedCity ? 'opacity-50 pointer-events-none' : ''}`}>
-          <label className="block my-2 text-base font-medium text-black" htmlFor="layers">
-            Layers
-          </label>
+          <label className="block my-2 text-base font-medium text-black" htmlFor="layers">{t("layers")}</label>
           <div
             id="layers"
             className="flex text-sm flex-col border border-gray-300 rounded-lg p-4 gap-4"
@@ -602,9 +592,7 @@ const FetchDatasetForm = () => {
           </div>
 
           <div className="border-t mt-4 pt-2">
-            <label className="block mb-2 text-md font-medium text-black" htmlFor="searchType">
-              Search Type
-            </label>
+            <label className="block mb-2 text-md font-medium text-black" htmlFor="searchType">{t("search-type")}</label>
             <select
               name="searchType"
               id="searchType"
@@ -615,25 +603,23 @@ const FetchDatasetForm = () => {
               }}
               disabled={!selectedCountry || !selectedCity}
             >
-              <option value="category_search">Category Search</option>
-              <option value="keyword_search">Keyword Search</option>
+              <option value="category_search">{t("category-search")}</option>
+              <option value="keyword_search">{t("keyword-search")}</option>
             </select>
           </div>
 
-          {searchType == 'keyword_search' && (
+          {searchType =="keyword_search" && (
             <div className="pt-4">
               <label
                 className="block mb-2 text-md font-medium text-black"
                 htmlFor="textSearchInput"
-              >
-                Search
-              </label>
+              >{t("search")}</label>
               <input
                 type="text"
                 id="textSearchInput"
                 name="textSearchInput"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                placeholder="Enter search text"
+                placeholder={t("enter-search-text")}
                 value={textSearchInput}
                 onChange={e => setTextSearchInput(e.target.value)}
                 disabled={!selectedCountry || !selectedCity}
@@ -642,23 +628,20 @@ const FetchDatasetForm = () => {
             </div>
           )}
 
-          {searchType !== 'keyword_search' && (
+          {searchType !=="keyword_search" && (
             <div className="flex flex-col my-5" ref={categoriesRef}>
               <div className="flex justify-between">
-                <label className="mb-4 font-bold">What are you looking for?</label>
+                <label className="mb-4 font-bold">{t("what-are-you-looking-for")}</label>
                 <button
                   onClick={handleClear}
                   disabled={!selectedCountry || !selectedCity}
                   className="w-16 h-6 text-sm bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Clear
-                </button>
+                >{t("clear")}</button>
               </div>
 
               <div className="pb-3">
                 <div className="flex justify-end mb-1">
-                  <p className="text-[10px] text-gray-500">
-                    Data updated on:{' '}
+                  <p className="text-[10px] text-gray-500">{t("data-updated-on")}{' '}
                     <span className="text-[#115740] font-medium">{getYesterdayDate()}</span>
                   </p>
                 </div>
@@ -667,7 +650,7 @@ const FetchDatasetForm = () => {
                   id="searchInput"
                   name="searchInput"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                  placeholder="Search for a type..."
+                  placeholder={t("search-for-a-type")}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   disabled={!selectedCountry || !selectedCity}
@@ -697,9 +680,7 @@ const FetchDatasetForm = () => {
             className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
                  hover:bg-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isLoadingDataset || !selectedCountry || !selectedCity}
-          >
-            Get Sample
-          </button>
+          >{t("get-sample")}</button>
           <button
             className="w-full bg-[#115740] text-white flex justify-between items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer px-4 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={e => {
@@ -707,13 +688,13 @@ const FetchDatasetForm = () => {
             }}
             disabled={isLoadingDataset || !selectedCountry || !selectedCity}
           >
-            <div className="text-lg">{costEstimate > 0 ? 'Buy now' : 'Full Data'}</div>
+            <div className="text-lg">{costEstimate > 0 ?t("buy-now") :t("full-data")}</div>
             <div className="flex flex-col items-end gap-1">
               {isPriceVisible && (
                 <span className="text-sm font-normal opacity-90">${costEstimate.toFixed(2)}</span>
               )}
               {isPriceVisible && costEstimate > 0 && (
-                <span className="text-xs font-normal opacity-90">Full data</span>
+                <span className="text-xs font-normal opacity-90">{t("full-data-2")}</span>
               )}
             </div>
           </button>
@@ -726,8 +707,7 @@ const FetchDatasetForm = () => {
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 bg-gray-100  border-b border-gray-300">
               <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                <span className="mr-2">⚠️</span> Warning
-              </h3>
+                <span className="mr-2">⚠️</span>{' '}{t("warning")}</h3>
               <button
                 onClick={() => setShowErrorMessage(false)}
                 className="text-gray-800 hover:text-gray-600 focus:outline-none"
@@ -738,10 +718,8 @@ const FetchDatasetForm = () => {
 
             {/* Body */}
             <div className="p-6 text-center">
-              <p className="text-base text-gray-800 font-medium">
-                Insufficient funds for this transaction.
-              </p>
-              <p className="text-sm text-gray-600 mt-2">Please add more funds to continue.</p>
+              <p className="text-base text-gray-800 font-medium">{t("insufficient-funds-for-this-transaction")}</p>
+              <p className="text-sm text-gray-600 mt-2">{t("please-add-more-funds-to-continue")}</p>
             </div>
 
             {/* Footer */}
@@ -749,9 +727,7 @@ const FetchDatasetForm = () => {
               <button
                 onClick={() => nav('/profile/wallet/add')}
                 className="w-full h-10 bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer"
-              >
-                Add Funds
-              </button>
+              >{t("add-funds")}</button>
             </div>
           </div>
         </div>
@@ -761,7 +737,7 @@ const FetchDatasetForm = () => {
       <Modal
         open={isDatasetModalOpen && !isLoadingDataset}
         onOpenChange={handleDatasetModalChange}
-        title="Dataset"
+        title={t("dataset")}
         contentClassName="max-w-4xl"
       >
         <DatasetModalContent />

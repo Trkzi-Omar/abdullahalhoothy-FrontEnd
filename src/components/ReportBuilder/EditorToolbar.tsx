@@ -2,6 +2,8 @@ import React, { useState, useRef } from 'react';
 import { Editor, Element as SlateElement, Transforms, Node } from 'slate';
 import { useSlate } from 'slate-react';
 import { CustomElement, CustomText } from './RichTextEditor';
+import { t } from '../../i18n';
+
 
 interface ToolbarButtonProps {
   format: string;
@@ -77,7 +79,7 @@ const ColorPicker: React.FC<{
         onClick={() => setShowPicker(!showPicker)}
         className="p-2 mx-1 rounded hover:bg-gray-200 transition-colors flex items-center"
       >
-        <span className="mr-1">{format === 'color' ? 'A' : 'BG'}</span>
+        <span className="mr-1">{format ==="color" ?t("a") :t("bg")}</span>
         <div
           className="w-4 h-4 border border-gray-300"
           style={{
@@ -89,7 +91,7 @@ const ColorPicker: React.FC<{
       {showPicker && (
         <div className="absolute top-full left-0 mt-1 p-2 bg-white shadow-lg rounded-md border border-gray-200 z-20 w-48">
           <div className="text-sm font-medium text-gray-700 mb-2">
-            {format === 'color' ? 'Text Color' : 'Background Color'}:
+            {format ==="color" ?t("text-color") :t("background-color")}:
           </div>
           <div className="grid grid-cols-5 gap-1">
             {colorOptions.map(color => (
@@ -105,7 +107,7 @@ const ColorPicker: React.FC<{
               />
             ))}
             <button
-              title="Remove color"
+              title={t("remove-color")}
               onClick={() => {
                 onChange('');
                 setShowPicker(false);
@@ -145,16 +147,16 @@ const FontSizeSelector: React.FC<{
     <div className="relative inline-block">
       <button
         type="button"
-        title="Font Size"
+        title={t("font-size")}
         onClick={() => setShowSelector(!showSelector)}
         className="p-2 mx-1 rounded hover:bg-gray-200 transition-colors flex items-center"
       >
-        <span className="text-sm">Size: {currentValue || 'Default'}</span>
+        <span className="text-sm">{t("size")}{' '}{currentValue ||"Default"}</span>
       </button>
 
       {showSelector && (
         <div className="absolute top-full left-0 mt-1 p-2 bg-white shadow-lg rounded-md border border-gray-200 z-20 w-32">
-          <div className="text-sm font-medium text-gray-700 mb-2">Font Size:</div>
+          <div className="text-sm font-medium text-gray-700 mb-2">{t("font-size-2")}</div>
           <div className="flex flex-col gap-1">
             {fontSizeOptions.map(size => (
               <button
@@ -176,9 +178,7 @@ const FontSizeSelector: React.FC<{
                 setShowSelector(false);
               }}
               className="px-2 py-1 text-left rounded hover:bg-gray-100"
-            >
-              Default
-            </button>
+            >{t("default")}</button>
           </div>
         </div>
       )}
@@ -423,14 +423,14 @@ const EditorToolbar: React.FC = () => {
         <div className="mx-2 h-6 w-px bg-gray-300" />
         <ToolbarButton
           format="heading-one"
-          icon={<span className="font-bold">H1</span>}
+          icon={<span className="font-bold">{t("h1")}</span>}
           tooltip="Heading 1"
           isActive={isBlockActive('heading-one')}
           onClick={() => toggleBlock('heading-one')}
         />
         <ToolbarButton
           format="heading-two"
-          icon={<span className="font-bold">H2</span>}
+          icon={<span className="font-bold">{t("h2")}</span>}
           tooltip="Heading 2"
           isActive={isBlockActive('heading-two')}
           onClick={() => toggleBlock('heading-two')}
@@ -479,14 +479,14 @@ const EditorToolbar: React.FC = () => {
         <div className="mx-2 h-6 w-px bg-gray-300" />
         <ToolbarButton
           format="direction-ltr"
-          icon={<span className="font-mono">LTR</span>}
+          icon={<span className="font-mono">{t("ltr")}</span>}
           tooltip="Left to Right"
           isActive={isDirectionActive('ltr')}
           onClick={() => toggleDirection('ltr')}
         />
         <ToolbarButton
           format="direction-rtl"
-          icon={<span className="font-mono">RTL</span>}
+          icon={<span className="font-mono">{t("rtl")}</span>}
           tooltip="Right to Left"
           isActive={isDirectionActive('rtl')}
           onClick={() => toggleDirection('rtl')}
@@ -502,32 +502,24 @@ const EditorToolbar: React.FC = () => {
 
           {showChartOptions && (
             <div className="absolute top-full left-0 mt-1 p-2 bg-white shadow-lg rounded-md border border-gray-200 z-10">
-              <div className="text-sm font-medium text-gray-700 mb-2">Select Chart Type:</div>
+              <div className="text-sm font-medium text-gray-700 mb-2">{t("select-chart-type")}</div>
               <div className="space-y-1">
                 <button
                   className="block w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100"
                   onClick={() => insertChart('demographic-chart')}
-                >
-                  Age Distribution
-                </button>
+                >{t("age-distribution")}</button>
                 <button
                   className="block w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100"
                   onClick={() => insertChart('population-pyramid')}
-                >
-                  Population Pyramid
-                </button>
+                >{t("population-pyramid")}</button>
                 <button
                   className="block w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100"
                   onClick={() => insertChart('trend-chart')}
-                >
-                  Demographic Trends
-                </button>
+                >{t("demographic-trends")}</button>
                 <button
                   className="block w-full text-left px-3 py-2 text-sm rounded hover:bg-gray-100"
                   onClick={() => insertChart('demographic-card')}
-                >
-                  Demographic Info Card
-                </button>
+                >{t("demographic-info-card")}</button>
               </div>
             </div>
           )}

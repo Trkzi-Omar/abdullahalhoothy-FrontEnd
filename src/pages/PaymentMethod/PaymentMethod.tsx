@@ -18,6 +18,8 @@ import clsx from 'clsx';
 
 import { toast } from 'sonner';
 import { UserProfile } from '../../types/allTypesAndInterfaces';
+import { t } from '../../i18n';
+
 
 const PaymentMethodForm: React.FC = () => {
   const { authResponse } = useAuth();
@@ -90,8 +92,8 @@ const PaymentMethodForm: React.FC = () => {
 
   const validateName = (name: string): string | null => {
     const trimmed = name.trim();
-    if (trimmed.length < 2) return 'Name must be at least 2 characters.';
-    if (!/^[a-zA-Z\s'-]+$/.test(trimmed)) return 'Name can only contain letters, spaces, hyphens, and apostrophes.';
+    if (trimmed.length < 2) return t("name-must-be-at-least-2-characters");
+    if (!/^[a-zA-Z\s'-]+$/.test(trimmed)) return t("name-can-only-contain-letters-spaces-hyphens-and-apostrophes");
     return null;
   };
 
@@ -112,7 +114,7 @@ const PaymentMethodForm: React.FC = () => {
   // Function to actually save the payment method
   const savePaymentMethod = useCallback(async () => {
     if (!stripe || !elements) {
-      setErrorMessage('Stripe has not loaded correctly.');
+      setErrorMessage(t("stripe-has-not-loaded-correctly"));
       return;
     }
 
@@ -121,7 +123,7 @@ const PaymentMethodForm: React.FC = () => {
     const cardCvcElement = elements.getElement(CardCvcElement);
 
     if (!cardNumberElement || !cardExpiryElement || !cardCvcElement) {
-      setErrorMessage('One or more card fields are not loaded.');
+      setErrorMessage(t("one-or-more-card-fields-are-not-loaded"));
       return;
     }
 
@@ -139,13 +141,13 @@ const PaymentMethodForm: React.FC = () => {
 
       if (stripeError) {
         setErrorMessage(
-          stripeError.message || 'Failed to create the payment method. Please try again.'
+          stripeError.message || t("failed-to-create-the-payment-method-please-try-again")
         );
         return;
       }
 
       if (!paymentMethod) {
-        setErrorMessage('No payment method was created.');
+        setErrorMessage(t("no-payment-method-was-created"));
         return;
       }
 
@@ -172,7 +174,7 @@ const PaymentMethodForm: React.FC = () => {
       navigate('/profile/payment-methods?success=true');
     } catch (error) {
       console.error('Payment method error:', error);
-      setErrorMessage('An unexpected error occurred. Please try again later.');
+      setErrorMessage(t("an-unexpected-error-occurred-please-try-again-later"));
     } finally {
       setSubmitting(false);
     }
@@ -183,7 +185,7 @@ const PaymentMethodForm: React.FC = () => {
     
     // Check if Stripe and Elements are initialized
     if (!stripe || !elements) {
-      setErrorMessage('Stripe has not loaded correctly.');
+      setErrorMessage(t("stripe-has-not-loaded-correctly"));
       return;
     }
 
@@ -194,7 +196,7 @@ const PaymentMethodForm: React.FC = () => {
 
     // Verify that all elements are loaded
     if (!cardNumberElement || !cardExpiryElement || !cardCvcElement) {
-      setErrorMessage('One or more card fields are not loaded.');
+      setErrorMessage(t("one-or-more-card-fields-are-not-loaded"));
       return;
     }
 
@@ -207,7 +209,7 @@ const PaymentMethodForm: React.FC = () => {
 
     // Check if user has a phone number
     if (!userPhone) {
-      toast.error('Please add a phone number to your profile before adding a payment method.');
+      toast.error(t("please-add-a-phone-number-to-your-profile-before-adding-a-payment-method"));
       navigate('/profile');
       return;
     }
@@ -236,7 +238,7 @@ const PaymentMethodForm: React.FC = () => {
   if (isLoadingProfile) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="text-lg text-primary font-semibold">Loading...</div>
+        <div className="text-lg text-primary font-semibold">{t("loading")}</div>
       </div>
     );
   }
@@ -245,17 +247,13 @@ const PaymentMethodForm: React.FC = () => {
     <div className="h-full flex items-center ">
       <div className="my-8 border w-full max-w-3xl mx-auto bg-white shadow rounded-lg overflow-hidden">
         <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-semibold text-gray-800">Add Payment Method</h1>
-          <p className="text-gray-500">Enter your card details to add a new payment method.</p>
+          <h1 className="text-xl font-semibold text-gray-800">{t("add-payment-method")}</h1>
+          <p className="text-gray-500">{t("enter-your-card-details-to-add-a-new-payment-method")}</p>
           {!userPhone && (
-            <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">
-              ⚠️ A verified phone number is required to add a payment method. 
-              <button 
+            <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">{t("a-verified-phone-number-is-required-to-add-a-payment-method")}<button
                 onClick={() => navigate('/profile')}
                 className="ml-1 text-primary underline hover:no-underline"
-              >
-                Add phone number
-              </button>
+              >{t("add-phone-number")}</button>
             </div>
           )}
         </div>
@@ -272,7 +270,7 @@ const PaymentMethodForm: React.FC = () => {
                   "w-full p-3 border shadow-sm rounded-md focus:outline-none",
                   nameError ? "border-red-400" : "border-gray-200"
                 )}
-                placeholder="Name on card"
+                placeholder={t("name-on-card")}
                 required
               />
               {nameError && <p className="text-red-500 text-sm mt-1">{nameError}</p>}
@@ -357,7 +355,7 @@ const PaymentMethodForm: React.FC = () => {
                 />
                 <path d="M2 9H22" strokeWidth="1.5" strokeLinejoin="round" />
               </svg>
-              <span>Add Payment Method</span>
+              <span>{t("add-payment-method")}</span>
             </button>
           </div>
         </form>

@@ -10,6 +10,8 @@ import { defaultMapConfig } from '../../hooks/map/useMapInitialization';
 import Chat from '../Chat/Chat';
 import ChatTrigger from '../Chat/ChatTrigger';
 import { CaseStudyToggle } from '../CaseStudy/CaseStudyToggle';
+import { t } from '../../i18n';
+
 
 const enableAI = true;
 
@@ -174,32 +176,28 @@ function CatalogMenu() {
       <div className={`flex flex-col justify-start my-3 flex-1 min-h-0`}>
         <CaseStudyToggle />
         <div className="flex justify-between items-center mx-8 my-2">
-          <p className={'text-lg font-semibold'}>Datasets</p>
+          <p className={'text-lg font-semibold'}>{t("datasets")}</p>
           <button
             className={
               'bg-[#115740] border border-white rounded h-16 w-36 text-white hover:bg-[#28a745] transition-all'
             }
             onClick={handleAddCatalogClick}
-          >
-            + Add Catalog
-          </button>
+          >{t("add-catalog")}</button>
         </div>
         <div className={'flex justify-between items-center mx-8 my-2'}>
-          <p className={'text-lg font-semibold'}>Layers</p>
+          <p className={'text-lg font-semibold'}>{t("layers")}</p>
           <button
             className={
               'bg-white border-2 border-[#115740] rounded h-16 w-36 text-black hover:bg-gray-300 transition-all'
             }
             onClick={handleAddLayerClick}
-          >
-            + Add Layer
-          </button>
+          >{t("add-layer")}</button>
         </div>
 
         {enableAI && (
           <div className="flex relative w-full">
             <ChatTrigger
-              title="AI Recolor"
+              title={t("ai-recolor")}
               position="auto"
               cN="flex-grow "
               size="h-12 mx-8"
@@ -213,9 +211,7 @@ function CatalogMenu() {
 
         {showRestorePrompt && (
           <div className="ms-8 me-8 m-auto border-solid rounded border-2 border-[#115740] p-2 mt-5 ">
-            <p className="text-lg text-center font-semibold flex pb-3">
-              You have unsaved data. Would you like to restore it?
-            </p>
+            <p className="text-lg text-center font-semibold flex pb-3">{t("you-have-unsaved-data-would-you-like-to-restore-it")}</p>
             <div className="flex w-full space-x-2">
               <button
                 onClick={() => {
@@ -229,17 +225,13 @@ function CatalogMenu() {
                 }}
                 className="w-full h-full bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
               hover:bg-white transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-slate-100 disabled:cursor-not-allowed"
-              >
-                No
-              </button>
+              >{t("no")}</button>
 
               <button
                 onClick={handleRestoreClick}
                 className="w-full h-full bg-[#115740] border-[#115740] border-2 text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] 
          transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-[#115740] disabled:cursor-not-allowed"
-              >
-                Yes
-              </button>
+              >{t("yes")}</button>
             </div>
           </div>
         )}
@@ -258,18 +250,14 @@ function CatalogMenu() {
             onClick={handleDiscardClick}
             className="w-full h-10  bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
                  hover:bg-white transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-slate-100 disabled:cursor-not-allowed"
-          >
-            Discard
-          </button>
+          >{t("discard")}</button>
 
           <button
             onClick={handleSaveClick}
             disabled={!(safeGeoPoints.length > 0)}
             className="w-full h-10  bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] 
             transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-[#115740] disabled:cursor-not-allowed"
-          >
-            Save
-          </button>
+          >{t("save")}</button>
         </div>
       </div>
     </div>

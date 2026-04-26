@@ -4,6 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { useUIContext } from '../../context/UIContext';
 import BottomDrawer from '../../components/BottomDrawer/BottomDrawer';
+import { t } from '../../i18n';
+
 
 const Profile = () => {
   const { isMobile, isDrawerOpen, setIsDrawerOpen } = useUIContext();
@@ -18,7 +20,7 @@ const Profile = () => {
   return (
     <div className="relative lg:h-full flex flex-col">
       {isMobile ? (
-        location.pathname === '/profile' && (
+        location.pathname ==="/profile" && (
           <>
             <ProfileDrawer />
             <button
@@ -40,9 +42,7 @@ const Profile = () => {
                   stroke-linecap="round"
                   stroke-linejoin="round"
                 />
-              </svg>
-              Tap to see more options
-            </button>
+              </svg>{t("tap-to-see-more-options")}</button>
           </>
         )
       ) : (
@@ -67,18 +67,18 @@ function ProfileContent() {
 
   return (
     <>
-      <div className="text-2xl pl-6 pt-4 font-semibold mb-4">Account</div>
+      <div className="text-2xl pl-6 pt-4 font-semibold mb-4">{t("account")}</div>
       <div className="flex flex-col justify-center items-center">
-        <MenuItem label="Account" to="/profile" />
-        <MenuItem label="Change Password" to="/profile/change-password" />
-        <MenuItem label="Change Email" to="/profile/change-email" />
+        <MenuItem label={t("account")} to="/profile" />
+        <MenuItem label={t("change-password")} to="/profile/change-password" />
+        <MenuItem label={t("change-email")} to="/profile/change-email" />
         <ExpandableMenuItem
-          label="Billing"
+          label={t("billing-2")}
           isExpanded={isExpanded.billing}
           onClick={() => toggleExpand('billing')}
         >
-          <SubMenuItem label="Payment methods" to="/profile/payment-methods" />
-          <SubMenuItem label="Wallet" to="/profile/wallet" />
+          <SubMenuItem label={t("payment-methods")} to="/profile/payment-methods" />
+          <SubMenuItem label={t("wallet")} to="/profile/wallet" />
         </ExpandableMenuItem>
       </div>
     </>

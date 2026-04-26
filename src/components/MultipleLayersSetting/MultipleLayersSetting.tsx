@@ -12,6 +12,8 @@ import { useAuth } from '../../context/AuthContext';
 import apiRequest from '../../services/apiRequest';
 import BasedOnLayerDropdown from './BasedOnLayerDropdown';
 import { toast } from 'sonner';
+import { t } from '../../i18n';
+
 
 const initialBasedon = 'radius';
 const initialRadius = 1000;
@@ -339,7 +341,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
     // Validate required fields
     if (!coverageValue || !basedOnLayerId) {
-      toast.error('Please fill in all required fields (distance and layer)');
+      toast.error(t("please-fill-in-all-required-fields-distance-and-layer"));
       return;
     }
 
@@ -352,7 +354,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
       if (!currentLayer || !baseLayer || !selectedColors) {
         console.error('Missing required fields');
-        toast.error('Missing required fields for filtering');
+        toast.error(t("missing-required-fields-for-filtering"));
         return;
       }
 
@@ -379,7 +381,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       const filterResponse = await handleFilteredZone(filterRequest);
 
       if (!filterResponse || filterResponse.length === 0) {
-        toast.error('No features found based on the given criteria.');
+        toast.error(t("no-features-found-based-on-the-given-criteria"));
         return;
       }
 
@@ -404,7 +406,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       );
     } catch (error: any) {
       console.error('Filter error:', error);
-      toast.error('Server error (500). Please try again later.');
+      toast.error(t("server-error-500-please-try-again-later"));
     } finally {
       setIsLoading(false);
     }
@@ -415,7 +417,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
     // Validate required fields for recolor
     if (!coverageValue || !basedOnLayerId) {
-      toast.error('Please fill in all required fields (distance and layer)');
+      toast.error(t("please-fill-in-all-required-fields-distance-and-layer"));
       return;
     }
 
@@ -428,7 +430,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       const selectedColors = colors[chosenPallet || 0];
 
       if (!currentLayer || !baseLayer || !selectedColors) {
-        toast.error('Missing required fields for recoloring');
+        toast.error(t("missing-required-fields-for-recoloring"));
         return;
       }
 
@@ -459,7 +461,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       const gradientData = await handleNameBasedColorZone(gradientRequest);
 
       if (!gradientData || gradientData.length === 0) {
-        throw new Error('No gradient data received.');
+        throw new Error(t("no-gradient-data-received"));
       }
 
       // Process gradient data for UI update
@@ -497,8 +499,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       });
     } catch (error) {
       console.error('Error applying dynamic color:', error);
-      setIsError(error instanceof Error ? error : new Error('Failed to apply dynamic color'));
-      toast.error('Failed to apply recoloring');
+      setIsError(error instanceof Error ? error : new Error(t("failed-to-apply-dynamic-color")));
+      toast.error(t("failed-to-apply-recoloring"));
     } finally {
       setIsLoading(false);
     }
@@ -608,7 +610,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 onChange={handleDisplayChange}
                 className="w-[11px] h-[11px] cursor-pointer accent-[#28a745]"
               />
-              <p className="text-[11px] my-[2px] text-[#555] whitespace-nowrap">Visible</p>
+              <p className="text-[11px] my-[2px] text-[#555] whitespace-nowrap">{t("visible")}</p>
             </div>
           </div>
 
@@ -639,7 +641,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 {layer_name || layer_legend}
               </p>
               <div className="flex items-center  gap-2">
-                <p className="text-xs mb-0 font-medium">Advanced</p>
+                <p className="text-xs mb-0 font-medium">{t("advanced")}</p>
                 <div
                   onClick={e => {
                     setIsAdvanced(!isAdvanced);
@@ -653,7 +655,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
               </div>
             </div>
 
-            <p className="text-sm mb-0 font-medium">Change display type</p>
+            <p className="text-sm mb-0 font-medium">{t("change-display-type")}</p>
 
             <div
               className={`flex gap-2 ms-2.5 text-sm ${layer.is_gradient ? 'cursor-not-allowed' : ''}`}
@@ -678,9 +680,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                   className={`my-[2px] whitespace-nowrap cursor-pointer ${
                     layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
                   }`}
-                >
-                  Points
-                </label>
+                >{t("points-2")}</label>
               </div>
 
               <div className="flex items-center gap-2">
@@ -703,9 +703,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                   className={`my-[2px] whitespace-nowrap cursor-pointer ${
                     layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
                   }`}
-                >
-                  Heatmap
-                </label>
+                >{t("heatmap")}</label>
               </div>
 
               <div className="flex items-center gap-2">
@@ -728,9 +726,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                   className={`my-[2px] whitespace-nowrap cursor-pointer ${
                     layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
                   }`}
-                >
-                  Grid
-                </label>
+                >{t("grid")}</label>
               </div>
             </div>
             <div className="flex  justify-between items-center">
@@ -743,9 +739,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                       ? 'border-primary text-primary font-bold' // Active tab styling
                       : 'border-transparent text-gray-500 hover:text-black'
                   }`}
-                >
-                  Recolor
-                </button>
+                >{t("recolor")}</button>
                 <button
                   onClick={() => setSelectedOption('filter')}
                   className={`px-4 py-2 text-sm font-medium flex items-center text-center gap-2 border-b-2 ${
@@ -753,9 +747,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                       ? 'border-primary text-primary font-bold' // Active tab styling
                       : 'border-transparent text-gray-500 hover:text-black'
                   }`}
-                >
-                  Filter
-                </button>
+                >{t("filter")}</button>
               </div>
             </div>
 
@@ -767,7 +759,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
             />
 
             <div>
-              {selectedOption === 'recolor' ? (
+              {selectedOption ==="recolor" ? (
                 <button
                   onClick={e => handleApplayerecolor(e)}
                   disabled={isLoading}
@@ -794,11 +786,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                           fill="currentColor"
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         />
-                      </svg>
-                      Applying...
-                    </span>
-                  ) : (
-                    'Recolor'
+                      </svg>{t("applying")}</span>
+                  ) : (t("recolor")
                   )}
                 </button>
               ) : (
@@ -829,11 +818,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                             fill="currentColor"
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           />
-                        </svg>
-                        Applying...
-                      </span>
-                    ) : (
-                      'Filter'
+                        </svg>{t("applying")}</span>
+                    ) : (t("filter")
                     )}
                   </button>
                 </>

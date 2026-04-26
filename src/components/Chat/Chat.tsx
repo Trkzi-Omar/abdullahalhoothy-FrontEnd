@@ -7,6 +7,8 @@ import { ChatMessage, topics, FetchDatasetBody } from '../../types';
 import Loader from '../Loader/Loader';
 import _ from 'lodash';
 import { useLayerContext } from '../../context/LayerContext';
+import { t } from '../../i18n';
+
 
 interface ChatProps {
   position?: string;
@@ -141,7 +143,9 @@ function Chat(props: ChatProps = defaultProps) {
       await handleFetchDataset(action, undefined, undefined, undefined, customBody);
 
       const successMessage: ChatMessage = {
-        content: `Dataset fetch initiated successfully. ${action === 'full data' ? 'The data will continue loading in the background.' : ''}`,
+        content: action === 'full data'
+          ? t("dataset-fetch-initiated-successfully-the-data-will-continue-loading-in-the-background")
+          : t("dataset-fetch-initiated-successfully"),
         isUser: false,
         timestamp: new Date().toISOString(),
       };
@@ -212,7 +216,7 @@ function Chat(props: ChatProps = defaultProps) {
           {/* Suggestions for invalid responses */}
           {isInvalidResponse && message.responseData.suggestions && (
             <div className="mt-2 text-sm">
-              <p className="font-semibold">Suggestions:</p>
+              <p className="font-semibold">{t("suggestions")}</p>
               <ul className="list-disc pl-5 mt-1">
                 {message.responseData.suggestions.map((suggestion, i) => (
                   <li key={i}>{suggestion}</li>
@@ -231,27 +235,21 @@ function Chat(props: ChatProps = defaultProps) {
                   }
                 }}
                 className="bg-gem-green text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gem-green/80 transition-colors"
-              >
-                Apply
-              </button>
+              >{t("apply")}</button>
               <button
                 onClick={() => {
                   clearChat();
                   closeChat();
                 }}
                 className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors"
-              >
-                Cancel
-              </button>
+              >{t("cancel")}</button>
             </div>
           )}
 
           {/* Dataset fetch response actions */}
           {isDatasetFetchResponse && (
             <div className="mt-3 flex flex-col gap-2">
-              <p className="text-sm text-gray-600 mb-1">
-                How would you like to retrieve this data?
-              </p>
+              <p className="text-sm text-gray-600 mb-1">{t("how-would-you-like-to-retrieve-this-data")}</p>
               <div className="flex gap-2">
                 <button
                   disabled={isSampleLoading || isFullDataLoading}
@@ -264,8 +262,7 @@ function Chat(props: ChatProps = defaultProps) {
                 >
                   {isSampleLoading ? (
                     <span className="inline-block w-4 h-4 border-2 border-gray-300 border-t-[#115740] rounded-full animate-spin"></span>
-                  ) : (
-                    'Get Sample'
+                  ) : (t("get-sample")
                   )}
                 </button>
                 <button
@@ -280,9 +277,7 @@ function Chat(props: ChatProps = defaultProps) {
                   {isFullDataLoading ? (
                     <span className="inline-block w-4 h-4 border-2 border-gray-300 border-t-white rounded-full animate-spin"></span>
                   ) : (
-                    <>
-                      Full Data
-                      {message.responseData?.cost
+                    <>{t("full-data")}{message.responseData?.cost
                         ? `($${parseFloat(message.responseData.cost).toFixed(2)})`
                         : ''}
                     </>
@@ -295,9 +290,7 @@ function Chat(props: ChatProps = defaultProps) {
                   closeChat();
                 }}
                 className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors mt-1"
-              >
-                Cancel
-              </button>
+              >{t("cancel")}</button>
             </div>
           )}
 
@@ -316,7 +309,7 @@ function Chat(props: ChatProps = defaultProps) {
                 }}
                 className="bg-gem-green text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gem-green/80 transition-colors"
               >
-                {topic === topics.DATASET ? 'Fetch' : 'Apply'}
+                {topic === topics.DATASET ?t("fetch") :t("apply")}
               </button>
               <button
                 onClick={() => {
@@ -324,9 +317,7 @@ function Chat(props: ChatProps = defaultProps) {
                   closeChat();
                 }}
                 className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors"
-              >
-                Cancel
-              </button>
+              >{t("cancel")}</button>
             </div>
           )}
         </div>
@@ -347,7 +338,7 @@ function Chat(props: ChatProps = defaultProps) {
         <button
           onClick={closeChat}
           className="text-gray-100 hover:text-white transition-colors"
-          aria-label="Close chat"
+          aria-label={t("close-chat")}
         >
           <HiX className="w-6 h-6" />
         </button>
@@ -377,7 +368,7 @@ function Chat(props: ChatProps = defaultProps) {
             type="button"
             onClick={handleHistoryNavigation}
             className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
-            aria-label="Browse message history"
+            aria-label={t("browse-message-history")}
           >
             <HiArrowUp className="w-5 h-5" />
           </button>
@@ -385,7 +376,7 @@ function Chat(props: ChatProps = defaultProps) {
             ref={inputRef}
             value={input}
             onChange={e => setInput(e.target.value)}
-            placeholder="Type your message..."
+            placeholder={t("type-your-message")}
             className="flex-1 p-2 border-none focus:ring-0 focus:outline-none resize-none min-h-[40px] h-[40px] max-h-24 leading-6 overflow-y-auto scrollbar-hide"
             onInput={e => {
               const target = e.target as HTMLTextAreaElement;
@@ -409,7 +400,7 @@ function Chat(props: ChatProps = defaultProps) {
                 ? 'text-gray-300 cursor-not-allowed'
                 : 'text-gem-green hover:text-gem-green/80 transition-colors'
             }`}
-            aria-label="Send message"
+            aria-label={t("send-message")}
           >
             <HiArrowRight className="w-5 h-5" />
           </button>

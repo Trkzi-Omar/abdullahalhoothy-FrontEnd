@@ -7,6 +7,7 @@ import { useCatalogContext } from './CatalogContext';
 import { useLayerContext } from './LayerContext';
 import { useMapContext } from './MapContext';
 import { ChatContext } from './chatContextDef';
+import { t } from '../i18n';
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const { authResponse } = useAuth();
@@ -153,12 +154,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       let responseMessage = '';
       if (responseData?.is_valid === 'Valid' || responseData?.is_valid === true) {
         if (topic === topics.DATASET) {
-          responseMessage = `I found a dataset matching your request: "${responseData.body.boolean_query}" in ${responseData.body.city_name}, ${responseData.body.country_name}.`;
+          responseMessage = t("i-found-a-dataset-matching-your-request-in-city-country", {
+            query: responseData.body.boolean_query,
+            city: responseData.body.city_name,
+            country: responseData.body.country_name,
+          });
         } else {
-          responseMessage = 'I can apply these changes for you. Would you like to proceed?';
+          responseMessage = t("i-can-apply-these-changes-for-you-would-you-like-to-proceed");
         }
       } else {
-        responseMessage = responseData?.reason || 'Sorry, I could not process your request.';
+        responseMessage = responseData?.reason || t("sorry-i-could-not-process-your-request");
       }
 
       const botMessage: ChatMessage = {
@@ -172,7 +177,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Chat error:', error);
       const errorMessage: ChatMessage = {
-        content: 'Sorry, an error occurred while processing your request.',
+        content: t("sorry-an-error-occurred-while-processing-your-request"),
         isUser: false,
         timestamp: new Date().toISOString(),
       };
@@ -202,7 +207,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
         // Extract and validate parameters from LLM response
         if (!responseData || !responseData.body) {
-          throw new Error('Invalid LLM response data');
+          throw new Error(t("invalid-llm-response-data"));
         }
 
         // Determine which endpoint to use based on the response
@@ -254,7 +259,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const processLLMResponseBody = (responseBody: RecolorBody): RecolorBody => {
     // Ensure required fields are present
     if (!responseBody) {
-      throw new Error('Missing response body');
+      throw new Error(t("missing-response-body"));
     }
 
     // Extract parameters, defaulting if necessary
@@ -274,7 +279,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
     // Validate essential parameters
     if (!change_layer_id || !based_on_layer_id) {
-      throw new Error('Missing required layer IDs in response');
+      throw new Error(t("missing-required-layer-ids-in-response"));
     }
 
     // Format parameters appropriately
@@ -367,4 +372,3 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     </ChatContext.Provider>
   );
 }
-

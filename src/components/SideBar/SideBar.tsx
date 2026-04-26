@@ -4,6 +4,8 @@ import { MdInfo, MdLogout, MdMap, MdPerson, MdTableChart } from 'react-icons/md'
 import { Link, useNavigate } from 'react-router-dom';
 import { HiCurrencyDollar } from 'react-icons/hi';
 import { isGuestUser, useAuth } from '../../context/AuthContext';
+import { t } from '../../i18n';
+
 
 const SideBar = () => {
   const { authResponse, isAuthenticated, logout } = useAuth();
@@ -43,52 +45,52 @@ const SideBar = () => {
               navigate('/');
             }, 100);
           }}
-          title="Map"
+          title={t("map")}
         >
           <div>
             <MdMap className="w-6 h-6 transition-all fill-white" />
           </div>
-          {!isCollapsed && <span className="ml-2 text-white truncate">Map</span>}
+          {!isCollapsed && <span className="ml-2 text-white truncate">{t("map")}</span>}
         </div>
 
         {/* Tabluar View Button */}
-        <Link to={'/tabularView'} className="sidebar-icon" title="Tabular View">
+        <Link to={'/tabularView'} className="sidebar-icon" title={t("tabular-view")}>
           <div>
             <MdTableChart className="w-6 h-6 transition-all fill-white" />
           </div>
-          {!isCollapsed && <span className="ml-2 text-white truncate">Tabular View</span>}
+          {!isCollapsed && <span className="ml-2 text-white truncate">{t("tabular-view")}</span>}
         </Link>
 
         {/* Organization View Button */}
-        <Link to={'/organization'} className="sidebar-icon" title="Organization">
+        <Link to={'/organization'} className="sidebar-icon" title={t("organization")}>
           <div>
             <FaNetworkWired className="w-6 h-6 transition-all fill-white" />
           </div>
-          {!isCollapsed && <span className="ml-2 text-white">Organization</span>}
+          {!isCollapsed && <span className="ml-2 text-white">{t("organization")}</span>}
         </Link>
 
         {/* Billing View Button */}
-        <Link to={'/billing'} className="sidebar-icon" title="Checkout">
+        <Link to={'/billing'} className="sidebar-icon" title={t("checkout")}>
           <div>
             <HiCurrencyDollar className="w-6 h-6 transition-all fill-white" />
           </div>
-          {!isCollapsed && <span className="ml-2 text-white">Checkout</span>}
+          {!isCollapsed && <span className="ml-2 text-white">{t("checkout")}</span>}
         </Link>
 
         {/* Bottom Icons */}
         <div className="absolute bottom-5 w-full">
-          <Link to={'/profile'} className="sidebar-icon" title="Account">
+          <Link to={'/profile'} className="sidebar-icon" title={t("account")}>
             <div>
               <MdPerson className="w-6 h-6 transition-all fill-white" />
             </div>
-            {!isCollapsed && <span className="ml-2 text-white truncate">Account</span>}
+            {!isCollapsed && <span className="ml-2 text-white truncate">{t("account")}</span>}
           </Link>
 
-          <a className="sidebar-icon" href="https://s-locator.com/" title="About Us" target="_blank">
+          <a className="sidebar-icon" href="https://s-locator.com/" title={t("about-us")} target="_blank">
             <div>
               <MdInfo className="w-6 h-6 transition-all fill-white" />
             </div>
-            {!isCollapsed && <span className="ml-2 text-white truncate">About Us</span>}
+            {!isCollapsed && <span className="ml-2 text-white truncate">{t("about-us")}</span>}
           </a>
 
           {shouldShowLogout ? (
@@ -99,12 +101,12 @@ const SideBar = () => {
                 setIsCollapsed(true);
                 navigate('/auth');
               }}
-              title="Logout"
+              title={t("logout")}
             >
               <div>
                 <MdLogout className="w-6 h-6 transition-all fill-white" />
               </div>
-              {!isCollapsed && <span className="ml-2 text-white truncate">Logout</span>}
+              {!isCollapsed && <span className="ml-2 text-white truncate">{t("logout")}</span>}
             </div>
           ) : null}
         </div>
@@ -119,51 +121,51 @@ export const SideBarContent = () => {
   return (
     <>
       {/* Map Button */}
-      <div className="sidebar-icon" onClick={() => navigate('/')} title="Map">
+      <div className="sidebar-icon" onClick={() => navigate('/')} title={t("map")}>
         <div>
           <MdMap className="w-6 h-6 transition-all " />
         </div>
-        <span className="ml-2 truncate">Map</span>
+        <span className="ml-2 truncate">{t("map")}</span>
       </div>
 
       {/* Tabluar View Button */}
-      <Link to={'/tabularView'} className="sidebar-icon" title="Tabular View">
+      <Link to={'/tabularView'} className="sidebar-icon" title={t("tabular-view")}>
         <div>
           <MdTableChart className="w-6 h-6 transition-all " />
         </div>
-        <span className="ml-2 truncate">Tabular View</span>
+        <span className="ml-2 truncate">{t("tabular-view")}</span>
       </Link>
 
       {/* Organization View Button */}
-      <Link to={'/organization'} className="sidebar-icon" title="Organization">
+      <Link to={'/organization'} className="sidebar-icon" title={t("organization")}>
         <div>
           <FaNetworkWired className="w-6 h-6 transition-all " />
         </div>
-        <span className="ml-2 ">Organization</span>{' '}
+        <span className="ml-2 ">{t("organization")}</span>{' '}
       </Link>
 
       {/* Billing View Button */}
-      <Link to={'/billing'} className="sidebar-icon" title="Billing and Cost Management">
+      <Link to={'/billing'} className="sidebar-icon" title={t("billing-and-cost-management")}>
         <div>
           <HiCurrencyDollar className="w-6 h-6 transition-all " />
         </div>
-        <span className="ml-2 ">Billing and Cost Management</span>
+        <span className="ml-2 ">{t("billing-and-cost-management")}</span>
       </Link>
 
       {/* Bottom Icons */}
       <div className="absolute bottom-5 w-full">
-        <Link to={'/profile'} className="sidebar-icon" title="Account">
+        <Link to={'/profile'} className="sidebar-icon" title={t("account")}>
           <div>
             <MdPerson className="w-6 h-6 transition-all " />
           </div>
-          <span className="ml-2 truncate">Account</span>
+          <span className="ml-2 truncate">{t("account")}</span>
         </Link>
 
-        <a className="sidebar-icon" href="https://s-locator.com/" title="About Us">
+        <a className="sidebar-icon" href="https://s-locator.com/" title={t("about-us")}>
           <div>
             <MdInfo className="w-6 h-6 transition-all " />
           </div>
-          <span className="ml-2 truncate">About Us</span>
+          <span className="ml-2 truncate">{t("about-us")}</span>
         </a>
 
         {/* <div

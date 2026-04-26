@@ -1,6 +1,8 @@
 // src/components/Banner.tsx
 import React from 'react';
 import { IoClose } from 'react-icons/io5';
+import { t } from '../../i18n';
+
 
 
 interface BannerProps {
@@ -42,7 +44,7 @@ const Banner: React.FC<BannerProps> = ({
         <button 
           onClick={onClose} 
           className="ml-3 flex items-center justify-center w-7 h-7 rounded-full bg-red-500 hover:bg-red-600 transition-colors flex-shrink-0"
-          aria-label="Close banner"
+          aria-label={t("close-banner")}
         >
           <IoClose size={16} color="white" />
         </button>

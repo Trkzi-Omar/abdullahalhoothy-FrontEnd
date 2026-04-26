@@ -36,6 +36,8 @@ import DeliveryInStoreStep from './components/DeliveryInStoreStep';
 import PhoneVerificationStep from './components/PhoneVerificationStep';
 import { formatBusinessTypeForApi } from './utils/businessTypeApi';
 import ReportAIAssistant from './components/ReportAIAssistant/ReportAIAssistant';
+import { t } from '../../i18n';
+
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
@@ -55,7 +57,7 @@ type ApiErrorShape = {
 };
 
 const extractErrorMessage = (error: unknown): string => {
-  let errorMessage = 'An unexpected error occurred. Please try again.';
+  let errorMessage = t("an-unexpected-error-occurred-please-try-again");
 
   if (error && typeof error === 'object' && 'response' in error) {
     const apiError = error as ApiErrorShape;
@@ -400,7 +402,7 @@ const CustomReportForm = () => {
 
     // Validate report type is selected
     if (!reportType) {
-      setErrors(prev => ({ ...prev, report_type: 'Please select a report type' }));
+      setErrors(prev => ({ ...prev, report_type: t("please-select-a-report-type") }));
       return false;
     }
 
@@ -408,16 +410,16 @@ const CustomReportForm = () => {
 
     // Validate city selection
     if (!formData.city_name) {
-      newErrors.city_name = 'Please select a city';
+      newErrors.city_name = t("please-select-a-city");
     }
 
     if (!formData.Type?.trim()) {
-      newErrors.Type = 'Please select or enter a business type';
+      newErrors.Type = t("please-select-or-enter-a-business-type");
     }
 
     // In advanced mode, validate report tier selection
     if (isAdvancedMode && !formData.report_tier) {
-      newErrors.report_tier = 'Please select a report tier';
+      newErrors.report_tier = t("please-select-a-report-tier");
     }
 
     // In advanced mode, validate evaluation metrics
@@ -429,20 +431,20 @@ const CustomReportForm = () => {
         0
       );
       if (Math.abs(metricsSum - 1) > 0.001) {
-        newErrors.evaluation_metrics = `Evaluation metrics must sum to 1.0. Current sum: ${metricsSum.toFixed(2)}`;
+        newErrors.evaluation_metrics = t("evaluation-metrics-must-sum-to-1-0-current-sum", { sum: metricsSum.toFixed(2) });
       }
 
       // Validate individual metrics are not negative
       Object.entries(formData.evaluation_metrics).forEach(([key, value]) => {
         if (value < 0) {
-          newErrors[`metrics_${key}`] = `${key} cannot be negative`;
+          newErrors[`metrics_${key}`] = t("metric-cannot-be-negative", { metric: key });
         }
       });
 
       // Validate delivery/dine-in weights
       const deliverySum = (formData.delivery_weight || 0) + (formData.dine_in_weight || 0);
       if (Math.abs(deliverySum - 1) > 0.001) {
-        newErrors.delivery_weight = `Weights must sum to 100%`;
+        newErrors.delivery_weight = t("weights-must-sum-to-100");
       }
     }
 
@@ -454,7 +456,7 @@ const CustomReportForm = () => {
         loc => loc.lat !== 0 && loc.lng !== 0
       );
       if (!hasValidCustomLocation) {
-        newErrors.custom_locations = 'Please select a location to evaluate';
+        newErrors.custom_locations = t("please-select-a-location-to-evaluate");
       }
     }
 
@@ -726,7 +728,7 @@ const CustomReportForm = () => {
 
     // Additional safety check for report type
     if (!reportType) {
-      setSubmitError('Please select a report type before submitting');
+      setSubmitError(t("please-select-a-report-type-before-submitting"));
       return;
     }
 
@@ -932,7 +934,7 @@ const CustomReportForm = () => {
   const goToNextStep = () => {
     // Prevent advancing from step 0 without selecting report type
     if (currentStep === 0 && !reportType) {
-      setSubmitError('Please select a report type to continue');
+      setSubmitError(t("please-select-a-report-type-to-continue"));
       return;
     }
 
@@ -1065,14 +1067,12 @@ const CustomReportForm = () => {
             <div className="flex flex-col items-center justify-center py-12 px-4">
               <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-4 flex items-center shadow-sm border border-red-100">
                 <FaExclamationTriangle className="mr-3 h-5 w-5" />
-                <span className="font-medium">Failed to load segment report.</span>
+                <span className="font-medium">{t("failed-to-load-segment-report")}</span>
               </div>
               <button
                 onClick={getSegmentReport}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium"
-              >
-                Retry
-              </button>
+              >{t("retry")}</button>
             </div>
           );
         }
@@ -1244,10 +1244,8 @@ const CustomReportForm = () => {
               ></div>
             </div>
 
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Preparing Your Report</h2>
-            <p className="text-gray-600 mb-4">
-              Setting up the form for your {businessType} location analysis...
-            </p>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t("preparing-your-report")}</h2>
+            <p className="text-gray-600 mb-4">{t("setting-up-the-form-for-your")}{' '}{businessType}{' '}{t("location-analysis")}</p>
 
             {/* Loading dots animation */}
             <div className="flex justify-center space-x-1">
@@ -1286,7 +1284,7 @@ const CustomReportForm = () => {
             <h2
               className={`text-xl font-semibold mb-2 ${isNotSupportedError ? 'text-orange-900' : 'text-red-900'}`}
             >
-              {isNotSupportedError ? 'Business Type Not Available' : 'Configuration Error'}
+              {isNotSupportedError ?t("business-type-not-available") :t("configuration-error")}
             </h2>
             <p className={`mb-4 ${isNotSupportedError ? 'text-orange-700' : 'text-red-700'}`}>
               {configError}
@@ -1298,9 +1296,7 @@ const CustomReportForm = () => {
                   ? 'bg-orange-600 hover:bg-orange-700'
                   : 'bg-red-600 hover:bg-red-700'
               }`}
-            >
-              Go Back
-            </button>
+            >{t("go-back")}</button>
           </div>
         </div>
       </main>
@@ -1323,8 +1319,8 @@ const CustomReportForm = () => {
               ></div>
             </div>
 
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Almost Ready</h2>
-            <p className="text-gray-600 mb-4">Finalizing your {businessType} report setup...</p>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t("almost-ready")}</h2>
+            <p className="text-gray-600 mb-4">{t("finalizing-your")}{' '}{businessType}{' '}{t("report-setup")}</p>
 
             {/* Loading dots animation */}
             <div className="flex justify-center space-x-1">
@@ -1361,16 +1357,16 @@ const CustomReportForm = () => {
             className="flex items-center px-2 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-200"
           >
             <FaArrowLeft className="w-3 h-3 mr-1" />
-            <span>Back</span>
+            <span>{t("back")}</span>
           </button>
           {!isLastStep && (
             <div className="text-center flex-1">
               <h1 className="text-lg font-bold text-gray-900">
-                {reportType === 'location'
-                  ? 'Evaluate Your Location'
-                  : reportType === 'full'
-                    ? 'Full Expansion Report'
-                    : 'Location Expansion Report'}
+                {reportType ==="location"
+                  ?t("evaluate-your-location")
+                  : reportType ==="full"
+                    ?t("full-expansion-report")
+                    :t("location-expansion-report")}
               </h1>
             </div>
           )}
@@ -1432,16 +1428,10 @@ const CustomReportForm = () => {
                   </div>
                   <div className="ml-3 flex-1">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-gray-900">
-                        Generating your {businessType} report...
-                      </p>
-                      <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full">
-                        ~3 - 15 min
-                      </span>
+                      <p className="text-sm font-medium text-gray-900">{t("generating-your")}{' '}{businessType}{' '}{t("report")}</p>
+                      <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full">{t("3-15-min")}</span>
                     </div>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Report Generation in progress. You can always find the report link in your profile under reports section.
-                    </p>
+                    <p className="text-xs text-gray-600 mt-1">{t("report-generation-in-progress-you-can-always-find-the-report-link-in-your-profil")}</p>
                   </div>
                 </div>
               </div>
@@ -1490,7 +1480,7 @@ const CustomReportForm = () => {
             {/* Additional Cost Message for Attributes Step */}
             {(() => {
               const isAttributesStep =
-                getActualStepContent(currentStep, reportType) === 'attributes';
+                getActualStepContent(currentStep, reportType) ==="attributes";
               return (
                 isAttributesStep &&
                 additionalCost !== null &&
@@ -1519,14 +1509,11 @@ const CustomReportForm = () => {
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             ></path>
                           </svg>
-                          <span className="text-sm font-medium">
-                            Calculating additional cost...
-                          </span>
+                          <span className="text-sm font-medium">{t("calculating-additional-cost")}</span>
                         </div>
                       ) : (
                         <p className="text-sm font-semibold text-blue-800">
-                          +${additionalCost.toFixed(2)} for extra datasets
-                        </p>
+                          +${additionalCost.toFixed(2)}{' '}{t("for-extra-datasets")}</p>
                       )}
                     </div>
                   </div>

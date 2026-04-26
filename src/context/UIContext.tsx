@@ -12,6 +12,7 @@ import { useCatalogContext } from './CatalogContext';
 import { useLayerContext } from './LayerContext';
 import { ModalOptions, UIContextProps } from '../types/allTypesAndInterfaces';
 import { useLocation } from 'react-router';
+import { t } from '../i18n';
 
 const UIContext = createContext<UIContextProps | undefined>(undefined);
 
@@ -19,7 +20,7 @@ const UIContext = createContext<UIContextProps | undefined>(undefined);
 export function useUIContext() {
   const context = useContext(UIContext);
   if (!context) {
-    throw new Error('useUIContext must be used within a UIProvider');
+    throw new Error(t("useuicontext-must-be-used-within-a-uiprovider"));
   }
   return context;
 }

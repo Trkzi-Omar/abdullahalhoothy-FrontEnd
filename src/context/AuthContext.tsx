@@ -3,6 +3,7 @@ import { AuthContextType, AuthResponse, AuthSuccessResponse } from '../types/all
 import apiRequest from '../services/apiRequest';
 import urls from '../urls.json';
 import { useSearchParams } from 'react-router-dom';
+import { t } from '../i18n';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -37,7 +38,7 @@ export const performGoogleLogin = async (
 
   const data = (response?.data?.data || response?.data) as AuthResponse;
   if (!data || !('idToken' in data)) {
-    throw new Error('Google Login Error: Invalid response');
+    throw new Error(t("google-login-error-invalid-response"));
   }
 
   setAuthResponse(data);
@@ -83,7 +84,7 @@ export const performLogin = async (
 
   const data = (response?.data?.data || response?.data) as AuthResponse;
   if (!data || !('idToken' in data)) {
-    throw new Error('Login Error: Invalid response');
+    throw new Error(t("login-error-invalid-response"));
   }
 
   if (options.isGuest && isGuestUser(data) && options.source) {
@@ -223,7 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error(t("useauth-must-be-used-within-an-authprovider"));
   }
   return context;
 };

@@ -1,5 +1,7 @@
 import { FaArrowLeft, FaArrowRight, FaCheck } from 'react-icons/fa';
 import { getTotalSteps, getStepDefinitions } from '../constants';
+import { t } from '../../../i18n';
+
 
 interface FormNavigationProps {
   currentStep: number;
@@ -46,7 +48,7 @@ const FormNavigation = ({
 
   // Determine if current step should show "Skip" instead of "Next"
   let shouldShowSkip = false;
-  let nextButtonText = 'Next';
+  let nextButtonText = t("next");
 
   const currentStepContent = getStepContent(currentStep);
 
@@ -72,7 +74,7 @@ const FormNavigation = ({
     shouldShowSkip = !isCurrentLocationSet;
   }
 
-  nextButtonText = shouldShowSkip ? 'Skip' : 'Next';
+  nextButtonText = shouldShowSkip ? t("skip") : t("next");
 
   return (
     <div className="flex items-center justify-between px-4">
@@ -80,12 +82,12 @@ const FormNavigation = ({
         type="button"
         onClick={onPreviousStep}
         disabled={currentStep === 0}
-        aria-label="Go to previous step"
+        aria-label={t("go-to-previous-step")}
         aria-disabled={currentStep === 0}
         className="flex items-center px-4 py-2.5 text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100"
       >
         <FaArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
-        <span>← Previous</span>
+        <span>{t("previous")}</span>
       </button>
 
       <div className="flex items-center space-x-3">
@@ -94,7 +96,7 @@ const FormNavigation = ({
             type="button"
             onClick={onNextStep}
             disabled={!validateCurrentStep(currentStep) || isSubmitting}
-            aria-label={shouldShowSkip ? 'Skip to next step' : 'Continue to next step'}
+            aria-label={shouldShowSkip ? t("skip-to-next-step") : t("continue-to-next-step")}
             aria-disabled={!validateCurrentStep(currentStep) || isSubmitting}
             className={`flex items-center px-6 py-2.5 font-semibold rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:translate-y-0 active:shadow-[0_2px_4px_rgba(0,0,0,0.1)] ${
               shouldShowSkip
@@ -110,7 +112,7 @@ const FormNavigation = ({
             type="button"
             disabled={isSubmitting || !validateForm()}
             onClick={onSubmit}
-            aria-label={isSubmitting ? 'Generating report, please wait' : 'Generate your report'}
+            aria-label={isSubmitting ? t("generating-report-please-wait") : t("generate-your-report")}
             aria-busy={isSubmitting}
             aria-disabled={isSubmitting || !validateForm()}
             className="flex items-center px-6 py-2.5 bg-gem-gradient text-white font-semibold rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] active:translate-y-0 active:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
@@ -137,12 +139,12 @@ const FormNavigation = ({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                <span>Generating Report...</span>
+                <span>{t("generating-report")}</span>
               </>
             ) : (
               <>
                 <FaCheck className="w-4 h-4 mr-2" />
-                <span>Generate Report</span>
+                <span>{t("generate-report")}</span>
               </>
             )}
           </button>

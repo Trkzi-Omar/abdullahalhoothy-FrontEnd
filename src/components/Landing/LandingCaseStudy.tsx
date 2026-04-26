@@ -1,6 +1,7 @@
 import { MdWarning, MdCheckCircle } from 'react-icons/md';
 import type { LandingTranslations } from '../../pages/Landing/translations';
 
+
 interface LandingCaseStudyProps {
   t: LandingTranslations;
 }
@@ -48,9 +49,7 @@ const LandingCaseStudy = ({ t }: LandingCaseStudyProps) => {
               <div className="w-full max-w-sm space-y-4">
                 <div className="bg-red-500/5 border border-red-500/20 p-4 rounded-lg flex items-center justify-between opacity-60">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center text-red-500 font-bold">
-                      A
-                    </div>
+                    <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center text-red-500 font-bold">A</div>
                     <div>
                       <div className="text-sm font-bold text-white">{t.caseStudy.orig}</div>
                       <div className="text-xs text-red-400">{t.caseStudy.risk}</div>
@@ -63,9 +62,7 @@ const LandingCaseStudy = ({ t }: LandingCaseStudyProps) => {
                 </div>
                 <div className="bg-brand-green/10 border border-brand-green/40 p-5 rounded-xl flex items-center justify-between scale-105 shadow-xl shadow-brand-green/5">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-brand-green flex items-center justify-center text-white font-bold shadow-lg">
-                      B
-                    </div>
+                    <div className="w-10 h-10 rounded-full bg-brand-green flex items-center justify-center text-white font-bold shadow-lg">B</div>
                     <div>
                       <div className="text-base font-bold text-white">{t.caseStudy.pick}</div>
                       <div className="text-xs text-brand-green">{t.caseStudy.rec}</div>

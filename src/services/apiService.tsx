@@ -1,5 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import urls from '../urls.json';
+import { t } from '../i18n';
+
 const baseUrl = urls.REACT_APP_API_URL;
 
 export const apiClient: AxiosInstance = axios.create({
@@ -29,7 +31,7 @@ export async function HttpReq<T>(
     const wrappedBody =
       method !== 'get'
         ? {
-            message: 'Request from frontend',
+            message:t("request-from-frontend"),
             request_info: {},
             request_body: body,
           }

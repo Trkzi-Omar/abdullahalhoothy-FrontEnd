@@ -3,6 +3,7 @@ import gridSizeLevels from '../gridSizeLevels.json';
 import distance from '@turf/distance';
 import metersPerPixelRanges from '../metersPerPixelRanges.json';
 import fakeDataLevels from '../fakeDataLevels.json';
+import { t } from '../i18n';
 /**
  * Maps a Mapbox zoom level to the backend zoom level
  * @param mapboxZoom - The current Mapbox zoom level
@@ -106,7 +107,7 @@ export function mapMetersPerPixelToZoom(metersPerPixel: number): number {
  */
 export function mapZoomToFakeDataZoom(zoom: number): number {
   if (zoom < 0 || zoom > 17) {
-    throw new Error('Zoom level must be between 0 and 17');
+    throw new Error(t("zoom-level-must-be-between-0-and-17"));
   }
   return fakeDataLevels[zoom.toString() as keyof typeof fakeDataLevels] || 1;
 }

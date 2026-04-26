@@ -3,6 +3,8 @@ import { HiOutlineSparkles } from 'react-icons/hi2';
 import { IoClose } from 'react-icons/io5';
 import ReportAIChatPanel from './ReportAIChatPanel';
 import { useReportAIChat } from './useReportAIChat';
+import { t } from '../../../../i18n';
+
 
 interface ReportAIAssistantProps {
   stepTitle?: string;
@@ -51,12 +53,11 @@ function ReportAIAssistant({ stepTitle }: ReportAIAssistantProps) {
   }, []);
 
   const greetingText = stepTitle ? (
-    <>
-      Hello, I can answer any question you may have regarding{' '}
+    <>{t("hello-i-can-answer-any-question-you-may-have-regarding")}{' '}
       <strong>{stepTitle}</strong>.
     </>
   ) : (
-    <>Hello, I can answer any question you may have regarding report generation.</>
+    <>{t("hello-i-can-answer-any-question-you-may-have-regarding-report-generation")}</>
   );
 
   return (
@@ -72,7 +73,7 @@ function ReportAIAssistant({ stepTitle }: ReportAIAssistantProps) {
             onClick={dismissGreeting}
             className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-200 hover:bg-gray-300
               rounded-full flex items-center justify-center transition-colors"
-            aria-label="Dismiss greeting"
+            aria-label={t("dismiss-greeting")}
           >
             <IoClose className="w-3 h-3 text-gray-600" />
           </button>
@@ -101,7 +102,7 @@ function ReportAIAssistant({ stepTitle }: ReportAIAssistantProps) {
           flex items-center justify-center
           transition-all duration-300 hover:scale-110 hover:brightness-110 z-50
           ${isOpen ? 'opacity-90 pointer-events-none' : 'opacity-100'}`}
-        aria-label="Open AI assistant"
+        aria-label={t("open-ai-assistant")}
       >
         <HiOutlineSparkles className="text-white w-7 h-7" />
       </button>

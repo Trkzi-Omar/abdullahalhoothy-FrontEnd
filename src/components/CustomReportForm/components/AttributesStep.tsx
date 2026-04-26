@@ -6,6 +6,8 @@ import {
 } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { CustomReportData } from "../../../types";
+import { t } from '../../../i18n';
+
 
 interface CategoryItem {
   type: "predefined" | "custom";
@@ -92,11 +94,11 @@ const SetAttributeStep = ({
     const trimmed = value.trim();
 
     if (trimmed.length < 2) {
-      return { valid: false, error: "Keyword must be at least 2 characters" };
+      return { valid: false, error: t("keyword-must-be-at-least-2-characters") };
     }
 
     if (trimmed.length > 50) {
-      return { valid: false, error: "Keyword must be at most 50 characters" };
+      return { valid: false, error: t("keyword-must-be-at-most-50-characters") };
     }
 
     return { valid: true };
@@ -119,13 +121,13 @@ const SetAttributeStep = ({
     const sanitized = searchValue.trim().replace(/^@+|@+$/g, "");
 
     if (!sanitized) {
-      setError("Please enter a keyword");
+      setError(t("please-enter-a-keyword"));
       return;
     }
 
     const validation = validateKeywordInput(sanitized);
     if (!validation.valid) {
-      setError(validation.error || "Invalid keyword");
+      setError(validation.error || t("invalid-keyword"));
       return;
     }
 
@@ -134,7 +136,7 @@ const SetAttributeStep = ({
     );
 
     if (isDuplicate) {
-      setError("This keyword is already added");
+      setError(t("this-keyword-is-already-added"));
       return;
     }
 
@@ -259,11 +261,8 @@ const SetAttributeStep = ({
     <div className="animate-fade-in-up h-full flex flex-col overflow-hidden">
       {/* Header */}
       <div className="mb-4 flex-shrink-0">
-        <h3 className="text-lg font-bold text-gray-900 mb-1">Set Attributes</h3>
-        <p className="text-sm text-gray-600">
-          Define demographics, competition, and complementary business
-          attributes.
-        </p>
+        <h3 className="text-lg font-bold text-gray-900 mb-1">{t("set-attributes")}</h3>
+        <p className="text-sm text-gray-600">{t("define-demographics-competition-and-complementary-business-attributes")}</p>
       </div>
 
       {/* Main Content Grid */}
@@ -271,15 +270,11 @@ const SetAttributeStep = ({
         {/* Demographics Section */}
         <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-4 flex flex-col overflow-hidden max-h-[60vh]">
           <h4 className="text-base font-semibold text-gray-800 mb-3 flex items-center flex-shrink-0">
-            <FaUsers className="w-4 h-4 mr-2 text-primary" />
-            Demographics
-          </h4>
+            <FaUsers className="w-4 h-4 mr-2 text-primary" />{t("demographics")}</h4>
           {/* Population Counter */}
           <div className="mb-3 flex-shrink-0">
             <div className="flex flex-col">
-              <label htmlFor="age" className="text-gray-900 font-semibold text-sm mb-2">
-                Age
-              </label>
+              <label htmlFor="age" className="text-gray-900 font-semibold text-sm mb-2">{t("age")}</label>
               <input
                 type="number"
                 id="age"
@@ -291,9 +286,7 @@ const SetAttributeStep = ({
           </div>
           {/* Income Chips */}
           <div className="flex flex-col flex-shrink-0">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Target Income Range
-            </label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">{t("target-income-range")}</label>
             <div className="flex flex-wrap gap-2">
               {INCOME_OPTIONS.map(option => {
                 const value = option.toLowerCase();
@@ -325,13 +318,11 @@ const SetAttributeStep = ({
         {/* Complementary Section */}
         <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-4 flex flex-col overflow-hidden max-h-[60vh]">
           <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center flex-shrink-0">
-            <FaHandshake className="w-4 h-4 mr-2 text-primary" />
-            Complementary
-          </h3>
+            <FaHandshake className="w-4 h-4 mr-2 text-primary" />{t("complementary")}</h3>
 
           <input
             type="text"
-            placeholder="Search categories or add custom keyword..."
+            placeholder={t("search-categories-or-add-custom-keyword")}
             value={searchComplementary}
             onChange={(e) => setSearchComplementary(e.target.value)}
             onKeyDown={(e) =>
@@ -358,11 +349,7 @@ const SetAttributeStep = ({
               (cat) =>
                 cat.toLowerCase() === searchComplementary.trim().toLowerCase(),
             ) && (
-              <div className="text-xs text-blue-600 mb-2 px-3">
-                Press Enter to add '
-                {searchComplementary.trim().replace(/^@+|@+$/g, "")}' as custom
-                keyword
-              </div>
+              <div className="text-xs text-blue-600 mb-2 px-3">{t("press-enter-to-add")}{searchComplementary.trim().replace(/^@+|@+$/g, "")}{t("as-custom-keyword")}</div>
             )}
 
           {complementaryError && (
@@ -414,13 +401,11 @@ const SetAttributeStep = ({
         {/* Competition Section */}
         <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-4 flex flex-col overflow-hidden max-h-[60vh]">
           <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center flex-shrink-0">
-            <FaLayerGroup className="w-4 h-4 mr-2 text-primary" />
-            Competition
-          </h3>
+            <FaLayerGroup className="w-4 h-4 mr-2 text-primary" />{t("competition")}</h3>
 
           <input
             type="text"
-            placeholder="Search categories or add custom keyword..."
+            placeholder={t("search-categories-or-add-custom-keyword")}
             value={searchCompetition}
             onChange={(e) => setSearchCompetition(e.target.value)}
             onKeyDown={(e) =>
@@ -447,11 +432,7 @@ const SetAttributeStep = ({
               (cat) =>
                 cat.toLowerCase() === searchCompetition.trim().toLowerCase(),
             ) && (
-              <div className="text-xs text-blue-600 mb-2 px-3">
-                Press Enter to add '
-                {searchCompetition.trim().replace(/^@+|@+$/g, "")}' as custom
-                keyword
-              </div>
+              <div className="text-xs text-blue-600 mb-2 px-3">{t("press-enter-to-add")}{searchCompetition.trim().replace(/^@+|@+$/g, "")}{t("as-custom-keyword")}</div>
             )}
 
           {competitionError && (
@@ -503,13 +484,11 @@ const SetAttributeStep = ({
         {/* Cross Shopping Section */}
         <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-4 flex flex-col overflow-hidden max-h-[60vh]">
           <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center flex-shrink-0">
-            <FaUsers className="w-4 h-4 mr-2 text-primary" />
-            Cross Shopping
-          </h3>
+            <FaUsers className="w-4 h-4 mr-2 text-primary" />{t("cross-shopping")}</h3>
 
           <input
             type="text"
-            placeholder="Search categories or add custom keyword..."
+            placeholder={t("search-categories-or-add-custom-keyword")}
             value={searchCross}
             onChange={(e) => setSearchCross(e.target.value)}
             onKeyDown={(e) =>
@@ -535,10 +514,7 @@ const SetAttributeStep = ({
             !categories.some(
               (cat) => cat.toLowerCase() === searchCross.trim().toLowerCase(),
             ) && (
-              <div className="text-xs text-blue-600 mb-2 px-3">
-                Press Enter to add '{searchCross.trim().replace(/^@+|@+$/g, "")}
-                ' as custom keyword
-              </div>
+              <div className="text-xs text-blue-600 mb-2 px-3">{t("press-enter-to-add")}{searchCross.trim().replace(/^@+|@+$/g, "")}{t("as-custom-keyword")}</div>
             )}
 
           {crossError && (

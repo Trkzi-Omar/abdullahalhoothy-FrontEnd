@@ -4,6 +4,8 @@ import { useBillingContext } from '../../context/BillingContext';
 import { BiMenu } from 'react-icons/bi';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { SideBarContent } from '../SideBar/SideBar';
+import { t } from '../../i18n';
+
 
 export default function MobileNavbar() {
   const { isAuthenticated } = useAuth();
@@ -42,7 +44,7 @@ export default function MobileNavbar() {
       <div className="flex justify-between items-center px-4 py-2 border-b">
         <Link to="/" className="flex items-center gap-2">
           <div className="flex items-center gap-2">
-            <img src="/slocator.png" alt="Google Logo" className="w-7" />
+            <img src="/slocator.png" alt={t("google-logo")} className="w-7" />
           </div>
         </Link>
         <div className="flex items-center gap-3">
@@ -51,7 +53,7 @@ export default function MobileNavbar() {
             <button
               onClick={handleCartClick}
               className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
-              aria-label="View Cart"
+              aria-label={t("view-cart")}
             >
               <svg
                 className="w-6 h-6 text-gray-700"
@@ -77,15 +79,13 @@ export default function MobileNavbar() {
             <div className="flex items-center gap-2">
               <Link to="/profile">
                 <div className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 ">
-                  <span className="text-gray-500 text-sm font-medium">JD</span>
+                  <span className="text-gray-500 text-sm font-medium">{t("jd")}</span>
                 </div>
               </Link>
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Link to="/auth" className="text-base">
-                Login
-              </Link>
+              <Link to="/auth" className="text-base">{t("login")}</Link>
             </div>
           )}
         </div>

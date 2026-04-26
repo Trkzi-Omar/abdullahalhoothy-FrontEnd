@@ -6,6 +6,8 @@ import { Descendant, Text, Element } from 'slate';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useCatalogContext } from '../../context/CatalogContext';
+import { t } from '../../i18n';
+
 
 export const CaseStudyContext = createContext<{
   showCaseStudy: boolean;
@@ -56,7 +58,7 @@ export const CaseStudyPanel: React.FC = () => {
   const handleExportToPdf = async () => {
     if (isEditMode) {
       alert(
-        'PDF export is best used in view mode to capture the displayed chart. Please switch to view mode.'
+        t("pdf-export-is-best-used-in-view-mode-to-capture-the-displayed-chart-please-switch-to-view-mode")
       );
       return;
     }
@@ -67,7 +69,7 @@ export const CaseStudyPanel: React.FC = () => {
     try {
       const fontResponse = await fetch('/DINNextLTArabic Regular.ttf');
       if (!fontResponse.ok) {
-        throw new Error('Arabic font not found');
+        throw new Error(t("arabic-font-not-found"));
       }
       const fontBlob = await fontResponse.arrayBuffer();
       arabicFontBase64 = btoa(
@@ -76,7 +78,7 @@ export const CaseStudyPanel: React.FC = () => {
       console.log('Arabic font loaded successfully');
     } catch (error) {
       console.error('Error loading Arabic font:', error);
-      alert('Could not load Arabic font. PDF export may not render Arabic text correctly.');
+      alert(t("could-not-load-arabic-font-pdf-export-may-not-render-arabic-text-correctly"));
     }
 
     try {
@@ -476,12 +478,12 @@ export const CaseStudyPanel: React.FC = () => {
     >
       <div className="h-full p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gem">Case Study</h2>
+          <h2 className="text-2xl font-bold text-gem">{t("case-study")}</h2>
           <div className="flex items-center gap-2">
             <button
               onClick={togglePanelExpansion}
               className="text-gray-500 hover:text-gem transition-colors p-1.5 border border-gray-300 rounded"
-              aria-label={isPanelExpanded ? 'Minimize panel' : 'Expand panel'}
+              aria-label={isPanelExpanded ? t("minimize-panel") : t("expand-panel")}
             >
               {isPanelExpanded ? (
                 <svg
@@ -518,21 +520,19 @@ export const CaseStudyPanel: React.FC = () => {
             <button
               onClick={handleExportToPdf}
               className="text-gray-500 hover:text-gem transition-colors px-3 py-1 border border-gray-300 rounded"
-              aria-label="Export to PDF"
-            >
-              Export PDF
-            </button>
+              aria-label={t("export-to-pdf")}
+            >{t("export-pdf")}</button>
             <button
               onClick={toggleEditMode}
               className="text-gray-500 hover:text-gem transition-colors px-3 py-1 border border-gray-300 rounded"
-              aria-label={isEditMode ? 'View Mode' : 'Edit Mode'}
+              aria-label={isEditMode ? t("view-mode") : t("edit-mode")}
             >
-              {isEditMode ? 'Save & Exit' : 'Edit'}
+              {isEditMode ?t("save-and-exit") :t("edit")}
             </button>
             <button
               onClick={handleInternalClose}
               className="text-gray-500 hover:text-gem transition-colors"
-              aria-label="Close case study panel"
+              aria-label={t("close-case-study-panel")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

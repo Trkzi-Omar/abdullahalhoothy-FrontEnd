@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { isGuestUser, useAuth } from '../../context/AuthContext';
+import { t } from '../../i18n';
+
 
 const GUEST_TOAST_ID = 'guest-banner';
 const KNOWN_ROUTES = [
@@ -44,12 +46,8 @@ export default function GuestBanner() {
         <div className="w-[min(24rem,calc(100vw-1.5rem))] rounded-2xl border border-sky-200 bg-white px-4 py-4 shadow-2xl sm:px-5">
           <div className="relative min-w-0 pr-8">
             <div>
-              <p className="text-lg font-semibold leading-7 text-slate-900">
-                You are logged in as a guest user.
-              </p>
-              <p className="mt-1 text-base leading-7 text-slate-700">
-                Sign up or sign in to access full features.
-              </p>
+              <p className="text-lg font-semibold leading-7 text-slate-900">{t("you-are-logged-in-as-a-guest-user")}</p>
+              <p className="mt-1 text-base leading-7 text-slate-700">{t("sign-up-or-sign-in-to-access-full-features")}</p>
 
               <div className="mt-4 flex flex-row flex-wrap gap-2">
                 <button
@@ -59,9 +57,7 @@ export default function GuestBanner() {
                     navigate(sourceLocal ? `/sign-up/${sourceLocal}` : '/sign-up');
                   }}
                   type="button"
-                >
-                  Sign up
-                </button>
+                >{t("sign-up")}</button>
 
                 <button
                   className="rounded-md border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-100"
@@ -70,14 +66,12 @@ export default function GuestBanner() {
                     navigate('/auth');
                   }}
                   type="button"
-                >
-                  Sign in
-                </button>
+                >{t("sign-in")}</button>
               </div>
             </div>
 
             <button
-              aria-label="Dismiss guest notice"
+              aria-label={t("dismiss-guest-notice")}
               className="absolute right-0 top-0 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
               onClick={() => toast.dismiss(toastId)}
               type="button"

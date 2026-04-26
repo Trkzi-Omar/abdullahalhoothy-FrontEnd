@@ -1,6 +1,8 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import urls from '../urls.json';
 import { ApiRequestOptions, AuthResponse, IAuthResponse } from '../types/allTypesAndInterfaces';
+import { t } from '../i18n';
+
 
 const baseUrl = urls.REACT_APP_API_URL;
 
@@ -73,7 +75,7 @@ const refreshAuthToken = async (refreshToken: string): Promise<AuthResponse> => 
     const refreshTokenData = res.data?.data;
     if (!refreshTokenData?.idToken) {
       handleAuthError();
-      throw new Error('Invalid token refresh response');
+      throw new Error(t("invalid-token-refresh-response"));
     }
 
     return refreshTokenData;
@@ -215,7 +217,7 @@ const makeApiCall = async ({
       data: isFormData
         ? body
         : {
-            message: 'Request from frontend',
+            message:t("request-from-frontend"),
             request_info: {},
             request_body: body,
           },
@@ -225,7 +227,7 @@ const makeApiCall = async ({
 
   // For cacheable requests, try cache first
   const data = {
-    message: 'Request from frontend',
+    message:t("request-from-frontend"),
     request_info: {},
     request_body: body,
   };
@@ -292,9 +294,9 @@ const apiRequest = async ({
     const hasStoredAuth = !!localStorage.getItem('authResponse');
     if (hasStoredAuth) {
       handleAuthError();
-      throw new Error('Not authenticated');
+      throw new Error(t("not-authenticated"));
     } else {
-      throw new Error('Not authenticated - guest login in progress');
+      throw new Error(t("not-authenticated-guest-login-in-progress"));
     }
   }
 
@@ -312,7 +314,7 @@ const apiRequest = async ({
     const axiosErr = err as { response?: { status: number; data?: Record<string, unknown> } };
     if (axiosErr?.response?.status === 403) {
       if (isPublicAuthRequest) {
-        throw new Error(getErrorMessageFromPayload(axiosErr?.response?.data) || 'Access forbidden');
+        throw new Error(getErrorMessageFromPayload(axiosErr?.response?.data) || t("access-forbidden"));
       }
 
       if (isGuest) {
@@ -335,7 +337,7 @@ const apiRequest = async ({
 
             const newAuth = loginResponse?.data?.data || loginResponse?.data;
             if (!newAuth?.idToken) {
-              throw new Error('Guest re-login failed');
+              throw new Error(t("guest-re-login-failed"));
             }
 
             localStorage.setItem('authResponse', JSON.stringify(newAuth));
@@ -354,7 +356,7 @@ const apiRequest = async ({
             console.error('Guest silent re-login failed:', reLoginErr);
             localStorage.removeItem('authResponse');
             handleAuthError();
-            throw new Error('Guest session expired. Please try again.');
+            throw new Error(t("guest-session-expired-please-try-again"));
           }
         }
 
@@ -365,18 +367,18 @@ const apiRequest = async ({
             : Array.isArray(apiMessage)
               ? apiMessage[0]
               : apiMessage;
-        throw new Error(message || 'Access denied for guest user');
+        throw new Error(message || t("access-denied-for-guest-user"));
       }
       localStorage.removeItem('authResponse');
       handleAuthError();
-      throw new Error('Access forbidden');
+      throw new Error(t("access-forbidden"));
     }
 
     if (axiosErr?.response?.status === 401) {
       const apiMessage = getErrorMessageFromPayload(axiosErr?.response?.data);
 
       if (isPublicAuthRequest) {
-        throw new Error(apiMessage || 'Authentication failed');
+        throw new Error(apiMessage || t("authentication-failed"));
       }
 
       if (isGuest) {
@@ -393,7 +395,7 @@ const apiRequest = async ({
 
           const newAuth = loginResponse?.data?.data || loginResponse?.data;
           if (!newAuth?.idToken) {
-            throw new Error('Guest re-login failed');
+            throw new Error(t("guest-re-login-failed"));
           }
 
           localStorage.setItem('authResponse', JSON.stringify(newAuth));
@@ -412,7 +414,7 @@ const apiRequest = async ({
           console.error('Guest silent re-login failed:', reLoginErr);
           localStorage.removeItem('authResponse');
           handleAuthError();
-          throw new Error('Guest session expired. Please try again.');
+          throw new Error(t("guest-session-expired-please-try-again"));
         }
       }
 
@@ -422,7 +424,7 @@ const apiRequest = async ({
         try {
           const newToken = await refreshAuthToken(authResponse.refreshToken);
           if (!newToken?.idToken) {
-            throw new Error('Invalid token refresh response');
+            throw new Error(t("invalid-token-refresh-response"));
           }
           addAuthTokenToLocalStorage(newToken);
 
@@ -439,12 +441,12 @@ const apiRequest = async ({
         } catch (tokenErr) {
           console.error('Token refresh error:', tokenErr);
           handleAuthError();
-          throw new Error('Unable to refresh token. Please log in again.');
+          throw new Error(t("unable-to-refresh-token-please-log-in-again"));
         }
       } else {
         console.error('No refresh token available');
         handleAuthError();
-        throw new Error('Authentication required');
+        throw new Error(t("authentication-required"));
       }
     }
 
@@ -452,7 +454,7 @@ const apiRequest = async ({
     if (axiosErr?.response) {
       const status = axiosErr.response.status;
       const data = axiosErr.response.data;
-      const message = getErrorMessageFromPayload(data) || 'Request failed';
+      const message = getErrorMessageFromPayload(data) || t("request-failed");
       throw new Error(`${message} (Status: ${status})`);
     }
 

@@ -13,6 +13,8 @@ import urls from '../../urls.json';
 import IntelligencePaywallModal, {
   type IntelligencePurchaseItem,
 } from './IntelligencePaywallModal';
+import { t } from '../../i18n';
+
 
 type IntelligenceType = 'Population' | 'Income' | 'Real Estate';
 
@@ -277,7 +279,7 @@ export const AreaIntelligeneControl: React.FC = () => {
             hover:bg-gray-100 min-w-[44px] sm:min-w-0
             ${includeIncome || includePopulation || includeRealEstate ? 'bg-gem-green text-white hover:bg-[#0d4432]' : ''}
           `}
-          title={'Area Intelligence'}
+          title={t("area-intelligence")}
         >
           <div className="flex items-center justify-center w-full h-full">
             <LiaMapMarkedAltSolid
@@ -288,7 +290,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                 m-0.5 sm:m-2
               `}
             />
-            <span className="hidden sm:inline">Area Intelligence</span>
+            <span className="hidden sm:inline">{t("area-intelligence")}</span>
           </div>
         </button>
 
@@ -301,19 +303,15 @@ export const AreaIntelligeneControl: React.FC = () => {
                 text-gray-100 bg-gem-gradient border-gem-green/20
                 aria-disabled:opacity-80 aria-disabled:cursor-not-allowed
               `}
-              title={'Activate area intelligence'}
+              title={t("activate-area-intelligence")}
             >
-              <div className="font-semibold text-white text-sm sm:text-base">Area Intelligence</div>
-              <p className="text-[11px] sm:text-xs text-gray-300 mt-1">
-                Only one intelligence layer can be active at a time
-              </p>
+              <div className="font-semibold text-white text-sm sm:text-base">{t("area-intelligence")}</div>
+              <p className="text-[11px] sm:text-xs text-gray-300 mt-1">{t("only-one-intelligence-layer-can-be-active-at-a-time")}</p>
 
               {/* Loading overlay */}
               {isCheckingCost && (
                 <div className="absolute inset-0 bg-black/30 rounded-lg flex items-center justify-center z-10">
-                  <div className="bg-white rounded-lg px-4 py-2 text-sm text-gray-700 font-medium shadow-lg">
-                    Checking availability...
-                  </div>
+                  <div className="bg-white rounded-lg px-4 py-2 text-sm text-gray-700 font-medium shadow-lg">{t("checking-availability")}</div>
                 </div>
               )}
 
@@ -384,14 +382,9 @@ export const AreaIntelligeneControl: React.FC = () => {
                     </svg>
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <label className="font-medium text-gem text-xs sm:text-sm">
-                      Population Intelligence
-                    </label>
-                    <p className="text-xs sm:text-sm text-gem/80 mt-1 ">
-                      Enable smart population data
-                    </p>
-                    <p className="text-[10px] text-gray-500 mt-0.5">
-                      Updated on:{' '}
+                    <label className="font-medium text-gem text-xs sm:text-sm">{t("population-intelligence")}</label>
+                    <p className="text-xs sm:text-sm text-gem/80 mt-1 ">{t("enable-smart-population-data")}</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">{t("updated-on")}{' '}
                       <span className="text-[#115740] font-medium">{getYesterdayDate()}</span>
                     </p>
                   </div>
@@ -401,7 +394,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                   <button
                     onClick={handlePopulationRefetch}
                     className="text-gem-green hover:text-gem-green/80 p-1"
-                    title="Refresh population data"
+                    title={t("refresh-population-data")}
                     disabled={isPopulationRefetching}
                   >
                     <svg
@@ -436,9 +429,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                             : 'text-gray-500 hover:text-gray-700'
                         }
                       `}
-                    >
-                      Sample
-                    </button>
+                    >{t("sample")}</button>
                     <button
                       onClick={handlePopulationFull}
                       className={`
@@ -449,9 +440,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                             : 'text-gray-500 hover:text-gray-700'
                         }
                       `}
-                    >
-                      Full
-                    </button>
+                    >{t("full-2")}</button>
                   </div>
                   <div className="relative flex-shrink-0 ml-1 sm:ml-0">
                     <input
@@ -505,12 +494,9 @@ export const AreaIntelligeneControl: React.FC = () => {
                     <MdAttachMoney size={20} className="sm:w-6 sm:h-6" />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <label className="font-medium text-gem text-xs sm:text-sm">
-                      Income Intelligence
-                    </label>
-                    <p className="text-xs sm:text-sm text-gem/80 mt-1 ">Enable smart income data</p>
-                    <p className="text-[10px] text-gray-500 mt-0.5">
-                      Updated on:{' '}
+                    <label className="font-medium text-gem text-xs sm:text-sm">{t("income-intelligence")}</label>
+                    <p className="text-xs sm:text-sm text-gem/80 mt-1 ">{t("enable-smart-income-data")}</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">{t("updated-on")}{' '}
                       <span className="text-[#115740] font-medium">{getYesterdayDate()}</span>
                     </p>
                   </div>
@@ -520,7 +506,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                   <button
                     onClick={handleIncomeRefetch}
                     className="text-gem-green hover:text-gem-green/80 p-1"
-                    title="Refresh income data"
+                    title={t("refresh-income-data")}
                     disabled={isIncomeRefetching}
                   >
                     <svg
@@ -555,9 +541,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                             : 'text-gray-500 hover:text-gray-700'
                         }
                       `}
-                    >
-                      Sample
-                    </button>
+                    >{t("sample")}</button>
                     <button
                       onClick={handleIncomeFull}
                       className={`
@@ -568,9 +552,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                             : 'text-gray-500 hover:text-gray-700'
                         }
                       `}
-                    >
-                      Full
-                    </button>
+                    >{t("full-2")}</button>
                   </div>
                   <div className="relative flex-shrink-0 ml-1 sm:ml-0">
                     <input
@@ -624,14 +606,9 @@ export const AreaIntelligeneControl: React.FC = () => {
                     <MdHome size={20} className="sm:w-6 sm:h-6" />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <label className="font-medium text-gem text-xs sm:text-sm">
-                      Real Estate Intelligence
-                    </label>
-                    <p className="text-xs sm:text-sm text-gem/80 mt-1">
-                      Enable smart real estate data
-                    </p>
-                    <p className="text-[10px] text-gray-500 mt-0.5">
-                      Updated on:{' '}
+                    <label className="font-medium text-gem text-xs sm:text-sm">{t("real-estate-intelligence")}</label>
+                    <p className="text-xs sm:text-sm text-gem/80 mt-1">{t("enable-smart-real-estate-data")}</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">{t("updated-on")}{' '}
                       <span className="text-[#115740] font-medium">{getYesterdayDate()}</span>
                     </p>
                   </div>
@@ -641,7 +618,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                   <button
                     onClick={handleRealEstateRefetch}
                     className="text-gem-green hover:text-gem-green/80 p-1"
-                    title="Refresh real estate data"
+                    title={t("refresh-real-estate-data")}
                     disabled={isRealEstateRefetching}
                   >
                     <svg
@@ -676,9 +653,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                             : 'text-gray-500 hover:text-gray-700'
                         }
                       `}
-                    >
-                      Sample
-                    </button>
+                    >{t("sample")}</button>
                     <button
                       onClick={handleRealEstateFull}
                       className={`
@@ -689,9 +664,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                             : 'text-gray-500 hover:text-gray-700'
                         }
                       `}
-                    >
-                      Full
-                    </button>
+                    >{t("full-2")}</button>
                   </div>
                   <div className="relative flex-shrink-0 ml-1 sm:ml-0">
                     <input

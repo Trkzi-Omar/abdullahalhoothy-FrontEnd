@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import * as yup from 'yup';
 import { emailRegex, isValidPhone } from '../utils/validation';
 import { passwordSchema } from '../utils/auth.validation';
+import { t } from '../i18n';
 
 export interface FormState {
   email: string;
@@ -43,7 +44,7 @@ export function useAuthForm({ mode, registerStep = 1 }: UseAuthFormOptions) {
       // Validate touched fields based on current mode/step
       if (touchedFields.has('email') && form.email) {
         if (!emailRegex.test(form.email)) {
-          errors.email = 'Please enter a valid email';
+          errors.email = t("please-enter-a-valid-email");
         }
       }
 
@@ -59,14 +60,14 @@ export function useAuthForm({ mode, registerStep = 1 }: UseAuthFormOptions) {
         }
         if (touchedFields.has('confirmPassword') && form.confirmPassword) {
           if (form.confirmPassword !== form.password) {
-            errors.confirmPassword = 'Passwords must match';
+            errors.confirmPassword = t("passwords-must-match");
           }
         }
       }
 
       if (mode === 'register' && registerStep === 2) {
         if (touchedFields.has('name') && form.name && form.name.length < 2) {
-          errors.name = 'Name must be at least 2 characters';
+          errors.name = t("name-must-be-at-least-2-characters");
         }
         // Only validate phone if it's provided and has actual digits (not just country code)
         // Country codes are typically 1-3 digits, so a complete phone should have more
@@ -75,7 +76,7 @@ export function useAuthForm({ mode, registerStep = 1 }: UseAuthFormOptions) {
           // Only validate if phone has more than just country code (at least 7 digits total)
           // This ensures we're validating a complete number, not just "+966"
           if (phoneWithoutPlus.length >= 7 && !isValidPhone(form.phone)) {
-            errors.phone = 'Please enter a valid phone number';
+            errors.phone = t("please-enter-a-valid-phone-number");
           }
           // If phone is empty or just country code, don't set error (it's optional)
         }

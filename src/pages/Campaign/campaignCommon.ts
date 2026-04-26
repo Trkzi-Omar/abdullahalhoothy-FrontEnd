@@ -1,4 +1,6 @@
 import urls from '../../urls.json';
+import { t } from '../../i18n';
+
 
 // Shared types
 export type Report = {
@@ -16,8 +18,8 @@ export type Report = {
 
 // Step definitions for campaign flow
 export const CAMPAIGN_STEPS = [
-  { id: 'select-report', title: 'Choose Report' },
-  { id: 'select-option', title: 'Choose Option' },
+  { id: 'select-report', title:t("choose-report") },
+  { id: 'select-option', title:t("choose-option") },
 ];
 
 // Shared constants

@@ -15,6 +15,8 @@ import {
   MdErrorOutline, 
   MdCheckCircle 
 } from 'react-icons/md';
+import { t } from '../../../i18n';
+
 
 interface PhoneInputProps {
   value: string;
@@ -184,7 +186,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
             focus:outline-none focus:bg-gray-50
             ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
           `}
-          aria-label="Select country"
+          aria-label={t("select-country")}
           aria-expanded={isOpen}
         >
           {currentCountry && (
@@ -209,7 +211,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           onChange={handlePhoneValueChange}
           onBlur={onBlur}
           disabled={disabled}
-          placeholder="5xxxxxxxx"
+          placeholder={t("5xxxxxxxx")}
           className={`
             flex-1 px-3 py-2.5 bg-transparent text-gray-800 placeholder-gray-400
             focus:outline-none text-base rounded-r-lg
@@ -241,7 +243,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search countries..."
+                placeholder={t("search-countries")}
                 className="
                   w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-gray-200 
                   rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 
@@ -257,9 +259,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
             {/* Preferred Countries */}
             {filteredCountries.preferred.length > 0 && (
               <>
-                <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/50">
-                  Popular
-                </div>
+                <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/50">{t("popular-2")}</div>
                 {filteredCountries.preferred.map((countryData) => (
                   <CountryOption
                     key={countryData.iso2}
@@ -278,9 +278,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
             {filteredCountries.rest.length > 0 && (
               <>
                 {filteredCountries.preferred.length > 0 && (
-                  <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/50">
-                    All Countries
-                  </div>
+                  <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/50">{t("all-countries")}</div>
                 )}
                 {filteredCountries.rest.map((countryData) => (
                   <CountryOption
@@ -296,9 +294,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
             {/* No Results */}
             {filteredCountries.preferred.length === 0 && filteredCountries.rest.length === 0 && (
               <div className="px-4 py-8 text-center text-gray-500 text-sm">
-                <MdSentimentDissatisfied className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                No countries found
-              </div>
+                <MdSentimentDissatisfied className="w-12 h-12 mx-auto mb-3 text-gray-300" />{t("no-countries-found")}</div>
             )}
           </div>
         </div>

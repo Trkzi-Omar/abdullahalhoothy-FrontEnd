@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router';
 import SavedIconFeedback from '../SavedIconFeedback/SavedIconFeedback';
 import ErrorIconFeedback from '../ErrorIconFeedback/ErrorIconFeedback';
 import { useUIContext } from '../../context/UIContext';
+import { t } from '../../i18n';
+
 
 function SaveOptions() {
   const nav = useNavigate();
@@ -45,7 +47,7 @@ function SaveOptions() {
         <SavedIconFeedback />
       ) : (
         <>
-          <h2 className="text-xl font-semibold mb-8">Select Your Preferred Saving Option</h2>
+          <h2 className="text-xl font-semibold mb-8">{t("select-your-preferred-saving-option")}</h2>
           <div className="flex justify-start items-start w-full mb-4">
             <label className={styles.optionLabel + 'flex justify-center items-center'}>
               <input
@@ -55,7 +57,7 @@ function SaveOptions() {
                 onChange={handleOptionChange}
                 className={styles.radioButton}
               />
-              <span className={styles.optionText}>Save sample on s-loc</span>
+              <span className={styles.optionText}>{t("save-sample-on-s-loc")}</span>
             </label>
           </div>
           <div className="flex justify-start items-start w-full mb-4">
@@ -70,9 +72,7 @@ function SaveOptions() {
                 onChange={handleOptionChange}
                 className={styles.radioButton}
               />
-              <span className={styles.optionText}>
-                Save full on s-loc. We create storage account for you, you still own the data
-              </span>
+              <span className={styles.optionText}>{t("save-full-on-s-loc-we-create-storage-account-for-you-you-still-own-the-data")}</span>
             </label>
           </div>
           <div className="flex justify-start items-start w-full mb-4">
@@ -84,7 +84,7 @@ function SaveOptions() {
                 onChange={handleOptionChange}
                 className={styles.radioButton}
               />
-              <span className={styles.optionText}>Save sample on your DB</span>
+              <span className={styles.optionText}>{t("save-sample-on-your-db")}</span>
             </label>
           </div>
           <div className="flex justify-start items-start w-full mb-4">
@@ -96,13 +96,11 @@ function SaveOptions() {
                 onChange={handleOptionChange}
                 className={styles.radioButton}
               />
-              <span className={styles.optionText}>Save full on your DB</span>
+              <span className={styles.optionText}>{t("save-full-on-your-db")}</span>
             </label>
           </div>
           <div className={styles.buttonContainer}>
-            <button className={styles.button} onClick={handleSaveClick} disabled={!selectedOption}>
-              Save
-            </button>
+            <button className={styles.button} onClick={handleSaveClick} disabled={!selectedOption}>{t("save")}</button>
           </div>
         </>
       )}

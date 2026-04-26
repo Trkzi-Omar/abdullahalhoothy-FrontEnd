@@ -11,6 +11,8 @@ import { loadStripe } from '@stripe/stripe-js';
 import { toast } from 'sonner';
 import InlinePaymentMethod from '../CustomReportForm/components/InlinePaymentMethod';
 import PhoneVerificationStep from '../CustomReportForm/components/PhoneVerificationStep';
+import { t } from '../../i18n';
+
 
 const stripeKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
 const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
@@ -162,7 +164,7 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
         onClose();
       }, 1500);
     } catch (err: unknown) {
-      let errorMessage = 'An error occurred while processing your purchase.';
+      let errorMessage = t("an-error-occurred-while-processing-your-purchase");
 
       if (err && typeof err === 'object' && 'response' in err) {
         const apiError = err as {
@@ -189,17 +191,17 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
       const lowerError = errorMessage.toLowerCase();
       if (lowerError.includes('payment method') || lowerError.includes('paymentintent')) {
         if (!stripePromise) {
-          toast.error('Payment system is unavailable. Please try again later or contact support.');
-          setError('Payment system is currently unavailable.');
+          toast.error(t("payment-system-is-unavailable-please-try-again-later-or-contact-support"));
+          setError(t("payment-system-is-currently-unavailable"));
           return;
         }
-        setError('No payment method on file. Please add a card to continue.');
+        setError(t("no-payment-method-on-file-please-add-a-card-to-continue"));
         setInlineView('add-payment');
       } else if (lowerError.includes('insufficient balance') || lowerError.includes('wallet')) {
-        setError('Insufficient funds. Please top up your wallet to continue.');
+        setError(t("insufficient-funds-please-top-up-your-wallet-to-continue"));
         setInlineView('add-funds');
       } else if (lowerError.includes('phone') || lowerError.includes('verify')) {
-        setError('Phone verification required. Please verify your phone number first.');
+        setError(t("phone-verification-required-please-verify-your-phone-number-first"));
         setInlineView('verify-phone');
       } else {
         setError(errorMessage);
@@ -239,8 +241,8 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 text-center">
             <MdCheckCircleOutline className="text-green-500 text-6xl mx-auto mb-4" />
-            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Purchase Successful!</h2>
-            <p className="text-gray-600">Activating your intelligence layer...</p>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">{t("purchase-successful")}</h2>
+            <p className="text-gray-600">{t("activating-your-intelligence-layer")}</p>
           </div>
         </div>
       );
@@ -253,11 +255,11 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
           <div className="bg-gem-gradient px-6 py-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                {inlineView !== 'main' && (
+                {inlineView !=="main" && (
                   <button
                     onClick={() => { setInlineView('main'); setError(null); }}
                     className="text-white/70 hover:text-white transition-colors mr-1"
-                    aria-label="Back"
+                    aria-label={t("back")}
                   >
                     <MdArrowBack size={22} />
                   </button>
@@ -267,21 +269,21 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold text-white">
-                    {inlineView === 'main'
-                      ? 'You Discovered A Premium Feature'
-                      : inlineView === 'add-payment'
-                        ? (paymentNeedsPhone ? 'Verify Phone Number' : 'Add Payment Method')
-                        : inlineView === 'add-funds'
-                          ? 'Add Funds'
-                          : 'Verify Phone Number'}
+                    {inlineView ==="main"
+                      ?t("you-discovered-a-premium-feature")
+                      : inlineView ==="add-payment"
+                        ? (paymentNeedsPhone ?t("verify-phone-number") :t("add-payment-method"))
+                        : inlineView ==="add-funds"
+                          ?t("add-funds")
+                          :t("verify-phone-number")}
                   </h2>
-                  <p className="text-sm text-white/80">Area Intelligence</p>
+                  <p className="text-sm text-white/80">{t("area-intelligence")}</p>
                 </div>
               </div>
               <button
                 onClick={onClose}
                 className="text-white/70 hover:text-white transition-colors"
-                aria-label="Close"
+                aria-label={t("close")}
               >
                 <MdClose size={24} />
               </button>
@@ -291,7 +293,7 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
           {/* Content */}
           <div className="flex-1 overflow-y-auto px-6 py-5">
             {/* Inline: Add Payment Method (with phone verification gate) */}
-            {inlineView === 'add-payment' && (
+            {inlineView ==="add-payment" && (
               paymentNeedsPhone ? (
                 <PhoneVerificationStep
                   onVerificationSuccess={(phone) => {
@@ -299,8 +301,8 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
                     setPaymentNeedsPhone(false);
                   }}
                   compact
-                  title="Verify Your Phone"
-                  subtitle="A verified phone number is required before adding a payment method."
+                  title={t("verify-your-phone")}
+                  subtitle={t("a-verified-phone-number-is-required-before-adding-a-payment-method")}
                 />
               ) : (
                 <Elements stripe={stripePromise!}>
@@ -314,7 +316,7 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
             )}
 
             {/* Inline: Add Funds */}
-            {inlineView === 'add-funds' && (
+            {inlineView ==="add-funds" && (
               <InlineAddFunds
                 onFundsAdded={handleFundsAdded}
                 onCancel={() => { setInlineView('main'); setError(null); }}
@@ -322,23 +324,21 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
             )}
 
             {/* Inline: Phone Verification */}
-            {inlineView === 'verify-phone' && (
+            {inlineView ==="verify-phone" && (
               <PhoneVerificationStep
                 onVerificationSuccess={handlePhoneVerified}
                 compact
-                title="Verify Your Phone"
-                subtitle="Phone verification is required to complete your purchase."
+                title={t("verify-your-phone")}
+                subtitle={t("phone-verification-is-required-to-complete-your-purchase")}
               />
             )}
 
             {/* Main purchase view */}
-            {inlineView === 'main' && (
+            {inlineView ==="main" && (
               <>
                 {isGuest && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4">
-                    <p className="text-sm text-amber-800">
-                      You're a guest user. Please sign up to complete your purchase.
-                    </p>
+                    <p className="text-sm text-amber-800">{t("you-re-a-guest-user-please-sign-up-to-complete-your-purchase")}</p>
                   </div>
                 )}
 
@@ -360,19 +360,17 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <h3 className="text-base font-semibold text-gray-900">
-                            {item.intelligence_name} Intelligence
-                          </h3>
+                            {item.intelligence_name}{' '}{t("intelligence")}</h3>
                           <p className="text-sm text-gray-600 mt-1">{item.description}</p>
                           <p className="text-xs text-gray-500 mt-1 italic">{item.explanation}</p>
                           {item.expiration && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              Valid until: {new Date(item.expiration).toLocaleDateString()}
+                            <p className="text-xs text-gray-500 mt-1">{t("valid-until")}{' '}{new Date(item.expiration).toLocaleDateString()}
                             </p>
                           )}
                         </div>
                         <div className="text-right ml-4">
                           {item.free_as_part_of_package ? (
-                            <span className="text-lg font-bold text-green-600">Free</span>
+                            <span className="text-lg font-bold text-green-600">{t("free")}</span>
                           ) : (
                             <span className="text-lg font-bold text-[#115740]">
                               {formatPrice(item.cost)}
@@ -384,8 +382,7 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
                       {/* Data variables preview */}
                       {item.data_variables && Object.keys(item.data_variables).length > 0 && (
                         <details className="mt-3">
-                          <summary className="text-xs text-[#115740] cursor-pointer font-medium">
-                            View included data variables ({Object.keys(item.data_variables).length})
+                          <summary className="text-xs text-[#115740] cursor-pointer font-medium">{t("view-included-data-variables")}{Object.keys(item.data_variables).length})
                           </summary>
                           <div className="mt-2 grid grid-cols-1 gap-1 max-h-32 overflow-y-auto">
                             {Object.entries(item.data_variables).map(([key, desc]) => (
@@ -402,8 +399,7 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
 
                 {!isGuest && (
                   <div className="mt-4 bg-gray-50 border border-gray-100 rounded-lg px-4 py-3">
-                    <p className="text-xs text-gray-500">
-                      Questions? Reach us at{' '}
+                    <p className="text-xs text-gray-500">{t("questions-reach-us-at")}{' '}
                       <a href="tel:+966558188632" className="text-[#115740] font-medium hover:underline">
                         +966 (55) 818 - 8632
                       </a>
@@ -415,10 +411,10 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
           </div>
 
           {/* Footer — only show on main view */}
-          {inlineView === 'main' && (
+          {inlineView ==="main" && (
             <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-sm text-gray-600">Total</span>
+                <span className="text-sm text-gray-600">{t("total")}</span>
                 <span className="text-xl font-bold text-gray-900">
                   {formatPrice(cartCostData.total_cost)}
                 </span>
@@ -428,16 +424,14 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
                   type="button"
                   onClick={onClose}
                   className="flex-1 bg-white border-2 border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-all"
-                >
-                  Not Now
-                </button>
+                >{t("not-now")}</button>
                 <button
                   type="button"
                   onClick={handlePurchase}
                   disabled={isPurchasing || purchasableItems.length === 0}
                   className="flex-1 bg-[#115740] text-white py-3 rounded-lg font-semibold hover:bg-[#0d4632] transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  {isPurchasing ? 'Processing...' : isGuest ? 'Sign Up to Purchase' : 'Purchase Now'}
+                  {isPurchasing ?t("processing") : isGuest ?t("sign-up-to-purchase") :t("purchase-now")}
                 </button>
               </div>
             </div>
@@ -471,7 +465,7 @@ const InlineAddFunds: React.FC<{
       setCost(value);
       setInputError(null);
     } else {
-      setInputError('Enter a valid amount (e.g. 10.99)');
+      setInputError(t("enter-a-valid-amount-e-g-10-99"));
     }
   };
 
@@ -501,13 +495,13 @@ const InlineAddFunds: React.FC<{
     try {
       const amount = parseFloat(cost);
       if (isNaN(amount) || amount <= 0) {
-        setErrorMessage('Please enter a valid amount.');
+        setErrorMessage(t("please-enter-a-valid-amount"));
         setSubmitting(false);
         return;
       }
 
       if (!authResponse?.localId) {
-        setErrorMessage('User not authenticated.');
+        setErrorMessage(t("user-not-authenticated"));
         setSubmitting(false);
         return;
       }
@@ -525,7 +519,7 @@ const InlineAddFunds: React.FC<{
       onFundsAdded();
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : 'An unexpected error occurred. Please try again later.'
+        error instanceof Error ? error.message : t("an-unexpected-error-occurred-please-try-again-later")
       );
     } finally {
       setSubmitting(false);
@@ -535,17 +529,13 @@ const InlineAddFunds: React.FC<{
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Top Up Your Wallet</h3>
-        <p className="text-sm text-gray-600">
-          Add funds to your wallet to complete this purchase.
-        </p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">{t("top-up-your-wallet")}</h3>
+        <p className="text-sm text-gray-600">{t("add-funds-to-your-wallet-to-complete-this-purchase")}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="topup-amount" className="block text-sm font-medium text-gray-700 mb-1">
-            Amount (USD)
-          </label>
+          <label htmlFor="topup-amount" className="block text-sm font-medium text-gray-700 mb-1">{t("amount-usd")}</label>
           <input
             id="topup-amount"
             type="number"
@@ -575,15 +565,13 @@ const InlineAddFunds: React.FC<{
             onClick={onCancel}
             disabled={submitting}
             className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
-          >
-            Cancel
-          </button>
+          >{t("cancel")}</button>
           <button
             type="submit"
             disabled={submitting || !cost}
             className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200"
           >
-            {submitting ? 'Processing...' : 'Add Funds'}
+            {submitting ?t("processing") :t("add-funds")}
           </button>
         </div>
       </form>

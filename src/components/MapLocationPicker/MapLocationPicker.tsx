@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { defaultMapConfig } from '../../hooks/map/useMapInitialization';
+import { t } from '../../i18n';
+
 
 interface Location {
   lat: number;
@@ -187,8 +189,7 @@ const MapLocationPicker = ({
           onMouseLeave={e => {
             e.currentTarget.style.backgroundColor = defaultMapConfig.defaultColor;
           }}
-        >
-          Center on {city}
+        >{t("center-on")}{' '}{city}
         </button>
       </div>
 
@@ -205,25 +206,19 @@ const MapLocationPicker = ({
           {/* Map Info Section */}
           <div className="space-y-2">
             {selectedLocation && selectedLocation.lat !== 0 && selectedLocation.lng !== 0 && (
-              <div className="text-sm text-gray-600">
-                Selected: {selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
+              <div className="text-sm text-gray-600">{t("selected")}{' '}{selectedLocation.lat.toFixed(6)}, {selectedLocation.lng.toFixed(6)}
               </div>
             )}
 
             {error && <p className="text-sm text-red-600">{error}</p>}
 
-            <p className="text-sm text-gray-500">
-              Click on the map to select a location. You can drag the marker to fine-tune the
-              position.
-            </p>
+            <p className="text-sm text-gray-500">{t("click-on-the-map-to-select-a-location-you-can-drag-the-marker-to-fine-tune-the-p")}</p>
           </div>
 
           {/* Rent Price Input Section */}
           {rentPrice !== undefined && (
             <div className="w-full">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Rent Price (SAR)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t("rent-price-sar")}</label>
               <input
                 type="number"
                 min="0"
@@ -235,11 +230,9 @@ const MapLocationPicker = ({
                 }}
                 disabled={disabled}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2"
-                placeholder="Enter rent price"
+                placeholder={t("enter-rent-price")}
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Yearly rent price for this location in Saudi Riyal
-              </p>
+              <p className="text-xs text-gray-500 mt-1">{t("yearly-rent-price-for-this-location-in-saudi-riyal")}</p>
             </div>
           )}
         </div>

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
 import apiRequest from '../../services/apiRequest';
 import urls from '../../urls.json';
+import { t } from '../../i18n';
+
 
 const AddFundsForm: React.FC = () => {
   const { authResponse } = useAuth();
@@ -29,7 +31,7 @@ const AddFundsForm: React.FC = () => {
       setCost(value);
       setInputError(null);
     } else {
-      setInputError('Enter a valid amount (e.g. 10.99)');
+      setInputError(t("enter-a-valid-amount-e-g-10-99"));
     }
   };
 
@@ -52,7 +54,7 @@ const AddFundsForm: React.FC = () => {
     
     // Check for input validation errors
     if (inputError) {
-      setErrorMessage('Please fix the input errors before submitting.');
+      setErrorMessage(t("please-fix-the-input-errors-before-submitting"));
       return;
     }
     
@@ -63,13 +65,13 @@ const AddFundsForm: React.FC = () => {
     try {
       const amount = parseFloat(cost);
       if (isNaN(amount) || amount <= 0) {
-        setErrorMessage('Please enter a valid amount.');
+        setErrorMessage(t("please-enter-a-valid-amount"));
         setSubmitting(false);
         return;
       }
 
       if (!authResponse?.localId) {
-        setErrorMessage('User not authenticated.');
+        setErrorMessage(t("user-not-authenticated"));
         setSubmitting(false);
         return;
       }
@@ -87,7 +89,7 @@ const AddFundsForm: React.FC = () => {
       navigate('/profile/wallet');
     } catch (error) {
       console.log(error);
-      setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred. Please try again later.');
+      setErrorMessage(error instanceof Error ? error.message : t("an-unexpected-error-occurred-please-try-again-later"));
       setInputError(null); // Clear input error on API error
     } finally {
       setSubmitting(false);
@@ -98,7 +100,7 @@ const AddFundsForm: React.FC = () => {
     <div className="h-full flex items-center ">
       <div className="my-8 border w-full max-w-3xl mx-auto bg-white shadow rounded-lg overflow-hidden">
         <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-semibold text-gray-800">Add Funds</h1>
+          <h1 className="text-xl font-semibold text-gray-800">{t("add-funds")}</h1>
         </div>
         <form onSubmit={handleSubmit} className="px-4 py-4">
           <div className="space-y-4">
@@ -125,9 +127,7 @@ const AddFundsForm: React.FC = () => {
               type="submit"
               disabled={submitting}
               className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-wait transition duration-200 ease-in-out flex items-center justify-center"
-            >
-              Topup
-            </button>
+            >{t("topup")}</button>
           </div>
         </form>
         {errorMessage && (

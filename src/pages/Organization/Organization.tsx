@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router';
 import { Link } from 'react-router-dom';
 import BottomDrawer from '../../components/BottomDrawer/BottomDrawer';
 import { useUIContext } from '../../context/UIContext';
+import { t } from '../../i18n';
+
 
 const Organization = () => {
   const { isMobile, isDrawerOpen, setIsDrawerOpen } = useUIContext();
@@ -37,9 +39,7 @@ const Organization = () => {
                 stroke-linecap="round"
                 stroke-linejoin="round"
               />
-            </svg>
-            Tap to see more options
-          </button>
+            </svg>{t("tap-to-see-more-options")}</button>
         </>
       ) : (
         <div className="h-full w-96 bg-[#115740] px-1 py-1">
@@ -54,14 +54,12 @@ function OrganizationContent() {
   return (
     <>
       <div className="w-full h-full bg-white rounded">
-        <div className="text-2xl pl-6 pt-4 font-semibold mb-4">Organization</div>
+        <div className="text-2xl pl-6 pt-4 font-semibold mb-4">{t("organization")}</div>
         <div className="flex flex-col justify-center items-center">
           <Link
             className="text-[#115740] w-full py-2 pl-8  mb-2 font-bold hover:bg-gray-100 transition-all"
             to={'/organization'}
-          >
-            Organization
-          </Link>
+          >{t("organization")}</Link>
         </div>
       </div>
     </>

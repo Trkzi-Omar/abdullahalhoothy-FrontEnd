@@ -9,6 +9,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { t } from '../../i18n';
+
 
 const defaultData = [
   { year: 2000, youth: 25, workingAge: 60, elderly: 15 },
@@ -76,9 +78,7 @@ const TrendChart: React.FC<TrendChartProps> = ({
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <p className="text-sm text-gray-500 mt-2 text-center">
-        Population structure changes over time (percentage of total population)
-      </p>
+      <p className="text-sm text-gray-500 mt-2 text-center">{t("population-structure-changes-over-time-percentage-of-total-population")}</p>
     </div>
   );
 };

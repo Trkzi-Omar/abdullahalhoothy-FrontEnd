@@ -14,6 +14,7 @@ import { MapContextType } from '../types/allTypesAndInterfaces';
 import { zoomToGridSize, getMapScale, mapToBackendZoom } from '../utils/mapZoomUtils';
 import { defaultMapConfig } from '../hooks/map/useMapInitialization';
 import debounce from 'lodash/debounce';
+import { t } from '../i18n';
 
 const MapContext = createContext<MapContextType | undefined>(undefined);
 
@@ -101,7 +102,7 @@ export function useMapContext() {
   const context = useContext(MapContext);
 
   if (!context) {
-    throw new Error('useMapContext must be used within a MapProvider');
+    throw new Error(t("usemapcontext-must-be-used-within-a-mapprovider"));
   }
   return context;
 }

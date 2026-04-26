@@ -54,7 +54,7 @@ const ProgressIndicator = ({
           const isCompleted = completedSteps.includes(actualStepNumber);
           // Check if current step is phone verification - if so, don't highlight any step as current
           const currentStepContent = allSteps[currentStep - 1]?.content;
-          const isCurrent = actualStepNumber === currentStep && currentStepContent !== 'phone-verification';
+          const isCurrent = actualStepNumber === currentStep && currentStepContent !=="phone-verification";
           const isAccessible = actualStepNumber <= currentStep || completedSteps.includes(actualStepNumber - 1);
 
           return (

@@ -10,6 +10,8 @@ import { MeasurementForm } from '../components/MeasurementForm/MeasurementForm';
 import React from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { MarkerType } from '../types';
+import { t } from '../i18n';
+
 
 export interface MeasurementState {
   isMeasuring: boolean;
@@ -629,7 +631,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
           }
         }
 
-        toast.success('Measurement saved successfully');
+        toast.success(t("measurement-saved-successfully"));
         closeModal();
 
         setIsMeasuring(false);
@@ -927,8 +929,8 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
         };
 
         if (measureSourcePoint.lat === e.lngLat.lat && measureSourcePoint.lng === e.lngLat.lng) {
-          toast.warning('Measurement API Call: Source and Destination points are identical.', {
-            description: 'Please select different points.',
+          toast.warning(t("measurement-api-call-source-and-destination-points-are-identical"), {
+            description:t("please-select-different-points"),
           });
           console.warn('Measurement API Call: Source and Destination points are identical.', body);
         }
@@ -1209,5 +1211,4 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
     setMeasurementResult,
   };
 };
-
 

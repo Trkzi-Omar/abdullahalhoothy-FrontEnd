@@ -7,6 +7,8 @@ import { useUIContext } from '../../../../context/UIContext';
 import { useAuth, isGuestUser } from '../../../../context/AuthContext';
 import apiRequest from '../../../../services/apiRequest';
 import urls from '../../../../urls.json';
+import { t } from '../../../../i18n';
+
 
 const PurchaseSuccessModal = lazy(() => import('./PurchaseSuccessModal'));
 
@@ -134,7 +136,7 @@ function CheckoutModal({
     } catch (error) {
       console.error('Failed to apply promotion code:', error);
 
-      let errorMessage = 'Invalid voucher code';
+      let errorMessage = t("invalid-voucher-code");
 
       if (error && typeof error === 'object' && 'response' in error) {
         const apiError = error as {
@@ -224,8 +226,8 @@ function CheckoutModal({
           fallback={
             <div className="flex flex-col items-center justify-center p-8 text-center">
               <MdCheckCircleOutline className="text-green-500 text-6xl mb-4" />
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2">Payment Successful!</h2>
-              <p className="text-gray-600">Loading details...</p>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2">{t("payment-successful")}</h2>
+              <p className="text-gray-600">{t("loading-details")}</p>
             </div>
           }
         >
@@ -243,7 +245,7 @@ function CheckoutModal({
     } catch (error) {
       console.error('Purchase failed:', error);
 
-      let errorMessage = 'An error occurred while processing your purchase.';
+      let errorMessage = t("an-error-occurred-while-processing-your-purchase");
 
       if (error && typeof error === 'object' && 'response' in error) {
         const apiError = error as {
@@ -269,7 +271,7 @@ function CheckoutModal({
       openModal(
         <div className="flex flex-col items-center justify-center p-8 text-center">
           <MdErrorOutline className="text-red-500 text-6xl mb-4" />
-          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Payment Failed</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">{t("payment-failed")}</h2>
           <p className="text-gray-600">{errorMessage}</p>
         </div>,
         {
@@ -322,15 +324,15 @@ function CheckoutModal({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <div>
-            <h2 className="text-2xl font-semibold text-gray-900">Checkout</h2>
+            <h2 className="text-2xl font-semibold text-gray-900">{t("checkout")}</h2>
             <span className="text-sm text-gray-500">
-              {totalItems} item{totalItems === 1 ? '' : 's'}
+              {totalItems}{' '}{t("item")}{totalItems === 1 ? '' :t("s")}
             </span>
           </div>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label="Close"
+            aria-label={t("close")}
           >
             <MdClose size={24} />
           </button>
@@ -341,25 +343,17 @@ function CheckoutModal({
           {/* Guest / location / Support messages */}
           {isGuest ? (
             <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-6">
-              <p className="text-sm text-amber-800 leading-relaxed">
-                You're a guest user. Please{' '}
-                <Link to="/auth" className="text-[#115740] font-semibold underline hover:no-underline">
-                  sign in
-                </Link>{' '}
-                to complete your purchase.
-              </p>
+              <p className="text-sm text-amber-800 leading-relaxed">{t("you-re-a-guest-user-please")}{' '}
+                <Link to="/auth" className="text-[#115740] font-semibold underline hover:no-underline">{t("sign-in-2")}</Link>{' '}{t("to-complete-your-purchase")}</p>
             </div>
           ) : !hasCountryAndCity && hasCheckoutItems ? (
             <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-6">
-              <p className="text-sm text-amber-800 leading-relaxed">
-                Please select country and city to continue with your purchase.
-              </p>
+              <p className="text-sm text-amber-800 leading-relaxed">{t("please-select-country-and-city-to-continue-with-your-purchase")}</p>
             </div>
           ) : null}
           {!isGuest && hasCountryAndCity ? (
             <div className="bg-gray-50 border border-gray-100 rounded-lg px-4 py-3 mb-6">
-              <p className="text-xs text-gray-500 leading-relaxed">
-                Questions? We're happy to help — reach us at{' '}
+              <p className="text-xs text-gray-500 leading-relaxed">{t("questions-we-re-happy-to-help-reach-us-at")}{' '}
                 <a href="tel:+966558188632" className="text-[#115740] font-medium hover:underline">
                   +966 (55) 818 - 8632
                 </a>
@@ -382,10 +376,8 @@ function CheckoutModal({
                   d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                 />
               </svg>
-              <p className="text-lg font-medium">Your cart is empty</p>
-              <p className="text-sm">
-                Select services from Area Intelligence, Datasets, or Reports to get started.
-              </p>
+              <p className="text-lg font-medium">{t("your-cart-is-empty")}</p>
+              <p className="text-sm">{t("select-services-from-area-intelligence-datasets-or-reports-to-get-started")}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -401,22 +393,19 @@ function CheckoutModal({
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                              area
-                            </span>
+                            <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("area")}</span>
                             <span className="text-sm text-gray-300">•</span>
                             <span className="text-sm text-gray-500">
-                              {item.intelligence_name || 'Unknown'}
+                              {item.intelligence_name ||"Unknown"}
                             </span>
                           </div>
                           <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                            {item.intelligence_name || 'Unknown'} Intelligence
-                          </h3>
+                            {item.intelligence_name ||"Unknown"}{' '}{t("intelligence")}</h3>
                           <p className="text-sm text-gray-500">{item.explanation}</p>
                         </div>
                         <div className="flex flex-col items-end gap-2">
                           {item.free_as_part_of_package ? (
-                            <span className="text-lg font-semibold text-green-600">Free</span>
+                            <span className="text-lg font-semibold text-green-600">{t("free")}</span>
                           ) : (
                             <span className="text-lg font-semibold text-gray-900">
                               {formatPrice(item.cost)}
@@ -429,9 +418,7 @@ function CheckoutModal({
                               item.intelligence_name &&
                               handleIntelligenceToggle(item.intelligence_name)
                             }
-                          >
-                            Remove
-                          </button>
+                          >{t("remove")}</button>
                         </div>
                       </div>
                     ))}
@@ -444,9 +431,7 @@ function CheckoutModal({
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                              dataset
-                            </span>
+                            <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("dataset-2")}</span>
                             <span className="text-sm text-gray-300">•</span>
                             <span className="text-sm text-gray-500">
                               {formatSubcategoryName(item.dataset_name || '')}
@@ -459,7 +444,7 @@ function CheckoutModal({
                         </div>
                         <div className="flex flex-col items-end gap-2">
                           {item.free_as_part_of_package ? (
-                            <span className="text-lg font-semibold text-green-600">Free</span>
+                            <span className="text-lg font-semibold text-green-600">{t("free")}</span>
                           ) : (
                             <span className="text-lg font-semibold text-gray-900">
                               {formatPrice(item.cost)}
@@ -469,9 +454,7 @@ function CheckoutModal({
                             type="button"
                             className="text-xs text-red-500 hover:text-red-700"
                             onClick={() => handleDatasetToggle(item.dataset_name)}
-                          >
-                            Remove
-                          </button>
+                          >{t("remove")}</button>
                         </div>
                       </div>
                     ))}
@@ -479,7 +462,7 @@ function CheckoutModal({
                     const tierName = item.report_tier
                       ? reportTiers.find(t => t.reportKey === item.report_tier)?.name ||
                         `${item.report_tier.charAt(0).toUpperCase() + item.report_tier.slice(1)} Tier`
-                      : 'Report';
+                      :"Report";
                     return (
                       <div
                         key={`report-${index}`}
@@ -487,17 +470,14 @@ function CheckoutModal({
                       >
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                              report
-                            </span>
+                            <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("report-3")}</span>
                             <span className="text-sm text-gray-300">•</span>
                             <span className="text-sm text-gray-500 capitalize">
-                              {item.report_tier || 'report'}
+                              {item.report_tier ||"report"}
                             </span>
                           </div>
                           <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                            {tierName} Report
-                          </h3>
+                            {tierName}{' '}{t("report-2")}</h3>
                           <p className="text-sm text-gray-500">{item.explanation}</p>
                         </div>
                         <div className="flex flex-col items-end gap-2">
@@ -509,9 +489,7 @@ function CheckoutModal({
                               type="button"
                               className="text-xs text-red-500 hover:text-red-700"
                               onClick={() => handleReportToggle(item.report_tier as ReportTier)}
-                            >
-                              Remove
-                            </button>
+                            >{t("remove")}</button>
                           )}
                         </div>
                       </div>
@@ -527,17 +505,14 @@ function CheckoutModal({
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                            area
-                          </span>
+                          <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("area")}</span>
                           <span className="text-sm text-gray-300">•</span>
                           <span className="text-sm text-gray-500">{service}</span>
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                          {service} Intelligence
-                        </h3>
+                          {service}{' '}{t("intelligence")}</h3>
                         <p className="text-sm text-gray-500">
-                          {isCalculatingCost ? 'Calculating price...' : 'Unable to calculate price. Please try again.'}
+                          {isCalculatingCost ?t("calculating-price") :t("unable-to-calculate-price-please-try-again")}
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-2">
@@ -545,9 +520,7 @@ function CheckoutModal({
                           type="button"
                           className="text-xs text-red-500 hover:text-red-700"
                           onClick={() => handleIntelligenceToggle(service)}
-                        >
-                          Remove
-                        </button>
+                        >{t("remove")}</button>
                       </div>
                     </div>
                   ))}
@@ -558,9 +531,7 @@ function CheckoutModal({
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                            dataset
-                          </span>
+                          <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("dataset-2")}</span>
                           <span className="text-sm text-gray-300">•</span>
                           <span className="text-sm text-gray-500">
                             {formatSubcategoryName(dataset)}
@@ -570,7 +541,7 @@ function CheckoutModal({
                           {formatSubcategoryName(dataset)}
                         </h3>
                         <p className="text-sm text-gray-500">
-                          {isCalculatingCost ? 'Calculating price...' : 'Unable to calculate price. Please try again.'}
+                          {isCalculatingCost ?t("calculating-price") :t("unable-to-calculate-price-please-try-again")}
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-2">
@@ -578,9 +549,7 @@ function CheckoutModal({
                           type="button"
                           className="text-xs text-red-500 hover:text-red-700"
                           onClick={() => handleDatasetToggle(dataset)}
-                        >
-                          Remove
-                        </button>
+                        >{t("remove")}</button>
                       </div>
                     </div>
                   ))}
@@ -593,29 +562,26 @@ function CheckoutModal({
                       const needsLocation = !checkout.country_name || !checkout.city_name;
                       let statusMessage = '';
                       if (isCalculatingCost) {
-                        statusMessage = 'Calculating price...';
+                        statusMessage ="Calculating price...";
                       } else if (needsBusinessType || needsLocation) {
                         statusMessage = needsBusinessType
-                          ? 'Please select a business type to calculate price.'
-                          : 'Please select country and city to calculate price.';
+                          ?"Please select a business type to calculate price."
+                          :"Please select country and city to calculate price.";
                       } else {
-                        statusMessage = 'Unable to calculate price. Please try again.';
+                        statusMessage ="Unable to calculate price. Please try again.";
                       }
                       return (
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border border-gray-100 rounded-lg p-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                                report
-                              </span>
+                              <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("report-3")}</span>
                               <span className="text-sm text-gray-300">•</span>
                               <span className="text-sm text-gray-500 capitalize">
                                 {checkout.report}
                               </span>
                             </div>
                             <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                              {tierName} Report
-                            </h3>
+                              {tierName}{' '}{t("report-2")}</h3>
                             <p className="text-sm text-gray-500">
                               {statusMessage}
                             </p>
@@ -625,9 +591,7 @@ function CheckoutModal({
                               type="button"
                               className="text-xs text-red-500 hover:text-red-700"
                               onClick={() => handleReportToggle(checkout.report)}
-                            >
-                              Remove
-                            </button>
+                            >{t("remove")}</button>
                           </div>
                         </div>
                       );
@@ -643,9 +607,7 @@ function CheckoutModal({
           <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
             {/* Promotion Code Section */}
             <div className="mb-4">
-              <label htmlFor="promotion-code" className="block text-sm font-medium text-gray-700 mb-2">
-                Promotion Code
-              </label>
+              <label htmlFor="promotion-code" className="block text-sm font-medium text-gray-700 mb-2">{t("promotion-code")}</label>
               <div className="flex gap-2 items-start">
                 <div className="flex-1 max-w-xs">
                   <input
@@ -656,7 +618,7 @@ function CheckoutModal({
                       setPromotionCode(e.target.value);
                       setPromoError(null);
                     }}
-                    placeholder="Enter voucher code"
+                    placeholder={t("enter-voucher-code")}
                     className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#115740] focus:border-transparent"
                   />
                   {promoError && (
@@ -669,15 +631,15 @@ function CheckoutModal({
                   className="bg-[#115740] text-white px-6 py-2 rounded-lg font-semibold hover:bg-[#0d4632] transition-all disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
                   disabled={!promotionCode.trim() || isApplyingPromo || isCalculatingCost}
                 >
-                  {isApplyingPromo ? 'Applying...' : 'Apply'}
+                  {isApplyingPromo ?t("applying") :t("apply")}
                 </button>
               </div>
             </div>
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-gray-600">Subtotal</span>
+              <span className="text-sm text-gray-600">{t("subtotal")}</span>
               <span className="text-lg font-semibold text-gray-900">
                 {isCalculatingCost
-                  ? 'Calculating...'
+                  ?t("calculating")
                   : cartCostResponse?.data?.total_cost
                     ? formatPrice(cartCostResponse.data.total_cost)
                     : '$0.00'}
@@ -686,13 +648,8 @@ function CheckoutModal({
             {purchaseDisabledReason && (
               <p className="text-sm text-amber-700 mb-3" role="status">
                 {isGuest ? (
-                  <>
-                    Please{' '}
-                    <Link to="/auth" className="text-[#115740] font-semibold underline hover:no-underline">
-                      sign in
-                    </Link>{' '}
-                    to complete your purchase.
-                  </>
+                  <>{t("please")}{' '}
+                    <Link to="/auth" className="text-[#115740] font-semibold underline hover:no-underline">{t("sign-in-2")}</Link>{' '}{t("to-complete-your-purchase")}</>
                 ) : (
                   purchaseDisabledReason
                 )}
@@ -703,16 +660,14 @@ function CheckoutModal({
                 type="button"
                 onClick={onClose}
                 className="flex-1 bg-white border-2 border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-all"
-              >
-                Continue Shopping
-              </button>
+              >{t("continue-shopping")}</button>
               <button
                 type="button"
                 onClick={handlePurchase}
                 disabled={isPurchasing || isCalculatingCost || !canPurchase}
                 className="flex-1 bg-[#115740] text-white py-3 rounded-lg font-semibold hover:bg-[#0d4632] transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {isPurchasing ? 'Processing...' : 'Purchase Now'}
+                {isPurchasing ?t("processing") :t("purchase-now")}
               </button>
             </div>
           </div>

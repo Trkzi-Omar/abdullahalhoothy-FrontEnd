@@ -5,6 +5,8 @@ import { UserLayerCardProps } from '../../types/allTypesAndInterfaces';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { Progress } from '../common';
 import { FaCheckCircle } from 'react-icons/fa';
+import { t } from '../../i18n';
+
 
 function UserLayerCard(props: UserLayerCardProps) {
   const { geoPoints } = useCatalogContext();
@@ -34,7 +36,7 @@ function UserLayerCard(props: UserLayerCardProps) {
       <div className="border border-[#f0f0f0] rounded overflow-hidden bg-white flex flex-col h-full mt-5">
         <div className="overflow-hidden">
           <img
-            alt="Placeholder"
+            alt={t("placeholder")}
             src={placeHolderImage}
             className="w-full h-[200px] object-contain scale-[0.8]"
           />
@@ -48,8 +50,8 @@ function UserLayerCard(props: UserLayerCardProps) {
           </div>
 
           <div className="mt-2 flex-grow">
-            <span className="block text-sm text-[#888]">Legend: {props.legend}</span>
-            <p className="m-0 text-sm text-[#555]">Description: {props.description}</p>
+            <span className="block text-sm text-[#888]">{t("legend-2")}{' '}{props.legend}</span>
+            <p className="m-0 text-sm text-[#555]">{t("description-2")}{' '}{props.description}</p>
           </div>
         </div>
 
@@ -58,9 +60,7 @@ function UserLayerCard(props: UserLayerCardProps) {
             <div
               onClick={handleMoreInfo}
               className="cursor-pointer inline-flex items-center hover:text-[#40a9ff] text-red-500 font-medium"
-            >
-              + Add
-            </div>
+            >{t("add")}</div>
           </li>
         </ul>
       </div>

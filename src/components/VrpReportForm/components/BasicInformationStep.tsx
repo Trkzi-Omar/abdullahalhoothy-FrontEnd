@@ -8,6 +8,8 @@ import {
   FaPlus,
 } from 'react-icons/fa';
 import { CITY_OPTIONS } from '../constants';
+import { t } from '../../../i18n';
+
 
 const formatCategoryName = (category: string): string =>
   category
@@ -73,11 +75,11 @@ const BasicInformationStep = ({
 
   const validateCustomValue = (value: string): { valid: boolean; error?: string } => {
     if (value.length < 2) {
-      return { valid: false, error: 'Business type must be at least 2 characters' };
+      return { valid: false, error: t("business-type-must-be-at-least-2-characters") };
     }
 
     if (value.length > 50) {
-      return { valid: false, error: 'Business type must be at most 50 characters' };
+      return { valid: false, error: t("business-type-must-be-at-most-50-characters") };
     }
 
     return { valid: true };
@@ -116,13 +118,13 @@ const BasicInformationStep = ({
     const normalizedValue = normalizeValue(value);
 
     if (!normalizedValue) {
-      setCategoryError('Please enter a business type');
+      setCategoryError(t("please-enter-a-business-type"));
       return;
     }
 
     const validation = validateCustomValue(normalizedValue);
     if (!validation.valid) {
-      setCategoryError(validation.error || 'Invalid business type');
+      setCategoryError(validation.error || t("invalid-business-type"));
       return;
     }
 
@@ -144,10 +146,8 @@ const BasicInformationStep = ({
   return (
     <div className="space-y-3 animate-fade-in-up">
       <div className="text-center mb-3">
-        <h3 className="text-lg font-bold text-gray-900 mb-1">Basic Information</h3>
-        <p className="text-sm text-gray-600">
-          Let's start with the basic details for your expansion report
-        </p>
+        <h3 className="text-lg font-bold text-gray-900 mb-1">{t("basic-information")}</h3>
+        <p className="text-sm text-gray-600">{t("let-s-start-with-the-basic-details-for-your-expansion-report")}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -155,9 +155,7 @@ const BasicInformationStep = ({
         <div className="space-y-3">
           <label htmlFor="country_name" className="block text-sm font-semibold text-gray-700">
             <span className="flex items-center">
-              <FaGlobe className="w-4 h-4 mr-2 text-primary" />
-              Country
-            </span>
+              <FaGlobe className="w-4 h-4 mr-2 text-primary" />{t("country")}</span>
           </label>
           <input
             type="text"
@@ -172,9 +170,7 @@ const BasicInformationStep = ({
         <div className="space-y-3">
           <label htmlFor="city_name" className="block text-sm font-semibold text-gray-700">
             <span className="flex items-center">
-              <FaMapMarkerAlt className="w-4 h-4 mr-2 text-primary" />
-              City
-              <span className="text-red-500 ml-1">*</span>
+              <FaMapMarkerAlt className="w-4 h-4 mr-2 text-primary" />{t("city")}<span className="text-red-500 ml-1">*</span>
             </span>
           </label>
           <select
@@ -209,9 +205,7 @@ const BasicInformationStep = ({
       <div className="space-y-3">
         <label htmlFor="Type" className="block text-sm font-semibold text-gray-700">
           <span className="flex items-center">
-            <FaBuilding className="w-4 h-4 mr-2 text-primary" />
-            What kind of business is yours?
-          </span>
+            <FaBuilding className="w-4 h-4 mr-2 text-primary" />{t("what-kind-of-business-is-yours")}</span>
         </label>
 
         <div className="space-y-3">
@@ -220,7 +214,7 @@ const BasicInformationStep = ({
             <input
               type="text"
               id="Type"
-              placeholder="Search categories or enter a custom business type..."
+              placeholder={t("search-categories-or-enter-a-custom-business-type")}
               value={categorySearchTerm}
               onChange={e => {
                 setCategorySearchTerm(e.target.value);
@@ -265,8 +259,7 @@ const BasicInformationStep = ({
                   disabled={disabled}
                   className="w-full flex items-center justify-center px-4 py-3 bg-primary/10 text-primary border border-primary/20 rounded-xl hover:bg-primary/15 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <FaPlus className="w-3.5 h-3.5 mr-2" />
-                  Add "{normalizedSearchTerm}"
+                  <FaPlus className="w-3.5 h-3.5 mr-2" />{t("add-2")}{normalizedSearchTerm}"
                 </button>
               )}
 
@@ -290,8 +283,7 @@ const BasicInformationStep = ({
                       </button>
                     ))
                   ) : (
-                    <div className="px-4 py-3 text-gray-500 text-center">
-                      No categories found matching "{normalizedSearchTerm}"
+                    <div className="px-4 py-3 text-gray-500 text-center">{t("no-categories-found-matching")}{normalizedSearchTerm}"
                     </div>
                   )}
                 </div>
@@ -313,13 +305,11 @@ const BasicInformationStep = ({
         <div className="p-4 bg-gray-50 rounded-xl">
           <div className="flex items-center justify-between mb-3">
             <div className="flex-1">
-              <h4 className="text-sm font-semibold text-gray-900 mb-1">Advanced Configuration</h4>
-              <p id="advanced-config-description" className="text-xs text-gray-600">
-                Customize evaluation metrics, add specific locations, and set your current position
-              </p>
+              <h4 className="text-sm font-semibold text-gray-900 mb-1">{t("advanced-configuration")}</h4>
+              <p id="advanced-config-description" className="text-xs text-gray-600">{t("customize-evaluation-metrics-add-specific-locations-and-set-your-current-positio")}</p>
             </div>
             <label className="flex items-center cursor-pointer">
-              <span className="sr-only">Enable Advanced Configuration</span>
+              <span className="sr-only">{t("enable-advanced-configuration")}</span>
               <button
                 type="button"
                 onClick={() => onToggleAdvancedMode(!isAdvancedMode)}
@@ -331,7 +321,7 @@ const BasicInformationStep = ({
                       ? 'bg-primary'
                       : 'bg-gray-300'
                 }`}
-                aria-label={`${isAdvancedMode ? 'Disable' : 'Enable'} Advanced Configuration`}
+                aria-label={isAdvancedMode ? t("disable-advanced-configuration") : t("enable-advanced-configuration")}
                 aria-pressed={isAdvancedMode}
               >
                 <span
@@ -353,20 +343,18 @@ const BasicInformationStep = ({
                 : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-primary hover:text-primary focus:ring-primary/20'
             }`}
             aria-label={
-              isAdvancedMode ? 'Advanced Configuration is enabled' : 'Enable Advanced Configuration'
+              isAdvancedMode ? t("advanced-configuration-is-enabled") : t("enable-advanced-configuration")
             }
             aria-describedby="advanced-config-description"
           >
-            {isAdvancedMode ? '✓ Advanced Mode Enabled' : 'Enable Advanced Configuration'}
+            {isAdvancedMode ?t("advanced-mode-enabled") :t("enable-advanced-configuration")}
           </button>
         </div>
 
         {isAdvancedMode && (
           <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-xs text-blue-700">
-              <strong>Advanced mode enabled:</strong> You'll be able to customize evaluation
-              metrics, add custom locations, and set your current position in the following steps.
-            </p>
+              <strong>{t("advanced-mode-enabled-2")}</strong>{' '}{t("you-ll-be-able-to-customize-evaluation-metrics-add-custom-locations-and-set-your")}</p>
           </div>
         )}
       </div>

@@ -4,6 +4,8 @@ import { Route, Routes, useLocation, Navigate } from 'react-router';
 import MobileNavbar from '../MobileNavbar/MobileNavbar';
 import { BillingProvider } from '../../context/BillingContext';
 import GuestBanner from '../Auth/GuestBanner';
+import { t } from '../../i18n';
+
 
 const NotFound = lazy(() => import('../../pages/NotFound/NotFound'));
 const Dataview = lazy(() => import('../../pages/Dataview/Dataview'));
@@ -106,5 +108,5 @@ const Layout = () => {
 export default Layout;
 
 const CommingSoon = ({ data }: { data: string }) => {
-  return <p className="h-full flex justify-center items-center text-4xl">{data} Comming Soon...</p>;
+  return <p className="h-full flex justify-center items-center text-4xl">{data}{' '}{t("comming-soon")}</p>;
 };

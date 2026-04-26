@@ -35,6 +35,7 @@ import { useMapContext } from './MapContext';
 import { isIntelligentLayer } from '../utils/layerUtils';
 import _ from 'lodash';
 import { useIntelligenceViewport } from './IntelligenceViewPortContext';
+import { t } from '../i18n';
 
 const FAKE_IS_ENABLED = true;
 
@@ -302,7 +303,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         idToken = authResponse.idToken;
       } else if (action == 'full data') {
         navigate('/auth');
-        setIsError(new Error('User is not authenticated!'));
+        setIsError(new Error(t("user-is-not-authenticated")));
         return;
       } else {
         user_id = '0000';
@@ -735,7 +736,7 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   function validateFetchDatasetForm() {
     if (!reqFetchDataset.selectedCountry || !reqFetchDataset.selectedCity) {
-      return new Error('Country and city are required.');
+      return new Error(t("country-and-city-are-required"));
     }
     if (
       reqFetchDataset.includedTypes.length === 0 &&
@@ -747,10 +748,10 @@ export function LayerProvider(props: { children: ReactNode }) {
         reqFetchDataset,
         searchType
       );
-      return new Error('At least one category must be included or excluded.');
+      return new Error(t("at-least-one-category-must-be-included-or-excluded"));
     }
     if (reqFetchDataset.includedTypes.length > 50 || reqFetchDataset.excludedTypes.length > 50) {
-      return new Error('Up to 50 types can be specified in each type restriction category.');
+      return new Error(t("up-to-50-types-can-be-specified-in-each-type-restriction-category"));
     }
     return true;
   }
@@ -872,7 +873,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         useCache: true,
       });
       if (!res.data.data) {
-        throw new Error('No data returned for current viewport');
+        throw new Error(t("no-data-returned-for-current-viewport"));
       }
       const features = res.data.data.features;
       const metadata = res.data.data.metadata;
@@ -970,7 +971,7 @@ export function LayerProvider(props: { children: ReactNode }) {
 
         // Check authentication
         if (!authResponse?.localId || !authResponse?.idToken) {
-          const message = 'Authentication required. Please log in to use this feature.';
+          const message = t("authentication-required-please-log-in-to-use-this-feature");
           console.error(message);
           setIsError(new Error(message));
           setShowLoaderTopup(false);
@@ -1018,7 +1019,7 @@ export function LayerProvider(props: { children: ReactNode }) {
             setViewport(prev => prev ? { ...prev, population: true } : prev);
           } catch (error) {
             const message =
-              error instanceof Error ? error.message : 'Failed to fetch population data';
+              error instanceof Error ? error.message : t("failed-to-fetch-population-data");
             console.error('Population layer error:', error);
             setIsError(new Error(message));
           } finally {
@@ -1042,7 +1043,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('Error updating population layer:', error);
-        setIsError(new Error('Failed to update population layer'));
+        setIsError(new Error(t("failed-to-update-population-layer")));
         setShowLoaderTopup(false);
       }
     },
@@ -1130,7 +1131,7 @@ export function LayerProvider(props: { children: ReactNode }) {
 
         // Check authentication
         if (!authResponse?.localId || !authResponse?.idToken) {
-          const message = 'Authentication required. Please log in to use this feature.';
+          const message = t("authentication-required-please-log-in-to-use-this-feature");
           console.error(message);
           setIsError(new Error(message));
           setShowLoaderTopup(false);
@@ -1180,7 +1181,7 @@ export function LayerProvider(props: { children: ReactNode }) {
             // Update viewport to reflect income layer is active
             setViewport(prev => prev ? { ...prev, income: true } : prev);
           } catch (error) {
-            const message = error instanceof Error ? error.message : 'Failed to fetch income data';
+            const message = error instanceof Error ? error.message : t("failed-to-fetch-income-data");
             console.error('Income layer error:', error);
             setIsError(new Error(message));
           } finally {
@@ -1204,7 +1205,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('Error updating income layer:', error);
-        setIsError(new Error('Failed to update income layer'));
+        setIsError(new Error(t("failed-to-update-income-layer")));
         setShowLoaderTopup(false);
       }
     },
@@ -1251,7 +1252,7 @@ export function LayerProvider(props: { children: ReactNode }) {
 
         // Check authentication
         if (!authResponse?.localId || !authResponse?.idToken) {
-          const message = 'Authentication required. Please log in to use this feature.';
+          const message = t("authentication-required-please-log-in-to-use-this-feature");
           console.error(message);
           setIsError(new Error(message));
           setShowLoaderTopup(false);
@@ -1300,7 +1301,7 @@ export function LayerProvider(props: { children: ReactNode }) {
             setViewport(prev => prev ? { ...prev, real_estate: true } : prev);
           } catch (error) {
             const message =
-              error instanceof Error ? error.message : 'Failed to fetch real estate data';
+              error instanceof Error ? error.message : t("failed-to-fetch-real-estate-data");
             console.error('Real estate layer error:', error);
             setIsError(new Error(message));
           } finally {
@@ -1324,7 +1325,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('Error updating real estate layer:', error);
-        setIsError(new Error('Failed to update real estate layer'));
+        setIsError(new Error(t("failed-to-update-real-estate-layer")));
         setShowLoaderTopup(false);
       }
     },
@@ -1584,7 +1585,7 @@ export function LayerProvider(props: { children: ReactNode }) {
 export function useLayerContext() {
   const context = useContext(LayerContext);
   if (!context) {
-    throw new Error('useLayerContext must be used within a LayerProvider');
+    throw new Error(t("uselayercontext-must-be-used-within-a-layerprovider"));
   }
   return context;
 }

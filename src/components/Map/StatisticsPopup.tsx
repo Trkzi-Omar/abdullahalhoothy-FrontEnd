@@ -4,6 +4,8 @@ import * as turf from '@turf/turf';
 import { useUIContext } from '../../context/UIContext';
 import { PolygonFeature } from '../../types/allTypesAndInterfaces';
 import { formatLargeNumber } from '../../utils/formatters';
+import { t } from '../../i18n';
+
 
 function calculatePercentageDifference(number: number, benchmark: number) {
   if (!number || !benchmark) return 0;
@@ -147,7 +149,7 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
               <th className="text-left font-normal text-blue-600 w-1/4" colSpan={2}>
                 <img
                   src="/slocator.png"
-                  alt="Logo"
+                  alt={t("logo")}
                   width={40}
                   height={40}
                   className="w-16 h-16 rounded"
@@ -172,24 +174,16 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
                         }`}
                       >
                         <div className="bg-blue-600 text-white text-center mb-1 h-12 w-full flex items-center justify-center ">
-                          {area === 'Unknown'
+                          {area ==="Unknown"
                             ? `Area ${(turf.area(polygon) / 100000).toFixed(3)} km²`
                             : area}
                         </div>
                         <div className="flex justify-between text-xs gap-0.5">
-                          <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">
-                            Count
-                          </span>
-                          <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">
-                            Sum
-                          </span>
+                          <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">{t("count")}</span>
+                          <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">{t("sum")}</span>
                           <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">%</span>
-                          <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">
-                            Avg
-                          </span>
-                          <span className="bg-blue-600 text-white p-1.5 w-auto text-center text-nowrap">
-                            vs Benchmark
-                          </span>
+                          <span className="bg-blue-600 text-white p-1.5 w-1/4 text-center">{t("avg")}</span>
+                          <span className="bg-blue-600 text-white p-1.5 w-auto text-center text-nowrap">{t("vs-benchmark")}</span>
                         </div>
                       </div>
                     );
@@ -251,9 +245,7 @@ function DesktopStatisticsPopup({ polygon }: { polygon: PolygonFeature }) {
                                     onClick={() =>
                                       setIsBenchmarkControlOpen(!isBenchmarkControlOpen)
                                     }
-                                  >
-                                    Set Benchmark
-                                  </button>
+                                  >{t("set-benchmark")}</button>
                                 )}
                                 {benchmark?.value !== '' && (
                                   <div
@@ -313,7 +305,7 @@ const MobileStatisticsPopup = ({ polygon }) => {
       }}
     >
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-bold text-blue-600">Statistics</h3>
+        <h3 className="text-lg font-bold text-blue-600">{t("statistics")}</h3>
         <CloseButton polygon={polygon} />
       </div>
       <div className="space-y-6">
@@ -321,7 +313,7 @@ const MobileStatisticsPopup = ({ polygon }) => {
           <div key={areaIndex} className="w-full border-t pt-4 space-y-4">
             {/* Header for the Area */}
             <div className="bg-blue-600 text-white text-center mb-4 h-9 w-full flex items-center justify-center">
-              {area === 'Unknown' ? `Area ${(turf.area(polygon) / 100000).toFixed(3)} km²` : area}
+              {area ==="Unknown" ? `Area ${(turf.area(polygon) / 100000).toFixed(3)} km²` : area}
             </div>
             {/* Data for the Area */}
             {polygonSections.sections.map((section, sectionIndex) => {
@@ -346,31 +338,29 @@ const MobileStatisticsPopup = ({ polygon }) => {
                         {/* Layer Name */}
                         <div className="font-medium text-gray-800 mb-2">{point.layer_name}</div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">Count:</span>
+                          <span className="text-gray-700 font-medium">{t("count-2")}</span>
                           <span className="text-gray-700">{dataForArea.count}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">Sum:</span>
+                          <span className="text-gray-700 font-medium">{t("sum-2")}</span>
                           <span className="text-gray-700">{dataForArea.sum}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">Percentage:</span>
+                          <span className="text-gray-700 font-medium">{t("percentage")}</span>
                           <span className="text-gray-700">{dataForArea.percentage}%</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">Average:</span>
+                          <span className="text-gray-700 font-medium">{t("average")}</span>
                           <span className="text-gray-700">{dataForArea.avg}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">vs Benchmark:</span>
+                          <span className="text-gray-700 font-medium">{t("vs-benchmark-2")}</span>
                           <span>
                             {benchmark?.value === '' ? (
                               <button
                                 className="text-blue-500 underline"
                                 onClick={() => setIsBenchmarkControlOpen(!isBenchmarkControlOpen)}
-                              >
-                                Set Benchmark
-                              </button>
+                              >{t("set-benchmark")}</button>
                             ) : (
                               <div
                                 className={`text-center p-1 rounded ${

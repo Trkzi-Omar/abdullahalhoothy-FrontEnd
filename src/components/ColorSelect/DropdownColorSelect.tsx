@@ -3,6 +3,8 @@ import React, { useEffect, MouseEvent as ReactMouseEvent, useState } from 'react
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useLayerContext } from '../../context/LayerContext';
 import { DropdownColorSelectProps } from '../../types/allTypesAndInterfaces';
+import { t } from '../../i18n';
+
 
 function DropdownColorSelect({ layerIndex }: DropdownColorSelectProps) {
   const catalogContext = useCatalogContext();
@@ -62,8 +64,8 @@ function DropdownColorSelect({ layerIndex }: DropdownColorSelectProps) {
         }}
       ></button>
       <div className="flex justify-between text-sm text-slate-500">
-        <span>Low</span>
-        <span>High</span>
+        <span>{t("low")}</span>
+        <span>{t("high")}</span>
       </div>
       {/* Dropdown menu */}
       {isOpen && (

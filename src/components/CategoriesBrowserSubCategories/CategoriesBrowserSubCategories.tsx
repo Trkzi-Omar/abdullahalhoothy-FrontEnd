@@ -42,18 +42,18 @@ const CategoriesBrowserSubCategories = ({
                 const isSelected = selectedType === type;
 
                 const colors = isMixed
-                  ? 'bg-[#FFE8D6] border-[#C86B31] text-[#CD5C08]'
+                  ?"bg-[#FFE8D6] border-[#C86B31] text-[#CD5C08]"
                   : included
-                    ? 'bg-[rgb(40,167,69)] border-[#167a1b] text-white'
+                    ?"bg-[rgb(40,167,69)] border-[#167a1b] text-white"
                     : excluded
-                      ? 'bg-[#ffebee] border-[#f44336] text-[#c62828]'
+                      ?"bg-[#ffebee] border-[#f44336] text-[#c62828]"
                       : '';
 
                 const borderClass = isSelected
-                  ? 'border-[#115740]'
+                  ?"border-[#115740]"
                   : included || excluded
                     ? ''
-                    : 'border-[#ccc]';
+                    :"border-[#ccc]";
 
                 return (
                   <div

@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import apiRequest from '../services/apiRequest';
 import urls from '../urls.json';
 import { CategoryData } from '../types/allTypesAndInterfaces';
+import { t } from '../i18n';
 
 interface DatasetPriceItem {
   dataset_name: string;
@@ -154,7 +155,7 @@ export const useDatasetPrices = ({
   const getPrice: (type: string) => string = useCallback(
     (type: string) => {
       if (isCalculatingPrices) {
-        return 'Loading...';
+        return t("loading");
       }
       const priceItem = priceData?.dataset_purchase_items?.find(d => d.dataset_name === type);
       return priceItem ? formatPrice(priceItem.cost) : '$0';

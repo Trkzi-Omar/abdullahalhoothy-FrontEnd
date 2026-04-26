@@ -2,6 +2,8 @@ import { useRef } from 'react';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useUIContext } from '../../context/UIContext';
 import { useClickOutside } from '../../hooks/useClickOutside';
+import { t } from '../../i18n';
+
 
 const BenchmarkControl = () => {
   const { benchmarks, setBenchmarks, polygons, isBenchmarkControlOpen, setIsBenchmarkControlOpen } =
@@ -40,9 +42,7 @@ const BenchmarkControl = () => {
         onClick={() => {
           setIsBenchmarkControlOpen(!isBenchmarkControlOpen);
         }}
-      >
-        Set Benchmark
-      </button>
+      >{t("set-benchmark")}</button>
       {isBenchmarkControlOpen && (
         <div className={`
           absolute left-0 top-full mt-2

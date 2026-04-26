@@ -21,8 +21,8 @@ function LayerFormLoader() {
 
   return (
     <>
-      {createLayerformStage === 'initial' && <FetchDatasetForm />}
-      {createLayerformStage === 'secondStep' && <CustomizeLayer />}
+      {createLayerformStage ==="initial" && <FetchDatasetForm />}
+      {createLayerformStage ==="secondStep" && <CustomizeLayer />}
     </>
   );
 }

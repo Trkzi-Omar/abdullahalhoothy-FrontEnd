@@ -6,6 +6,8 @@ import { useUIContext } from '../../context/UIContext';
 import { MdKeyboardArrowDown } from 'react-icons/md';
 import { colorOptions, colorMap, getDefaultLayerColor } from '../../utils/helperFunctions';
 import { ColorSelectProps } from '../../types/allTypesAndInterfaces';
+import { t } from '../../i18n';
+
 
 function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
   const { sidebarMode } = useUIContext();
@@ -115,7 +117,7 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
           } ${showLoaderTopup ? styles.disabledOption : ''}`}
           onClick={e => handleOptionClick(name, hex, e)}
         >
-          {sidebarMode !== 'catalog' && <span className="mr-2.5">{name}</span>}
+          {sidebarMode !=="catalog" && <span className="mr-2.5">{name}</span>}
           <span
             className={`w-[14px] h-[14px] rounded-full absolute left-[80px]  ${
               sidebarMode === 'catalog' ? 'w-[14px] h-[14px] static' : ''
@@ -145,7 +147,7 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
             style={{ backgroundColor: isGradient ? 'transparent' : colorHex }}
           />
           <span className="font-medium">
-            {isGradient ? 'Custom' : colorName || 'Select a color'}
+            {isGradient ?t("custom") : colorName ||"Select a color"}
           </span>
         </div>
         <MdKeyboardArrowDown className={`text-2xl ${isOpen ? 'rotate-180' : ''}`} />

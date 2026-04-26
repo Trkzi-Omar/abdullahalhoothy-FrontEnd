@@ -6,6 +6,8 @@ import {
 } from '../../../types/allTypesAndInterfaces';
 import MapLocationPicker from '../../MapLocationPicker/MapLocationPicker';
 import { BusinessTypeConfig } from '../services/businessMetricsService';
+import { t } from '../../../i18n';
+
 
 interface CurrentLocationStepProps {
   formData: CustomReportData;
@@ -26,11 +28,11 @@ export const CurrentLocationStep = ({
   isRequired = false,
   reportType,
 }: CurrentLocationStepProps) => {
-  const title = reportType === 'location' ? 'Your Location' : 'Current Location';
+  const title = reportType === 'location' ? t("your-location") : t("current-location");
   const helpText =
     reportType === 'location'
-      ? "Select the exact location you want to analyze. We'll compare it to our database."
-      : 'Set your current position for distance calculations';
+      ? t("select-the-exact-location-you-want-to-analyze-we-ll-compare-it-to-our-database")
+      : t("set-your-current-position-for-distance-calculations");
 
   return (
     <div className="space-y-4 animate-fade-in-up">
@@ -40,7 +42,7 @@ export const CurrentLocationStep = ({
           {isRequired ? (
             <span className="text-red-500 ml-1">*</span>
           ) : (
-            <span className="text-sm font-normal text-gray-500 ml-1">(Optional)</span>
+            <span className="text-sm font-normal text-gray-500 ml-1">{t("optional")}</span>
           )}
         </h3>
         <p className="text-sm text-gray-600">{helpText}</p>
@@ -52,10 +54,8 @@ export const CurrentLocationStep = ({
             <FaMapMarkerAlt className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <h4 className="font-semibold text-gray-900 text-sm">Your Current Position</h4>
-            <p className="text-xs text-gray-600">
-              This will be used as the reference point for distance calculations
-            </p>
+            <h4 className="font-semibold text-gray-900 text-sm">{t("your-current-position")}</h4>
+            <p className="text-xs text-gray-600">{t("this-will-be-used-as-the-reference-point-for-distance-calculations")}</p>
           </div>
         </div>
 
@@ -76,16 +76,14 @@ export const CurrentLocationStep = ({
             lat: formData.current_location?.lat || 0,
             lng: formData.current_location?.lng || 0,
           }}
-          title="Current Location"
+          title={t("current-location")}
           error={errors.current_location}
         />
 
         <div className="mt-4 flex flex-col sm:flex-row gap-5">
           {/* Average Order Value Input */}
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Average Order Value (SAR)
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t("average-order-value-sar")}</label>
             <input
               type="number"
               min="0"
@@ -106,14 +104,12 @@ export const CurrentLocationStep = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2"
               placeholder="30"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              The average price per order in Saudi Riyal.
-            </p>
+            <p className="text-xs text-gray-500 mt-1">{t("the-average-price-per-order-in-saudi-riyal")}</p>
           </div>
 
           {/* Rent Price Input */}
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Rent Price (SAR)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t("rent-price-sar")}</label>
             <input
               type="number"
               min="0"
@@ -132,11 +128,9 @@ export const CurrentLocationStep = ({
               }}
               disabled={disabled}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
-              placeholder="Enter rent price"
+              placeholder={t("enter-rent-price")}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Yearly rent price for this location in Saudi Riyal
-            </p>
+            <p className="text-xs text-gray-500 mt-1">{t("yearly-rent-price-for-this-location-in-saudi-riyal")}</p>
           </div>
         </div>
       </div>

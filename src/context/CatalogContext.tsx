@@ -27,6 +27,8 @@ import { isIntelligentLayer } from '../utils/layerUtils';
 import { v4 as uuidv4 } from 'uuid';
 import { Descendant } from 'slate';
 import { useIntelligenceViewport } from './IntelligenceViewPortContext';
+import { t } from '../i18n';
+
 
 const defaultCaseStudyContent: Descendant[] = [
   {
@@ -562,7 +564,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         setLastGeoIdRequest(res.data.request_id || res.data.id);
       }
     } catch (error) {
-      setIsError(error instanceof Error ? error : new Error('Failed to fetch geo points'));
+      setIsError(error instanceof Error ? error : new Error(t("failed-to-fetch-geo-points")));
     } finally {
       setIsError(null);
       setIsLoading(false);
@@ -743,7 +745,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
       }
 
       const requestBody = {
-        message: 'Save catalog request',
+        message:t("save-catalog-request"),
         request_info: {},
         request_body: {
           // Include catalog_id if updating an existing catalog
@@ -834,7 +836,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
 
       resetState();
     } catch (error) {
-      setIsError(error instanceof Error ? error : new Error('Failed to save catalog'));
+      setIsError(error instanceof Error ? error : new Error(t("failed-to-save-catalog")));
     } finally {
       setIsLoading(false);
     }
@@ -1471,7 +1473,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
 export function useCatalogContext() {
   const context = useContext(CatalogContext);
   if (!context) {
-    throw new Error('useCatalogContext must be used within a CatalogProvider');
+    throw new Error(t("usecatalogcontext-must-be-used-within-a-catalogprovider"));
   }
   return context;
 }

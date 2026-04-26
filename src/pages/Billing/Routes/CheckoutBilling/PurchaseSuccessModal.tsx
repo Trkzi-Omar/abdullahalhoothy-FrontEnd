@@ -5,6 +5,8 @@ import type {
   DatasetItem,
   IntelligenceItem,
 } from '../../../../components/CustomReportForm/services/reportPricingService';
+import { t } from '../../../../i18n';
+
 
 interface PurchaseSuccessModalProps {
   purchaseData: {
@@ -41,8 +43,8 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
       {/* Header */}
       <div className="flex flex-col items-center justify-center p-6 border-b border-gray-200 bg-gradient-to-br from-green-50 to-emerald-50">
         <MdCheckCircleOutline className="text-green-500 text-6xl mb-3" />
-        <h2 className="text-2xl font-semibold text-gray-900 mb-1">Payment Successful!</h2>
-        <p className="text-sm text-gray-600">Your purchase has been completed successfully</p>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-1">{t("payment-successful")}</h2>
+        <p className="text-sm text-gray-600">{t("your-purchase-has-been-completed-successfully")}</p>
       </div>
 
       {/* Scrollable Content */}
@@ -52,9 +54,7 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
           {hasReport && purchaseData.report && (
             <div className="space-y-3">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <span className="w-1 h-5 bg-[#115740] rounded-full"></span>
-                Report
-              </h3>
+                <span className="w-1 h-5 bg-[#115740] rounded-full"></span>{t("report-2")}</h3>
               <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
@@ -76,8 +76,7 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
           {hasIntelligences && purchaseData.intelligences && (
             <div className="space-y-3">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <span className="w-1 h-5 bg-[#115740] rounded-full"></span>
-                Area Intelligence ({purchaseData.intelligences.length})
+                <span className="w-1 h-5 bg-[#115740] rounded-full"></span>{t("area-intelligence-2")}{purchaseData.intelligences.length})
               </h3>
               <div className="space-y-3">
                 {purchaseData.intelligences.map((item, index) => (
@@ -85,8 +84,7 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <h4 className="text-base font-semibold text-gray-900 mb-2">
-                          {item.intelligence.intelligence_name} Intelligence
-                        </h4>
+                          {item.intelligence.intelligence_name}{' '}{t("intelligence")}</h4>
                         <p className="text-sm text-gray-600 mb-2">
                           {item.intelligence.description}
                         </p>
@@ -94,14 +92,13 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
                           {item.intelligence.explanation}
                         </p>
                         {item.intelligence.expiration && (
-                          <p className="text-xs text-gray-500 mt-2">
-                            Expires: {new Date(item.intelligence.expiration).toLocaleDateString()}
+                          <p className="text-xs text-gray-500 mt-2">{t("expires")}{' '}{new Date(item.intelligence.expiration).toLocaleDateString()}
                           </p>
                         )}
                       </div>
                       <div className="text-right ml-4">
                         {item.intelligence.free_as_part_of_package ? (
-                          <div className="text-lg font-bold text-green-600">Free</div>
+                          <div className="text-lg font-bold text-green-600">{t("free")}</div>
                         ) : (
                           <div className="text-lg font-bold text-[#115740]">
                             {formatPrice(item.intelligence.cost)}
@@ -124,8 +121,7 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
           {hasDatasets && purchaseData.datasets && (
             <div className="space-y-3">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <span className="w-1 h-5 bg-[#115740] rounded-full"></span>
-                Datasets ({purchaseData.datasets.length})
+                <span className="w-1 h-5 bg-[#115740] rounded-full"></span>{t("datasets-2")}{purchaseData.datasets.length})
               </h3>
               <div className="space-y-3">
                 {purchaseData.datasets.map((item, index) => (
@@ -133,9 +129,7 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                            DATASET
-                          </span>
+                          <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("dataset-3")}</span>
                         </div>
                         <h4 className="text-base font-semibold text-gray-900 mb-2">
                           {formatSubcategoryName(item.dataset.dataset_name)}
@@ -143,14 +137,13 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
                         <p className="text-sm text-gray-600 mb-2">{item.dataset.description}</p>
                         <p className="text-xs text-gray-500 italic">{item.dataset.explanation}</p>
                         {item.dataset.expiration && (
-                          <p className="text-xs text-gray-500 mt-2">
-                            Expires: {new Date(item.dataset.expiration).toLocaleDateString()}
+                          <p className="text-xs text-gray-500 mt-2">{t("expires")}{' '}{new Date(item.dataset.expiration).toLocaleDateString()}
                           </p>
                         )}
                       </div>
                       <div className="text-right ml-4">
                         {item.dataset.free_as_part_of_package ? (
-                          <div className="text-lg font-bold text-green-600">Free</div>
+                          <div className="text-lg font-bold text-green-600">{t("free")}</div>
                         ) : (
                           <div className="text-lg font-bold text-[#115740]">
                             {formatPrice(item.dataset.cost)}
@@ -172,7 +165,7 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
           {/* Empty State */}
           {!hasReport && !hasIntelligences && !hasDatasets && (
             <div className="text-center py-8 text-gray-500">
-              <p>No purchase details available</p>
+              <p>{t("no-purchase-details-available")}</p>
             </div>
           )}
         </div>
@@ -181,9 +174,7 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
       {/* Footer */}
       <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
         <div className="text-center">
-          <p className="text-sm text-gray-600">
-            Thank you for your purchase! You can now access your new data and reports.
-          </p>
+          <p className="text-sm text-gray-600">{t("thank-you-for-your-purchase-you-can-now-access-your-new-data-and-reports")}</p>
         </div>
       </div>
     </div>

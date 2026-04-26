@@ -1,6 +1,8 @@
 import { FaExclamationTriangle, FaStore, FaTruck } from 'react-icons/fa';
 import { CustomReportData, FormErrors } from '../../../types/allTypesAndInterfaces';
 import '../DeliveryStore.css';
+import { t } from '../../../i18n';
+
 
 interface DeliveryInStoreStepProps {
   formData: CustomReportData;
@@ -32,10 +34,8 @@ export const DeliveryInStoreStep = ({
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div className="text-center mb-6">
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Delivery vs In-Store</h3>
-        <p className="text-gray-600">
-          How do you expect your revenue to be split between delivery and in-store sales?
-        </p>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">{t("delivery-vs-in-store")}</h3>
+        <p className="text-gray-600">{t("how-do-you-expect-your-revenue-to-be-split-between-delivery-and-in-store-sales")}</p>
       </div>
 
       <div className="bg-white border text-center border-gray-200 rounded-xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
@@ -48,7 +48,7 @@ export const DeliveryInStoreStep = ({
               }`}
             >
               <FaTruck className="w-5 h-5" />
-              <span className="font-bold text-sm">Delivery</span>
+              <span className="font-bold text-sm">{t("delivery")}</span>
             </div>
             <span
               className="text-5xl font-extrabold transition-all duration-200"
@@ -64,7 +64,7 @@ export const DeliveryInStoreStep = ({
                 dineInWeight > 0.5 ? 'bg-amber-100 text-amber-600' : 'bg-gray-50 text-gray-500'
               }`}
             >
-              <span className="font-bold text-sm">In-Store</span>
+              <span className="font-bold text-sm">{t("in-store")}</span>
               <FaStore className="w-5 h-5" />
             </div>
             <span
@@ -107,15 +107,11 @@ export const DeliveryInStoreStep = ({
           <span
             className="transition-colors duration-200"
             style={{ color: deliveryWeight > 0.5 ? deliveryColor : undefined }}
-          >
-            More Delivery
-          </span>
+          >{t("more-delivery")}</span>
           <span
             className="transition-colors duration-200"
             style={{ color: dineInWeight > 0.5 ? inStoreColor : undefined }}
-          >
-            More In-Store
-          </span>
+          >{t("more-in-store")}</span>
         </div>
       </div>
 

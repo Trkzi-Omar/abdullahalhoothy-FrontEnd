@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useCaseStudy } from './CaseStudyPanel';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { t } from '../../i18n';
+
 
 export const CaseStudyToggle: React.FC = () => {
   const { showCaseStudy, setShowCaseStudy } = useCaseStudy();
@@ -46,7 +48,7 @@ export const CaseStudyToggle: React.FC = () => {
             <FaEye className="stroke-current w-[18px] h-[18px]" aria-hidden="true" />
           )}
           <span className="font-medium">
-            {showCaseStudy ? 'Hide Case Study' : 'Show Case Study'}
+            {showCaseStudy ?t("hide-case-study") :t("show-case-study")}
           </span>
         </div>
       </button>

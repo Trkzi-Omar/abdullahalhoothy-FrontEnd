@@ -11,6 +11,8 @@ import apiRequest from '../../services/apiRequest';
 import { useLayerContext } from '../../context/LayerContext';
 import CampaignPage from '../../pages/Campaign/campaign_home';
 import { Spinner } from '../common';
+import { t } from '../../i18n';
+
 
 function DataContainer() {
   const {
@@ -224,7 +226,7 @@ function DataContainer() {
   }
 
   if (error) {
-    return <div>Error: {error.message}</div>;
+    return <div>{t("error")}{' '}{error.message}</div>;
   }
 
   if (loading) {
@@ -241,13 +243,13 @@ function DataContainer() {
       )}
 
       <h2 className="text-2xl text-center font-semibold">
-        {selectedContainerType === 'Catalogue'
-          ? 'Add Data to Map'
-          : selectedContainerType === 'Home'
+        {selectedContainerType ==="Catalogue"
+          ?t("add-data-to-map")
+          : selectedContainerType ==="Home"
             ? ''
-            : 'Add Layers to Map'}
+            :t("add-layers-to-map")}
       </h2>
-      {selectedContainerType === 'Home' ? (
+      {selectedContainerType ==="Home" ? (
         <>
           <CampaignPage />
         </>
@@ -267,7 +269,7 @@ function DataContainer() {
                 );
               }}
             >
-              {selectedContainerType === 'Catalogue' ? 'Data Catalogue' : 'Data Layer'}
+              {selectedContainerType ==="Catalogue" ?t("data-catalogue") :t("data-layer")}
             </button>
             <button
               className={`${
@@ -278,9 +280,7 @@ function DataContainer() {
               onClick={function () {
                 setActiveTab('Load Files');
               }}
-            >
-              Load Files
-            </button>
+            >{t("load-files")}</button>
             <button
               className={`${
                 activeTab === 'Connect Your Data'
@@ -290,22 +290,14 @@ function DataContainer() {
               onClick={function () {
                 setActiveTab('Connect Your Data');
               }}
-            >
-              Connect Your Data
-            </button>
+            >{t("connect-your-data")}</button>
           </div>
-          {activeTab === 'Data Catalogue' || activeTab === 'Data Layer' ? (
+          {activeTab ==="Data Catalogue" || activeTab ==="Data Layer" ? (
             <div className="w-full pb-10">
-              {selectedContainerType === 'Catalogue' && activeTab === 'Data Catalogue' && (
+              {selectedContainerType ==="Catalogue" && activeTab ==="Data Catalogue" && (
                 <div className="mb-6 p-4 rounded-xl bg-[#f0f7ff] border border-[#c5d9f1] text-[#1a365d]">
-                  <p className="font-semibold mb-2">Build your own data catalogue</p>
-                  <p className="text-sm leading-relaxed">
-                    Create a catalogue by adding multiple <strong>layers</strong> from the Layers
-                    section and saving them together. You can combine layers with <strong>pins</strong>{' '}
-                    and <strong>drawings</strong> on the map to organize your data the way you want.
-                    Once saved, your layers and annotations become a reusable catalogue you can add to
-                    the map anytime.
-                  </p>
+                  <p className="font-semibold mb-2">{t("build-your-own-data-catalogue")}</p>
+                  <p className="text-sm leading-relaxed">{t("create-a-catalogue-by-adding-multiple")}{' '}<strong>{t("layers-2")}</strong>{' '}{t("from-the-layers-section-and-saving-them-together-you-can-combine-layers-with")}{' '}<strong>{t("pins")}</strong>{' '}{t("and")}{' '}<strong>{t("drawings")}</strong>{' '}{t("on-the-map-to-organize-your-data-the-way-you-want-once-saved-your-layers-and-ann")}</p>
                 </div>
               )}
               <div
@@ -314,22 +306,17 @@ function DataContainer() {
               >
                 {renderCards()}
               </div>
-              {selectedContainerType === 'Catalogue' &&
-                activeTab === 'Data Catalogue' &&
+              {selectedContainerType ==="Catalogue" &&
+                activeTab ==="Data Catalogue" &&
                 Array.isArray(resData) &&
                 resData.length === 0 && (
-                  <div className="mt-6 rounded-xl border border-dashed border-[#c5d9f1] bg-[#f8fbff] p-6 text-center text-[#1a365d]">
-                    No saved catalogues yet. Build one by adding layers to the map and saving
-                    them as a catalogue.
-                  </div>
+                  <div className="mt-6 rounded-xl border border-dashed border-[#c5d9f1] bg-[#f8fbff] p-6 text-center text-[#1a365d]">{t("no-saved-catalogues-yet-build-one-by-adding-layers-to-the-map-and-saving-them-as")}</div>
                 )}
             </div>
-          ) : activeTab === 'Load Files' ? (
-            <div className="text-center p-8 text-[1.2rem] text-[#666]">Load Files Content</div>
+          ) : activeTab ==="Load Files" ? (
+            <div className="text-center p-8 text-[1.2rem] text-[#666]">{t("load-files-content")}</div>
           ) : (
-            <div className="text-center p-8 text-[1.2rem] text-[#666]">
-              Connect Your Data Content
-            </div>
+            <div className="text-center p-8 text-[1.2rem] text-[#666]">{t("connect-your-data-content")}</div>
           )}
         </>
       )}

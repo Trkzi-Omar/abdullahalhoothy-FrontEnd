@@ -3,6 +3,8 @@ import './EvaluationMetricsStep.css';
 import { CustomReportData, FormErrors, MetricKey } from '../../../types/allTypesAndInterfaces';
 import { getMetricIcon } from '../utils/metricIcons';
 import { BusinessTypeConfig } from '../services/businessMetricsService';
+import { t } from '../../../i18n';
+
 
 interface EvaluationMetricsStepProps {
   formData: CustomReportData;
@@ -140,13 +142,9 @@ export const EvaluationMetricsStep = ({
   return (
     <div className="space-y-4 animate-fade-in-up">
       <div className="text-center mb-4">
-        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Evaluation Metrics</h3>
-        <p className="text-sm text-gray-600">
-          Set the importance weights for different factors (must total 100%)
-        </p>
-        <p className="text-sm text-gray-600">
-          your choice of weight indicates how much this factor has an effect on your business
-        </p>
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">{t("evaluation-metrics")}</h3>
+        <p className="text-sm text-gray-600">{t("set-the-importance-weights-for-different-factors-must-total-100-percent")}</p>
+        <p className="text-sm text-gray-600">{t("your-choice-of-weight-indicates-how-much-this-factor-has-an-effect-on-your-busin")}</p>
       </div>
 
       {/* Progress Indicator */}
@@ -154,7 +152,7 @@ export const EvaluationMetricsStep = ({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center">
             <FaChartBar className="w-5 h-5 text-primary mr-2" />
-            <span className="text-base font-semibold text-gray-900">Total Weight</span>
+            <span className="text-base font-semibold text-gray-900">{t("total-weight")}</span>
           </div>
           <div
             className={`flex items-center px-3 py-1.5 rounded-full ${
@@ -183,9 +181,9 @@ export const EvaluationMetricsStep = ({
         </div>
         <p className="text-sm text-gray-600 mt-2 text-center">
           {isBalanced
-            ? 'Perfect! All weights are balanced.'
+            ?t("perfect-all-weights-are-balanced")
             : isOver
-              ? 'Total exceeds 100%. Please reduce some values.'
+              ?t("total-exceeds-100-percent-please-reduce-some-values")
               : `${((1 - metricsSum) * 100).toFixed(0)}% remaining to reach 100%`}
         </p>
       </div>

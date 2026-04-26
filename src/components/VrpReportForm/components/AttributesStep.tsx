@@ -6,6 +6,8 @@ import {
 } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { CustomReportData } from "../../../types";
+import { t } from '../../../i18n';
+
 
 interface CategoryItem {
   type: "predefined" | "custom";
@@ -92,11 +94,11 @@ const SetAttributeStep = ({
     const trimmed = value.trim();
 
     if (trimmed.length < 2) {
-      return { valid: false, error: "Keyword must be at least 2 characters" };
+      return { valid: false, error: t("keyword-must-be-at-least-2-characters") };
     }
 
     if (trimmed.length > 50) {
-      return { valid: false, error: "Keyword must be at most 50 characters" };
+      return { valid: false, error: t("keyword-must-be-at-most-50-characters") };
     }
 
     return { valid: true };
@@ -119,13 +121,13 @@ const SetAttributeStep = ({
     const sanitized = searchValue.trim().replace(/^@+|@+$/g, "");
 
     if (!sanitized) {
-      setError("Please enter a keyword");
+      setError(t("please-enter-a-keyword"));
       return;
     }
 
     const validation = validateKeywordInput(sanitized);
     if (!validation.valid) {
-      setError(validation.error || "Invalid keyword");
+      setError(validation.error || t("invalid-keyword"));
       return;
     }
 
@@ -134,7 +136,7 @@ const SetAttributeStep = ({
     );
 
     if (isDuplicate) {
-      setError("This keyword is already added");
+      setError(t("this-keyword-is-already-added"));
       return;
     }
 
@@ -259,13 +261,11 @@ const SetAttributeStep = ({
   
         <div className="bg-white rounded-xl border-2 border-gray-200 shadow-sm p-4 flex flex-col overflow-hidden max-h-[60vh]">
           <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center flex-shrink-0">
-            <FaHandshake className="w-4 h-4 mr-2 text-primary" />
-            Excluded Categories
-          </h3>
+            <FaHandshake className="w-4 h-4 mr-2 text-primary" />{t("excluded-categories")}</h3>
 
           <input
             type="text"
-            placeholder="Search categories or add custom keyword..."
+            placeholder={t("search-categories-or-add-custom-keyword")}
             value={searchComplementary}
             onChange={(e) => setSearchComplementary(e.target.value)}
             onKeyDown={(e) =>
@@ -292,11 +292,7 @@ const SetAttributeStep = ({
               (cat) =>
                 cat.toLowerCase() === searchComplementary.trim().toLowerCase(),
             ) && (
-              <div className="text-xs text-blue-600 mb-2 px-3">
-                Press Enter to add '
-                {searchComplementary.trim().replace(/^@+|@+$/g, "")}' as custom
-                keyword
-              </div>
+              <div className="text-xs text-blue-600 mb-2 px-3">{t("press-enter-to-add")}{searchComplementary.trim().replace(/^@+|@+$/g, "")}{t("as-custom-keyword")}</div>
             )}
 
           {complementaryError && (

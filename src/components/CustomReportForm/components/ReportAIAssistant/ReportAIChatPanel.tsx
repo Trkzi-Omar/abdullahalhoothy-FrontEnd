@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { HiArrowRight, HiX } from 'react-icons/hi';
 import Loader from '../../../Loader/Loader';
+import { t } from '../../../../i18n';
+
 
 interface ReportAIChatPanelProps {
   messages: Array<{
@@ -81,11 +83,11 @@ function ReportAIChatPanel({
     >
       {/* Header */}
       <div className="flex items-center justify-between bg-gem-gradient-animated bg-200% animate-gradient-shift p-4 rounded-t-2xl">
-        <h2 className="text-gray-100 font-semibold">AI Assistant</h2>
+        <h2 className="text-gray-100 font-semibold">{t("ai-assistant")}</h2>
         <button
           onClick={onClose}
           className="text-gray-100 hover:text-white transition-colors"
-          aria-label="Close chat"
+          aria-label={t("close-chat")}
         >
           <HiX className="w-6 h-6" />
         </button>
@@ -115,7 +117,7 @@ function ReportAIChatPanel({
             ref={inputRef}
             value={input}
             onChange={e => setInput(e.target.value)}
-            placeholder="Type your message..."
+            placeholder={t("type-your-message")}
             className="flex-1 min-w-0 p-2 border-none focus:ring-0 focus:outline-none resize-none min-h-[40px] h-[40px] max-h-24 leading-6 overflow-y-auto scrollbar-hide"
             onInput={e => {
               const target = e.target as HTMLTextAreaElement;
@@ -139,7 +141,7 @@ function ReportAIChatPanel({
                 ? 'text-gray-300 cursor-not-allowed'
                 : 'text-gem-green hover:text-gem-green/80 transition-colors'
             }`}
-            aria-label="Send message"
+            aria-label={t("send-message")}
           >
             <HiArrowRight className="w-5 h-5" />
           </button>

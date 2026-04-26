@@ -1,9 +1,10 @@
+import { t } from '../../i18n';
 const LandingLogo = () => {
   return (
     <div className="flex items-center shrink-0">
       <img
         src="/images/landing/logo-full.webp"
-        alt="S-LOC Logo"
+        alt={t("s-loc-logo")}
         className="h-16 md:h-20 w-auto object-contain transition-all duration-300"
         width={200}
         height={80}
@@ -11,7 +12,7 @@ const LandingLogo = () => {
           e.currentTarget.style.display = 'none';
           const parent = e.currentTarget.parentNode as HTMLElement;
           if (parent) {
-            parent.innerHTML = '<span class="text-white font-black text-4xl">S-LOC</span>';
+            parent.innerHTML = `<span class="text-white font-black text-4xl">${t("s-locator")}</span>`;
           }
         }}
       />

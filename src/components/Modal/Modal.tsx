@@ -1,6 +1,8 @@
 import ReactDOM from 'react-dom';
 import { ModalProps } from '../../types';
 import { useUIContext } from '../../context/UIContext';
+import { t } from '../../i18n';
+
 
 function Modal(props: ModalProps) {
   const {
@@ -39,10 +41,8 @@ function Modal(props: ModalProps) {
         <button
           className={`${isHome ? 'text-white bg-red-600' : ''} transition-all text-xl w-10 h-10 hover:text-white font-bold hover:bg-red-600 absolute top-0 right-0 rounded-tr-lg`}
           onClick={closeModal}
-          aria-label="Close modal"
-        >
-          &times;
-        </button>
+          aria-label={t("close-modal")}
+        >{t("and-times")}</button>
         {children}
       </div>
     </div>,

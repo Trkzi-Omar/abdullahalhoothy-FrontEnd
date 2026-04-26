@@ -1,5 +1,6 @@
 import { MapFeatures } from '../../types/allTypesAndInterfaces';
 import defaultMapConfig from '../../mapConfig.json';
+import { t } from '../../i18n';
 
 function MapLegend(legendElement: HTMLDivElement, geoPoints: MapFeatures[]) {
   // Clear existing content
@@ -8,7 +9,7 @@ function MapLegend(legendElement: HTMLDivElement, geoPoints: MapFeatures[]) {
   // Create legend header
   const header = document.createElement('div');
   header.className = 'p-2 border-b font-medium text-sm';
-  header.textContent = 'Legend';
+  header.textContent = t("legend");
   legendElement.appendChild(header);
 
   // Create legend content

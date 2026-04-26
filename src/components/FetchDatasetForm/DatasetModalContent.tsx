@@ -2,6 +2,8 @@ import { useLayerContext } from '../../context/LayerContext';
 import { Progress } from '../common';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { FiInfo } from 'react-icons/fi';
+import { t } from '../../i18n';
+
 
 function DatasetModalContent() {
   const { reqFetchDataset, layerDataMap } = useLayerContext();
@@ -13,7 +15,7 @@ function DatasetModalContent() {
   return (
     <div className="py-4 px-2 space-y-10">
       {layers.length === 0 ? (
-        <p className="text-gray-600 text-center py-8">No categories available</p>
+        <p className="text-gray-600 text-center py-8">{t("no-categories-available")}</p>
       ) : (
         <div className="space-y-4">
           {layers.map(layer => {
@@ -43,9 +45,7 @@ function DatasetModalContent() {
       )}
       <div className="flex items-center gap-2 p-3 rounded-md bg-blue-50 border border-blue-200">
         <FiInfo className="text-blue-600 text-xl" />
-        <p className="text-sm text-blue-700 font-medium">
-          Save the layer and then retrieve the data from Get Layers.
-        </p>
+        <p className="text-sm text-blue-700 font-medium">{t("save-the-layer-and-then-retrieve-the-data-from-get-layers")}</p>
       </div>
     </div>
   );

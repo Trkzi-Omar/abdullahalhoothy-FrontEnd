@@ -11,6 +11,8 @@ import BottomDrawer from '../../components/BottomDrawer/BottomDrawer';
 import { useLayerContext } from '../../context/LayerContext';
 import { useMeasurement } from '../../hooks/useMeasurement';
 import { Spinner } from '../../components/common';
+import { t } from '../../i18n';
+
 
 const Home = () => {
   const { isAuthenticated, authLoading } = useAuth();
@@ -72,9 +74,7 @@ const Home = () => {
                 stroke-linecap="round"
                 stroke-linejoin="round"
               />
-            </svg>
-            Tap to see more options
-          </button>
+            </svg>{t("tap-to-see-more-options")}</button>
           <HomerDrawer />
         </>
       )}
@@ -136,9 +136,7 @@ export function HomeContent() {
           onClick={() => {
             handleTabSwitch('LAYER');
           }}
-        >
-          Layer
-          <span className="ml-2">
+        >{t("layer")}<span className="ml-2">
             <FaLayerGroup />
           </span>
         </div>
@@ -153,9 +151,7 @@ export function HomeContent() {
           onClick={() => {
             handleTabSwitch('CATALOG');
           }}
-        >
-          Catalog
-          <span className="ml-2">
+        >{t("catalog-2")}<span className="ml-2">
             <FaBoxOpen />
           </span>
         </div>
@@ -163,7 +159,7 @@ export function HomeContent() {
 
       {/* Container */}
       <div className="flex-1 flex flex-col  border-slate-300 lg:border border-t-0 bg-white overflow-hidden">
-        {selectedHomeTab === 'LAYER' && (
+        {selectedHomeTab ==="LAYER" && (
           <>
             <LayerFormLoader />
             {isLoadingDataset && (
@@ -175,7 +171,7 @@ export function HomeContent() {
             )}
           </>
         )}
-        {selectedHomeTab === 'CATALOG' && <CatalogFormLoader />}
+        {selectedHomeTab ==="CATALOG" && <CatalogFormLoader />}
       </div>
     </div>
   );

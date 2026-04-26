@@ -12,6 +12,8 @@ import { withHistory, HistoryEditor } from 'slate-history';
 import { css } from '@emotion/css';
 import EditorToolbar from './EditorToolbar';
 import ChartRenderer from './ChartRenderer';
+import { t } from '../../i18n';
+
 
 export type CustomElement = {
   type:
@@ -103,20 +105,19 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           <div className="my-4 p-4 border border-gray-200 rounded-md bg-gray-50" {...attributes}>
             <div contentEditable={false}>
               {props.element.chartId ? (
-                <ChartRenderer chartId={props.element.chartId} title="Demographic Data" />
+                <ChartRenderer chartId={props.element.chartId} title={t("demographic-data")} />
               ) : (
                 <div className="flex flex-col items-center justify-center p-6 text-center">
                   <div className="text-4xl mb-2">📊</div>
                   <div className="text-gray-600 font-medium mb-1">
-                    {props.element.placeholderType === 'info-card'
-                      ? 'Demographic Info Card Placeholder'
+                    {props.element.placeholderType ==="info-card"
+                      ?t("demographic-info-card-placeholder")
                       : props.element.placeholderType
                         ? `${props.element.placeholderType.charAt(0).toUpperCase() + props.element.placeholderType.slice(1)} Chart Placeholder`
-                        : 'Chart Placeholder'}
+                        :t("chart-placeholder")}
                   </div>
                   <div className="text-sm text-gray-500">
-                    {props.element.placeholder ||
-                      'This chart will be replaced with actual data later'}
+                    {props.element.placeholder ||"This chart will be replaced with actual data later"}
                   </div>
                 </div>
               )}
@@ -138,10 +139,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               ) : (
                 <div className="flex flex-col items-center justify-center p-6 text-center bg-gray-50 rounded-md border border-gray-200">
                   <div className="text-4xl mb-2">🖼️</div>
-                  <div className="text-gray-600 font-medium mb-1">Image Placeholder</div>
-                  <div className="text-sm text-gray-500">
-                    This image will be replaced with actual content later
-                  </div>
+                  <div className="text-gray-600 font-medium mb-1">{t("image-placeholder")}</div>
+                  <div className="text-sm text-gray-500">{t("this-image-will-be-replaced-with-actual-content-later")}</div>
                 </div>
               )}
             </div>

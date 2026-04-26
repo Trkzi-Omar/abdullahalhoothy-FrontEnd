@@ -3,6 +3,7 @@ import React, {
   createContext,
   useContext,
   useState,
+  useCallback,
   ReactNode,
   useRef,
   useEffect,
@@ -53,12 +54,11 @@ export function UIProvider({ children }: { children: ReactNode }) {
     setInitialFlyToDone,
   } = useLayerContext();
 
-  // Function to open the modal with specified content and options
-  function openModal(content: ReactNode, options: ModalOptions = {}) {
+  const openModal = useCallback((content: ReactNode, options: ModalOptions = {}) => {
     setModalContent(content);
     setModalOptions(options);
     setIsModalOpen(true);
-  }
+  }, []);
 
   // Function to close the modal and reset related states
   function closeModal() {

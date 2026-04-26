@@ -464,14 +464,10 @@ export function CatalogProvider(props: { children: ReactNode }) {
   }, [polygons, geoPoints]);
 
   useEffect(() => {
-    const newBenchmarks: Benchmark[] = [];
-
-    // Get unique properties from all layers
     const properties = new Set<string>();
     geoPoints.forEach(layer => {
       layer.features?.forEach(feature => {
         Object.entries(feature.properties).forEach(([key, val]) => {
-          // Only add numeric properties
           if (typeof val === 'number' || !isNaN(Number(val))) {
             properties.add(key);
           }
@@ -479,20 +475,16 @@ export function CatalogProvider(props: { children: ReactNode }) {
       });
     });
 
-    // Create benchmarks for each numeric property
-    properties.forEach(property => {
-      if (!benchmarks.some(b => b.title === property)) {
-        newBenchmarks.push({
-          title: property,
-          value: '',
-        });
-      }
+    setBenchmarks(prev => {
+      const additions: Benchmark[] = [];
+      properties.forEach(property => {
+        if (!prev.some(b => b.title === property)) {
+          additions.push({ title: property, value: '' });
+        }
+      });
+      return additions.length > 0 ? [...prev, ...additions] : prev;
     });
-
-    if (newBenchmarks.length > 0) {
-      setBenchmarks(prev => [...prev, ...newBenchmarks]);
-    }
-  }, [geoPoints, benchmarks]);
+  }, [geoPoints]);
 
   const onColorChange = (color: string) => {
     console.log('Color changed:', color);

@@ -16,7 +16,8 @@ function LayerFormLoader() {
   useEffect(() => {
     resetFormStage();
     setSidebarMode('default');
-  }, [resetFormStage, setSidebarMode]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>

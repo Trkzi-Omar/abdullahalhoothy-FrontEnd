@@ -11,6 +11,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { toast } from 'sonner';
 import InlinePaymentMethod from '../CustomReportForm/components/InlinePaymentMethod';
 import PhoneVerificationStep from '../CustomReportForm/components/PhoneVerificationStep';
+import { formatSubcategoryName } from '../../utils/helperFunctions';
 import { t } from '../../i18n';
 import metaDataInformation from '../../data/metaDataInformation.json';
 
@@ -53,31 +54,54 @@ function resolveIntelligenceMeta(item: IntelligencePurchaseItem): {
   };
 }
 
+export interface DatasetPurchaseItem {
+  city_name: string;
+  country_name: string;
+  user_id: string;
+  cost: number;
+  expiration: string | null;
+  explanation?: string;
+  is_currently_owned: boolean;
+  free_as_part_of_package: boolean | null;
+  description?: string;
+  data_variables?: Record<string, string>;
+  dataset_name: string;
+}
+
 interface CartCostData {
   total_cost: number;
   intelligence_purchase_items: IntelligencePurchaseItem[];
-  dataset_purchase_items: unknown[];
+  dataset_purchase_items: DatasetPurchaseItem[];
   report_purchase_items: unknown[];
 }
 
-interface IntelligencePaywallModalProps {
-  onClose: () => void;
-  onPurchaseSuccess: () => void;
-  cartCostData: CartCostData;
-  intelligenceNames: string[]; // e.g. ['Population', 'Income', 'Real Estate']
-}
+type IntelligencePaywallModalProps =
+  | {
+      onClose: () => void;
+      onPurchaseSuccess: () => void;
+      cartCostData: CartCostData;
+      purchaseKind?: 'intelligence';
+      intelligenceNames: string[];
+    }
+  | {
+      onClose: () => void;
+      onPurchaseSuccess: () => void;
+      cartCostData: CartCostData;
+      purchaseKind: 'dataset';
+      datasetNames: string[];
+      countryName: string;
+      cityName: string;
+    };
 
 const formatPrice = (value: number) =>
   `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 type InlineView = 'main' | 'add-payment' | 'add-funds' | 'verify-phone';
 
-export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> = ({
-  onClose,
-  onPurchaseSuccess,
-  cartCostData,
-  intelligenceNames,
-}) => {
+export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> = (props) => {
+  const { onClose, onPurchaseSuccess, cartCostData } = props;
+  const purchaseKind = props.purchaseKind ?? 'intelligence';
+  const isDatasetKind = purchaseKind === 'dataset';
   const navigate = useNavigate();
   const { authResponse } = useAuth();
   const isGuest = !!authResponse && isGuestUser(authResponse);
@@ -141,9 +165,15 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
     }
   }, [inlineView, profileLoading, userPhone, hasPaymentMethod]);
 
-  const purchasableItems = cartCostData.intelligence_purchase_items.filter(
+  const purchasableIntelligenceItems = cartCostData.intelligence_purchase_items.filter(
     item => !item.is_currently_owned
   );
+  const purchasableDatasetItems = cartCostData.dataset_purchase_items.filter(
+    item => !item.is_currently_owned
+  );
+  const purchasableCount = isDatasetKind
+    ? purchasableDatasetItems.length
+    : purchasableIntelligenceItems.length;
 
   const handlePurchase = useCallback(async () => {
     if (isGuest) {
@@ -164,10 +194,10 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
     try {
       const requestBody = {
         user_id: authResponse.localId,
-        country_name: '',
-        city_name: '',
-        datasets: [] as string[],
-        intelligences: intelligenceNames,
+        country_name: isDatasetKind ? props.countryName : '',
+        city_name: isDatasetKind ? props.cityName : '',
+        datasets: isDatasetKind ? props.datasetNames : ([] as string[]),
+        intelligences: isDatasetKind ? ([] as string[]) : props.intelligenceNames,
         displayed_price: cartCostData.total_cost,
         report: '',
         report_potential_business_type: '',
@@ -231,7 +261,7 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
     } finally {
       setIsPurchasing(false);
     }
-  }, [isGuest, authResponse, intelligenceNames, cartCostData.total_cost, onPurchaseSuccess, onClose, navigate]);
+  }, [isGuest, authResponse, isDatasetKind, props, cartCostData.total_cost, onPurchaseSuccess, onClose, navigate]);
 
   // After inline flow completes, retry purchase
   const handlePaymentMethodAdded = useCallback(() => {
@@ -264,7 +294,11 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 text-center">
             <MdCheckCircleOutline className="text-green-500 text-6xl mx-auto mb-4" />
             <h2 className="text-2xl font-semibold text-gray-900 mb-2">{t("purchase-successful")}</h2>
-            <p className="text-gray-600">{t("activating-your-intelligence-layer")}</p>
+            <p className="text-gray-600">
+              {isDatasetKind
+                ? t('activating-your-data-layers')
+                : t('activating-your-intelligence-layer')}
+            </p>
           </div>
         </div>
       );
@@ -299,7 +333,9 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
                           ?t("add-funds")
                           :t("verify-phone-number")}
                   </h2>
-                  <p className="text-sm text-white/80">{t("area-intelligence")}</p>
+                  <p className="text-sm text-white/80">
+                    {isDatasetKind ? t('dataset-layers') : t('area-intelligence')}
+                  </p>
                 </div>
               </div>
               <button
@@ -374,52 +410,79 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
                 )}
 
                 <div className="space-y-3">
-                  {purchasableItems.map(item => {
-                    const { description, data_variables } = resolveIntelligenceMeta(item);
-                    return (
-                    <div
-                      key={item.intelligence_name}
-                      className="border border-gray-100 rounded-lg p-4 bg-gray-50"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="text-base font-semibold text-gray-900">
-                            {item.intelligence_name}{' '}{t("intelligence")}</h3>
-                          <p className="text-sm text-gray-600 mt-1">{description}</p>
-                          <p className="text-xs text-gray-500 mt-1 italic">{item.explanation}</p>
-                          {item.expiration && (
-                            <p className="text-xs text-gray-500 mt-1">{t("valid-until")}{' '}{new Date(item.expiration).toLocaleDateString()}
-                            </p>
-                          )}
-                        </div>
-                        <div className="text-end ms-4">
-                          {item.free_as_part_of_package ? (
-                            <span className="text-lg font-bold text-green-600">{t("free")}</span>
-                          ) : (
-                            <span className="text-lg font-bold text-[#115740]">
-                              {formatPrice(item.cost)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                  {(isDatasetKind ? purchasableDatasetItems : purchasableIntelligenceItems).map(
+                    rawItem => {
+                      const item = rawItem as IntelligencePurchaseItem & DatasetPurchaseItem;
+                      const itemName = isDatasetKind ? item.dataset_name : item.intelligence_name;
+                      const heading = isDatasetKind
+                        ? formatSubcategoryName(itemName)
+                        : `${itemName} ${t('intelligence')}`;
+                      const intelligenceMeta = !isDatasetKind
+                        ? resolveIntelligenceMeta(item)
+                        : null;
+                      const description = isDatasetKind
+                        ? item.description
+                        : intelligenceMeta?.description;
+                      const dataVariables = isDatasetKind
+                        ? item.data_variables
+                        : intelligenceMeta?.data_variables;
 
-                      {/* Data variables preview */}
-                      {Object.keys(data_variables).length > 0 && (
-                        <details className="mt-3">
-                          <summary className="text-xs text-[#115740] cursor-pointer font-medium">{t("view-included-data-variables")}{Object.keys(data_variables).length})
-                          </summary>
-                          <div className="mt-2 grid grid-cols-1 gap-1 max-h-32 overflow-y-auto">
-                            {Object.entries(data_variables).map(([key, desc]) => (
-                              <div key={key} className="text-xs text-gray-600">
-                                <span className="font-medium text-gray-700">{key}</span>: {desc}
-                              </div>
-                            ))}
+                      return (
+                        <div
+                          key={itemName}
+                          className="border border-gray-100 rounded-lg p-4 bg-gray-50"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="text-base font-semibold text-gray-900">{heading}</h3>
+                              {description && (
+                                <p className="text-sm text-gray-600 mt-1">{description}</p>
+                              )}
+                              {item.explanation && (
+                                <p className="text-xs text-gray-500 mt-1 italic">
+                                  {item.explanation}
+                                </p>
+                              )}
+                              {item.expiration && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {t('valid-until')}{' '}
+                                  {new Date(item.expiration).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+                            <div className="text-end ms-4">
+                              {item.free_as_part_of_package ? (
+                                <span className="text-lg font-bold text-green-600">
+                                  {t('free')}
+                                </span>
+                              ) : (
+                                <span className="text-lg font-bold text-[#115740]">
+                                  {formatPrice(item.cost)}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </details>
-                      )}
-                    </div>
-                  );
-                })}
+
+                          {dataVariables && Object.keys(dataVariables).length > 0 && (
+                            <details className="mt-3">
+                              <summary className="text-xs text-[#115740] cursor-pointer font-medium">
+                                {t('view-included-data-variables')}
+                                {Object.keys(dataVariables).length})
+                              </summary>
+                              <div className="mt-2 grid grid-cols-1 gap-1 max-h-32 overflow-y-auto">
+                                {Object.entries(dataVariables).map(([key, desc]) => (
+                                  <div key={key} className="text-xs text-gray-600">
+                                    <span className="font-medium text-gray-700">{key}</span>:{' '}
+                                    {desc}
+                                  </div>
+                                ))}
+                              </div>
+                            </details>
+                          )}
+                        </div>
+                      );
+                    }
+                  )}
                 </div>
 
                 {!isGuest && (
@@ -453,7 +516,7 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
                 <button
                   type="button"
                   onClick={handlePurchase}
-                  disabled={isPurchasing || purchasableItems.length === 0}
+                  disabled={isPurchasing || purchasableCount === 0}
                   className="flex-1 bg-[#115740] text-white py-3 rounded-lg font-semibold hover:bg-[#0d4632] transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   {isPurchasing ?t("processing") : isGuest ?t("sign-up-to-purchase") :t("purchase-now")}

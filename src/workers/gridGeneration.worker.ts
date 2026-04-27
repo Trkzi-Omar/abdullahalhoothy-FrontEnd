@@ -78,7 +78,9 @@ self.onmessage = async event => {
 
       const cellStats = Object.entries(cellProperties).reduce(
         (acc, [key, stats]) => {
-          acc[key] = _.round(stats.sum || 0, 2);
+          acc[key] = key === 'backend_opacity'
+            ? _.round(stats.average ?? 0, 2)
+            : _.round(stats.sum || 0, 2);
           return acc;
         },
         {} as Record<string, number>

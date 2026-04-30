@@ -37,8 +37,6 @@ import _ from 'lodash';
 import { useIntelligenceViewport } from './IntelligenceViewPortContext';
 import { t } from '../i18n';
 
-const FAKE_IS_ENABLED = true;
-
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
 export function LayerProvider(props: { children: ReactNode }) {
@@ -983,8 +981,6 @@ export function LayerProvider(props: { children: ReactNode }) {
         if (shouldInclude) {
           setShowLoaderTopup(true);
           try {
-            const shouldFake = FAKE_IS_ENABLED;
-
             const { features, metadata } = await fetchPopulationByViewport(true);
 
             setGeoPoints(prevPoints => {
@@ -997,7 +993,7 @@ export function LayerProvider(props: { children: ReactNode }) {
                 layer_legend: `Population Layer (${features?.length})`,
                 is_grid: true,
                 is_intelligent: true,
-                is_fake: shouldFake,
+                is_backend_grid: true,
                 is_refetch: isRefetch,
                 basedon: 'population',
                 visualization_mode: 'grid',
@@ -1158,7 +1154,7 @@ export function LayerProvider(props: { children: ReactNode }) {
                 layer_legend: `Income Intelligence (${features?.length})`,
                 is_grid: true,
                 is_intelligent: true,
-                is_fake: true,
+                is_backend_grid: true,
                 is_refetch: isRefetch,
                 basedon: 'income',
                 visualization_mode: 'grid',
@@ -1276,7 +1272,7 @@ export function LayerProvider(props: { children: ReactNode }) {
                 layer_legend: `Real Estate Intelligence (${features?.length})`,
                 is_grid: true,
                 is_intelligent: true,
-                is_fake: false,
+                is_backend_grid: true,
                 is_refetch: isRefetch,
                 basedon: 'total_category_listings',
                 visualization_mode: 'grid',

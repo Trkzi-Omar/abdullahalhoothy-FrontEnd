@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import InlinePaymentMethod from '../CustomReportForm/components/InlinePaymentMethod';
 import PhoneVerificationStep from '../CustomReportForm/components/PhoneVerificationStep';
 import { t } from '../../i18n';
+import metaDataInformation from '../../data/metaDataInformation.json';
 
 
 const stripeKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
@@ -26,9 +27,30 @@ export interface IntelligencePurchaseItem {
   explanation: string;
   is_currently_owned: boolean;
   free_as_part_of_package: boolean | null;
+  description?: string;
+  data_variables?: Record<string, string>;
+  intelligence_name: string;
+}
+
+/** Resolve description and data_variables from local metaDataInformation when not supplied by API */
+function resolveIntelligenceMeta(item: IntelligencePurchaseItem): {
   description: string;
   data_variables: Record<string, string>;
-  intelligence_name: string;
+} {
+  const intelKey = item.intelligence_name
+    .replace(/ /g, '_')
+    .toLowerCase() as keyof typeof metaDataInformation.intelligence;
+  const meta = metaDataInformation.intelligence[intelKey];
+  return {
+    description: item.description ?? (meta ? t(meta.description_key) : ''),
+    data_variables:
+      item.data_variables ??
+      (meta
+        ? Object.fromEntries(
+            Object.entries(meta.data_variables_description_keys).map(([k, tk]) => [k, t(tk)])
+          )
+        : {}),
+  };
 }
 
 interface CartCostData {
@@ -352,7 +374,9 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
                 )}
 
                 <div className="space-y-3">
-                  {purchasableItems.map(item => (
+                  {purchasableItems.map(item => {
+                    const { description, data_variables } = resolveIntelligenceMeta(item);
+                    return (
                     <div
                       key={item.intelligence_name}
                       className="border border-gray-100 rounded-lg p-4 bg-gray-50"
@@ -361,7 +385,7 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
                         <div className="flex-1">
                           <h3 className="text-base font-semibold text-gray-900">
                             {item.intelligence_name}{' '}{t("intelligence")}</h3>
-                          <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                          <p className="text-sm text-gray-600 mt-1">{description}</p>
                           <p className="text-xs text-gray-500 mt-1 italic">{item.explanation}</p>
                           {item.expiration && (
                             <p className="text-xs text-gray-500 mt-1">{t("valid-until")}{' '}{new Date(item.expiration).toLocaleDateString()}
@@ -380,12 +404,12 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
                       </div>
 
                       {/* Data variables preview */}
-                      {item.data_variables && Object.keys(item.data_variables).length > 0 && (
+                      {Object.keys(data_variables).length > 0 && (
                         <details className="mt-3">
-                          <summary className="text-xs text-[#115740] cursor-pointer font-medium">{t("view-included-data-variables")}{Object.keys(item.data_variables).length})
+                          <summary className="text-xs text-[#115740] cursor-pointer font-medium">{t("view-included-data-variables")}{Object.keys(data_variables).length})
                           </summary>
                           <div className="mt-2 grid grid-cols-1 gap-1 max-h-32 overflow-y-auto">
-                            {Object.entries(item.data_variables).map(([key, desc]) => (
+                            {Object.entries(data_variables).map(([key, desc]) => (
                               <div key={key} className="text-xs text-gray-600">
                                 <span className="font-medium text-gray-700">{key}</span>: {desc}
                               </div>
@@ -394,7 +418,8 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
                         </details>
                       )}
                     </div>
-                  ))}
+                  );
+                })}
                 </div>
 
                 {!isGuest && (

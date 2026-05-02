@@ -35,7 +35,7 @@ export interface Catalog {
   catalog_description?: string;
   layers?: { layer_id: string; points_color: string }[];
   display_elements: {
-    details: any[];
+    details: unknown[];
     markers: {
       id: string;
       description: string;
@@ -102,7 +102,7 @@ export interface CardItem {
   points_color?: string;
   legend?: string;
   display_elements?: {
-    details: any[];
+    details: unknown[];
     markers: {
       id: string;
       description: string;
@@ -166,8 +166,8 @@ export interface CatalogContextType {
   setSaveResponse: React.Dispatch<React.SetStateAction<SaveResponse | null>>;
   colors: string[][];
   setColors: React.Dispatch<React.SetStateAction<string[][]>>;
-  chosenPallet: any;
-  setChosenPallet: React.Dispatch<React.SetStateAction<any>>;
+  chosenPallet: number | null;
+  setChosenPallet: React.Dispatch<React.SetStateAction<number | null>>;
   radiusInput: number | null;
   setRadiusInput: React.Dispatch<React.SetStateAction<number | null>>;
   openDropdownIndices: (number | null)[];
@@ -182,14 +182,14 @@ export interface CatalogContextType {
   ) => Promise<GradientColorBasedOnZone[]>;
   selectedBasedon: string;
   setSelectedBasedon: React.Dispatch<React.SetStateAction<string>>;
-  layerColors: Record<string, any>;
-  setLayerColors: React.Dispatch<React.SetStateAction<Record<string, any>>>;
+  layerColors: Record<string, string>;
+  setLayerColors: React.Dispatch<React.SetStateAction<Record<string, string>>>;
   isRadiusMode: boolean;
   setIsRadiusMode: React.Dispatch<React.SetStateAction<boolean>>;
   isAdvanced: boolean;
   setIsAdvanced: React.Dispatch<React.SetStateAction<boolean>>;
-  isAdvancedMode: Record<string, any>;
-  setIsAdvancedMode: React.Dispatch<React.SetStateAction<Record<string, any>>>;
+  isAdvancedMode: Record<string, boolean>;
+  setIsAdvancedMode: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   updateLayerColor: (layerId: number, newColor: string) => void;
   updateLayerDisplay: (layerIndex: number, display: boolean) => void;
   updateLayerHeatmap: (layerIndex: number, isHeatmap: boolean) => void;
@@ -202,7 +202,7 @@ export interface CatalogContextType {
   basedOnProperty: string | null;
   setBasedOnProperty: React.Dispatch<React.SetStateAction<string | null>>;
   updateLayerLegend: (layerId: number, legend: string) => void;
-  handleStoreUnsavedGeoPoint: (geoPoints: any) => void;
+  handleStoreUnsavedGeoPoint: (geoPoints: MapFeatures[]) => void;
   handleNameBasedColorZone: (
     requestData?: ReqGradientColorBasedOnZone
   ) => Promise<GradientColorBasedOnZone[]>;
@@ -228,7 +228,7 @@ export interface CatalogContextType {
     description: string,
     sourcePoint: [number, number],
     destinationPoint: [number, number],
-    route: any,
+    route: unknown,
     distance: number,
     duration: number,
     measurementId?: string
@@ -279,7 +279,7 @@ export interface CatalogContextType {
 
 export interface GradientColorBasedOnZone extends MapFeatures {
   sub_layer_id: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ReqGradientColorBasedOnZone {
@@ -464,6 +464,9 @@ export interface ReqFetchDataset {
     includedTypes: string[];
     excludedTypes: string[];
     layer_name?: string;
+    layer_legend?: string;
+    layer_description?: string;
+    action?: LayerAction;
   }[];
   includedTypes: string[];
   excludedTypes: string[];
@@ -512,7 +515,7 @@ export interface BoxmapProperties {
   user_ratings_total: number | string;
   priceLevel?: number;
   heatmap_weight?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface Feature {
@@ -553,7 +556,7 @@ export interface MapFeatures extends FetchDatasetResponse {
   gradient_groups?: GradientGroup[];
   is_gradient?: boolean;
   gradient_based_on?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface TabularData {
@@ -627,6 +630,8 @@ export interface CityData {
   borders: CityBorders;
 }
 
+export type LayerAction = 'sample' | 'full data';
+
 export interface Layer {
   id: number;
   name: string;
@@ -642,6 +647,7 @@ export interface Layer {
   layer_description?: string;
   layer_id?: string;
   cost: number;
+  action?: LayerAction;
 }
 
 export interface LayerGroup {
@@ -694,9 +700,9 @@ export const DisplayType = {
 export interface PolygonFeature {
   id: string;
   type: string;
-  properties: any;
+  properties: Record<string, unknown> | null;
   geometry: {
-    coordinates: [number, number][][] | number[][][] | any;
+    coordinates: number[][][] | number[][][][];
     type: string;
   };
   isStatisticsPopupOpen: boolean;
@@ -772,7 +778,7 @@ export interface ApiRequestOptions extends AxiosRequestConfig {
   authMode?: 'public' | 'private';
   isAuthRequest?: boolean;
   isFormData?: boolean;
-  body?: any;
+  body?: unknown;
   options?: AxiosRequestConfig;
   useCache?: boolean;
 }
@@ -785,9 +791,9 @@ export interface CategoriesBrowserSubCategoriesProps {
     includedCount: number[];
     excludedCount: number[];
   };
-  onRemoveType: (type: string, layerId: number, isExcluded: boolean) => void;
-  onAddToIncluded: (type: string) => void;
-  onAddToExcluded?: (type: string) => void;
+  layers?: { id: number; name: string }[];
+  onToggleTypeInLayer?: (type: string, layerId: number) => void;
+  onCreateLayerWithType?: (type: string) => void;
   getPrice?: (type: string) => string | React.ReactNode;
   onTypeClick?: (type: string) => void;
   hideAddRemoveButtons?: boolean;
@@ -822,14 +828,14 @@ export interface UserProfile {
   phone?: string;
   account_type: string;
   show_price_on_purchase: boolean;
-  maker?: Record<string, any>;
+  maker?: Record<string, unknown>;
   has_used_free_location_report?: boolean;
 }
 
 export interface PopupInfo {
   type: string;
   name: string;
-  data: any;
+  data: unknown;
 }
 
 export interface PaymentMethod {
@@ -867,8 +873,17 @@ export interface LayerDisplaySubCategoriesProps {
   layer: Layer;
   layerIndex: number;
   onRemoveType: (type: string) => void;
-  onToggleTypeInLayer: (type: string) => void;
   onNameChange: (layerIndex: number, newName: string) => void;
+  onColorChange: (layerIndex: number, color: string) => void;
+  onLegendChange: (layerIndex: number, legend: string) => void;
+  onDescriptionChange: (layerIndex: number, description: string) => void;
+  onActionChange: (layerIndex: number, action: LayerAction) => void;
+  onRefresh: (layerId: number) => void;
+  isFetching: boolean;
+  saveStatus?: 'saved' | 'unsaved' | 'saving' | 'error';
+  listPrice: number;
+  formatPrice: (value: number) => string;
+  isPriceVisible: boolean;
 }
 
 export type MapContextType = {

@@ -172,7 +172,9 @@ export function LayerProvider(props: { children: ReactNode }) {
       setSaveResponseMsg(res.data.message);
       setSaveReqId(res.data.id);
     } catch (error) {
-      setIsError(error instanceof Error ? error : new Error(String(error)));
+      const saveError = error instanceof Error ? error : new Error(String(error));
+      setIsError(saveError);
+      throw saveError;
     }
   }
 

@@ -880,6 +880,7 @@ export interface LayerDisplaySubCategoriesProps {
   onActionChange: (layerIndex: number, action: LayerAction) => void;
   onRefresh: (layerId: number) => void;
   isFetching: boolean;
+  saveStatus?: 'saved' | 'unsaved' | 'saving' | 'error';
   listPrice: number;
   formatPrice: (value: number) => string;
   isPriceVisible: boolean;

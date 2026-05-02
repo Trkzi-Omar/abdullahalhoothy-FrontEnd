@@ -40,6 +40,8 @@ interface FetchDatasetDraft {
   layers: Layer[];
 }
 
+type LayerSaveStatus = 'saved' | 'unsaved' | 'saving' | 'error';
+
 const draftKeyFor = (userId: string | null | undefined) =>
   `${DRAFT_KEY_PREFIX}${userId || 'guest'}`;
 
@@ -70,6 +72,25 @@ const clearDraft = (userId: string | null | undefined) => {
   } catch {
     // ignore
   }
+};
+
+const pruneLayerSignatureMap = (
+  signatures: Record<number, string>,
+  liveIds: Set<number>
+) => {
+  let changed = false;
+  const next: Record<number, string> = {};
+
+  Object.entries(signatures).forEach(([id, signature]) => {
+    const layerId = Number(id);
+    if (liveIds.has(layerId)) {
+      next[layerId] = signature;
+    } else {
+      changed = true;
+    }
+  });
+
+  return changed ? next : signatures;
 };
 
 
@@ -113,6 +134,9 @@ const FetchDatasetForm = () => {
   const [isPriceVisible, setIsPriceVisible] = useState<boolean>(false);
   // FETCHED DATA
   const [layers, setLayers] = useState<Layer[]>([]);
+  const [savingLayerIds, setSavingLayerIds] = useState<Set<number>>(new Set());
+  const [savedLayerSignatures, setSavedLayerSignatures] = useState<Record<number, string>>({});
+  const [failedLayerSignatures, setFailedLayerSignatures] = useState<Record<number, string>>({});
   const [, setCostEstimate] = useState<number>(0.0);
   // COLBASE CATEGORY
   const [openedCategories, setOpenedCategories] = useState<string[]>([]);
@@ -334,6 +358,16 @@ const FetchDatasetForm = () => {
   const layersRef = useRef<Layer[]>(layers);
   useEffect(() => {
     layersRef.current = layers;
+  }, [layers]);
+
+  useEffect(() => {
+    const liveIds = new Set(layers.map(layer => layer.id));
+    setSavedLayerSignatures(prev => pruneLayerSignatureMap(prev, liveIds));
+    setFailedLayerSignatures(prev => pruneLayerSignatureMap(prev, liveIds));
+    setSavingLayerIds(prev => {
+      const next = new Set([...prev].filter(id => liveIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
   }, [layers]);
 
   // Auto-refetch sample layers when the viewport changes (mirrors intelligence
@@ -565,6 +599,24 @@ const FetchDatasetForm = () => {
     calculateCartCost();
   }, [calculateCartCost]);
 
+  const getLayerSaveSignature = useCallback(
+    (layer: Layer) => {
+      const fetchedLayerData = layerDataMap[layer.id];
+      return JSON.stringify({
+        action: layer.action || 'sample',
+        backendDatasetId: fetchedLayerData?.bknd_dataset_id || '',
+        description: layer.layer_description || '',
+        excludedTypes: [...layer.excludedTypes].sort(),
+        includedTypes: [...layer.includedTypes].sort(),
+        layerDataId: fetchedLayerData?.layer_id || '',
+        legend: layer.layer_legend || layer.name || `Layer ${layer.id}`,
+        name: layer.name || `Layer ${layer.id}`,
+        pointsColor: layer.points_color || getDefaultLayerColor(layer.id),
+      });
+    },
+    [layerDataMap]
+  );
+
   // Save All — persists every layer (mirrors CustomizeLayer.handleSaveAllLayers) then
   // navigates to the catalog tab. Auto-fetch (P6.2/P6.3) is responsible for putting
   // the layer's data into layerDataMap before save; if a layer hasn't been fetched
@@ -608,7 +660,39 @@ const FetchDatasetForm = () => {
 
     try {
       setIsSavingAll(true);
-      await handleSaveLayer({ layers: layerCustomizations });
+      for (const layerData of layerCustomizations) {
+        const layer = layers.find(l => l.id === layerData.layerId);
+        if (!layer) continue;
+
+        const saveSignature = getLayerSaveSignature(layer);
+        setSavingLayerIds(prev => new Set(prev).add(layerData.layerId));
+
+        try {
+          await handleSaveLayer({ layers: [layerData] });
+          setSavedLayerSignatures(prev => ({
+            ...prev,
+            [layerData.layerId]: saveSignature,
+          }));
+          setFailedLayerSignatures(prev => {
+            if (!prev[layerData.layerId]) return prev;
+            const next = { ...prev };
+            delete next[layerData.layerId];
+            return next;
+          });
+        } catch (err) {
+          setFailedLayerSignatures(prev => ({
+            ...prev,
+            [layerData.layerId]: saveSignature,
+          }));
+          throw err;
+        } finally {
+          setSavingLayerIds(prev => {
+            const next = new Set(prev);
+            next.delete(layerData.layerId);
+            return next;
+          });
+        }
+      }
 
       // Mirror CustomizeLayer's post-save: switch tab + fetch geoPoints for each saved layer.
       setSelectedHomeTab('CATALOG');
@@ -632,6 +716,7 @@ const FetchDatasetForm = () => {
     selectedCity,
     layerDataMap,
     handleSaveLayer,
+    getLayerSaveSignature,
     setSelectedHomeTab,
     fetchGeoPoints,
     draftUserId,
@@ -768,9 +853,9 @@ const FetchDatasetForm = () => {
 
   // Add this handler
   const handleLayerNameChange = (index: number, newName: string) => {
-    const newLayers = [...layers];
-    newLayers[index].name = newName;
-    setLayers(newLayers);
+    setLayers(prev =>
+      prev.map((layer, i) => (i === index ? { ...layer, name: newName } : layer))
+    );
   };
 
   const handleLayerColorChange = (index: number, color: string) => {
@@ -854,6 +939,25 @@ const FetchDatasetForm = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [textSearchInput, selectedCountry, selectedCity]);
 
+  const getLayerSaveStatus = useCallback(
+    (layer: Layer): LayerSaveStatus => {
+      const currentSignature = getLayerSaveSignature(layer);
+
+      if (savingLayerIds.has(layer.id)) return 'saving';
+      if (failedLayerSignatures[layer.id] === currentSignature) return 'error';
+      if (savedLayerSignatures[layer.id] === currentSignature) return 'saved';
+      return 'unsaved';
+    },
+    [failedLayerSignatures, getLayerSaveSignature, savedLayerSignatures, savingLayerIds]
+  );
+
+  const unsavedLayerCount = useMemo(
+    () => layers.filter(layer => getLayerSaveStatus(layer) !== 'saved').length,
+    [getLayerSaveStatus, layers]
+  );
+
+  const allCurrentLayersSaved = layers.length > 0 && unsavedLayerCount === 0;
+
   return (
     <>
       <div className="flex-1 flex flex-col justify-between overflow-y-auto relative">
@@ -936,6 +1040,7 @@ const FetchDatasetForm = () => {
                 onActionChange={handleLayerActionChange}
                 onRefresh={refreshLayer}
                 isFetching={fetchingLayers.has(layer.id)}
+                saveStatus={getLayerSaveStatus(layer)}
                 listPrice={getLayerListPrice(layer)}
                 formatPrice={formatPrice}
                 isPriceVisible={isPriceVisible}
@@ -1024,6 +1129,17 @@ const FetchDatasetForm = () => {
         </div>
       </div>
       <div className="flex-col flex px-2 py-2 select-none border-t lg:mb-0 mb-14 relative">
+        {layers.length > 0 && (
+          <p className={`mb-2 text-xs font-medium ${
+            allCurrentLayersSaved ? 'text-green-700' : 'text-amber-700'
+          }`}>
+            {isSavingAll
+              ? t('saving-layer-status')
+              : allCurrentLayersSaved
+                ? t('all-layers-saved')
+                : t('layers-not-saved-count', { count: unsavedLayerCount })}
+          </p>
+        )}
         {saveAllError && (
           <p className="mb-2 text-sm text-red-600">{saveAllError}</p>
         )}
@@ -1035,10 +1151,17 @@ const FetchDatasetForm = () => {
             isLoadingDataset ||
             !selectedCountry ||
             !selectedCity ||
-            layers.length === 0
+            layers.length === 0 ||
+            allCurrentLayersSaved
           }
         >
-          <span className="text-lg">{isSavingAll ? t('saving-all') : t('save-all')}</span>
+          <span className="text-lg">
+            {isSavingAll
+              ? t('saving-all')
+              : allCurrentLayersSaved
+                ? t('all-saved')
+                : t('save-all')}
+          </span>
         </button>
       </div>
 

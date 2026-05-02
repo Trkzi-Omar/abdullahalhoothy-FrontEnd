@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { formatSubcategoryName, colorOptions, getDefaultLayerColor } from '../../utils/helperFunctions';
 import { IoClose } from 'react-icons/io5';
-import { MdKeyboardArrowDown, MdRefresh } from 'react-icons/md';
+import { MdKeyboardArrowDown, MdRefresh, MdTune } from 'react-icons/md';
 import { LayerDisplaySubCategoriesProps } from '../../types/allTypesAndInterfaces';
 import { t } from '../../i18n';
 
@@ -16,6 +16,7 @@ const LayerDisplaySubCategories = ({
   onActionChange,
   onRefresh,
   isFetching,
+  saveStatus,
   listPrice,
   formatPrice,
   isPriceVisible,
@@ -25,6 +26,28 @@ const LayerDisplaySubCategories = ({
   const layerColor = layer.points_color || getDefaultLayerColor(layer.id);
   const action = layer.action || 'sample';
   const isFull = action === 'full data';
+  const saveStatusConfig = {
+    saved: {
+      label: t('saved'),
+      className: 'border-green-200 bg-green-50 text-green-700',
+      dotClassName: 'bg-green-600',
+    },
+    unsaved: {
+      label: t('unsaved'),
+      className: 'border-amber-200 bg-amber-50 text-amber-700',
+      dotClassName: 'bg-amber-500',
+    },
+    saving: {
+      label: t('saving'),
+      className: 'border-blue-200 bg-blue-50 text-blue-700',
+      dotClassName: 'bg-blue-500 animate-pulse',
+    },
+    error: {
+      label: t('save-failed'),
+      className: 'border-red-200 bg-red-50 text-red-700',
+      dotClassName: 'bg-red-600',
+    },
+  }[saveStatus || 'unsaved'];
 
   return (
     <div
@@ -50,6 +73,13 @@ const LayerDisplaySubCategories = ({
               onChange={e => onNameChange(layerIndex, e.target.value)}
             />
           </label>
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap shrink-0 ${saveStatusConfig.className}`}
+            aria-label={`${t('save-status')}: ${saveStatusConfig.label}`}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${saveStatusConfig.dotClassName}`} />
+            {saveStatusConfig.label}
+          </span>
           <button
             type="button"
             onClick={() => onRefresh(layer.id)}
@@ -60,17 +90,6 @@ const LayerDisplaySubCategories = ({
           >
             <MdRefresh
               className={`text-base ${isFetching ? 'animate-spin' : ''}`}
-            />
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsCustomizeOpen(prev => !prev)}
-            className="flex items-center gap-1 text-xs font-medium text-gray-700 hover:text-black px-2 py-1 rounded border border-gray-300 bg-white shrink-0"
-            aria-expanded={isCustomizeOpen}
-          >
-            {t('customize')}
-            <MdKeyboardArrowDown
-              className={`text-base transition-transform ${isCustomizeOpen ? 'rotate-180' : ''}`}
             />
           </button>
         </div>
@@ -122,8 +141,33 @@ const LayerDisplaySubCategories = ({
           </span>
         </div>
 
+        <div className="px-4 py-2 border-b border-gray-300 bg-white">
+          <button
+            type="button"
+            onClick={() => setIsCustomizeOpen(prev => !prev)}
+            className={`w-full flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm font-semibold transition-colors ${
+              isCustomizeOpen
+                ? 'border-[#115740] bg-[#f0f7f4] text-[#115740] shadow-sm'
+                : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-[#115740]/40 hover:bg-[#f8fbf9]'
+            }`}
+            aria-expanded={isCustomizeOpen}
+            aria-controls={`layer-customize-${layer.id}`}
+          >
+            <span className="flex items-center gap-2 min-w-0">
+              <MdTune className="text-base shrink-0" />
+              <span className="truncate">{t('customize')}</span>
+            </span>
+            <MdKeyboardArrowDown
+              className={`text-lg shrink-0 transition-transform ${isCustomizeOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+        </div>
+
         {isCustomizeOpen && (
-          <div className="px-4 py-3 border-b border-gray-300 bg-white space-y-3">
+          <div
+            id={`layer-customize-${layer.id}`}
+            className="px-4 py-3 border-b border-gray-300 bg-white space-y-3"
+          >
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 {t('point-color')}

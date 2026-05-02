@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import {
   processCityData,
   getDefaultLayerColor,
@@ -144,8 +144,8 @@ const FetchDatasetForm = () => {
   // USER INPUT
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Add ref for the categories section
   const categoriesRef = useRef<HTMLDivElement>(null);
+  const chatAnchorRef = useRef<HTMLDivElement>(null);
 
   const { backendZoom, mapRef } = useMapContext();
 
@@ -964,7 +964,7 @@ const FetchDatasetForm = () => {
         <div className="w-full p-4 overflow-y-auto ">
           <div className="mb-6">
             <label className="block mb-2 text-base font-medium text-black" htmlFor="ai-fetch">{t("ai-powered-dataset-finder")}</label>
-            <div className="flex relative w-full">
+            <div className="flex relative w-full" ref={chatAnchorRef}>
               <ChatTrigger
                 title={t("ai-dataset-finder")}
                 position="auto"
@@ -974,7 +974,11 @@ const FetchDatasetForm = () => {
                 beforeIcon={<FaWandMagicSparkles />}
                 afterIcon={<></>}
               />
-              <Chat topic={topics.DATASET} position="fixed bottom-16 lg:bottom-auto start-[2.5vw] lg:start-[27.5rem] z-50" />
+              <Chat
+                topic={topics.DATASET}
+                position="fixed bottom-16 start-[2.5vw] z-50"
+                anchorRef={chatAnchorRef as React.RefObject<HTMLElement>}
+              />
             </div>
           </div>
           <div>

@@ -7,13 +7,6 @@ export default defineConfig({
   server: {
     port: 3000,
     host: '0.0.0.0',
-    proxy: {
-      '/fastapi': {
-        target: 'http://37.27.195.216:8000',
-        changeOrigin: true,
-        secure: false,
-      },
-    },
   },
   preview: {
     port: 3000,

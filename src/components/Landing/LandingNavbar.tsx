@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { MdClose, MdMenu } from 'react-icons/md';
-import { LuLanguages } from 'react-icons/lu';
 import LandingLogo from './LandingLogo';
 import type { LandingTranslations } from '../../pages/Landing/translations';
 
@@ -51,10 +50,12 @@ const LandingNavbar = ({ lang, setLang, t }: LandingNavbarProps) => {
           <div className="h-5 w-px bg-white/10"></div>
           <button
             onClick={toggleLang}
-            className="flex items-center gap-1.5 text-slate-300 hover:text-white transition-colors text-sm font-semibold"
+            aria-label={lang === 'en' ? 'العربية' : 'English'}
+            className="flex items-center justify-center min-w-[32px] h-7 px-2 text-slate-300 hover:text-white transition-colors text-sm font-semibold"
           >
-            <LuLanguages size={16} />
-            <span>{lang === 'en' ? 'AR' : 'EN'}</span>
+            <span className={lang === 'en' ? 'text-base leading-none' : 'text-xs leading-none'}>
+              {lang === 'en' ? 'ع' : 'EN'}
+            </span>
           </button>
           <a
             href="/"
@@ -64,8 +65,14 @@ const LandingNavbar = ({ lang, setLang, t }: LandingNavbarProps) => {
           </a>
         </div>
         <div className="lg:hidden ms-auto flex items-center gap-4">
-          <button onClick={toggleLang} className="text-slate-300 font-bold text-xs">
-            {lang === 'en' ? 'AR' : 'EN'}
+          <button
+            onClick={toggleLang}
+            aria-label={lang === 'en' ? 'العربية' : 'English'}
+            className="text-slate-300 font-bold"
+          >
+            <span className={lang === 'en' ? 'text-base leading-none' : 'text-xs leading-none'}>
+              {lang === 'en' ? 'ع' : 'EN'}
+            </span>
           </button>
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white p-1" aria-label={mobileMenuOpen ? t.nav.closeMenu : t.nav.openMenu}>
             {mobileMenuOpen ? <MdClose size={24} /> : <MdMenu size={24} />}

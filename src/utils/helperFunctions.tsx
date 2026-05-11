@@ -1,8 +1,23 @@
 import { t } from '../i18n';
 
+export function translateWithBackendCategoryFallback(key: string): string {
+  const translated = t(key);
+  if (translated !== key) return translated;
+
+  const backendCategoryTranslated = t(`backend.categories.${key}`);
+  if (backendCategoryTranslated !== `backend.categories.${key}`) return backendCategoryTranslated;
+
+  return key;
+}
+
 export function formatSubcategoryName(name: string | undefined | null): string {
   if (!name) return '';
-  const translated = t(name);
+  if (name.includes('_')) {
+    const backendCategoryTranslated = t(`backend.categories.${name}`);
+    if (backendCategoryTranslated !== `backend.categories.${name}`) return backendCategoryTranslated;
+  }
+
+  const translated = translateWithBackendCategoryFallback(name);
   if (translated !== name) return translated;
 
   return name

@@ -471,7 +471,10 @@ export const AreaIntelligeneControl: React.FC = () => {
                         after:h-5
                         after:w-5
                         after:transition-all
-                        peer-checked:after:translate-x-[24px] sm:peer-checked:after:translate-x-[28px]
+                        peer-checked:after:translate-x-[24px]
+                        rtl:peer-checked:after:-translate-x-[24px]
+                        sm:peer-checked:after:translate-x-[28px]
+                        sm:rtl:peer-checked:after:-translate-x-[28px]
                         peer-checked:after:border-white
                       `}
                     />
@@ -583,7 +586,10 @@ export const AreaIntelligeneControl: React.FC = () => {
                         after:h-5
                         after:w-5
                         after:transition-all
-                        peer-checked:after:translate-x-[24px] sm:peer-checked:after:translate-x-[28px]
+                        peer-checked:after:translate-x-[24px]
+                        rtl:peer-checked:after:-translate-x-[24px]
+                        sm:peer-checked:after:translate-x-[28px]
+                        sm:rtl:peer-checked:after:-translate-x-[28px]
                         peer-checked:after:border-white
                       `}
                     />
@@ -695,7 +701,10 @@ export const AreaIntelligeneControl: React.FC = () => {
                         after:h-5
                         after:w-5
                         after:transition-all
-                        peer-checked:after:translate-x-[24px] sm:peer-checked:after:translate-x-[28px]
+                        peer-checked:after:translate-x-[24px]
+                        rtl:peer-checked:after:-translate-x-[24px]
+                        sm:peer-checked:after:translate-x-[28px]
+                        sm:rtl:peer-checked:after:-translate-x-[28px]
                         peer-checked:after:border-white
                       `}
                     />

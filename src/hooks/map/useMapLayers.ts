@@ -374,16 +374,20 @@ export function useMapLayers() {
                     gridLayerIdRef.current = gridLayerId;
                     layerStatesRef.current[index].gridSourceId = gridSourceId;
 
-                    // Add click handler directly to grid cells
-                    map.on('click', gridLayerId, e => {
+                    const handleGridInteraction = (
+                      e:
+                        | (mapboxgl.MapMouseEvent & mapboxgl.EventData)
+                        | (mapboxgl.MapTouchEvent & mapboxgl.EventData)
+                    ) => {
                       e.preventDefault();
-                      handleGridCellClick(
-                        e,
-                        featureCollection,
-                        gridSourceId,
-                        featureCollection.basedon
-                      );
-                    });
+                      handleGridCellClick(e);
+                    };
+
+                    // Add interaction handlers directly to grid cells
+                    map.on('click', gridLayerId, handleGridInteraction);
+                    if (isMobile) {
+                      map.on('touchstart', gridLayerId, handleGridInteraction);
+                    }
 
                     // Add hover effects for the grid cells
                     map.on('mouseenter', gridLayerId, () => {
@@ -478,16 +482,20 @@ export function useMapLayers() {
                   gridLayerIdRef.current = gridLayerId;
                   layerStatesRef.current[index].gridSourceId = gridSourceId;
 
-                  // Add click handler directly to grid cells
-                  map.on('click', gridLayerId, e => {
+                  const handleGridInteraction = (
+                    e:
+                      | (mapboxgl.MapMouseEvent & mapboxgl.EventData)
+                      | (mapboxgl.MapTouchEvent & mapboxgl.EventData)
+                  ) => {
                     e.preventDefault();
-                    handleGridCellClick(
-                      e,
-                      featureCollection,
-                      gridSourceId,
-                      featureCollection.basedon
-                    );
-                  });
+                    handleGridCellClick(e);
+                  };
+
+                  // Add interaction handlers directly to grid cells
+                  map.on('click', gridLayerId, handleGridInteraction);
+                  if (isMobile) {
+                    map.on('touchstart', gridLayerId, handleGridInteraction);
+                  }
 
                   // Add hover effects for the grid cells
                   map.on('mouseenter', gridLayerId, () => {

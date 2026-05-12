@@ -1,6 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 
+type GridInteractionEvent = (mapboxgl.MapMouseEvent | mapboxgl.MapTouchEvent) & {
+  features?: mapboxgl.MapboxGeoJSONFeature[];
+};
+
 export function useGridInteraction(
   map: mapboxgl.Map | null,
   createGridPopup: (coordinates: [number, number], properties: Record<string, number>) => void,
@@ -16,12 +20,7 @@ export function useGridInteraction(
   const gridLayerIdRef = useRef<string | null>(null);
 
   const handleGridCellClick = useCallback(
-    (
-      e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] },
-      featureCollection: any,
-      gridSourceId: string,
-      basedonField: string
-    ) => {
+    (e: GridInteractionEvent) => {
       if (!map || !e.features?.length) {
         console.log('No features found in click event');
         return;
@@ -131,6 +130,7 @@ export function useGridInteraction(
   // Update mousemove to click handler
   useEffect(() => {
     if (!map) return;
+    const cellTimeouts = cellTimeoutRef.current;
 
     const handleGridCellSelect = (e: mapboxgl.MapMouseEvent) => {
       // Skip if style or layer ID not ready
@@ -146,7 +146,7 @@ export function useGridInteraction(
         if (feature?.properties?.id) {
           const cellId = feature.properties.id;
           if (!selectedCells.has(cellId)) {
-            handleGridCellClick(e as any, null, '', '');
+            handleGridCellClick({ ...e, features });
           }
         } else {
           // Mouse is not over any cell
@@ -163,18 +163,20 @@ export function useGridInteraction(
 
     return () => {
       map.off('click', handleGridCellSelect);
-      Object.values(cellTimeoutRef.current).forEach(clearTimeout);
+      Object.values(cellTimeouts).forEach(clearTimeout);
     };
   }, [map, selectedCells, handleGridCellClick, handleCellDeselect]);
 
   // Cleanup effect
   useEffect(() => {
+    const gridSourceId = gridSourceIdRef.current;
+
     return () => {
       lastSelectedGridRef.current = null;
-      if (selectedGridId !== null && map && gridSourceIdRef.current) {
+      if (selectedGridId !== null && map && gridSourceId) {
         try {
           map.removeFeatureState({
-            source: gridSourceIdRef.current,
+            source: gridSourceId,
             id: selectedGridId,
           });
         } catch (error) {

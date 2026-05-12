@@ -211,8 +211,8 @@ function CheckoutBilling({ Name }: { Name: string }) {
   const hasCountryAndCity = !!(checkout.country_name?.trim() && checkout.city_name?.trim());
   const addToCartDisabled = !hasCountryAndCity;
   const addToCartMessage = !hasCountryAndCity
-    ? 'Please select country and city to add items to cart.'
-    : undefined;
+    ? t("please-select-country-and-city-to-add-items-to-cart.")
+    : '';
 
   // Update active view when Name changes
   useEffect(() => {
@@ -270,17 +270,24 @@ function CheckoutBilling({ Name }: { Name: string }) {
 
       // Derive perks from tier key (no longer parsed from description)
       const getTierPerks = (reportTier: string, hasConcierge: boolean, pkg: ReportPackage): string[] => {
-        if (pkg.perks && pkg.perks.length > 0) return pkg.perks;
+        if (pkg.perks && pkg.perks.length > 0) {
+          return pkg.perks.map(perk => {
+            const key = perk.toLowerCase().replace(/\s+/g, '-');
+            const translated = t(key);
+            // If the key is not found (t returns the key itself), use the original perk
+            return translated !== key ? translated : perk;
+          });
+        }
         const perks: string[] = [];
         if (reportTier === 'basic') {
-          perks.push('Preset Scoring', '1x Report', 'Full Data Access');
+          perks.push(t('preset-scoring'), t('1x-report'), t('full-data-access'));
         } else {
-          perks.push('Custom Scoring', 'Full Data Access');
+          perks.push(t('custom-scoring'), t('full-data-access'));
         }
         if (pkg.included_report_refreshes) {
-          perks.push(`${pkg.included_report_refreshes}x Report Refreshes`);
+          perks.push(t('x-report-refreshes', { count: pkg.included_report_refreshes }));
         }
-        if (hasConcierge) perks.push('Personal Concierge Service');
+        if (hasConcierge) perks.push(t('personal-concierge-service'));
         return perks;
       };
 
@@ -312,7 +319,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
           perks: getTierPerks(pkg.report_tier, hasConcierge, pkg),
           intelligences,
           isMostPopular: pkg.is_most_popular ?? (pkg.report_tier === 'premium'),
-          conciergeService: pkg.concierge_service || (hasConcierge ? 'Personal consultant to guide your business expansion' : undefined),
+          conciergeService: pkg.concierge_service || (hasConcierge ? t('personal-consultant') : undefined),
           datasetLimit: pkg.dataset_limit || pkg.included_datasets_count,
           additionalDatasetCost: pkg.additional_dataset_cost ?? 300,
           tag: pkg.tag,
@@ -964,10 +971,9 @@ function CheckoutBilling({ Name }: { Name: string }) {
         // by the backend – look them up from the frontend's local metaDataInformation.json
         const localMeta = type !== 'report' ? getLocalMetadata(type, key, item) : null;
         const resolvedDescription =
-          item.description ||
           (type === 'report'
             ? t(`report-package-${key}-description`)
-            : localMeta?.description || '');
+            : localMeta?.description) || item.description || '';
         const resolvedDataVariables =
           item.data_variables
             ? convertDataVariables(item.data_variables)
@@ -1045,6 +1051,13 @@ function CheckoutBilling({ Name }: { Name: string }) {
 
   // Format category name for display
   const formatCategoryName = useCallback((category: string): string => {
+    const translationKey = `backend.categories.${category}`;
+    const translated = t(translationKey);
+    // If translation is found (t returns something other than the key itself), return it
+    if (translated && translated !== translationKey) {
+      return translated;
+    }
+    // Fallback if not translated
     return category
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -1231,12 +1244,12 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 role="button"
                 tabIndex={0}
                 onClick={() => {
-                  handleItemSelect('Population', 'intelligence', 'Population Intelligence');
+                  handleItemSelect('Population', 'intelligence', t("population-intelligence"));
                 }}
                 onKeyDown={event => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
-                    handleItemSelect('Population', 'intelligence', 'Population Intelligence');
+                    handleItemSelect('Population', 'intelligence', t("population-intelligence"));
                   }
                 }}
               >
@@ -1330,12 +1343,12 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 role="button"
                 tabIndex={0}
                 onClick={() => {
-                  handleItemSelect('Income', 'intelligence', 'Income Intelligence');
+                  handleItemSelect('Income', 'intelligence', t("income-intelligence"));
                 }}
                 onKeyDown={event => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
-                    handleItemSelect('Income', 'intelligence', 'Income Intelligence');
+                    handleItemSelect('Income', 'intelligence', t("income-intelligence"));
                   }
                 }}
               >
@@ -1376,12 +1389,12 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 role="button"
                 tabIndex={0}
                 onClick={() => {
-                  handleItemSelect('Real Estate', 'intelligence', 'Real Estate Intelligence');
+                  handleItemSelect('Real Estate', 'intelligence', t("real-estate-intelligence"));
                 }}
                 onKeyDown={event => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
-                    handleItemSelect('Real Estate', 'intelligence', 'Real Estate Intelligence');
+                    handleItemSelect('Real Estate', 'intelligence', t("real-estate-intelligence"));
                   }
                 }}
               >

@@ -4,7 +4,6 @@ import mapboxgl from 'mapbox-gl';
 import { useMapContext } from '../../context/MapContext';
 import { useUIContext } from '../../context/UIContext';
 import { useCatalogContext } from '../../context/CatalogContext';
-import { useLongPress } from 'use-long-press';
 import MapMenu from './MapMenu';
 import './mapbox-custom.css';
 import { useMeasurement } from '../../hooks/useMeasurement';
@@ -28,7 +27,6 @@ const SavedLocations: React.FC = () => {
     measurements,
     deleteMeasurement,
   } = useCatalogContext();
-  const [lastLngLat, setLastLngLat] = useState<mapboxgl.LngLat | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [menuLngLat, setMenuLngLat] = useState<mapboxgl.LngLat | null>(null);
 
@@ -51,6 +49,9 @@ const SavedLocations: React.FC = () => {
   }, [handleMapClickForMeasurement]);
 
   const markersRef = useRef<{ [id: string]: mapboxgl.Marker }>({});
+  const longPressTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressStartRef = useRef<{ x: number; y: number } | null>(null);
+  const suppressNextClickRef = useRef(false);
 
   useEffect(() => {
     console.log('markers', markers);
@@ -400,27 +401,6 @@ const SavedLocations: React.FC = () => {
     ]
   );
 
-  const longPressHandler = useLongPress(
-    event => {
-      if (!isMarkersEnabled || !lastLngLat) return;
-
-      if (isMeasuring) {
-        exitMeasureMode();
-      }
-
-      if (event.target) {
-        const touch = (event as unknown as TouchEvent).touches[0];
-        setMenuPosition({ x: touch.clientX, y: touch.clientY });
-        setMenuLngLat(lastLngLat);
-      }
-    },
-    {
-      threshold: 500,
-      captureEvent: true,
-      cancelOnMovement: true,
-    }
-  );
-
   const handleMeasure = useCallback(
     (id: string) => {
       if (!isMarkersEnabled) return;
@@ -459,27 +439,83 @@ const SavedLocations: React.FC = () => {
       setMenuLngLat(e.lngLat);
     };
 
-    // Handle touch for mobile (to capture coordinates)
-    const handleTouchStart = (e: mapboxgl.MapTouchEvent) => {
-      if (!isMarkersEnabled) return;
-      setLastLngLat(e.lngLat);
+    const clearLongPressTimer = () => {
+      if (longPressTimeoutRef.current) {
+        clearTimeout(longPressTimeoutRef.current);
+        longPressTimeoutRef.current = null;
+      }
     };
 
-    // Apply longPress to the map container for mobile
-    if (isMobile && map.getContainer()) {
-      const container = map.getContainer();
-      container.setAttribute('role', 'application');
-      Object.entries(longPressHandler()).forEach(([key, value]) => {
-        container.addEventListener(key.replace('on', '').toLowerCase(), value as EventListener);
-      });
-    }
+    const getTouchPosition = (e: mapboxgl.MapTouchEvent) => {
+      const touch = e.originalEvent.touches?.[0] || e.originalEvent.changedTouches?.[0];
+      if (touch) {
+        return { x: touch.clientX, y: touch.clientY };
+      }
+
+      const rect = map.getContainer().getBoundingClientRect();
+      return {
+        x: rect.left + e.point.x,
+        y: rect.top + e.point.y,
+      };
+    };
+
+    const openMobileContextMenu = (e: mapboxgl.MapTouchEvent) => {
+      if (!isMarkersEnabled) return;
+
+      if (isMeasuring) {
+        exitMeasureMode();
+      }
+
+      const position = getTouchPosition(e);
+      setMenuPosition(position);
+      setMenuLngLat(e.lngLat);
+      suppressNextClickRef.current = true;
+      e.preventDefault();
+      e.originalEvent.preventDefault();
+    };
+
+    const handleTouchStart = (e: mapboxgl.MapTouchEvent) => {
+      if (!isMarkersEnabled || !isMobile) return;
+
+      clearLongPressTimer();
+      longPressStartRef.current = getTouchPosition(e);
+
+      longPressTimeoutRef.current = setTimeout(() => {
+        openMobileContextMenu(e);
+        longPressTimeoutRef.current = null;
+      }, 550);
+    };
+
+    const handleTouchMove = (e: mapboxgl.MapTouchEvent) => {
+      if (!longPressStartRef.current) return;
+
+      const position = getTouchPosition(e);
+      const movedX = Math.abs(position.x - longPressStartRef.current.x);
+      const movedY = Math.abs(position.y - longPressStartRef.current.y);
+
+      if (movedX > 12 || movedY > 12) {
+        clearLongPressTimer();
+      }
+    };
+
+    const handleTouchEnd = () => {
+      clearLongPressTimer();
+      longPressStartRef.current = null;
+    };
 
     const handleMapClick = () => {
+      if (suppressNextClickRef.current) {
+        suppressNextClickRef.current = false;
+        return;
+      }
       closeMenu();
     };
 
     map.on('contextmenu', handleRightClick);
     map.on('touchstart', handleTouchStart);
+    map.on('touchmove', handleTouchMove);
+    map.on('touchend', handleTouchEnd);
+    map.on('touchcancel', handleTouchEnd);
     map.on('click', handleMapClick);
 
     const handleModalClose = () => {
@@ -489,35 +525,27 @@ const SavedLocations: React.FC = () => {
       }
     };
 
-    // Add a listener to the document to detect modal closures
-    document.addEventListener('keydown', e => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         handleModalClose();
         closeMenu();
       }
-    });
+    };
+
+    // Add a listener to the document to detect modal closures
+    document.addEventListener('keydown', handleKeyDown);
 
     return () => {
       map.off('contextmenu', handleRightClick);
       map.off('touchstart', handleTouchStart);
+      map.off('touchmove', handleTouchMove);
+      map.off('touchend', handleTouchEnd);
+      map.off('touchcancel', handleTouchEnd);
       map.off('click', handleMapClick);
+      clearLongPressTimer();
+      longPressStartRef.current = null;
 
-      if (isMobile && map.getContainer()) {
-        const container = map.getContainer();
-        Object.entries(longPressHandler()).forEach(([key, value]) => {
-          container.removeEventListener(
-            key.replace('on', '').toLowerCase(),
-            value as EventListener
-          );
-        });
-      }
-
-      document.removeEventListener('keydown', e => {
-        if (e.key === 'Escape') {
-          handleModalClose();
-          closeMenu();
-        }
-      });
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [
     mapRef,
@@ -529,9 +557,10 @@ const SavedLocations: React.FC = () => {
     handleCloseModal,
     createMarkerModal,
     createNewMarker,
-    lastLngLat,
-    longPressHandler,
     closeMenu,
+    isMeasuring,
+    isMobile,
+    exitMeasureMode,
   ]);
 
   useEffect(() => {

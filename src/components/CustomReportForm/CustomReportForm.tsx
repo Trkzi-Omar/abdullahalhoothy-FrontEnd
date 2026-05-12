@@ -5,7 +5,6 @@ import apiRequest from '../../services/apiRequest';
 import urls from '../../urls.json';
 
 import { FaArrowLeft, FaExclamationTriangle } from 'react-icons/fa';
-import { LuLanguages } from 'react-icons/lu';
 import { useLanguage } from '../../hooks/useLanguage';
 import {
   BusinessCategoryMetrics,
@@ -1376,11 +1375,13 @@ const CustomReportForm = () => {
           <button
             type="button"
             onClick={toggleLanguage}
-            className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-all duration-200 w-16 justify-center"
+            className="flex items-center justify-center px-2 py-1.5 font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-all duration-200 w-10 h-8"
             title={lang === 'en' ? 'العربية' : 'English'}
+            aria-label={lang === 'en' ? 'العربية' : 'English'}
           >
-            <LuLanguages className="w-3 h-3" />
-            <span>{lang === 'en' ? 'AR' : 'EN'}</span>
+            <span className={lang === 'en' ? 'text-lg leading-none' : 'text-xs leading-none'}>
+              {lang === 'en' ? 'ع' : 'EN'}
+            </span>
           </button>
         </div>
       </div>

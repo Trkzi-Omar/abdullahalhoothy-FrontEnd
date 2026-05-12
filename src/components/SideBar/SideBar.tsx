@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { FaAngleRight, FaNetworkWired } from 'react-icons/fa';
 import { MdInfo, MdLogout, MdMap, MdPerson, MdTableChart } from 'react-icons/md';
-import { LuLanguages } from 'react-icons/lu';
 import { Link, useNavigate } from 'react-router-dom';
 import { HiCurrencyDollar } from 'react-icons/hi';
 import { isGuestUser, useAuth } from '../../context/AuthContext';
@@ -96,11 +95,23 @@ const SideBar = () => {
             {!isCollapsed && <span className="ms-2 text-white truncate">{t("about-us")}</span>}
           </a>
 
-          <div className="sidebar-icon" onClick={toggleLanguage} title={lang === 'en' ? 'العربية' : 'English'}>
-            <div>
-              <LuLanguages className="w-6 h-6 transition-all text-white" />
-            </div>
-            {!isCollapsed && <span className="ms-2 text-white truncate">{lang === 'en' ? 'AR' : 'EN'}</span>}
+          <div className="sidebar-icon" onClick={toggleLanguage} title={lang === 'en' ? 'العربية' : 'English'} role="button">
+            {isCollapsed ? (
+              <div className="w-6 h-6 flex items-center justify-center rounded-full ring-1 ring-white/40 text-white font-semibold">
+                <span className={lang === 'en' ? 'text-base leading-none' : 'text-[10px] leading-none tracking-wide'}>
+                  {lang === 'en' ? 'ع' : 'EN'}
+                </span>
+              </div>
+            ) : (
+              <div className="ms-1 inline-flex items-center rounded-full bg-white/10 ring-1 ring-white/15 p-0.5 text-white font-semibold select-none">
+                <span className={`px-2 py-0.5 rounded-full text-sm leading-none transition-colors ${lang === 'ar' ? 'bg-white text-emerald-900' : 'text-white/60'}`}>
+                  ع
+                </span>
+                <span className={`px-2 py-0.5 rounded-full text-[11px] tracking-wider leading-none transition-colors ${lang === 'en' ? 'bg-white text-emerald-900' : 'text-white/60'}`}>
+                  EN
+                </span>
+              </div>
+            )}
           </div>
 
           {shouldShowLogout ? (
@@ -179,11 +190,15 @@ export const SideBarContent = () => {
           <span className="ms-2 truncate">{t("about-us")}</span>
         </a>
 
-        <div className="sidebar-icon" onClick={toggleLanguage} title={lang === 'en' ? 'العربية' : 'English'}>
-          <div>
-            <LuLanguages className="w-6 h-6 transition-all" />
+        <div className="sidebar-icon" onClick={toggleLanguage} title={lang === 'en' ? 'العربية' : 'English'} role="button">
+          <div className="ms-1 inline-flex items-center rounded-full bg-black/5 ring-1 ring-black/10 p-0.5 font-semibold select-none">
+            <span className={`px-2 py-0.5 rounded-full text-sm leading-none transition-colors ${lang === 'ar' ? 'bg-emerald-900 text-white' : 'text-current/60'}`}>
+              ع
+            </span>
+            <span className={`px-2 py-0.5 rounded-full text-[11px] tracking-wider leading-none transition-colors ${lang === 'en' ? 'bg-emerald-900 text-white' : 'text-current/60'}`}>
+              EN
+            </span>
           </div>
-          <span className="ms-2 truncate">{lang === 'en' ? 'AR' : 'EN'}</span>
         </div>
 
         {/* <div

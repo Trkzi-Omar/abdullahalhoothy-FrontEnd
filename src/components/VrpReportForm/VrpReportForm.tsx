@@ -23,6 +23,8 @@ import { OSM } from 'ol/source';
 import VectorSource from 'ol/source/Vector';
 import Control from 'ol/control/Control';
 import Draw from 'ol/interaction/Draw';
+import Modify from 'ol/interaction/Modify';
+import GeoJSON from 'ol/format/GeoJSON';
 import {Stroke, Circle, Fill, Icon, Style} from 'ol/style';
 import {defaults as defaultControls } from 'ol/control/defaults';
 import { useMap, Map, View, TileLayer, VectorLayer } from 'react-openlayers';
@@ -108,7 +110,7 @@ const warehouseStyle = new Style({
 type VrpMapDrawProps = {
   source: VectorSource;
   handleInputChange: (field: string, value: FormInputValue) => void;
-  formData: object|null;
+  formData: VrpReportData | null;
 };
 
 const cityCoords = {
@@ -119,124 +121,248 @@ const cityCoords = {
 const VrpMapDraw = ({formData, source, handleInputChange}: VrpMapDrawProps) => {
   const map = useMap();
   const [drawers] = useState(() => [
-	  new Draw({
-	  	source: source,
-			type: "Polygon",
-			freehand: true,
-			geometryName: "draw",
-			style: drawStyle,
-	  }),
-		new Draw({
-	  	source: source,
-			type: "Point",
-			geometryName: "driver",
-			style: driverStyle,
-	  }),
-		new Draw({
-	  	source: source,
-			type: "Point",
-			geometryName: "warehouse",
-			style: warehouseStyle,
-	  }),
+    new Draw({
+      source: source,
+      type: "Polygon",
+      // No freehand — click-vertex mode like geojson.io
+      geometryName: "draw",
+      style: drawStyle,
+    }),
+    new Draw({
+      source: source,
+      type: "Point",
+      geometryName: "driver",
+      style: driverStyle,
+    }),
+    new Draw({
+      source: source,
+      type: "Point",
+      geometryName: "warehouse",
+      style: warehouseStyle,
+    }),
   ]);
   const [oldCity, setOldCity] = useState("");
   const [draw, setDraw] = useState(0);
-	if(map && formData && oldCity != formData["city_name"]) {
-  	const city = formData["city_name"];
-		setOldCity(city);
-		// console.log(city, cityCoords[city]);
-  	map.getView().setCenter(fromLonLat([].concat(cityCoords[city]).reverse()));
-	}
+  if(map && formData && oldCity != formData.city_name) {
+    const city = formData.city_name;
+    setOldCity(city);
+    map.getView().setCenter(fromLonLat(([...(cityCoords as Record<string, number[]>)[city]] as number[]).reverse()));
+  }
+
+  // Restore saved polygon from formData on first map load
   useEffect(() => {
-  	drawers.map(v => {
-	  	v.addEventListener("drawend", (ev) => {
-	  		const e = ev.target;
-	  		if(e.geometryName_ === "draw") {
-		  		const tmpCoords = ev.feature.getGeometry().getCoordinates()[0]
-			  		.map(v => toLonLat(v));
+    if (!map) return;
+    const fc = formData?.polygons ?? null;
+    if (!fc?.features?.length) return;
+    try {
+      const features = new GeoJSON().readFeatures(fc, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: 'EPSG:3857',
+      });
+      features.forEach(f => f.setGeometryName('draw'));
+      source.getFeatures()
+        .filter(f => f.getGeometryName() === 'draw')
+        .forEach(f => source.removeFeature(f));
+      source.addFeatures(features);
+    } catch { /* ignore malformed saved polygon */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map]);
 
-			  	// console.log(tmpCoords);
-		  		handleInputChange("polygons", {
-			      "type": "FeatureCollection",
-			      "features": [{
-			      	"type": "Feature",
-			      	"properties": {},
-			      	"geometry": {
-				        "coordinates": [tmpCoords],
-				        "type": "Polygon",
-			        },
-			      }]
-		      });
-	      } else if(e.geometryName_ === "driver") {
-		  		const tmpCoords = toLonLat(ev.feature.getGeometry().getCoordinates());
-		  		handleInputChange("groups_info", [Object.assign(formData["groups_info"][0], {
-			  		lng: tmpCoords[0],
-			  		lat: tmpCoords[1],
-		  		})]);
-	      }  else if(e.geometryName_ === "warehouse") {
-		  		const tmpCoords = toLonLat(ev.feature.getGeometry().getCoordinates());
-		  		handleInputChange("centroid_lat", tmpCoords[1]);
-		  		handleInputChange("centroid_lng", tmpCoords[0]);
-	      }
+  // Modify interaction — allows dragging vertices/edges after drawing
+  useEffect(() => {
+    if (!map) return;
+    const modify = new Modify({ source });
+    map.addInteraction(modify);
+    modify.on('modifyend', (e) => {
+      e.features.forEach(feature => {
+        const name = (feature as unknown as { getGeometryName: () => string }).getGeometryName();
+        const geom = (feature as unknown as { getGeometry: () => unknown }).getGeometry() as
+          { getCoordinates: () => unknown };
+        if (name === 'draw') {
+          const coords = ((geom.getCoordinates() as unknown) as number[][][])[0].map(v => toLonLat(v));
+          handleInputChange("polygons", {
+            type: 'FeatureCollection' as const,
+            features: [{ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [coords] } }]
+          } as unknown as FormInputValue);
+        } else if (name === 'driver') {
+          const coords = toLonLat((geom.getCoordinates() as unknown) as number[]);
+          handleInputChange("groups_info", [Object.assign({}, formData?.groups_info?.[0] ?? {}, {
+            lng: coords[0], lat: coords[1],
+          })] as unknown as FormInputValue);
+        } else if (name === 'warehouse') {
+          const coords = toLonLat((geom.getCoordinates() as unknown) as number[]);
+          handleInputChange("centroid_lat", coords[1]);
+          handleInputChange("centroid_lng", coords[0]);
+        }
+      });
+    });
+    return () => { map.removeInteraction(modify); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, source]);
 
-	  	})
-	  	
-		  v.addEventListener("drawstart", (ev) => {
-		  	const e = ev.target;
-	      source.getFeatures().filter(v => v.geometryName_ === e.geometryName_)
-		      .map(v => source.removeFeature(v));
-		  	// source.clear();
-		  	return true
-		  });
-  	});
+  useEffect(() => {
+    drawers.forEach(v => {
+      v.on("drawend", (ev) => {
+        const name = (ev.feature as unknown as { getGeometryName: () => string }).getGeometryName();
+        if (name === "draw") {
+          const geom = ev.feature.getGeometry() as unknown as { getCoordinates: () => number[][][] };
+          const tmpCoords = geom.getCoordinates()[0].map(v => toLonLat(v));
+          handleInputChange("polygons", {
+            type: 'FeatureCollection' as const,
+            features: [{ type: 'Feature', properties: {}, geometry: { coordinates: [tmpCoords], type: 'Polygon' } }]
+          } as unknown as FormInputValue);
+        } else if (name === "driver") {
+          const geom = ev.feature.getGeometry() as unknown as { getCoordinates: () => number[] };
+          const tmpCoords = toLonLat(geom.getCoordinates());
+          handleInputChange("groups_info", [Object.assign({}, formData?.groups_info?.[0] ?? {}, {
+            lng: tmpCoords[0], lat: tmpCoords[1],
+          })] as unknown as FormInputValue);
+        } else if (name === "warehouse") {
+          const geom = ev.feature.getGeometry() as unknown as { getCoordinates: () => number[] };
+          const tmpCoords = toLonLat(geom.getCoordinates());
+          handleInputChange("centroid_lat", tmpCoords[1]);
+          handleInputChange("centroid_lng", tmpCoords[0]);
+        }
+      });
+      v.on("drawstart", () => {
+        source.getFeatures()
+          .filter(f => f.getGeometryName() === (v as unknown as { geometryName_: string }).geometryName_)
+          .forEach(f => source.removeFeature(f));
+      });
+    });
   }, [drawers, formData, handleInputChange, source]);
+
   useEffect(() => {
-  	if(!map) return;
-  	
-  	// [drawClass, drawPointClass].map(draw ? map.addInteraction : map.removeInteraction);
-  	drawers.map(v => map.removeInteraction(v)); 
-  	if(draw > 0)
-	  	map.addInteraction(drawers[draw-1]);
-  	map.targetElement_.addEventListener("toggleDraw", (e) => {
-  		const letter = (e.target as HTMLButtonElement).dataset.letter;
-  		if(letter === "P")
-	  		setDraw(draw === 1 ? 0 : 1)
-	  	else if(letter === "D")
-	  		setDraw(draw === 2 ? 0 : 2)
-	  	else if(letter === "W")
-	  		setDraw(draw === 3 ? 0 : 3);
-  	})
+    if (!map) return;
+    drawers.forEach(v => map.removeInteraction(v));
+    if (draw > 0) map.addInteraction(drawers[draw - 1]);
+    const el = map.getTargetElement();
+    const handler = (e: Event) => {
+      const letter = (e.target as HTMLButtonElement).dataset.letter;
+      if (letter === "P") setDraw(d => d === 1 ? 0 : 1);
+      else if (letter === "D") setDraw(d => d === 2 ? 0 : 2);
+      else if (letter === "W") setDraw(d => d === 3 ? 0 : 3);
+    };
+    el.addEventListener("toggleDraw", handler);
+    return () => el.removeEventListener("toggleDraw", handler);
   }, [draw, drawers, map]);
-  return 
+
+  return null;
 };
 
-const VrpMap = ({formData, handleInputChange}: { handleInputChange: VrpMapDrawProps['handleInputChange'] }) => {
-  const mapRef = useRef();
-  const drawSource = new VectorSource({wrapX: false});
-	return (
-		<>
-		<style>{DRAW_CONTROL_STYLE}</style>
-	  <Map ref={mapRef} controls={defaultControls().extend(["P", "D", "W"].map(v => new DrawControl({
-	  	'letter': v,
-	  })))}>
-	    <TileLayer source={new OSM()} />
-	    <VectorLayer 
-	      source={drawSource}
-	      style={(feature) => {
-	      	const name = feature.geometryName_;
-	      	if(name === "draw")
-	      		return drawStyle;
-	      	else if(name === "driver")
-	      	 	return driverStyle;
-	      	else if(name === "warehouse")
-	      	 	return warehouseStyle;
-	      }}
-	    />
-	    <VrpMapDraw formData={formData} source={drawSource} handleInputChange={handleInputChange} />
-	    <View center={fromLonLat([].concat(cityCoords[formData.city_name]).reverse())} zoom={13}/>
-	  </Map>
-	  </>
-  )
+const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null; handleInputChange: VrpMapDrawProps['handleInputChange'] }) => {
+  const mapRef = useRef<import('ol/Map').default | null>(null);
+  // Stable source — must not be recreated on every render
+  const [drawSource] = useState(() => new VectorSource({ wrapX: false }));
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [geoJsonText, setGeoJsonText] = useState('');
+  const [geoJsonError, setGeoJsonError] = useState('');
+
+  const openPanel = () => {
+    const current = formData?.polygons;
+    setGeoJsonText(current?.features?.length ? JSON.stringify(current, null, 2) : '');
+    setGeoJsonError('');
+    setPanelOpen(true);
+  };
+
+  const applyGeoJson = () => {
+    setGeoJsonError('');
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(geoJsonText);
+    } catch {
+      setGeoJsonError('Invalid JSON');
+      return;
+    }
+    const type = parsed.type as string;
+    if (type !== 'FeatureCollection' && type !== 'Feature' && type !== 'Polygon') {
+      setGeoJsonError('Must be a GeoJSON FeatureCollection, Feature, or Polygon');
+      return;
+    }
+    try {
+      const fmt = new GeoJSON();
+      const features = fmt.readFeatures(parsed, { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' });
+      if (!features.length) { setGeoJsonError('No features found'); return; }
+      features.forEach(f => f.setGeometryName('draw'));
+      drawSource.getFeatures().filter(f => f.getGeometryName() === 'draw').forEach(f => drawSource.removeFeature(f));
+      drawSource.addFeatures(features);
+      // Normalise to FeatureCollection for formData
+      const fc = type === 'FeatureCollection' ? parsed : {
+        type: 'FeatureCollection',
+        features: type === 'Feature' ? [parsed] : [{ type: 'Feature', properties: {}, geometry: parsed }],
+      };
+      handleInputChange('polygons', fc as unknown as FormInputValue);
+      // Fly map to polygon extent
+      const extent = drawSource.getExtent();
+      if (extent && mapRef.current) {
+        mapRef.current.getView().fit(extent, { padding: [50, 50, 50, 50], maxZoom: 16 });
+      }
+      setPanelOpen(false);
+    } catch (err) {
+      setGeoJsonError('Could not parse geometry: ' + (err instanceof Error ? err.message : String(err)));
+    }
+  };
+
+  return (
+    <div className="relative w-full h-full">
+      <style>{DRAW_CONTROL_STYLE}</style>
+      <Map ref={mapRef} controls={defaultControls().extend(["P", "D", "W"].map(v => new DrawControl({ letter: v })))}>
+        <TileLayer source={new OSM()} />
+        <VectorLayer
+          source={drawSource}
+          style={(feature) => {
+            const name = (feature as unknown as { getGeometryName: () => string }).getGeometryName();
+            if (name === "draw") return drawStyle;
+            if (name === "driver") return driverStyle;
+            if (name === "warehouse") return warehouseStyle;
+          }}
+        />
+        <VrpMapDraw formData={formData} source={drawSource} handleInputChange={handleInputChange} />
+        <View center={fromLonLat(([...(cityCoords as Record<string, number[]>)[formData?.city_name ?? 'Riyadh']] as number[]).reverse())} zoom={13} />
+      </Map>
+
+      {/* GeoJSON paste panel toggle button — top-right inside map */}
+      <button
+        type="button"
+        onClick={panelOpen ? () => setPanelOpen(false) : openPanel}
+        title="Paste GeoJSON polygon"
+        className="absolute top-3 end-3 z-10 bg-white border border-gray-300 rounded-lg shadow px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-1.5"
+      >
+        <span className="font-mono text-primary">&#123;&#125;</span>
+        {panelOpen ? 'Close' : 'GeoJSON'}
+      </button>
+
+      {/* GeoJSON paste panel — drops down from top-right */}
+      {panelOpen && (
+        <div className="absolute top-11 end-3 z-10 w-72 bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col overflow-hidden">
+          <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-700">Paste GeoJSON polygon</span>
+            <button type="button" onClick={() => setPanelOpen(false)} className="text-gray-400 hover:text-gray-600">
+              <FaTimes className="w-3 h-3" />
+            </button>
+          </div>
+          <textarea
+            className="flex-1 p-2 text-xs font-mono text-gray-800 resize-none border-none outline-none min-h-[180px]"
+            placeholder={'{\n  "type": "FeatureCollection",\n  "features": [...]\n}'}
+            value={geoJsonText}
+            onChange={e => { setGeoJsonText(e.target.value); setGeoJsonError(''); }}
+            spellCheck={false}
+          />
+          {geoJsonError && (
+            <p className="px-3 py-1 text-xs text-red-600 bg-red-50 border-t border-red-100">{geoJsonError}</p>
+          )}
+          <div className="px-3 py-2 border-t border-gray-100 flex justify-end gap-2">
+            <button type="button" onClick={() => { setGeoJsonText(''); setGeoJsonError(''); }}
+              className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1">Clear</button>
+            <button type="button" onClick={applyGeoJson}
+              className="text-xs font-medium bg-primary text-white px-3 py-1 rounded-md hover:bg-primary/90">
+              Apply
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 const formDataKeys = ["centroid_lat", "centroid_lng", "manager_phone", "group_size", "num_groups", "polygons", "country_name", "city_name", "user_id", "groups_info"];
@@ -307,25 +433,34 @@ const REPORT_FILE_TYPES = [
   { id: "clusters_map", urlKey: "clusters_map_url", icon: ClustersMapIcon },
 ] as Array<{id: string; urlKey: string; icon: string}>;
 
-const CustomReportForm = () => {
-  // STEP INDEXING CONVENTION:
-  // - Step 0: Report Type Selection (special case)
-  // - Steps 1+: Actual form steps (1-indexed for display)
-  // - Use getActualStepContent(step, reportType) to map step number to content
-  // - Step definitions are 0-indexed arrays representing 1-indexed steps
+const VRP_STORAGE_KEY = 'vrp_form_data';
 
+const CustomReportForm = () => {
   const { authResponse } = useAuth();
   const navigate = useNavigate();
-  // TODO: Dynamic business type from URL params - currently disabled
-  // const { businessType } = useParams<{ businessType: string }>();
 
   const [categories, setCategories] = useState<string[]>([]);
   const [userLayers, setUserLayers] = useState<UserLayer[]>([]);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
 
-  const [formData, setFormData] = useState<VrpReportData | null>({
-    ...INITIAL_VRP_FORM_DATA,
-    user_id: authResponse?.localId,
+  // Lazy init: restore from localStorage, falling back to defaults
+  const [isRestoredFromCache] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(VRP_STORAGE_KEY);
+      return !!saved && !!JSON.parse(saved);
+    } catch { return false; }
+  });
+
+  const [formData, setFormData] = useState<VrpReportData | null>(() => {
+    try {
+      const saved = localStorage.getItem(VRP_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as Partial<VrpReportData>;
+        // Always refresh user_id from current auth session
+        return { ...INITIAL_VRP_FORM_DATA, ...parsed } as unknown as VrpReportData;
+      }
+    } catch { /* ignore */ }
+    return { ...INITIAL_VRP_FORM_DATA } as unknown as VrpReportData;
   });
   // useEffect(() => console.log(formData), [formData]);
  
@@ -355,6 +490,16 @@ const CustomReportForm = () => {
       );
     }
   }, [authResponse, formData]);
+
+  // Persist form data to localStorage on every change (skip user_id — restored from auth)
+  useEffect(() => {
+    if (!formData) return;
+    try {
+      const { user_id: _uid, ...rest } = formData;
+      void _uid;
+      localStorage.setItem(VRP_STORAGE_KEY, JSON.stringify(rest));
+    } catch { /* quota exceeded etc. */ }
+  }, [formData]);
 
   const handleCategoryLoad = useCallback(async () => {
     try {
@@ -463,6 +608,22 @@ const CustomReportForm = () => {
 	        }}>
             {/* Current Step Content */}
             <div className={`flex-1 gap-2 py-4 flex flex-col`}>
+              {/* Restored from cache banner */}
+              {isRestoredFromCache && (
+                <div className="flex items-center justify-between px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                  <span>Loaded from your last session</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      localStorage.removeItem(VRP_STORAGE_KEY);
+                      setFormData({ ...INITIAL_VRP_FORM_DATA, user_id: authResponse?.localId ?? '' });
+                    }}
+                    className="ms-3 underline hover:no-underline font-medium"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
               {<BasicInformationStep
 				        formData={formData}
 				        errors={errors}

@@ -5,39 +5,11 @@ import 'ag-grid-community/styles/ag-theme-quartz.css'; // Optional Theme applied
 import { TabularData, Feature } from '../../types/allTypesAndInterfaces';
 import { ColDef } from 'ag-grid-community';
 import { useCatalogContext } from '../../context/CatalogContext';
-import { useNavigate } from 'react-router';
-import { useAuth } from '../../context/AuthContext';
 import { isIntelligentLayer } from '../../utils/layerUtils';
-
-// Define the column definitions for the grid
-export const columnDefs: ColDef<TabularData>[] = [
-  { headerName: 'Name', field: 'name', sortable: true, filter: true },
-  {
-    headerName: 'Address',
-    field: 'formatted_address',
-    sortable: true,
-    filter: true,
-  },
-  {
-    headerName: 'Website',
-    field: 'website',
-    sortable: true,
-    filter: true,
-  },
-  {
-    headerName: 'Rating',
-    field: 'rating',
-    sortable: true,
-  },
-  {
-    headerName: 'Total Rating',
-    field: 'user_ratings_total',
-    sortable: true,
-  },
-];
+import { t } from '../../i18n';
 
 // Function to map a feature to tabular data
-export function mapFeatureToTabularData(feature: Feature): TabularData {
+function mapFeatureToTabularData(feature: Feature): TabularData {
   return {
     name: feature.properties.name,
     formatted_address: feature.properties.address,
@@ -50,13 +22,31 @@ export function mapFeatureToTabularData(feature: Feature): TabularData {
 const Dataview: React.FC = () => {
   const [businesses, setBusinesses] = useState<TabularData[]>([]);
   const { geoPoints } = useCatalogContext();
-
-  const { isAuthenticated } = useAuth();
-  const nav = useNavigate();
-
-  useEffect(() => {
-    // if (!isAuthenticated) nav("/auth");
-  }, []);
+  const columnDefs: ColDef<TabularData>[] = [
+    { headerName: t("table-name"), field: 'name', sortable: true, filter: true },
+    {
+      headerName: t("address"),
+      field: 'formatted_address',
+      sortable: true,
+      filter: true,
+    },
+    {
+      headerName: t("website"),
+      field: 'website',
+      sortable: true,
+      filter: true,
+    },
+    {
+      headerName: t("rating"),
+      field: 'rating',
+      sortable: true,
+    },
+    {
+      headerName: t("total-rating"),
+      field: 'user_ratings_total',
+      sortable: true,
+    },
+  ];
 
   useEffect(() => {
     if (geoPoints.length > 0) {

@@ -3,7 +3,8 @@ import MapLocationPicker from '../../MapLocationPicker/MapLocationPicker';
 import { CustomLocation, FormErrors } from '../../../types/allTypesAndInterfaces';
 import { getBusinessTypeConfig } from '../constants';
 import { BusinessTypeConfig } from '../services/businessMetricsService';
-import { t } from '../../../i18n';
+import i18n, { t } from '../../../i18n';
+import { formatSubcategoryName } from '../../../utils/helperFunctions';
 
 
 interface CustomLocationsStepProps {
@@ -34,6 +35,11 @@ const CustomLocationsStep = ({
   isRequired = false,
 }: CustomLocationsStepProps) => {
   const config = businessConfig ? getBusinessTypeConfig(businessConfig) : null;
+  const formatBusinessName = (value: string) => {
+    const key = value.replace(/\s+/g, '_').toLowerCase();
+    const translated = formatSubcategoryName(key);
+    return i18n.language?.startsWith('ar') ? translated : translated.toLowerCase();
+  };
 
   if (!config) {
     return <div>{t("loading")}</div>;
@@ -50,8 +56,8 @@ const CustomLocationsStep = ({
         </h3>
         <p className="text-sm text-gray-600">
           {isRequired
-            ? t("select-the-location-you-want-to-evaluate-for-business-potential", { business: config.displayName.toLowerCase() })
-            : t("add-specific-locations-you-want-to-analyze-for-business-placement", { business: config.displayName.toLowerCase() })}
+            ? t("select-the-location-you-want-to-evaluate-for-business-potential", { business: formatBusinessName(config.displayName) })
+            : t("add-specific-locations-you-want-to-analyze-for-business-placement", { business: formatBusinessName(config.displayName) })}
         </p>
       </div>
       <div>

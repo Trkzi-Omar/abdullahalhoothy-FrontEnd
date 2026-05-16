@@ -11,7 +11,7 @@ import { MeasurementForm } from '../components/MeasurementForm/MeasurementForm';
 import React from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { MarkerType } from '../types';
-import { t } from '../i18n';
+import i18n, { t } from '../i18n';
 
 
 export interface MeasurementState {
@@ -72,6 +72,20 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
   const [measurementPopup, setMeasurementPopup] = useState<mapboxgl.Popup | null>(null);
 
   const isExitingRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    const closeStalePopup = () => {
+      setMeasurementPopup(currentPopup => {
+        currentPopup?.remove();
+        return null;
+      });
+    };
+
+    i18n.on('languageChanged', closeStalePopup);
+    return () => {
+      i18n.off('languageChanged', closeStalePopup);
+    };
+  }, []);
 
   const clearMeasurementLayers = useCallback(() => {
     const map = mapRef.current;
@@ -343,24 +357,24 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                   `
                   <div class="p-3 bg-white rounded-lg shadow-md">
                     <div class="text-sm">
-                      <strong>Name:</strong> ${savedMeasurement.name}
+                      <strong>${t("measurement-name")}:</strong> ${savedMeasurement.name}
                       <br />
-                      <strong>Description:</strong> ${savedMeasurement.description || '-'}
+                      <strong>${t("description")}:</strong> ${savedMeasurement.description || '-'}
                       <br />
-                      <strong>Distance:</strong> ${savedMeasurement.distance.toFixed(2)} km
+                      <strong>${t("distance")}:</strong> ${savedMeasurement.distance.toFixed(2)} km
                       <br />
-                      <strong>Drive Time:</strong> ${savedMeasurement.duration.toFixed(0)} min
+                      <strong>${t("drive-time")}:</strong> ${savedMeasurement.duration.toFixed(0)} min
                     </div>
                     <div class="mt-3 flex justify-end gap-2">
                       <button
                         class="delete-measurement-hook px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
                       >
-                        Delete
+                        ${t("delete")}
                       </button>
                        <button
                         class="edit-measurement-hook px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs"
                       >
-                        Edit
+                        ${t("edit")}
                       </button>
                     </div>
                   </div>
@@ -417,24 +431,24 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                 `
                 <div class="p-3 bg-white rounded-lg shadow-md">
                   <div class="text-sm">
-                    <strong>Name:</strong> ${savedMeasurement.name}
+                    <strong>${t("measurement-name")}:</strong> ${savedMeasurement.name}
                     <br />
-                    <strong>Description:</strong> ${savedMeasurement.description || '-'}
+                    <strong>${t("description")}:</strong> ${savedMeasurement.description || '-'}
                     <br />
-                    <strong>Distance:</strong> ${savedMeasurement.distance.toFixed(2)} km
+                    <strong>${t("distance")}:</strong> ${savedMeasurement.distance.toFixed(2)} km
                     <br />
-                    <strong>Drive Time:</strong> ${savedMeasurement.duration.toFixed(0)} min
+                    <strong>${t("drive-time")}:</strong> ${savedMeasurement.duration.toFixed(0)} min
                   </div>
                   <div class="mt-3 flex justify-end gap-2">
                     <button
                       class="delete-measurement-hook px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
                     >
-                      Delete
+                      ${t("delete")}
                     </button>
                     <button
                       class="edit-measurement-hook px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs"
                     >
-                      Edit
+                    ${t("edit")}
                     </button>
                   </div>
                 </div>
@@ -526,7 +540,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
           `
         <div class="p-2 flex items-center bg-white rounded-lg shadow-sm">
           <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 me-2"></div>
-          <span>Calculating route...</span>
+          <span>${t("calculating-route")}</span>
         </div>
       `
         )
@@ -699,9 +713,9 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
         `
           <div class="p-3 bg-white rounded-lg shadow-md">
             <div class="text-sm">
-              <strong>Distance:</strong> ${(apiResult.data?.distance_in_km ?? 0).toFixed(2)} km
+              <strong>${t("distance")}:</strong> ${(apiResult.data?.distance_in_km ?? 0).toFixed(2)} km
               <br />
-              <strong>Drive Time:</strong> ${(apiResult.data?.drive_time_in_min ?? 0).toFixed(0)} min
+              <strong>${t("drive-time")}:</strong> ${(apiResult.data?.drive_time_in_min ?? 0).toFixed(0)} min
             </div>
             <div class="mt-3 flex justify-end gap-2">
               <button
@@ -789,7 +803,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
           `
           <div class="p-3 bg-white rounded-lg shadow-md">
             <div class="text-sm">
-              <strong>Distance:</strong> ${formattedDistance}
+              <strong>${t("distance")}:</strong> ${formattedDistance}
               ${errorMessage ? `<div class="text-red-500 text-xs mt-1">${errorMessage}</div>` : ''}
             </div>
             <div class="mt-3 flex justify-end">

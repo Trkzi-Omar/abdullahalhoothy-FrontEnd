@@ -1,4 +1,34 @@
 import { t } from '../i18n';
+import metaDataInformation from '../data/metaDataInformation.json';
+
+type DatasetMetaKey = keyof typeof metaDataInformation.datasets;
+type IntelligenceMetaKey = keyof typeof metaDataInformation.intelligence;
+
+function normalizeMetadataKey(name: string | undefined | null): string {
+  return (name || '').trim().toLowerCase().replace(/\s+/g, '_');
+}
+
+function getDatasetMetaKey(name: string | undefined | null): DatasetMetaKey {
+  const normalized = normalizeMetadataKey(name);
+
+  if (
+    normalized === 'real_estate' ||
+    normalized.includes('_for_rent') ||
+    normalized.includes('_for_sale')
+  ) {
+    return 'real_estate';
+  }
+
+  return 'google_categories';
+}
+
+function getIntelligenceMetaKey(name: string | undefined | null): IntelligenceMetaKey | null {
+  const normalized = normalizeMetadataKey(name);
+  if (normalized === 'population' || normalized === 'population_intelligence') return 'population';
+  if (normalized === 'income' || normalized === 'income_intelligence') return 'income';
+  if (normalized === 'real_estate' || normalized === 'real_estate_intelligence') return 'real_estate';
+  return null;
+}
 
 export function translateWithBackendCategoryFallback(key: string): string {
   const translated = t(key);
@@ -24,6 +54,80 @@ export function formatSubcategoryName(name: string | undefined | null): string {
     .split('_')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
+}
+
+export function formatIntelligenceName(name: string | undefined | null): string {
+  if (!name) return t("unknown");
+
+  const normalized = name.trim().toLowerCase().replace(/_/g, ' ');
+  if (normalized === 'population') return t("population-intelligence");
+  if (normalized === 'income') return t("income-intelligence");
+  if (normalized === 'real estate') return t("real-estate-intelligence");
+
+  return formatSubcategoryName(name);
+}
+
+export function formatPurchaseExplanation(
+  explanation: string | undefined | null,
+  itemName?: string | null
+): string {
+  if (!explanation) return '';
+
+  if (explanation.startsWith('New purchase of')) {
+    return t("new-purchase-of", {
+      item: formatIntelligenceName(itemName),
+    });
+  }
+
+  return explanation;
+}
+
+export function formatDatasetDescription(
+  datasetName: string | undefined | null,
+  fallback?: string | null
+): string {
+  const metaKey = getDatasetMetaKey(datasetName);
+  const descriptionKey = metaDataInformation.datasets[metaKey]?.description_key;
+  return descriptionKey ? t(descriptionKey) : fallback || '';
+}
+
+export function formatIntelligenceDescription(
+  intelligenceName: string | undefined | null,
+  fallback?: string | null
+): string {
+  const metaKey = getIntelligenceMetaKey(intelligenceName);
+  const descriptionKey = metaKey ? metaDataInformation.intelligence[metaKey]?.description_key : null;
+  return descriptionKey ? t(descriptionKey) : fallback || '';
+}
+
+export function formatDatasetPurchaseExplanation(
+  explanation: string | undefined | null,
+  datasetName?: string | null
+): string {
+  if (!explanation && !datasetName) return '';
+
+  const isBackendPurchaseText =
+    !explanation ||
+    /^Dataset ['"].+['"] purchased$/i.test(explanation) ||
+    /^New purchase of/i.test(explanation);
+
+  if (isBackendPurchaseText) {
+    return t("dataset-purchase-explanation", {
+      item: formatSubcategoryName(datasetName),
+    });
+  }
+
+  return explanation;
+}
+
+export function formatPurchaseSuccessMessage(
+  itemType: 'dataset' | 'intelligence' | 'report',
+  fallback?: string | null
+): string {
+  if (itemType === 'dataset') return t("dataset-purchase-success-message");
+  if (itemType === 'intelligence') return t("intelligence-purchase-success-message");
+  if (itemType === 'report') return t("report-purchase-success-message");
+  return fallback || '';
 }
 
 /**
@@ -82,11 +186,11 @@ export function processCityData(
 }
 
 export const colorOptions = [
-  { name: 'Red', hex: '#FF5733' },
-  { name: 'Green', hex: '#28A745' },
-  { name: 'Blue', hex: '#007BFF' },
-  { name: 'Yellow', hex: '#FFC107' },
-  { name: 'Black', hex: '#343A40' },
+  { name: 'red', hex: '#FF5733' },
+  { name: 'green', hex: '#28A745' },
+  { name: 'blue', hex: '#007BFF' },
+  { name: 'yellow', hex: '#FFC107' },
+  { name: 'black', hex: '#343A40' },
 ];
 
 export const colorMap = new Map(colorOptions.map(color => [color.hex, color.name]));

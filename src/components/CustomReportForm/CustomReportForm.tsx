@@ -38,6 +38,7 @@ import PhoneVerificationStep from './components/PhoneVerificationStep';
 import { formatBusinessTypeForApi } from './utils/businessTypeApi';
 import ReportAIAssistant from './components/ReportAIAssistant/ReportAIAssistant';
 import { t } from '../../i18n';
+import { translateError } from '../../utils/apiMessages';
 
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -50,30 +51,8 @@ type CurrentLocationUpdate = {
   properties?: { price?: number; avg_order_value?: number };
 };
 
-type ApiErrorShape = {
-  response?: {
-    data?: { message?: string; detail?: string; error?: string } | string;
-  };
-  message?: string;
-};
-
 const extractErrorMessage = (error: unknown): string => {
-  let errorMessage = t("an-unexpected-error-occurred-please-try-again");
-
-  if (error && typeof error === 'object' && 'response' in error) {
-    const apiError = error as ApiErrorShape;
-    const errorData = apiError.response?.data;
-
-    if (errorData && typeof errorData === 'object') {
-      errorMessage = errorData.message || errorData.detail || errorData.error || errorMessage;
-    } else if (typeof errorData === 'string') {
-      errorMessage = errorData;
-    }
-  } else if (error instanceof Error) {
-    errorMessage = error.message.replace(/\s*\(Status:\s*\d+\)/g, '');
-  }
-
-  return errorMessage;
+  return translateError(error, "an-unexpected-error-occurred-please-try-again");
 };
 
 const isPaymentIntentErrorMessage = (errorMessage: string): boolean =>

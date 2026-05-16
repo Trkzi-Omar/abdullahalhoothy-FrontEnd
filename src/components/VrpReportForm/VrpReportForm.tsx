@@ -30,6 +30,7 @@ import {defaults as defaultControls } from 'ol/control/defaults';
 import { useMap, Map, View, TileLayer, VectorLayer } from 'react-openlayers';
 import 'react-openlayers/dist/index.css';
 import { t } from '../../i18n';
+import { translateError } from '../../utils/apiMessages';
 import ExcelIcon from '../../assets/images/excel.svg';
 import PdfIcon from '../../assets/images/pdf.svg';
 import Html5Icon from '../../assets/images/html5.svg';
@@ -271,18 +272,18 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
     try {
       parsed = JSON.parse(geoJsonText);
     } catch {
-      setGeoJsonError('Invalid JSON');
+      setGeoJsonError(t("invalid-json"));
       return;
     }
     const type = parsed.type as string;
     if (type !== 'FeatureCollection' && type !== 'Feature' && type !== 'Polygon') {
-      setGeoJsonError('Must be a GeoJSON FeatureCollection, Feature, or Polygon');
+      setGeoJsonError(t("must-be-a-geojson-featurecollection-feature-or-polygon"));
       return;
     }
     try {
       const fmt = new GeoJSON();
       const features = fmt.readFeatures(parsed, { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' });
-      if (!features.length) { setGeoJsonError('No features found'); return; }
+      if (!features.length) { setGeoJsonError(t("no-features-found")); return; }
       features.forEach(f => f.setGeometryName('draw'));
       drawSource.getFeatures().filter(f => f.getGeometryName() === 'draw').forEach(f => drawSource.removeFeature(f));
       drawSource.addFeatures(features);
@@ -299,7 +300,7 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
       }
       setPanelOpen(false);
     } catch (err) {
-      setGeoJsonError('Could not parse geometry: ' + (err instanceof Error ? err.message : String(err)));
+      setGeoJsonError(`${t("could-not-parse-geometry")}: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -325,18 +326,18 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
       <button
         type="button"
         onClick={panelOpen ? () => setPanelOpen(false) : openPanel}
-        title="Paste GeoJSON polygon"
+        title={t("paste-geojson-polygon")}
         className="absolute top-3 end-3 z-10 bg-white border border-gray-300 rounded-lg shadow px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-1.5"
       >
         <span className="font-mono text-primary">&#123;&#125;</span>
-        {panelOpen ? 'Close' : 'GeoJSON'}
+        {panelOpen ? t("close") : 'GeoJSON'}
       </button>
 
       {/* GeoJSON paste panel — drops down from top-right */}
       {panelOpen && (
         <div className="absolute top-11 end-3 z-10 w-72 bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col overflow-hidden">
           <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-700">Paste GeoJSON polygon</span>
+            <span className="text-xs font-semibold text-gray-700">{t("paste-geojson-polygon")}</span>
             <button type="button" onClick={() => setPanelOpen(false)} className="text-gray-400 hover:text-gray-600">
               <FaTimes className="w-3 h-3" />
             </button>
@@ -353,10 +354,10 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
           )}
           <div className="px-3 py-2 border-t border-gray-100 flex justify-end gap-2">
             <button type="button" onClick={() => { setGeoJsonText(''); setGeoJsonError(''); }}
-              className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1">Clear</button>
+              className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1">{t("clear")}</button>
             <button type="button" onClick={applyGeoJson}
               className="text-xs font-medium bg-primary text-white px-3 py-1 rounded-md hover:bg-primary/90">
-              Apply
+              {t("apply")}
             </button>
           </div>
         </div>
@@ -410,19 +411,19 @@ const INITIAL_VRP_FORM_DATA: Omit<VrpReportData, 'user_id'> & { user_id?: string
 };
 
 const ADVANCED_FORM_FIELDS = [
-  { key: 'num_work_days', label: 'Number of work days', step: 1 },
-  { key: 'departure_hour', label: 'Departure hour (0–23)', step: 1, min: 0, max: 23 },
-  { key: 'max_route_working_minutes', label: 'Max route working minutes', step: 1 },
-  { key: 'osrm_multiplier', label: 'Traffic multiplier', step: 0.1 },
-  { key: 'current_daily_km_per_van', label: 'Current daily km per van', step: 1 },
-  { key: 'weekly_refill_sar', label: 'Weekly refill (SAR)', step: 1 },
-  { key: 'current_stores_per_day', label: 'Current stores per day', step: 1 },
-  { key: 'driver_monthly_salary_sar', label: 'Driver monthly salary (SAR)', step: 100 },
-  { key: 'planner_monthly_salary_sar', label: 'Planner monthly salary (SAR)', step: 100 },
-  { key: 'work_days_per_week', label: 'Work days per week', step: 1 },
-  { key: 'work_days_per_month', label: 'Work days per month', step: 1 },
-  { key: 'avg_revenue_per_store_sar', label: 'Avg revenue per store (SAR)', step: 100 },
-] as Array<{ key: string; label: string; step: number; min?: number; max?: number }>;
+  { key: 'num_work_days', labelKey: 'number-of-work-days', step: 1 },
+  { key: 'departure_hour', labelKey: 'departure-hour-0-23', step: 1, min: 0, max: 23 },
+  { key: 'max_route_working_minutes', labelKey: 'max-route-working-minutes', step: 1 },
+  { key: 'osrm_multiplier', labelKey: 'traffic-multiplier', step: 0.1 },
+  { key: 'current_daily_km_per_van', labelKey: 'current-daily-km-per-van', step: 1 },
+  { key: 'weekly_refill_sar', labelKey: 'weekly-refill-sar', step: 1 },
+  { key: 'current_stores_per_day', labelKey: 'current-stores-per-day', step: 1 },
+  { key: 'driver_monthly_salary_sar', labelKey: 'driver-monthly-salary-sar', step: 100 },
+  { key: 'planner_monthly_salary_sar', labelKey: 'planner-monthly-salary-sar', step: 100 },
+  { key: 'work_days_per_week', labelKey: 'work-days-per-week', step: 1 },
+  { key: 'work_days_per_month', labelKey: 'work-days-per-month', step: 1 },
+  { key: 'avg_revenue_per_store_sar', labelKey: 'avg-revenue-per-store-sar', step: 100 },
+] as Array<{ key: string; labelKey: string; step: number; min?: number; max?: number }>;
 
 const REPORT_FILE_TYPES = [
   { id: "excel", urlKey: "excel_url", icon: ExcelIcon },
@@ -611,7 +612,7 @@ const CustomReportForm = () => {
               {/* Restored from cache banner */}
               {isRestoredFromCache && (
                 <div className="flex items-center justify-between px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
-                  <span>Loaded from your last session</span>
+                  <span>{t("loaded-from-your-last-session")}</span>
                   <button
                     type="button"
                     onClick={() => {
@@ -620,7 +621,7 @@ const CustomReportForm = () => {
                     }}
                     className="ms-3 underline hover:no-underline font-medium"
                   >
-                    Clear
+                    {t("clear")}
                   </button>
                 </div>
               )}
@@ -782,14 +783,14 @@ const CustomReportForm = () => {
 		              onClick={() => setIsAdvancedOpen(v => !v)}
 		              className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 text-sm font-semibold text-gray-700 transition-colors"
 		            >
-		              <span>Advanced Options</span>
+		              <span>{t("advanced-options")}</span>
 		              <FaChevronDown className={`w-4 h-4 transition-transform duration-200 ${isAdvancedOpen ? 'rotate-180' : ''}`} />
 		            </button>
 		            {isAdvancedOpen && (
 		              <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-		                {ADVANCED_FORM_FIELDS.map(({ key, label, step, ...rest }) => (
+		                {ADVANCED_FORM_FIELDS.map(({ key, labelKey, step, ...rest }) => (
 		                  <div key={key} className="space-y-1">
-		                    <label className="block text-xs font-medium text-gray-600">{label}</label>
+		                    <label className="block text-xs font-medium text-gray-600">{t(labelKey)}</label>
 		                    <input
 		                      type="number"
 		                      value={(formData as unknown as Record<string, unknown>)[key] as number ?? ''}
@@ -832,8 +833,7 @@ const CustomReportForm = () => {
 						          	setModalOpen(true);
 						          }
 					          } catch(e) {
-				          	const err = e as {response?: {data?: {detail?: string}}, message?: string};
-				          	const msg = err.response?.data?.detail || err.message || 'Submission failed';
+				          	const msg = translateError(e, 'submission-failed');
 				          	setSubmitError(msg);
 				          	toast.error(msg);
 					          }

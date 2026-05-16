@@ -102,12 +102,18 @@ const RichTextContent: React.FC<RichTextContentProps> = ({ value, className = ''
               <div className="flex flex-col items-center justify-center p-6 text-center bg-gray-50 rounded-md border border-gray-200">
                 <div className="text-4xl mb-2">📊</div>
                 <div className="text-gray-600 font-medium mb-1">
-                  {element.placeholderType
-                    ? `${element.placeholderType.charAt(0).toUpperCase() + element.placeholderType.slice(1)} Chart Placeholder`
-                    :t("chart-placeholder")}
+                  {element.placeholderType === 'info-card'
+                    ? t("demographic-info-card-placeholder")
+                    : element.placeholderType === 'demographic'
+                      ? t("demographic-chart-placeholder")
+                      : element.placeholderType === 'pyramid'
+                        ? t("population-pyramid-placeholder")
+                        : element.placeholderType === 'trend'
+                          ? t("trend-chart-placeholder")
+                          : t("chart-placeholder")}
                 </div>
                 <div className="text-sm text-gray-500">
-                  {element.placeholder ||"This chart will be replaced with actual data later"}
+                  {element.placeholder || t("this-chart-will-be-replaced-with-actual-data-later")}
                 </div>
               </div>
             )}

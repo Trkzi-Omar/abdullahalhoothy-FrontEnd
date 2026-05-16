@@ -2,6 +2,7 @@ import { CustomSegment, CustomSegmentReportResponse } from '../../types';
 import ScrollableSegments from './ScrollableSegments';
 import DetailedSegment from './DetailedSegment';
 import SegmentReportSkeleton from './SegmentReportSkeleton';
+import i18n from '../../i18n';
 
 interface SmartSegmentReportProps {
   segmentReportData: CustomSegmentReportResponse | null;
@@ -18,7 +19,7 @@ function SmartSegmentReport({
 }: SmartSegmentReportProps) {
   const lite_segments =
     (Array.isArray(segmentReportData) ? segmentReportData : [])?.map(segment => ({
-      name: segment.name,
+      name: i18n.language?.startsWith('ar') && segment.name_ar ? segment.name_ar : segment.name,
       icon: segment.icon,
       id: segment.segment_id,
     })) || [];

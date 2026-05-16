@@ -3,7 +3,7 @@ import './EvaluationMetricsStep.css';
 import { CustomReportData, FormErrors, MetricKey } from '../../../types/allTypesAndInterfaces';
 import { getMetricIcon } from '../utils/metricIcons';
 import { BusinessTypeConfig } from '../services/businessMetricsService';
-import { t } from '../../../i18n';
+import i18n, { t } from '../../../i18n';
 
 
 interface EvaluationMetricsStepProps {
@@ -25,6 +25,11 @@ interface MetricItemProps {
   error?: string;
   className?: string;
 }
+
+const metricLabel = (metricKey: string) => {
+  const key = metricKey.replace(/_/g, '-').toLowerCase();
+  return i18n.exists(key) ? t(key) : metricKey.replace(/_/g, ' ');
+};
 
 const MetricItem = ({
   metricKey,
@@ -49,7 +54,7 @@ const MetricItem = ({
             <span className="text-primary me-2">
               {getMetricIcon(metricKey, businessType, businessConfig)}
             </span>
-            <span className="me-1">{metricKey.replace('_', ' ')}</span>
+            <span className="me-1">{metricLabel(metricKey)}</span>
             {businessConfig?.metrics?.[metricKey]?.description && (
               <div className="group relative ms-1">
                 <FaInfoCircle className="text-gray-400 hover:text-primary transition-colors cursor-help w-3.5 h-3.5" />
@@ -184,7 +189,9 @@ export const EvaluationMetricsStep = ({
             ?t("perfect-all-weights-are-balanced")
             : isOver
               ?t("total-exceeds-100-percent-please-reduce-some-values")
-              : `${((1 - metricsSum) * 100).toFixed(0)}% remaining to reach 100%`}
+              : t("remaining-to-reach-100-percent", {
+                  percent: Number(((1 - metricsSum) * 100).toFixed(0)),
+                })}
         </p>
       </div>
 

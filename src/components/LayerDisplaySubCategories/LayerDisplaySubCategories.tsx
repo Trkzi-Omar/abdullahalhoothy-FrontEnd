@@ -179,7 +179,7 @@ const LayerDisplaySubCategories = ({
                     <button
                       key={hex}
                       type="button"
-                      title={name}
+                      title={t(name)}
                       onClick={() => onColorChange(layerIndex, hex)}
                       className={`w-6 h-6 rounded-full border-2 transition-all ${
                         isSelected
@@ -187,7 +187,7 @@ const LayerDisplaySubCategories = ({
                           : 'border-gray-300 hover:border-gray-500'
                       }`}
                       style={{ backgroundColor: hex }}
-                      aria-label={name}
+                      aria-label={t(name)}
                       aria-pressed={isSelected}
                     />
                   );

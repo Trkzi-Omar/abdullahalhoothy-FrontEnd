@@ -275,28 +275,21 @@ const EditorToolbar: React.FC = () => {
     const chartId = `${Date.now()}-${chartType}`;
 
     let phType: 'demographic' | 'pyramid' | 'trend' | 'info-card';
-    let phText: string;
-
     switch (chartType) {
       case 'demographic-chart':
         phType = 'demographic';
-        phText = 'Demographic Chart';
         break;
       case 'population-pyramid':
         phType = 'pyramid';
-        phText = 'Population Pyramid';
         break;
       case 'trend-chart':
         phType = 'trend';
-        phText = 'Trend Chart';
         break;
       case 'demographic-card':
         phType = 'info-card';
-        phText = 'Demographic Info Card';
         break;
       default:
         phType = 'demographic';
-        phText = 'Chart';
         break;
     }
 
@@ -304,7 +297,7 @@ const EditorToolbar: React.FC = () => {
       type: 'chart-container',
       chartId,
       placeholderType: phType,
-      placeholder: `This ${phText} will be replaced with actual data later`,
+      placeholder: t("this-chart-will-be-replaced-with-actual-data-later"),
       children: [{ text: '' }],
     } as CustomElement);
     setShowChartOptions(false);

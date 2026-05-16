@@ -8,6 +8,7 @@ import LoginForm from '../../components/Auth/LoginForm';
 import RegisterForm from '../../components/Auth/RegisterForm';
 import ResetPasswordForm from '../../components/Auth/ResetPasswordForm';
 import { t } from '../../i18n';
+import { translateError } from '../../utils/apiMessages';
 
 
 type AuthMode = 'login' | 'register' | 'reset';
@@ -66,8 +67,7 @@ const Auth = () => {
         await performGoogleLogin(setAuthResponse, tokenResponse.access_token, sourceLocal);
         handleRedirect();
       } catch (e: unknown) {
-        const error = e as { response?: { data?: { detail?: string } }; message?: string };
-        setGoogleError(error.response?.data?.detail || error.message || t("google-login-failed"));
+        setGoogleError(translateError(e, "google-login-failed"));
       }
     },
     onError: () => {

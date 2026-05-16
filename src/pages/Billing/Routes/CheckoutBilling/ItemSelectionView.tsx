@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getYesterdayDate } from '../../../../utils/helperFunctions';
+import {
+  formatDatasetDescription,
+  formatDatasetPurchaseExplanation,
+  formatIntelligenceDescription,
+  formatPurchaseExplanation,
+  getYesterdayDate,
+} from '../../../../utils/helperFunctions';
 import { t } from '../../../../i18n';
 
 
@@ -72,6 +78,18 @@ function ItemSelectionView({
 
   const formatPrice = (value: number) =>
     `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const displayDescription =
+    selectedItem.type === 'dataset'
+      ? formatDatasetDescription(selectedItem.itemKey, selectedItem.description)
+      : selectedItem.type === 'intelligence'
+      ? formatIntelligenceDescription(selectedItem.itemKey, selectedItem.description)
+      : selectedItem.description;
+  const displayExplanation =
+    selectedItem.type === 'dataset'
+      ? formatDatasetPurchaseExplanation(selectedItem.explanation, selectedItem.itemKey)
+      : selectedItem.type === 'intelligence'
+      ? formatPurchaseExplanation(selectedItem.explanation, selectedItem.itemKey)
+      : selectedItem.explanation;
 
   return (
     <div className="flex flex-col h-full w-full">
@@ -97,11 +115,9 @@ function ItemSelectionView({
             <span className="inline-block px-3 py-1 text-xs font-semibold uppercase tracking-wide text-green-700 bg-green-100 rounded-full">{t("owned")}</span>
           )}
         </div>
-        {selectedItem.explanation && (
+        {displayExplanation && (
           <p className="mt-2 text-sm text-gray-600 italic">
-            {selectedItem.explanation.startsWith("New purchase of") 
-              ? t("new-purchase-of", { item: selectedItem.name })
-              : selectedItem.explanation}
+            {displayExplanation}
           </p>
         )}
         {selectedItem.expiration && (
@@ -148,7 +164,7 @@ function ItemSelectionView({
           <div className="prose max-w-none">
             <p
               className="text-gray-700 leading-relaxed whitespace-pre-line"
-              dangerouslySetInnerHTML={{ __html: selectedItem.description }}
+              dangerouslySetInnerHTML={{ __html: displayDescription }}
             ></p>
           </div>
         ) : (

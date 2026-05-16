@@ -80,7 +80,7 @@ const Layout = () => {
           <Route path="wallet/add" element={<AddFunds />} />
         </Route>
         <Route path={'/organization'} element={<OrganizationLayout />}>
-          <Route path="" element={<CommingSoon data={'Organization Features'} />} />
+          <Route path="" element={<CommingSoon translationKey="organization-features-coming-soon" />} />
         </Route>
         <Route path={'/billing'} element={<BillingLayout />}>
           <Route path="" element={<CheckoutBilling Name="area" />} />
@@ -107,6 +107,6 @@ const Layout = () => {
 
 export default Layout;
 
-const CommingSoon = ({ data }: { data: string }) => {
-  return <p className="h-full flex justify-center items-center text-4xl">{data}{' '}{t("comming-soon")}</p>;
+const CommingSoon = ({ translationKey }: { translationKey: string }) => {
+  return <p className="h-full flex justify-center items-center text-4xl">{t(translationKey)}</p>;
 };

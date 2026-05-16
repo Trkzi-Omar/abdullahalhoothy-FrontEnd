@@ -1,13 +1,19 @@
 import React, { useCallback, lazy, Suspense } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { MdClose, MdCheckCircleOutline, MdErrorOutline } from 'react-icons/md';
-import { formatSubcategoryName } from '../../../../utils/helperFunctions';
+import {
+  formatDatasetPurchaseExplanation,
+  formatIntelligenceName,
+  formatPurchaseExplanation,
+  formatSubcategoryName,
+} from '../../../../utils/helperFunctions';
 import { useBillingContext, type ReportTier } from '../../../../context/BillingContext';
 import { useUIContext } from '../../../../context/UIContext';
 import { useAuth, isGuestUser } from '../../../../context/AuthContext';
 import apiRequest from '../../../../services/apiRequest';
 import urls from '../../../../urls.json';
 import { t } from '../../../../i18n';
+import { translateError } from '../../../../utils/apiMessages';
 
 
 const PurchaseSuccessModal = lazy(() => import('./PurchaseSuccessModal'));
@@ -135,31 +141,7 @@ function CheckoutModal({
       // Success - error will be cleared and prices updated
     } catch (error) {
       console.error('Failed to apply promotion code:', error);
-
-      let errorMessage = t("invalid-voucher-code");
-
-      if (error && typeof error === 'object' && 'response' in error) {
-        const apiError = error as {
-          response?: { data?: { message?: string; detail?: string; error?: string } | string };
-        };
-        const errorData = apiError.response?.data;
-
-        if (errorData && typeof errorData === 'object') {
-          const obj = errorData as Record<string, unknown>;
-          const msg =
-            typeof obj.message === 'string' ? obj.message :
-            typeof obj.detail === 'string' ? obj.detail :
-            typeof obj.error === 'string' ? obj.error : null;
-          if (msg) errorMessage = msg;
-        } else if (typeof errorData === 'string') {
-          errorMessage = errorData;
-        }
-      } else if (error instanceof Error) {
-        const msg = error.message.replace(/\s*\(Status:\s*\d+\)/g, '').trim();
-        if (msg && msg !== '[object Object]') errorMessage = msg;
-      }
-
-      setPromoError(errorMessage);
+      setPromoError(translateError(error, "invalid-voucher-code"));
     } finally {
       setIsApplyingPromo(false);
     }
@@ -244,29 +226,7 @@ function CheckoutModal({
       onClose();
     } catch (error) {
       console.error('Purchase failed:', error);
-
-      let errorMessage = t("an-error-occurred-while-processing-your-purchase");
-
-      if (error && typeof error === 'object' && 'response' in error) {
-        const apiError = error as {
-          response?: { data?: { message?: string; detail?: string; error?: string } | string };
-        };
-        const errorData = apiError.response?.data;
-
-        if (errorData && typeof errorData === 'object') {
-          if (errorData.message) {
-            errorMessage = errorData.message;
-          } else if (errorData.detail) {
-            errorMessage = errorData.detail;
-          } else if (errorData.error) {
-            errorMessage = errorData.error;
-          }
-        } else if (typeof errorData === 'string') {
-          errorMessage = errorData;
-        }
-      } else if (error instanceof Error) {
-        errorMessage = error.message.replace(/\s*\(Status:\s*\d+\)/g, '');
-      }
+      const errorMessage = translateError(error, "an-error-occurred-while-processing-your-purchase");
 
       openModal(
         <div className="flex flex-col items-center justify-center p-8 text-center">
@@ -396,12 +356,15 @@ function CheckoutModal({
                             <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("area")}</span>
                             <span className="text-sm text-gray-300">•</span>
                             <span className="text-sm text-gray-500">
-                              {item.intelligence_name ||"Unknown"}
+                              {formatIntelligenceName(item.intelligence_name)}
                             </span>
                           </div>
                           <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                            {item.intelligence_name ||"Unknown"}{' '}{t("intelligence")}</h3>
-                          <p className="text-sm text-gray-500">{item.explanation}</p>
+                            {formatIntelligenceName(item.intelligence_name)}
+                          </h3>
+                          <p className="text-sm text-gray-500">
+                            {formatPurchaseExplanation(item.explanation, item.intelligence_name)}
+                          </p>
                         </div>
                         <div className="flex flex-col items-end gap-2">
                           {item.free_as_part_of_package ? (
@@ -440,7 +403,9 @@ function CheckoutModal({
                           <h3 className="text-lg font-semibold text-gray-900 mb-1">
                             {formatSubcategoryName(item.dataset_name || '')}
                           </h3>
-                          <p className="text-sm text-gray-500">{item.explanation}</p>
+                          <p className="text-sm text-gray-500">
+                            {formatDatasetPurchaseExplanation(item.explanation, item.dataset_name)}
+                          </p>
                         </div>
                         <div className="flex flex-col items-end gap-2">
                           {item.free_as_part_of_package ? (
@@ -507,10 +472,13 @@ function CheckoutModal({
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("area")}</span>
                           <span className="text-sm text-gray-300">•</span>
-                          <span className="text-sm text-gray-500">{service}</span>
+                          <span className="text-sm text-gray-500">
+                            {formatIntelligenceName(service)}
+                          </span>
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                          {service}{' '}{t("intelligence")}</h3>
+                          {formatIntelligenceName(service)}
+                        </h3>
                         <p className="text-sm text-gray-500">
                           {isCalculatingCost ?t("calculating-price") :t("unable-to-calculate-price-please-try-again")}
                         </p>

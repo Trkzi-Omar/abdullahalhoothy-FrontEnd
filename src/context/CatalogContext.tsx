@@ -28,6 +28,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Descendant } from 'slate';
 import { useIntelligenceViewport } from './IntelligenceViewPortContext';
 import { t } from '../i18n';
+import { translateApiMessage } from '../utils/apiMessages';
 
 
 const defaultCaseStudyContent: Descendant[] = [
@@ -578,7 +579,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         } else {
           callData(res.data.data);
         }
-        setLastGeoMessageRequest(res.data.message);
+        setLastGeoMessageRequest(translateApiMessage(res.data.message, "request-received"));
         setLastGeoIdRequest(res.data.request_id || res.data.id);
       }
     } catch (error) {
@@ -839,7 +840,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         isFormData: true,
       });
       setSaveResponse(res.data.data);
-      setSaveResponseMsg(res.data.message);
+      setSaveResponseMsg(translateApiMessage(res.data.message, "request-received"));
       setSaveReqId(res.data.request_id || res.data.id);
       setFormStage('catalog');
       setIsBenchmarkControlOpen(false);

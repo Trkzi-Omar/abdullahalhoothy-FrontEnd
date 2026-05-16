@@ -2,7 +2,9 @@ import React from 'react';
 import { FaFile } from 'react-icons/fa';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { CustomSegment } from '../../types';
-import { t } from '../../i18n';
+import i18n, { t } from '../../i18n';
+import { formatSubcategoryName } from '../../utils/helperFunctions';
+import { toTranslationKey } from '../../utils/i18nHelpers';
 
 
 interface DetailedSegmentProps {
@@ -20,6 +22,12 @@ function DetailedSegment({
     'who_they_are' | 'evaluation_metrics' | 'how_they_live'
   >('who_they_are');
   const selectedSegment = segmentReportData?.find(seg => seg.segment_id === selectedSegmentId);
+  const isArabic = i18n.language?.startsWith('ar');
+
+  const translateValue = (value: string) => {
+    const key = toTranslationKey(value);
+    return i18n.exists(key) ? t(key) : value;
+  };
 
   if (!selectedSegment)
     return (
@@ -35,6 +43,13 @@ function DetailedSegment({
         </div>
       </div>
     );
+
+  const segmentName =
+    isArabic && selectedSegment.name_ar ? selectedSegment.name_ar : selectedSegment.name;
+  const segmentDescription =
+    isArabic && selectedSegment.description_ar
+      ? selectedSegment.description_ar
+      : selectedSegment.description;
 
   const handlePrevious = () => {
     if (!segmentReportData) return;
@@ -77,10 +92,10 @@ function DetailedSegment({
                 .padStart(2, '0')}
             </div>
             <h2 className="text-2xl font-bold text-[#582c83]">
-              {selectedSegment.name}
+              {segmentName}
             </h2>
           </div>
-          <p className="text-gray-700 text-sm leading-relaxed">{selectedSegment.description}</p>
+          <p className="text-gray-700 text-sm leading-relaxed">{segmentDescription}</p>
         </div>
 
         {/* Right Section - Tabs and Content (2/3 of space) */}
@@ -140,7 +155,7 @@ function DetailedSegment({
                 {/* Description Section */}
                 <div className="bg-gray-50 rounded-lg p-6">
                   <p className="leading-relaxed text-gray-700">
-                    {selectedSegment.description}{t("this-group-typically-falls-within-the")}{' '}
+                    {segmentDescription}{t("this-group-typically-falls-within-the")}{' '}
                     <span className="font-semibold text-gray-900">
                       {selectedSegment.demographic_profile.age_range}
                     </span>{' '}{t("age-range-with-a-household-size-of")}{' '}
@@ -148,10 +163,10 @@ function DetailedSegment({
                       {selectedSegment.demographic_profile.household_size}
                     </span>{t("their-lifestyle-is-described-as")}{' '}
                     <span className="font-semibold text-gray-900">
-                      {selectedSegment.demographic_profile.lifestyle}
+                      {translateValue(selectedSegment.demographic_profile.lifestyle)}
                     </span>{t("and-they-tend-to-spend-on")}{' '}
                     <span className="font-semibold text-gray-900">
-                      {selectedSegment.demographic_profile.spending_habits}
+                      {translateValue(selectedSegment.demographic_profile.spending_habits)}
                     </span>
                     .
                   </p>
@@ -163,7 +178,7 @@ function DetailedSegment({
                   <div className="bg-gradient-to-br from-white to-purple-50 border border-purple-100 rounded-lg p-4">
                     <div className="text-[#582c83] text-xs font-semibold mb-2 tracking-wide uppercase">{t("average-income")}</div>
                     <div className="text-gray-900 font-bold text-lg capitalize">
-                      {selectedSegment.demographic_profile.income}
+                      {translateValue(selectedSegment.demographic_profile.income)}
                     </div>
                   </div>
 
@@ -197,7 +212,7 @@ function DetailedSegment({
                       >
                         <div className="relative">
                           <div className="text-[#582c83] text-xs font-bold mb-3 tracking-wider uppercase">
-                            {key.replace(/_/g, ' ')}
+                            {translateValue(key)}
                           </div>
                           <div className="flex items-baseline gap-2">
                             <div className="text-4xl font-bold text-gray-900 group-hover:text-[#582c83] transition-colors">
@@ -257,7 +272,7 @@ function DetailedSegment({
                                 key={index}
                                 className="px-4 py-2 bg-white border border-blue-200 text-blue-700 rounded-lg text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
                               >
-                                {category}
+                                {formatSubcategoryName(category)}
                               </span>
                             )
                           )}
@@ -295,7 +310,7 @@ function DetailedSegment({
                                 key={index}
                                 className="px-4 py-2 bg-white border border-green-200 text-green-700 rounded-lg text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
                               >
-                                {category}
+                                {formatSubcategoryName(category)}
                               </span>
                             )
                           )}

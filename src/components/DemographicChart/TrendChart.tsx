@@ -28,13 +28,15 @@ interface TrendChartProps {
 }
 
 const TrendChart: React.FC<TrendChartProps> = ({
-  title = 'Demographic Trends',
+  title,
   data = defaultData,
   className = '',
 }) => {
+  const resolvedTitle = title ?? t("demographic-trends");
+
   return (
     <div className={`bg-white p-4 rounded-lg shadow-md ${className}`}>
-      <h3 className="text-xl font-semibold text-gem-dark mb-4">{title}</h3>
+      <h3 className="text-xl font-semibold text-gem-dark mb-4">{resolvedTitle}</h3>
       <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
@@ -43,7 +45,7 @@ const TrendChart: React.FC<TrendChartProps> = ({
             <YAxis
               domain={[0, 100]}
               label={{
-                value: 'Percentage (%)',
+                value: t("percentage-symbol"),
                 angle: -90,
                 position: 'insideLeft',
                 style: { textAnchor: 'middle' },
@@ -54,7 +56,7 @@ const TrendChart: React.FC<TrendChartProps> = ({
             <Line
               type="monotone"
               dataKey="youth"
-              name="Youth (0-14)"
+              name={t("youth-0-14")}
               stroke="#8884d8"
               strokeWidth={2}
               activeDot={{ r: 8 }}
@@ -62,7 +64,7 @@ const TrendChart: React.FC<TrendChartProps> = ({
             <Line
               type="monotone"
               dataKey="workingAge"
-              name="Working Age (15-64)"
+              name={t("working-age-15-64")}
               stroke="#115740"
               strokeWidth={2}
               activeDot={{ r: 8 }}
@@ -70,7 +72,7 @@ const TrendChart: React.FC<TrendChartProps> = ({
             <Line
               type="monotone"
               dataKey="elderly"
-              name="Elderly (65+)"
+              name={t("elderly-65-plus")}
               stroke="#ff7300"
               strokeWidth={2}
               activeDot={{ r: 8 }}

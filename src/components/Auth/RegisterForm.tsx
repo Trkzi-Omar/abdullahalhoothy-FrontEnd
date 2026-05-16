@@ -14,6 +14,7 @@ import { useOTP } from '../../context/OTPContext';
 import { PhoneInput } from '../common/PhoneInput';
 import styles from '../../pages/Auth/Auth.module.css';
 import { t } from '../../i18n';
+import { translateError } from '../../utils/apiMessages';
 
 
 interface RegisterFormProps {
@@ -55,8 +56,7 @@ export const RegisterForm = ({ onSuccess, source }: RegisterFormProps) => {
       logout();
       onSuccess();
     } catch (e: unknown) {
-      const error = e as { message?: string };
-      const msg = error.message || t("registration-failed-please-try-again");
+      const msg = translateError(e, "registration-failed-please-try-again");
       setError(msg);
       toast.error(msg, { duration: 3000 });
     } finally {

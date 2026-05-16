@@ -64,10 +64,19 @@ interface RichTextEditorProps {
 const RichTextEditor: React.FC<RichTextEditorProps> = ({
   value,
   onChange,
-  placeholder = 'Start typing...',
+  placeholder,
   className = '',
 }) => {
+  const resolvedPlaceholder = placeholder ?? t("start-typing");
   const editor = useMemo(() => withHistory(withReact(createEditor())), []);
+
+  const getChartPlaceholderTitle = useCallback((placeholderType?: CustomElement['placeholderType']) => {
+    if (placeholderType === 'info-card') return t("demographic-info-card-placeholder");
+    if (placeholderType === 'demographic') return t("demographic-chart-placeholder");
+    if (placeholderType === 'pyramid') return t("population-pyramid-placeholder");
+    if (placeholderType === 'trend') return t("trend-chart-placeholder");
+    return t("chart-placeholder");
+  }, []);
 
   const renderElement = useCallback((props: RenderElementProps) => {
     const elementStyle: React.CSSProperties = {};
@@ -110,14 +119,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 <div className="flex flex-col items-center justify-center p-6 text-center">
                   <div className="text-4xl mb-2">📊</div>
                   <div className="text-gray-600 font-medium mb-1">
-                    {props.element.placeholderType ==="info-card"
-                      ?t("demographic-info-card-placeholder")
-                      : props.element.placeholderType
-                        ? `${props.element.placeholderType.charAt(0).toUpperCase() + props.element.placeholderType.slice(1)} Chart Placeholder`
-                        :t("chart-placeholder")}
+                    {getChartPlaceholderTitle(props.element.placeholderType)}
                   </div>
                   <div className="text-sm text-gray-500">
-                    {props.element.placeholder ||"This chart will be replaced with actual data later"}
+                    {props.element.placeholder || t("this-chart-will-be-replaced-with-actual-data-later")}
                   </div>
                 </div>
               )}
@@ -154,7 +159,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           </p>
         );
     }
-  }, []);
+  }, [getChartPlaceholderTitle]);
 
   const renderLeaf = useCallback((props: RenderLeafProps) => {
     let { children } = props;
@@ -202,7 +207,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           `}
           renderElement={renderElement}
           renderLeaf={renderLeaf}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
         />
       </Slate>
     </div>

@@ -319,7 +319,7 @@ const SetAttributeStep = ({
                         : 'bg-white text-gray-700 border-gray-200 hover:border-primary hover:text-primary'
                       } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                   >
-                    {option}
+                    {t(value)}
                   </button>
                 );
               })}

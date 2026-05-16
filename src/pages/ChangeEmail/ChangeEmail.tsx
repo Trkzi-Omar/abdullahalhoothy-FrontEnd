@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import urls from './../../urls.json';
 import apiRequest from '../../services/apiRequest';
 import { t } from '../../i18n';
+import { translateError } from '../../utils/apiMessages';
 
 
 const ChangeEmail: React.FC = () => {
@@ -59,9 +60,9 @@ const ChangeEmail: React.FC = () => {
       toast.success(t("email-changed-successfully-please-use-your-new-email-next-time-you-sign-in"));
       navigate('/profile');
     } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      setError(err);
-      toast.error(err.message);
+      const message = translateError(error, "request-failed");
+      setError(new Error(message));
+      toast.error(message);
     } finally {
       setLoading(false);
     }

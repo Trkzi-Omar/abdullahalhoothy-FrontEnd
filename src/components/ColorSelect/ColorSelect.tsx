@@ -118,7 +118,7 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
           } ${showLoaderTopup ? styles.disabledOption : ''}`}
           onClick={e => handleOptionClick(name, hex, e)}
         >
-          {sidebarMode !=="catalog" && <span className="me-2.5">{name}</span>}
+          {sidebarMode !=="catalog" && <span className="me-2.5">{t(name)}</span>}
           <span
             className={`w-[14px] h-[14px] rounded-full absolute start-[80px]  ${
               sidebarMode === 'catalog' ? 'w-[14px] h-[14px] static' : ''
@@ -148,7 +148,7 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
             style={{ backgroundColor: isGradient ? 'transparent' : colorHex }}
           />
           <span className="font-medium">
-            {isGradient ?t("custom") : colorName ||"Select a color"}
+            {isGradient ?t("custom") : colorName ? t(colorName) : t("select-a-color")}
           </span>
         </div>
         <MdKeyboardArrowDown className={`text-2xl ${isOpen ? 'rotate-180' : ''}`} />

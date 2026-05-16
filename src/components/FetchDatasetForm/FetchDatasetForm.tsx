@@ -29,6 +29,7 @@ import { useDatasetPrices } from '../../hooks/useDatasetPrices';
 import { toast } from 'sonner';
 
 import { t } from '../../i18n';
+import { translateError } from '../../utils/apiMessages';
 
 const DRAFT_KEY_PREFIX = 'fetchDatasetForm.draft.v1.';
 
@@ -901,7 +902,7 @@ const FetchDatasetForm = () => {
 
   useEffect(() => {
     if (isError) {
-      toast.error(isError.message);
+      toast.error(translateError(isError, 'request-failed'));
     }
   }, [isError]);
 

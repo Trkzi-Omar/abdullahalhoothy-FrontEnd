@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import apiRequest from '../services/apiRequest';
 import urls from '../urls.json';
 import { t } from '../i18n';
+import { translateError } from '../utils/apiMessages';
 import {
   OTPChannel,
   OTPConfig,
@@ -143,8 +144,7 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         cooldownTimerRef.current = null;
       }
       
-      const apiError = error as { message?: string };
-      const errorMessage = apiError.message || t("failed-to-send-otp-please-try-again");
+      const errorMessage = translateError(error, "failed-to-send-otp-please-try-again");
       setState(prev => ({
         ...prev,
         status: 'error' as OTPStatus,
@@ -205,7 +205,7 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Check for 404 (invalid code)
       const errorMessage = apiError.response?.status === 404
         ? t("invalid-verification-code-please-try-again")
-        : apiError.message || t("verification-failed-please-try-again");
+        : translateError(error, "verification-failed-please-try-again");
       
       setState(prev => ({
         ...prev,

@@ -9,6 +9,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { t } from '../../i18n';
 
 const demoData = [
   { ageGroup: '0-14', male: 10, female: 9 },
@@ -27,13 +28,15 @@ interface DemographicChartProps {
 }
 
 const DemographicChart: React.FC<DemographicChartProps> = ({
-  title = 'Population Demographics',
+  title,
   data = demoData,
   className = '',
 }) => {
+  const resolvedTitle = title ?? t("population-demographics");
+
   return (
     <div className={`bg-white p-4 rounded-lg shadow-md ${className}`}>
-      <h3 className="text-xl font-semibold text-gem-dark mb-4">{title}</h3>
+      <h3 className="text-xl font-semibold text-gem-dark mb-4">{resolvedTitle}</h3>
       <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
@@ -46,8 +49,8 @@ const DemographicChart: React.FC<DemographicChartProps> = ({
             <YAxis dataKey="ageGroup" type="category" />
             <Tooltip formatter={value => `${value}%`} />
             <Legend />
-            <Bar dataKey="male" name="Male" fill="#115740" />
-            <Bar dataKey="female" name="Female" fill="#28a745" />
+            <Bar dataKey="male" name={t("male")} fill="#115740" />
+            <Bar dataKey="female" name={t("female")} fill="#28a745" />
           </BarChart>
         </ResponsiveContainer>
       </div>

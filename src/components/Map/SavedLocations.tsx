@@ -691,17 +691,17 @@ const SavedLocations: React.FC = () => {
               <p class="text-gray-600 mb-3">${measurement.description}</p>
               <div class="text-sm">
                 <div class="flex justify-between mb-1">
-                  <b>Distance:</b>
+                  <b>${t("distance")}:</b>
                   <span>${measurement.distance.toFixed(2)} km</span>
                 </div>
                 <div class="flex justify-between mb-3">
-                  <b>Duration:</b>
+                  <b>${t("duration")}:</b>
                   <span>${measurement.duration} min</span>
                 </div>
               </div>
               <div class="mt-2 w-full flex justify-end">
                 <button class="delete-measurement text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded" data-id="${measurement.id}">
-                  Delete
+                  ${t("delete")}
                 </button>
               </div>
             `;
@@ -760,17 +760,17 @@ const SavedLocations: React.FC = () => {
         <p class="text-gray-600 mb-3">${measurement.description}</p>
         <div class="text-sm">
           <div class="flex justify-between mb-1">
-            <b>Distance:</b>
+            <b>${t("distance")}:</b>
             <span>${measurement.distance.toFixed(2)} km</span>
           </div>
           <div class="flex justify-between mb-3">
-            <b>Duration:</b>
+            <b>${t("duration")}:</b>
             <span>${measurement.duration} min</span>
           </div>
         </div>
         <div class="mt-2 w-full flex justify-end">
           <button class="delete-measurement text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded" data-id="${measurement.id}">
-            Delete
+            ${t("delete")}
           </button>
         </div>
       `;

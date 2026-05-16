@@ -1,6 +1,14 @@
 import React from 'react';
 import { MdCheckCircleOutline } from 'react-icons/md';
-import { formatSubcategoryName } from '../../../../utils/helperFunctions';
+import {
+  formatDatasetDescription,
+  formatDatasetPurchaseExplanation,
+  formatIntelligenceName,
+  formatIntelligenceDescription,
+  formatPurchaseExplanation,
+  formatPurchaseSuccessMessage,
+  formatSubcategoryName,
+} from '../../../../utils/helperFunctions';
 import type {
   DatasetItem,
   IntelligenceItem,
@@ -59,7 +67,7 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                      {purchaseData.report.message}
+                      {formatPurchaseSuccessMessage('report', purchaseData.report.message)}
                     </p>
                   </div>
                   <div className="text-end ms-4">
@@ -84,12 +92,19 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <h4 className="text-base font-semibold text-gray-900 mb-2">
-                          {item.intelligence.intelligence_name}{' '}{t("intelligence")}</h4>
+                          {formatIntelligenceName(item.intelligence.intelligence_name)}
+                        </h4>
                         <p className="text-sm text-gray-600 mb-2">
-                          {item.intelligence.description}
+                          {formatIntelligenceDescription(
+                            item.intelligence.intelligence_name,
+                            item.intelligence.description
+                          )}
                         </p>
                         <p className="text-xs text-gray-500 italic">
-                          {item.intelligence.explanation}
+                          {formatPurchaseExplanation(
+                            item.intelligence.explanation,
+                            item.intelligence.intelligence_name
+                          )}
                         </p>
                         {item.intelligence.expiration && (
                           <p className="text-xs text-gray-500 mt-2">{t("expires")}{' '}{new Date(item.intelligence.expiration).toLocaleDateString()}
@@ -108,7 +123,7 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
                     </div>
                     <div className="mt-3 pt-3 border-t border-gray-200">
                       <p className="text-sm text-gray-700 bg-blue-50 border border-blue-100 rounded-md p-3">
-                        {item.message}
+                        {formatPurchaseSuccessMessage('intelligence', item.message)}
                       </p>
                     </div>
                   </div>
@@ -134,8 +149,18 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
                         <h4 className="text-base font-semibold text-gray-900 mb-2">
                           {formatSubcategoryName(item.dataset.dataset_name)}
                         </h4>
-                        <p className="text-sm text-gray-600 mb-2">{item.dataset.description}</p>
-                        <p className="text-xs text-gray-500 italic">{item.dataset.explanation}</p>
+                        <p className="text-sm text-gray-600 mb-2">
+                          {formatDatasetDescription(
+                            item.dataset.dataset_name,
+                            item.dataset.description
+                          )}
+                        </p>
+                        <p className="text-xs text-gray-500 italic">
+                          {formatDatasetPurchaseExplanation(
+                            item.dataset.explanation,
+                            item.dataset.dataset_name
+                          )}
+                        </p>
                         {item.dataset.expiration && (
                           <p className="text-xs text-gray-500 mt-2">{t("expires")}{' '}{new Date(item.dataset.expiration).toLocaleDateString()}
                           </p>
@@ -153,7 +178,7 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
                     </div>
                     <div className="mt-3 pt-3 border-t border-gray-200">
                       <p className="text-sm text-gray-700 bg-blue-50 border border-blue-100 rounded-md p-3">
-                        {item.message}
+                        {formatPurchaseSuccessMessage('dataset', item.message)}
                       </p>
                     </div>
                   </div>

@@ -5,6 +5,7 @@ import { FaPhone, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import apiRequest from '../../../services/apiRequest';
 import urls from '../../../urls.json';
 import { t } from '../../../i18n';
+import { translateError } from '../../../utils/apiMessages';
 
 
 interface PhoneVerificationStepProps {
@@ -79,8 +80,7 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
       setStep('otp');
       toast.success(t("verification-code-sent-to-your-phone"));
     } catch (err: unknown) {
-      const error = err as { message?: string };
-      const errorMessage = error.message || t("failed-to-send-verification-code-please-try-again");
+      const errorMessage = translateError(err, "failed-to-send-verification-code-please-try-again");
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -123,7 +123,7 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
       // Check for 404 (invalid code)
       const errorMessage = error.response?.status === 404
         ? t("invalid-verification-code-please-try-again")
-        : error.message || t("verification-failed-please-try-again");
+        : translateError(err, "verification-failed-please-try-again");
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -319,4 +319,3 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
 };
 
 export default PhoneVerificationStep;
-

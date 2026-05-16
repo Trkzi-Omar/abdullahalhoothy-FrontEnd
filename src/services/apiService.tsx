@@ -2,6 +2,7 @@
 import axios, { AxiosInstance } from 'axios';
 import urls from '../urls.json';
 import { t } from '../i18n';
+import { translateApiMessage, translateError } from '../utils/apiMessages';
 
 const baseUrl = urls.REACT_APP_API_URL;
 
@@ -53,7 +54,7 @@ export async function HttpReq<T>(
     const data: T = response.data.data || response.data;
 
     setResData(data);
-    setResMessage(message);
+    setResMessage(translateApiMessage(message, "request-received"));
     setResId(request_id);
     setLoading(false);
     setError(null);
@@ -63,6 +64,6 @@ export async function HttpReq<T>(
     setResMessage('');
     setResId('');
     setLoading(false);
-    setError(fetchError instanceof Error ? fetchError : new Error(String(fetchError)));
+    setError(new Error(translateError(fetchError, "request-failed")));
   }
 }

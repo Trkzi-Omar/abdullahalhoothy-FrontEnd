@@ -12,10 +12,15 @@ import { toast } from 'sonner';
 import InlinePaymentMethod from '../CustomReportForm/components/InlinePaymentMethod';
 import PhoneVerificationStep from '../CustomReportForm/components/PhoneVerificationStep';
 import {
+  formatDatasetDescription,
+  formatDatasetPurchaseExplanation,
+  formatIntelligenceName,
+  formatIntelligenceDescription,
   formatSubcategoryName,
   translateWithBackendCategoryFallback,
 } from '../../utils/helperFunctions';
 import { t } from '../../i18n';
+import { translateError } from '../../utils/apiMessages';
 import metaDataInformation from '../../data/metaDataInformation.json';
 
 
@@ -46,7 +51,7 @@ function resolveIntelligenceMeta(item: IntelligencePurchaseItem): {
     .toLowerCase() as keyof typeof metaDataInformation.intelligence;
   const meta = metaDataInformation.intelligence[intelKey];
   return {
-    description: item.description ?? (meta ? t(meta.description_key) : ''),
+    description: formatIntelligenceDescription(item.intelligence_name, item.description),
     data_variables:
       item.data_variables ??
       (meta
@@ -222,28 +227,7 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
         onClose();
       }, 1500);
     } catch (err: unknown) {
-      let errorMessage = t("an-error-occurred-while-processing-your-purchase");
-
-      if (err && typeof err === 'object' && 'response' in err) {
-        const apiError = err as {
-          response?: { data?: { message?: string; detail?: string; error?: string } | string };
-        };
-        const errorData = apiError.response?.data;
-
-        if (errorData && typeof errorData === 'object') {
-          if (errorData.message) {
-            errorMessage = errorData.message;
-          } else if (errorData.detail) {
-            errorMessage = errorData.detail;
-          } else if (errorData.error) {
-            errorMessage = errorData.error;
-          }
-        } else if (typeof errorData === 'string') {
-          errorMessage = errorData;
-        }
-      } else if (err instanceof Error) {
-        errorMessage = err.message.replace(/\s*\(Status:\s*\d+\)/g, '');
-      }
+      const errorMessage = translateError(err, "an-error-occurred-while-processing-your-purchase");
 
       // Route to inline flows based on error type
       const lowerError = errorMessage.toLowerCase();
@@ -422,12 +406,12 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
                       const itemName = isDatasetKind ? item.dataset_name : item.intelligence_name;
                       const heading = isDatasetKind
                         ? formatSubcategoryName(itemName)
-                        : `${itemName} ${t('intelligence')}`;
+                        : formatIntelligenceName(itemName);
                       const intelligenceMeta = !isDatasetKind
                         ? resolveIntelligenceMeta(item)
                         : null;
                       const description = isDatasetKind
-                        ? item.description
+                        ? formatDatasetDescription(item.dataset_name, item.description)
                         : intelligenceMeta?.description;
                       const dataVariables = isDatasetKind
                         ? item.data_variables
@@ -446,7 +430,12 @@ export const IntelligencePaywallModal: React.FC<IntelligencePaywallModalProps> =
                               )}
                               {item.explanation && (
                                 <p className="text-xs text-gray-500 mt-1 italic">
-                                  {item.explanation}
+                                  {isDatasetKind
+                                    ? formatDatasetPurchaseExplanation(
+                                        item.explanation,
+                                        item.dataset_name
+                                      )
+                                    : item.explanation}
                                 </p>
                               )}
                               {item.expiration && (

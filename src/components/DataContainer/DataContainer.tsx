@@ -12,6 +12,7 @@ import { useLayerContext } from '../../context/LayerContext';
 import CampaignPage from '../../pages/Campaign/campaign_home';
 import { Spinner } from '../common';
 import { t } from '../../i18n';
+import { translateApiMessage } from '../../utils/apiMessages';
 
 import Modal from '../common/Modal';
 
@@ -119,7 +120,7 @@ function DataContainer() {
           body: body,
         });
         setUserLayersData(res.data.data);
-        setResMessage(res.data.message);
+        setResMessage(translateApiMessage(res.data.message, "request-received"));
         setResId(res.data.request_id);
       } catch (error) {
         setError(error instanceof Error ? error : new Error(String(error)));
@@ -140,7 +141,7 @@ function DataContainer() {
           body: body,
         });
         setUserCatalogsData(res.data.data);
-        setResMessage(res.data.message);
+        setResMessage(translateApiMessage(res.data.message, "request-received"));
         setResId(res.data.request_id);
       } catch (error) {
         setError(error instanceof Error ? error : new Error(String(error)));
@@ -198,7 +199,7 @@ function DataContainer() {
           body: { catalogue_dataset_id: selectedItem.id },
         });
         setGeoPoints(res.data.data);
-        setWsResMessage(res.data.message);
+        setWsResMessage(translateApiMessage(res.data.message, "request-received"));
         setWsResId(res.data.request_id);
         setWsResLoading(false);
         closeModal();
@@ -431,7 +432,7 @@ function DataContainer() {
 											      const updatedGeoPoints = prevGeoPoints.slice().concat(data);
 											      return updatedGeoPoints;
 											    });
-									        setResMessage(res.data.message);
+									        setResMessage(translateApiMessage(res.data.message, "request-received"));
 									        setResId(res.data.request_id);
 									        closeModal();
 									        console.log('res', res);
@@ -523,7 +524,7 @@ function DataContainer() {
 		            			name="description"
 		            			value={formData["description"]} />
 		            		*/}
-		            		<button className="border px-4 py-2 hover:border-black">{t("Submit")}</button>
+		            		<button className="border px-4 py-2 hover:border-black">{t("submit")}</button>
 		            	</form>
 	            	</Modal>
 	            </div>

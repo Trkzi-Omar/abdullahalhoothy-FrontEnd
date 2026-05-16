@@ -9,6 +9,7 @@ import {
   passwordSchema,
 } from '../../utils/auth.validation';
 import { t } from '../../i18n';
+import { translateError } from '../../utils/apiMessages';
 
 
 const ChangePassword: React.FC = () => {
@@ -79,7 +80,7 @@ const ChangePassword: React.FC = () => {
         navigate('/auth');
       }
     } catch (error) {
-      setError(error instanceof Error ? error : new Error(String(error)));
+      setError(new Error(translateError(error, "request-failed")));
     } finally {
       setLoading(false);
     }

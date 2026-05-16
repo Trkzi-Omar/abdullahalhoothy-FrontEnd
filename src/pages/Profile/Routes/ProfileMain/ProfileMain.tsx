@@ -21,6 +21,8 @@ import { UserProfile, PopupInfo } from '../../../../types/allTypesAndInterfaces'
 import { useOTP } from '../../../../context/OTPContext';
 import { toast } from 'sonner';
 import { t } from '../../../../i18n';
+import i18n from '../../../../i18n';
+import { toTranslationKey } from '../../../../utils/i18nHelpers';
 
 
 const ProfileMain: React.FC = () => {
@@ -81,7 +83,19 @@ const ProfileMain: React.FC = () => {
       setIsLoading(false);
     }
   };
-  // Helper to format field labels nicely
+  const translateProfileLabel = (key: string): string => {
+    const normalizedKey = toTranslationKey(key);
+    if (i18n.exists(normalizedKey)) return t(normalizedKey);
+    return formatLabel(key);
+  };
+
+  const translateProfileValue = (value: string): string => {
+    const normalizedKey = toTranslationKey(value);
+    if (i18n.exists(normalizedKey)) return t(normalizedKey);
+    return value;
+  };
+
+  // Helper to format field labels nicely when no translation exists
   const formatLabel = (key: string): string => {
     return key
       .replace(/_/g, ' ')
@@ -98,7 +112,7 @@ const ProfileMain: React.FC = () => {
       const diffTime = date.getTime() - now.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       
-      const main = date.toLocaleDateString('en-US', {
+      const main = date.toLocaleDateString(i18n.language === 'ar' ? 'ar-SA' : 'en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -108,11 +122,11 @@ const ProfileMain: React.FC = () => {
 
       let relative = '';
       if (diffDays > 0) {
-        relative = `${diffDays} days from now`;
+        relative = t("days-from-now", { count: diffDays });
       } else if (diffDays < 0) {
-        relative = `${Math.abs(diffDays)} days ago`;
+        relative = t("days-ago", { count: Math.abs(diffDays) });
       } else {
-        relative = 'Today';
+        relative = t("today");
       }
 
       return { main, relative };
@@ -174,7 +188,7 @@ const ProfileMain: React.FC = () => {
       if (key.toLowerCase().includes('count') || key.toLowerCase().includes('credits')) {
         return <span className="text-sm text-gray-700 break-words leading-relaxed">{value.toLocaleString()}</span>;
       }
-      return <span className="text-sm text-gray-700 break-words leading-relaxed">{value}</span>;
+      return <span className="text-sm text-gray-700 break-words leading-relaxed">{translateProfileValue(value)}</span>;
     }
 
     // String values
@@ -247,7 +261,7 @@ const ProfileMain: React.FC = () => {
           {entries.map(([nestedKey, nestedValue], index) => (
             <div key={nestedKey} className="bg-white border border-[#115740]/12 rounded-xl mb-4 overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3.5 bg-gradient-to-r from-[#f0f7f4] to-[#e8f5e9] border-b border-[#115740]/8 cursor-pointer transition-all duration-200 hover:from-[#e8f5e9] hover:to-[#dcedc8]">
-                <h4 className="text-sm font-semibold text-[#115740] m-0">{formatLabel(nestedKey)}</h4>
+                <h4 className="text-sm font-semibold text-[#115740] m-0">{translateProfileLabel(nestedKey)}</h4>
                 <span className="text-xs font-medium text-white bg-[#115740] px-2.5 py-0.5 rounded-xl">#{index + 1}</span>
               </div>
               <div className="p-4">
@@ -283,7 +297,7 @@ const ProfileMain: React.FC = () => {
             return (
               <div key={key} className="bg-white border border-[#115740]/12 rounded-xl mb-4 overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3.5 bg-gradient-to-r from-[#f0f7f4] to-[#e8f5e9] border-b border-[#115740]/8 cursor-pointer transition-all duration-200 hover:from-[#e8f5e9] hover:to-[#dcedc8]">
-                  <h4 className="text-sm font-semibold text-[#115740] m-0">{formatLabel(key)}</h4>
+                  <h4 className="text-sm font-semibold text-[#115740] m-0">{translateProfileLabel(key)}</h4>
                 </div>
                 <div className="p-4">
                   {renderNestedObject(value)}
@@ -294,7 +308,7 @@ const ProfileMain: React.FC = () => {
 
           return (
             <div key={key} className="flex flex-col px-4 py-3 bg-[#f8faf9] rounded-lg mb-3 border border-[#115740]/8 transition-all duration-200 hover:bg-[#f0f7f4] hover:border-[#115740]/15">
-              <span className="text-[0.7rem] font-semibold text-[#115740] uppercase tracking-wide mb-1.5">{formatLabel(key)}</span>
+              <span className="text-[0.7rem] font-semibold text-[#115740] uppercase tracking-wide mb-1.5">{translateProfileLabel(key)}</span>
               {renderFieldValue(key, value)}
             </div>
           );
@@ -336,7 +350,7 @@ const ProfileMain: React.FC = () => {
 
     return (
       <div className="flex flex-col px-4 py-3 bg-[#f8faf9] rounded-lg mb-3 border border-[#115740]/8 transition-all duration-200 hover:bg-[#f0f7f4] hover:border-[#115740]/15">
-        <span className="text-[0.7rem] font-semibold text-[#115740] uppercase tracking-wide mb-1.5">{formatLabel(key)}</span>
+        <span className="text-[0.7rem] font-semibold text-[#115740] uppercase tracking-wide mb-1.5">{translateProfileLabel(key)}</span>
         {renderFieldValue(key, value)}
       </div>
     );
@@ -383,7 +397,7 @@ const ProfileMain: React.FC = () => {
               <FaTimes />
             </button>
             <h3 className="text-white text-lg font-semibold m-0 break-words leading-snug">
-              {getTypeIcon(popupInfo.type)} {popupInfo.name}
+              {getTypeIcon(popupInfo.type)} {translateProfileLabel(popupInfo.name)}
             </h3>
             <p className="text-white/75 text-xs mt-1 font-normal">{getTypeLabel(popupInfo.type)}</p>
           </div>
@@ -440,7 +454,7 @@ const ProfileMain: React.FC = () => {
                   onClick={() => handleItemClick(type, key, value)}
                   className="flex-1 min-w-0 break-words overflow-wrap-anywhere hyphens-auto"
                 >
-                  {value.layer_name || value.catalog_name || value.name || key}
+                  {value?.layer_name || value?.catalog_name || value?.name || translateProfileLabel(key)}
                 </span>
                 {/* Conditionally render the delete icon */}
                 {type.includes("layer") || type.includes("catalog") ? (
@@ -456,7 +470,7 @@ const ProfileMain: React.FC = () => {
             ))}
           </ul>
         ) : (
-          <p>{t("no")}{' '}{title.toLowerCase()}{' '}{t("available")}</p>
+          <p>{t("no-items-available", { item: title })}</p>
         )}
       </div>
     );
@@ -605,7 +619,7 @@ const ProfileMain: React.FC = () => {
             <div className="mb-5">
               <h3 className="text-xl text-[#006400] mt-5 mb-2.5">{t("maker-information")}</h3>
               {Object.entries(profile.maker).map(([key, value]) => {
-                const title = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                const title = translateProfileLabel(key);
                 let icon = <FaDatabase />;
                 if (key.includes("layer")) icon = <FaLayerGroup />;
                 else if (key.includes("catalog")) icon = <FaBook />;

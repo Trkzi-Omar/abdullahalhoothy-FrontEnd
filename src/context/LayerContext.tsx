@@ -36,6 +36,7 @@ import { isIntelligentLayer } from '../utils/layerUtils';
 import _ from 'lodash';
 import { useIntelligenceViewport } from './IntelligenceViewPortContext';
 import { t } from '../i18n';
+import { translateApiMessage } from '../utils/apiMessages';
 
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
 
@@ -169,7 +170,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         isAuthRequest: true,
       });
       setSaveResponse(res.data.data);
-      setSaveResponseMsg(res.data.message);
+      setSaveResponseMsg(translateApiMessage(res.data.message, "request-received"));
       setSaveReqId(res.data.id);
     } catch (error) {
       const saveError = error instanceof Error ? error : new Error(String(error));
@@ -1157,7 +1158,7 @@ export function LayerProvider(props: { children: ReactNode }) {
                 features: features,
                 display: true,
                 points_color: metadata?.color || colorOptions[3].hex,
-                layer_legend: `Income Intelligence (${features?.length})`,
+                layer_legend: `${t("income-intelligence")} (${features?.length})`,
                 is_grid: true,
                 is_intelligent: true,
                 is_backend_grid: true,
@@ -1275,7 +1276,7 @@ export function LayerProvider(props: { children: ReactNode }) {
                 features: features,
                 display: true,
                 points_color: metadata?.color || colorOptions[2].hex,
-                layer_legend: `Real Estate Intelligence (${features?.length})`,
+                layer_legend: `${t("real-estate-intelligence")} (${features?.length})`,
                 is_grid: true,
                 is_intelligent: true,
                 is_backend_grid: true,

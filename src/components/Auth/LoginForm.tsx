@@ -6,6 +6,7 @@ import { performLogin } from '../../context/AuthContext';
 import { useAuth } from '../../context/AuthContext';
 import styles from '../../pages/Auth/Auth.module.css';
 import { t } from '../../i18n';
+import { translateError } from '../../utils/apiMessages';
 
 
 interface LoginFormProps {
@@ -45,8 +46,7 @@ export const LoginForm = ({ onSuccess, onForgotPassword }: LoginFormProps) => {
       });
       onSuccess();
     } catch (e: unknown) {
-      const error = e as { response?: { data?: { detail?: string } }; message?: string };
-      const message = error.response?.data?.detail || error.message || 'Login failed';
+      const message = translateError(e, 'login-failed');
       setError(message);
       toast.error(message, { duration: 3000 });
     } finally {

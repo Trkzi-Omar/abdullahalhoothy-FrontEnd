@@ -2,6 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import urls from '../urls.json';
 import { ApiRequestOptions, AuthResponse, IAuthResponse } from '../types/allTypesAndInterfaces';
 import { t } from '../i18n';
+import { getApiMessageText, translateApiMessage } from '../utils/apiMessages';
 
 
 const baseUrl = urls.REACT_APP_API_URL;
@@ -37,26 +38,7 @@ const setAuthorizationHeader = (options: AxiosRequestConfig, token: string) => {
  * Handles string, object (e.g. { message, detail, error }), and array responses.
  */
 function getErrorMessageFromPayload(data: unknown): string | null {
-  if (data == null) return null;
-  if (typeof data === 'string') return data;
-  if (Array.isArray(data)) {
-    const first = data[0];
-    if (typeof first === 'string') return first;
-    if (first && typeof first === 'object') return getErrorMessageFromPayload(first) ?? null;
-    return null;
-  }
-  if (typeof data === 'object') {
-    const obj = data as Record<string, unknown>;
-    const candidates = [obj.message, obj.detail, obj.error, obj.msg];
-    for (const c of candidates) {
-      if (typeof c === 'string') return c;
-      if (c != null && typeof c === 'object') {
-        const nested = getErrorMessageFromPayload(c);
-        if (nested) return nested;
-      }
-    }
-  }
-  return null;
+  return getApiMessageText(data);
 }
 
 const refreshAuthToken = async (refreshToken: string): Promise<AuthResponse> => {
@@ -314,7 +296,7 @@ const apiRequest = async ({
     const axiosErr = err as { response?: { status: number; data?: Record<string, unknown> } };
     if (axiosErr?.response?.status === 403) {
       if (isPublicAuthRequest) {
-        throw new Error(getErrorMessageFromPayload(axiosErr?.response?.data) || t("access-forbidden"));
+        throw new Error(translateApiMessage(axiosErr?.response?.data, "access-forbidden"));
       }
 
       if (isGuest) {
@@ -367,7 +349,7 @@ const apiRequest = async ({
             : Array.isArray(apiMessage)
               ? apiMessage[0]
               : apiMessage;
-        throw new Error(message || t("access-denied-for-guest-user"));
+        throw new Error(translateApiMessage(message || '', "access-denied-for-guest-user"));
       }
       localStorage.removeItem('authResponse');
       handleAuthError();
@@ -378,7 +360,7 @@ const apiRequest = async ({
       const apiMessage = getErrorMessageFromPayload(axiosErr?.response?.data);
 
       if (isPublicAuthRequest) {
-        throw new Error(apiMessage || t("authentication-failed"));
+        throw new Error(translateApiMessage(apiMessage || '', "authentication-failed"));
       }
 
       if (isGuest) {
@@ -454,7 +436,7 @@ const apiRequest = async ({
     if (axiosErr?.response) {
       const status = axiosErr.response.status;
       const data = axiosErr.response.data;
-      const message = getErrorMessageFromPayload(data) || t("request-failed");
+      const message = translateApiMessage(data, "request-failed");
       throw new Error(`${message} (Status: ${status})`);
     }
 

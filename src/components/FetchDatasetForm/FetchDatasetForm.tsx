@@ -26,6 +26,7 @@ import Chat from '../Chat/Chat';
 import { topics } from '../../types';
 import { FaWandMagicSparkles } from 'react-icons/fa6';
 import { useDatasetPrices } from '../../hooks/useDatasetPrices';
+import { isIntelligentLayer } from '../../utils/layerUtils';
 import { toast } from 'sonner';
 
 import { t } from '../../i18n';
@@ -126,9 +127,11 @@ const FetchDatasetForm = () => {
     layerDataMap,
     setLayerDataMap,
     handleFetchDataset,
+    refreshAllLayersRef,
+    clearAllLayersRef,
   } = useLayerContext();
 
-  const { setSelectedHomeTab, fetchGeoPoints } = useCatalogContext();
+  const { setSelectedHomeTab, fetchGeoPoints, setGeoPoints } = useCatalogContext();
   const { authResponse, authLoading } = useAuth();
   const [isPriceVisible, setIsPriceVisible] = useState<boolean>(false);
   const [layers, setLayers] = useState<Layer[]>([]);
@@ -642,7 +645,7 @@ const FetchDatasetForm = () => {
     draftUserId,
   ]);
 
-  function handleClear() {
+  const handleClear = useCallback(() => {
     setLayers([]);
     setReqFetchDataset(prevData => ({
       ...prevData,
@@ -651,8 +654,64 @@ const FetchDatasetForm = () => {
       layers: [],
     }));
     setCostEstimate(0.0);
+    setLayerDataMap({});
+    setGeoPoints(prev => prev.filter(p => isIntelligentLayer(p)));
+    layerSignaturesRef.current = {};
     clearDraft(draftUserId);
-  }
+    try {
+      localStorage.removeItem('unsavedGeoPoints');
+    } catch {
+      // ignore
+    }
+  }, [setReqFetchDataset, setLayerDataMap, setGeoPoints, draftUserId]);
+
+  const deleteLayer = useCallback(
+    (layerId: number) => {
+      setLayers(prev => {
+        const next = prev.filter(l => l.id !== layerId);
+        const remainingIncluded = next.flatMap(l => l.includedTypes);
+        const remainingExcluded = next.flatMap(l => l.excludedTypes);
+        setReqFetchDataset(prevData => ({
+          ...prevData,
+          includedTypes: remainingIncluded,
+          excludedTypes: remainingExcluded,
+        }));
+        return next;
+      });
+      setLayerDataMap(prev => {
+        const next = { ...prev };
+        delete next[layerId];
+        return next;
+      });
+      setGeoPoints(prev =>
+        prev.filter(p => isIntelligentLayer(p) || String(p.layerId) !== String(layerId))
+      );
+      delete layerSignaturesRef.current[layerId];
+    },
+    [setReqFetchDataset, setLayerDataMap, setGeoPoints]
+  );
+
+  const refreshAllLayers = useCallback(() => {
+    if (!selectedCountry || !selectedCity) return;
+    layers.forEach(layer => {
+      if (layer.includedTypes.length === 0) return;
+      layerSignaturesRef.current[layer.id] = layerSignature(layer);
+      fetchLayerNow(layer);
+    });
+  }, [layers, selectedCountry, selectedCity, fetchLayerNow]);
+
+  useEffect(() => {
+    refreshAllLayersRef.current = refreshAllLayers;
+    clearAllLayersRef.current = handleClear;
+    return () => {
+      if (refreshAllLayersRef.current === refreshAllLayers) {
+        refreshAllLayersRef.current = null;
+      }
+      if (clearAllLayersRef.current === handleClear) {
+        clearAllLayersRef.current = null;
+      }
+    };
+  }, [refreshAllLayers, handleClear, refreshAllLayersRef, clearAllLayersRef]);
 
   const removeTypeFromLayer = (type: string, layerId: number, isExcluded: boolean) => {
     const updatedLayers = layers
@@ -953,6 +1012,7 @@ const FetchDatasetForm = () => {
                 onDescriptionChange={handleLayerDescriptionChange}
                 onActionChange={handleLayerActionChange}
                 onRefresh={refreshLayer}
+                onDelete={deleteLayer}
                 isFetching={fetchingLayers.has(layer.id)}
                 saveStatus={getLayerSaveStatus(layer)}
                 listPrice={getLayerListPrice(layer)}

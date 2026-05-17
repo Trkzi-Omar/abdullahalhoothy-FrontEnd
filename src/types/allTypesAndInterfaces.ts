@@ -452,6 +452,8 @@ export interface LayerContextType {
   setIsLoadingDataset: React.Dispatch<React.SetStateAction<boolean>>;
   showErrorMessage: boolean;
   setShowErrorMessage: React.Dispatch<React.SetStateAction<boolean>>;
+  refreshAllLayersRef: React.MutableRefObject<(() => void) | null>;
+  clearAllLayersRef: React.MutableRefObject<(() => void) | null>;
 }
 
 export interface ReqFetchDataset {
@@ -880,6 +882,7 @@ export interface LayerDisplaySubCategoriesProps {
   onDescriptionChange: (layerIndex: number, description: string) => void;
   onActionChange: (layerIndex: number, action: LayerAction) => void;
   onRefresh: (layerId: number) => void;
+  onDelete: (layerId: number) => void;
   isFetching: boolean;
   saveStatus?: 'saved' | 'unsaved' | 'saving' | 'error';
   listPrice: number;

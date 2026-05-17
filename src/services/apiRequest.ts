@@ -249,6 +249,7 @@ const apiRequest = async ({
   isAuthRequest = false,
   isFormData = false,
   useCache = false,
+  suppressAuthRedirectOn401 = false,
 }: ApiRequestOptions): Promise<unknown> => {
   const authResponse = getAuthResponse();
   const authResponseFull = authResponse as unknown as AuthResponse;
@@ -351,6 +352,14 @@ const apiRequest = async ({
     if (axiosErr?.response?.status === 401) {
       if (isPublicAuthRequest) {
         throw new Error(translateApiMessage(axiosErr?.response?.data, "authentication-failed"));
+      }
+
+      if (suppressAuthRedirectOn401) {
+        const err401 = new Error(
+          translateApiMessage(axiosErr?.response?.data, "authentication-failed")
+        ) as Error & { status?: number };
+        err401.status = 401;
+        throw err401;
       }
 
       if (isGuest) {

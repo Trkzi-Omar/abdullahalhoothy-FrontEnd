@@ -75,12 +75,19 @@ const ChangePassword: React.FC = () => {
         method: 'post',
         body: data,
         isAuthRequest: true,
+        suppressAuthRedirectOn401: true,
       });
       if (res.status === 200) {
         navigate('/auth');
       }
     } catch (error) {
-      setError(new Error(translateError(error, "request-failed")));
+      const status = (error as { status?: number; response?: { status?: number } })?.status
+        ?? (error as { response?: { status?: number } })?.response?.status;
+      if (status === 401) {
+        setError(new Error(t("current-password-is-incorrect")));
+      } else {
+        setError(new Error(translateError(error, "request-failed")));
+      }
     } finally {
       setLoading(false);
     }

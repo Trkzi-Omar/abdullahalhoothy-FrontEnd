@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import urls from '../urls.json';
 import { ApiRequestOptions, AuthResponse, IAuthResponse } from '../types/allTypesAndInterfaces';
 import { t } from '../i18n';
-import { getApiMessageText, translateApiMessage } from '../utils/apiMessages';
+import { translateApiMessage } from '../utils/apiMessages';
 
 
 const baseUrl = urls.REACT_APP_API_URL;
@@ -32,14 +32,6 @@ const setAuthorizationHeader = (options: AxiosRequestConfig, token: string) => {
     Authorization: `Bearer ${token}`,
   };
 };
-
-/**
- * Extracts a user-facing error message from API error payload.
- * Handles string, object (e.g. { message, detail, error }), and array responses.
- */
-function getErrorMessageFromPayload(data: unknown): string | null {
-  return getApiMessageText(data);
-}
 
 const refreshAuthToken = async (refreshToken: string): Promise<AuthResponse> => {
   try {
@@ -357,10 +349,8 @@ const apiRequest = async ({
     }
 
     if (axiosErr?.response?.status === 401) {
-      const apiMessage = getErrorMessageFromPayload(axiosErr?.response?.data);
-
       if (isPublicAuthRequest) {
-        throw new Error(translateApiMessage(apiMessage || '', "authentication-failed"));
+        throw new Error(translateApiMessage(axiosErr?.response?.data, "authentication-failed"));
       }
 
       if (isGuest) {

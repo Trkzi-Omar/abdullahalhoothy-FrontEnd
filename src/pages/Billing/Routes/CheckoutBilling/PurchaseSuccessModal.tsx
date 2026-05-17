@@ -24,16 +24,19 @@ interface PurchaseSuccessModalProps {
       charged_usd: number;
       current_credits: number;
       message: string;
+      message_key?: string;
     };
     intelligences?: Array<{
       intelligence: IntelligenceItem;
       status: string;
       message: string;
+      message_key?: string;
     }>;
     datasets?: Array<{
       dataset: DatasetItem;
       status: string;
       message: string;
+      message_key?: string;
     }>;
   };
 }
@@ -67,7 +70,7 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                      {formatPurchaseSuccessMessage('report', purchaseData.report.message)}
+                      {formatPurchaseSuccessMessage('report', purchaseData.report)}
                     </p>
                   </div>
                   <div className="text-end ms-4">
@@ -123,7 +126,7 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
                     </div>
                     <div className="mt-3 pt-3 border-t border-gray-200">
                       <p className="text-sm text-gray-700 bg-blue-50 border border-blue-100 rounded-md p-3">
-                        {formatPurchaseSuccessMessage('intelligence', item.message)}
+                        {formatPurchaseSuccessMessage('intelligence', item)}
                       </p>
                     </div>
                   </div>
@@ -178,7 +181,7 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({ purchaseDat
                     </div>
                     <div className="mt-3 pt-3 border-t border-gray-200">
                       <p className="text-sm text-gray-700 bg-blue-50 border border-blue-100 rounded-md p-3">
-                        {formatPurchaseSuccessMessage('dataset', item.message)}
+                        {formatPurchaseSuccessMessage('dataset', item)}
                       </p>
                     </div>
                   </div>

@@ -1,5 +1,6 @@
 import apiRequest from '../../../services/apiRequest';
 import urls from '../../../urls.json';
+import { translateApiMessage, translateError } from '../../../utils/apiMessages';
 
 export interface MetricConfig {
   name: string;
@@ -69,14 +70,14 @@ class BusinessMetricsService {
       if (apiResponse.success && apiResponse.data) {
         return apiResponse.data;
       } else {
-        throw new Error(apiResponse.message || `Business type '${businessType}' is not supported`);
+        throw new Error(
+          translateApiMessage(apiResponse, "failed-to-load-business-type-configuration")
+        );
       }
     } catch (error: unknown) {
       // Check if it's a 404 error (business type not supported yet)
       if (error?.response?.status === 404 || error?.response?.status === 400) {
-        throw new Error(
-          `Business type '${businessType}' is not yet supported. Please check again in the future.`
-        );
+        throw new Error(translateError(error, "failed-to-load-business-type-configuration"));
       }
 
       // Re-throw other errors

@@ -1,5 +1,6 @@
 import { t } from '../i18n';
 import metaDataInformation from '../data/metaDataInformation.json';
+import { translateApiMessage } from './apiMessages';
 
 type DatasetMetaKey = keyof typeof metaDataInformation.datasets;
 type IntelligenceMetaKey = keyof typeof metaDataInformation.intelligence;
@@ -122,12 +123,12 @@ export function formatDatasetPurchaseExplanation(
 
 export function formatPurchaseSuccessMessage(
   itemType: 'dataset' | 'intelligence' | 'report',
-  fallback?: string | null
+  payload?: unknown
 ): string {
-  if (itemType === 'dataset') return t("dataset-purchase-success-message");
-  if (itemType === 'intelligence') return t("intelligence-purchase-success-message");
-  if (itemType === 'report') return t("report-purchase-success-message");
-  return fallback || '';
+  if (itemType === 'dataset') return translateApiMessage(payload, "dataset-purchase-success-message");
+  if (itemType === 'intelligence') return translateApiMessage(payload, "intelligence-purchase-success-message");
+  if (itemType === 'report') return translateApiMessage(payload, "report-purchase-success-message");
+  return '';
 }
 
 /**

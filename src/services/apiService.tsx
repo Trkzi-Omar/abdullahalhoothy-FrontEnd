@@ -49,12 +49,11 @@ export async function HttpReq<T>(
       response = await apiClient[method](end_point, wrappedBody, { headers });
     }
 
-    const message: string = response.data.message;
     const request_id: string = response.data.request_id;
     const data: T = response.data.data || response.data;
 
     setResData(data);
-    setResMessage(translateApiMessage(message, "request-received"));
+    setResMessage(translateApiMessage(response.data, "request-received"));
     setResId(request_id);
     setLoading(false);
     setError(null);

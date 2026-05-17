@@ -170,7 +170,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         isAuthRequest: true,
       });
       setSaveResponse(res.data.data);
-      setSaveResponseMsg(translateApiMessage(res.data.message, "request-received"));
+      setSaveResponseMsg(translateApiMessage(res.data, "request-received"));
       setSaveReqId(res.data.id);
     } catch (error) {
       const saveError = error instanceof Error ? error : new Error(String(error));

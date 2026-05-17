@@ -120,7 +120,7 @@ function DataContainer() {
           body: body,
         });
         setUserLayersData(res.data.data);
-        setResMessage(translateApiMessage(res.data.message, "request-received"));
+        setResMessage(translateApiMessage(res.data, "request-received"));
         setResId(res.data.request_id);
       } catch (error) {
         setError(error instanceof Error ? error : new Error(String(error)));
@@ -141,7 +141,7 @@ function DataContainer() {
           body: body,
         });
         setUserCatalogsData(res.data.data);
-        setResMessage(translateApiMessage(res.data.message, "request-received"));
+        setResMessage(translateApiMessage(res.data, "request-received"));
         setResId(res.data.request_id);
       } catch (error) {
         setError(error instanceof Error ? error : new Error(String(error)));
@@ -199,7 +199,7 @@ function DataContainer() {
           body: { catalogue_dataset_id: selectedItem.id },
         });
         setGeoPoints(res.data.data);
-        setWsResMessage(translateApiMessage(res.data.message, "request-received"));
+        setWsResMessage(translateApiMessage(res.data, "request-received"));
         setWsResId(res.data.request_id);
         setWsResLoading(false);
         closeModal();
@@ -432,7 +432,7 @@ function DataContainer() {
 											      const updatedGeoPoints = prevGeoPoints.slice().concat(data);
 											      return updatedGeoPoints;
 											    });
-									        setResMessage(translateApiMessage(res.data.message, "request-received"));
+									        setResMessage(translateApiMessage(res.data, "request-received"));
 									        setResId(res.data.request_id);
 									        closeModal();
 									        console.log('res', res);

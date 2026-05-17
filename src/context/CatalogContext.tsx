@@ -579,7 +579,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         } else {
           callData(res.data.data);
         }
-        setLastGeoMessageRequest(translateApiMessage(res.data.message, "request-received"));
+        setLastGeoMessageRequest(translateApiMessage(res.data, "request-received"));
         setLastGeoIdRequest(res.data.request_id || res.data.id);
       }
     } catch (error) {
@@ -840,7 +840,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
         isFormData: true,
       });
       setSaveResponse(res.data.data);
-      setSaveResponseMsg(translateApiMessage(res.data.message, "request-received"));
+      setSaveResponseMsg(translateApiMessage(res.data, "request-received"));
       setSaveReqId(res.data.request_id || res.data.id);
       setFormStage('catalog');
       setIsBenchmarkControlOpen(false);

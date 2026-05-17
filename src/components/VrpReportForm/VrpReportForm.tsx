@@ -805,7 +805,7 @@ const CustomReportForm = () => {
 		            )}
 		          </div>
 				      <div className="flex-1 relative w-full h-full min-h-[800px]" id="map-container">
-				        <div className="w-full h-full overflow-hidden [&>.ol-map]:size-full">
+				        <div className="w-full h-full overflow-hidden [&_.ol-map]:size-full">
 				        	<VrpMap formData={formData} handleInputChange={handleInputChange} />
 							  </div>
 				      </div>

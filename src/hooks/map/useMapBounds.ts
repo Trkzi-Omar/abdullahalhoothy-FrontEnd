@@ -26,6 +26,7 @@ export function useMapBounds() {
   const { selectedCity } = useLayerContext();
 
   const fallbackCenter = useRef(cityCenters.jeddah);
+  const prevLayerIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const city = selectedCity.trim().toLowerCase();
@@ -53,17 +54,18 @@ export function useMapBounds() {
     if (!map || !geoPoints.length) return;
 
     let noFly = false;
-    // Calculate center point of all features
     let sumLng = 0;
     let sumLat = 0;
     let pointCount = 0;
+    const currentLayerIds = new Set<string>();
 
     geoPoints.forEach(point => {
       if (isIntelligentLayer(point)) {
         noFly = true;
         return;
       }
-      if (point.display && point.features) {
+      if (point.display && point.features && point.features.length > 0) {
+        currentLayerIds.add(String(point.layerId ?? point.prdcer_layer_id ?? ''));
         point.features.forEach(feature => {
           const coords = feature.geometry.coordinates as [number, number];
           sumLng += coords[0];
@@ -73,7 +75,10 @@ export function useMapBounds() {
       }
     });
 
-    if (pointCount > 0 && !noFly) {
+    const isFirstLayer = prevLayerIdsRef.current.size === 0 && currentLayerIds.size > 0;
+    prevLayerIdsRef.current = currentLayerIds;
+
+    if (pointCount > 0 && !noFly && isFirstLayer) {
       const centerLng = sumLng / pointCount;
       const centerLat = sumLat / pointCount;
 

@@ -62,7 +62,7 @@ const writeDraft = (userId: string | null | undefined, draft: FetchDatasetDraft)
   try {
     window.sessionStorage.setItem(draftKeyFor(userId), JSON.stringify(draft));
   } catch {
-    // sessionStorage may be unavailable (private mode, quota) — skip silently.
+    // sessionStorage may be unavailable (private mode, quota).
   }
 };
 
@@ -98,7 +98,6 @@ const pruneLayerSignatureMap = (
 const FetchDatasetForm = () => {
   const nav = useNavigate();
 
-  // LAYER CONTEXT
   const {
     setReqFetchDataset,
     showErrorMessage,
@@ -130,27 +129,21 @@ const FetchDatasetForm = () => {
   } = useLayerContext();
 
   const { setSelectedHomeTab, fetchGeoPoints } = useCatalogContext();
-  // AUTH CONTEXT
   const { authResponse, authLoading } = useAuth();
   const [isPriceVisible, setIsPriceVisible] = useState<boolean>(false);
-  // FETCHED DATA
   const [layers, setLayers] = useState<Layer[]>([]);
   const [savingLayerIds, setSavingLayerIds] = useState<Set<number>>(new Set());
   const [savedLayerSignatures, setSavedLayerSignatures] = useState<Record<number, string>>({});
   const [failedLayerSignatures, setFailedLayerSignatures] = useState<Record<number, string>>({});
   const [, setCostEstimate] = useState<number>(0.0);
-  // COLBASE CATEGORY
   const [openedCategories, setOpenedCategories] = useState<string[]>([]);
-
-  // USER INPUT
   const [searchQuery, setSearchQuery] = useState('');
 
   const categoriesRef = useRef<HTMLDivElement>(null);
   const chatAnchorRef = useRef<HTMLDivElement>(null);
 
-  const { backendZoom, mapRef } = useMapContext();
+  const { backendZoom } = useMapContext();
 
-  // Track auth user for draft scoping. Effect below uses authResponse?.localId.
   const draftUserId = authResponse?.localId ?? null;
   const didHydrateRef = useRef(false);
 
@@ -158,8 +151,6 @@ const FetchDatasetForm = () => {
     resetFetchDatasetForm();
     handleGetCountryCityCategory();
 
-    // Hydrate any in-progress draft after the reset above. If none, mount stays in
-    // its default reset state. Hydration runs at most once per component mount.
     if (!didHydrateRef.current) {
       const draft = readDraft(draftUserId);
       if (draft) {
@@ -174,10 +165,9 @@ const FetchDatasetForm = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Persist draft on any meaningful change, debounced to avoid sessionStorage thrash.
+  // Debounced to avoid sessionStorage thrash on every keystroke.
   useEffect(() => {
     if (!didHydrateRef.current) return;
-    // Don't persist a fully-empty draft.
     if (
       layers.length === 0 &&
       !textSearchInput &&
@@ -221,7 +211,7 @@ const FetchDatasetForm = () => {
       console.error('Failed to fetch profile:', err);
     }
   };
-  // Datasets the user wants AS FULL DATA (paid). Sample-only datasets cost nothing.
+  // Paid datasets only. Sample-only layers cost nothing.
   const fullDataDatasets = useMemo(() => {
     const datasetsSet = new Set<string>();
     layers
@@ -231,17 +221,16 @@ const FetchDatasetForm = () => {
   }, [layers]);
 
 
-  // Key tracks ONLY full-data datasets — sample-only changes shouldn't trigger cost calls.
+  // Tracks only full-data datasets so sample-only changes don't trigger cost calls.
   const fullDataKey = useMemo(() => fullDataDatasets.join(','), [fullDataDatasets]);
 
-  // Calculate cart cost via backend (already deducts owned items).
+  // Backend already deducts owned items.
   const calculateCartCost = useCallback(async () => {
     if (!authResponse?.localId) {
       setCostEstimate(0.0);
       return;
     }
 
-    // No full-data layers → nothing to pay for. Sample is free.
     if (fullDataDatasets.length === 0 || !selectedCity || !selectedCountry) {
       setCostEstimate(0.0);
       return;
@@ -273,7 +262,6 @@ const FetchDatasetForm = () => {
     }
   }, [authResponse?.localId, fullDataDatasets, selectedCity, selectedCountry]);
 
-  // Recompute cost when the full-data set changes or location changes.
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       calculateCartCost();
@@ -282,7 +270,6 @@ const FetchDatasetForm = () => {
     return () => clearTimeout(timeoutId);
   }, [fullDataKey, selectedCity, selectedCountry, calculateCartCost]);
 
-  // Use dataset prices hook
   const { getPrice, getRawPrice, formatPrice } = useDatasetPrices({
     selectedCountry,
     selectedCity,
@@ -296,21 +283,14 @@ const FetchDatasetForm = () => {
     [getRawPrice]
   );
 
-  // Tracks which layers have an in-flight fetch — used by the per-layer refresh icon
-  // (spinner) and to avoid stacking refetches for the same layer.
   const [fetchingLayers, setFetchingLayers] = useState<Set<number>>(new Set());
 
-  // Per-layer "fetched signature": action + sorted-included-types. Compared against
-  // current state to decide whether a layer's content actually changed and needs a
-  // re-fetch. Mirrors intelligence's pattern of toggle-driven refetch.
+  // action + sorted included types. Compared against current state to dedupe refetches.
   const layerSignaturesRef = useRef<Record<number, string>>({});
 
   const layerSignature = (layer: Layer) =>
     `${layer.action || 'sample'}|${[...layer.includedTypes].sort().join(',')}`;
 
-  // Internal worker: clears the layer's entry in layerDataMap and refetches. Used by
-  // both the manual refresh button and the auto-fetch effect. Bypasses the dedup
-  // signature so the caller is responsible for tracking what changed.
   const fetchLayerNow = useCallback(
     async (layer: Layer) => {
       if (!selectedCountry || !selectedCity) return;
@@ -341,8 +321,6 @@ const FetchDatasetForm = () => {
     [selectedCountry, selectedCity, fetchingLayers, setLayerDataMap, handleFetchDataset]
   );
 
-  // Manual refresh from the layer card icon. Forces a refetch even if the dedup
-  // signature is unchanged.
   const refreshLayer = useCallback(
     (layerId: number) => {
       const layer = layers.find(l => l.id === layerId);
@@ -354,13 +332,6 @@ const FetchDatasetForm = () => {
     [layers, fetchLayerNow]
   );
 
-  // Keep the latest layers in a ref so the map listener (which is registered once)
-  // can read the current value without re-subscribing on every render.
-  const layersRef = useRef<Layer[]>(layers);
-  useEffect(() => {
-    layersRef.current = layers;
-  }, [layers]);
-
   useEffect(() => {
     const liveIds = new Set(layers.map(layer => layer.id));
     setSavedLayerSignatures(prev => pruneLayerSignatureMap(prev, liveIds));
@@ -371,50 +342,13 @@ const FetchDatasetForm = () => {
     });
   }, [layers]);
 
-  // Auto-refetch sample layers when the viewport changes (mirrors intelligence
-  // sample fetch, which sends bottom_lng/lat + top_lng/lat from the current bounds).
-  // Full-data layers do NOT viewport-refetch — backend returns the full city slice
-  // for paid layers, identical to the intelligence pattern.
-  useEffect(() => {
-    if (!didHydrateRef.current) return;
-    const map = mapRef.current;
-    if (!map) return;
-
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    const onViewportChange = () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        const sampleLayers = layersRef.current.filter(
-          l => (l.action || 'sample') === 'sample' && l.includedTypes.length > 0
-        );
-        sampleLayers.forEach(layer => {
-          // Bump the signature so the change-driven effect doesn't double-fire.
-          layerSignaturesRef.current[layer.id] = layerSignature(layer);
-          fetchLayerNow(layer);
-        });
-      }, 300);
-    };
-
-    map.on('moveend', onViewportChange);
-    map.on('zoomend', onViewportChange);
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      map.off('moveend', onViewportChange);
-      map.off('zoomend', onViewportChange);
-    };
-  }, [mapRef, fetchLayerNow]);
-
-  // Auto-fetch on layer content change. Mirrors intelligence's debounced auto-fetch:
-  // when a layer's includedTypes or action changes, refetch *just* that layer after
-  // a 300ms quiet period. Sample is always allowed (free); full-data only auto-fetches
-  // when the toggle paywall has already committed (toggle gate ensures cost === 0
-  // before action flips to 'full data', so by the time we see it here, we're entitled).
+  // Refetch a layer 300ms after its includedTypes or action change. Full-data flips
+  // are gated by the paywall toggle, so by the time we see them here, cost is 0.
   useEffect(() => {
     if (!didHydrateRef.current) return;
     if (!selectedCountry || !selectedCity) return;
 
     const timeoutId = setTimeout(() => {
-      // Drop signature entries for layers that no longer exist.
       const liveIds = new Set(layers.map(l => l.id));
       Object.keys(layerSignaturesRef.current).forEach(idStr => {
         if (!liveIds.has(Number(idStr))) {
@@ -479,10 +413,8 @@ const FetchDatasetForm = () => {
       }
     }
   }
-  // Paywall state. Driven by per-layer "Full Data" toggles (intelligence-style):
-  // when a user flips a layer to full, we precompute cost and gate the flip behind
-  // this modal. paywallDatasets is the prospective union shown in the modal — may
-  // differ from committed fullDataDatasets while the toggle is pending.
+  // paywallDatasets is the prospective union shown in the modal and may differ from
+  // committed fullDataDatasets while the toggle is pending.
   const [paywallData, setPaywallData] = useState<{
     total_cost: number;
     intelligence_purchase_items: IntelligencePurchaseItem[];
@@ -496,7 +428,6 @@ const FetchDatasetForm = () => {
 
   const handleLayerActionChange = useCallback(
     async (index: number, nextAction: LayerAction) => {
-      // Switching to sample is free for everyone — flip immediately.
       if (nextAction === 'sample') {
         setLayers(prev =>
           prev.map((layer, i) => (i === index ? { ...layer, action: 'sample' } : layer))
@@ -507,7 +438,6 @@ const FetchDatasetForm = () => {
       const targetLayer = layers[index];
       if (!targetLayer || !selectedCountry || !selectedCity) return;
 
-      // No datasets in this layer yet — no cost to gate. Flip silently.
       if (targetLayer.includedTypes.length === 0) {
         setLayers(prev =>
           prev.map((layer, i) => (i === index ? { ...layer, action: 'full data' } : layer))
@@ -515,7 +445,6 @@ const FetchDatasetForm = () => {
         return;
       }
 
-      // Guest must register before paying.
       if (authResponse && isGuestUser(authResponse)) {
         navigate('/auth?mode=register');
         return;
@@ -526,7 +455,6 @@ const FetchDatasetForm = () => {
         return;
       }
 
-      // Prospective union: every other full layer + this layer (which is going full).
       const prospectiveSet = new Set<string>();
       layers.forEach((layer, i) => {
         const layerAction = i === index ? 'full data' : layer.action || 'sample';
@@ -554,7 +482,7 @@ const FetchDatasetForm = () => {
         const data = response.data?.data;
         const totalCost: number = data?.total_cost ?? 0;
 
-        // Already entitled — flip immediately, skip the modal.
+        // Already entitled: flip immediately, skip the modal.
         if (totalCost === 0) {
           setLayers(prev =>
             prev.map((layer, i) => (i === index ? { ...layer, action: 'full data' } : layer))
@@ -562,7 +490,6 @@ const FetchDatasetForm = () => {
           return;
         }
 
-        // Defer the flip until purchase succeeds.
         setPendingFullToggleLayerIndex(index);
         setPaywallDatasets(prospectiveDatasets);
         setPaywallData({
@@ -589,7 +516,6 @@ const FetchDatasetForm = () => {
     setPendingFullToggleLayerIndex(null);
     setPaywallData(null);
     setPaywallDatasets([]);
-    // Cost recomputes via the existing fullDataKey → calculateCartCost effect.
   }, [pendingFullToggleLayerIndex]);
 
   const handlePaywallClose = useCallback(() => {
@@ -618,10 +544,6 @@ const FetchDatasetForm = () => {
     [layerDataMap]
   );
 
-  // Save All — persists every layer (mirrors CustomizeLayer.handleSaveAllLayers) then
-  // navigates to the catalog tab. Auto-fetch (P6.2/P6.3) is responsible for putting
-  // the layer's data into layerDataMap before save; if a layer hasn't been fetched
-  // yet we surface that as a validation error.
   const [isSavingAll, setIsSavingAll] = useState(false);
   const [saveAllError, setSaveAllError] = useState<string | null>(null);
 
@@ -634,7 +556,6 @@ const FetchDatasetForm = () => {
       return;
     }
 
-    // Every layer needs at least 1 included type and a name.
     const invalid = layers.find(
       l => l.includedTypes.length === 0 || !(l.name || `Layer ${l.id}`)
     );
@@ -643,8 +564,7 @@ const FetchDatasetForm = () => {
       return;
     }
 
-    // Each layer must have been auto-fetched by now (handleFetchDataset populates
-    // layerDataMap with the layer_id we need to save).
+    // handleFetchDataset populates layerDataMap with the layer_id we need to save.
     const unfetched = layers.find(l => !layerDataMap[l.id]?.layer_id);
     if (unfetched) {
       setSaveAllError(t('layer-data-not-ready-please-wait-a-moment-and-try-again'));
@@ -695,7 +615,6 @@ const FetchDatasetForm = () => {
         }
       }
 
-      // Mirror CustomizeLayer's post-save: switch tab + fetch geoPoints for each saved layer.
       setSelectedHomeTab('CATALOG');
       layerCustomizations.forEach(l => {
         const savedLayerData = layerDataMap[l.layerId];
@@ -724,21 +643,17 @@ const FetchDatasetForm = () => {
   ]);
 
   function handleClear() {
-    // Clear all layers
     setLayers([]);
-    // Clear reqFetchDataset
     setReqFetchDataset(prevData => ({
       ...prevData,
       includedTypes: [],
       excludedTypes: [],
       layers: [],
     }));
-    // Reset cost estimate
     setCostEstimate(0.0);
     clearDraft(draftUserId);
   }
 
-  // Add new handler to remove type from specific layer
   const removeTypeFromLayer = (type: string, layerId: number, isExcluded: boolean) => {
     const updatedLayers = layers
       .map(layer => {
@@ -759,7 +674,6 @@ const FetchDatasetForm = () => {
 
     setLayers(updatedLayers);
 
-    // Update reqFetchDataset based on remaining types
     const remainingIncluded = updatedLayers.flatMap(layer => layer.includedTypes);
     const remainingExcluded = updatedLayers.flatMap(layer => layer.excludedTypes);
 
@@ -770,7 +684,6 @@ const FetchDatasetForm = () => {
     }));
   };
 
-  // Update getTypeCounts to return layer IDs with the counts
   const getTypeCounts = (type: string) => {
     const includedInLayers = layers
       .filter(layer => layer.includedTypes.includes(type))
@@ -852,7 +765,6 @@ const FetchDatasetForm = () => {
     });
   };
 
-  // Add this handler
   const handleLayerNameChange = (index: number, newName: string) => {
     setLayers(prev =>
       prev.map((layer, i) => (i === index ? { ...layer, name: newName } : layer))
@@ -879,7 +791,6 @@ const FetchDatasetForm = () => {
     );
   };
 
-  // Update reqFetchDataset when layers change
   useEffect(() => {
     setReqFetchDataset(prev => ({
       ...prev,
@@ -932,8 +843,7 @@ const FetchDatasetForm = () => {
     }
 
     const delayDebounceFn = setTimeout(() => {
-      // For keyword search, we don't calculate cost until datasets are actually added to layers
-      // The cost will be calculated automatically when datasets are added
+      // Keyword search defers cost until datasets are actually added to layers.
       setCostEstimate(0.0);
     }, typingDelay);
 
@@ -1031,7 +941,6 @@ const FetchDatasetForm = () => {
             id="layers"
             className="flex text-sm flex-col border border-gray-300 rounded-lg p-4 gap-4"
           >
-            {/* Map through layers to create multiple Layer sections */}
             {layers.map((layer, index) => (
               <LayerDisplaySubCategories
                 key={layer.id}
@@ -1173,7 +1082,6 @@ const FetchDatasetForm = () => {
       {showErrorMessage && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white shadow-xl w-96 max-w-full">
-            {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 bg-gray-100  border-b border-gray-300">
               <h3 className="text-lg font-semibold text-gray-800 flex items-center">
                 <span className="me-2">⚠️</span>{' '}{t("warning")}</h3>
@@ -1185,13 +1093,11 @@ const FetchDatasetForm = () => {
               </button>
             </div>
 
-            {/* Body */}
             <div className="p-6 text-center">
               <p className="text-base text-gray-800 font-medium">{t("insufficient-funds-for-this-transaction")}</p>
               <p className="text-sm text-gray-600 mt-2">{t("please-add-more-funds-to-continue")}</p>
             </div>
 
-            {/* Footer */}
             <div className="flex justify-center px-6 py-4">
               <button
                 onClick={() => nav('/profile/wallet/add')}

@@ -215,7 +215,7 @@ const CategoriesBrowserSubCategories = ({
                   >
                     <div
                       onClick={() => onTypeClick?.(type)}
-                      className={`flex flex-col break-words ${onTypeClick ? "cursor-pointer hover:underline" : ""}`}
+                      className={`flex flex-col break-words gap-1 ${onTypeClick ? "cursor-pointer hover:underline" : ""}`}
                     >
                       {formatSubcategoryName(type)}
 

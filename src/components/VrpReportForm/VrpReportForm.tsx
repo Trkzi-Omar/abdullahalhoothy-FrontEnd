@@ -160,7 +160,11 @@ const VrpMapDraw = ({formData, source, handleInputChange}: VrpMapDrawProps) => {
         dataProjection: 'EPSG:4326',
         featureProjection: 'EPSG:3857',
       });
-      features.forEach(f => f.setGeometryName('draw'));
+      features.forEach(f => {
+        const g = f.getGeometry();
+        f.setGeometryName('draw');
+        if (g) f.setGeometry(g);
+      });
       source.getFeatures()
         .filter(f => f.getGeometryName() === 'draw')
         .forEach(f => source.removeFeature(f));
@@ -284,7 +288,11 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
       const fmt = new GeoJSON();
       const features = fmt.readFeatures(parsed, { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' });
       if (!features.length) { setGeoJsonError(t("no-features-found")); return; }
-      features.forEach(f => f.setGeometryName('draw'));
+      features.forEach(f => {
+        const g = f.getGeometry();
+        f.setGeometryName('draw');
+        if (g) f.setGeometry(g);
+      });
       drawSource.getFeatures().filter(f => f.getGeometryName() === 'draw').forEach(f => drawSource.removeFeature(f));
       drawSource.addFeatures(features);
       // Normalise to FeatureCollection for formData
@@ -805,7 +813,7 @@ const CustomReportForm = () => {
 		            )}
 		          </div>
 				      <div className="flex-1 relative w-full h-full min-h-[800px]" id="map-container">
-				        <div className="w-full h-full overflow-hidden [&>.ol-map]:size-full">
+				        <div className="w-full h-full overflow-hidden [&_.ol-map]:size-full">
 				        	<VrpMap formData={formData} handleInputChange={handleInputChange} />
 							  </div>
 				      </div>

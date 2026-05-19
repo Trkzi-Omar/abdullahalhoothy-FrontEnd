@@ -1241,6 +1241,7 @@
   "email-already-taken": "Email already taken",
   "unverified-email": "Please verify your email before signing in.",
   "incorrect-username-or-password": "Incorrect username or password",
+  "current-password-is-incorrect": "Current password is incorrect",
   "login-failed": "Login failed",
   "invalid-authentication-scheme": "Invalid authentication scheme.",
   "invalid-token-or-expired-token": "Invalid or expired token.",

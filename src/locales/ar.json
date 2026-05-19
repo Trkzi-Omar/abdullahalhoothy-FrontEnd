@@ -1241,6 +1241,7 @@
   "email-already-taken": "البريد الإلكتروني مستخدم بالفعل",
   "unverified-email": "يرجى توثيق بريدك الإلكتروني قبل تسجيل الدخول.",
   "incorrect-username-or-password": "اسم المستخدم أو كلمة المرور غير صحيحة",
+  "current-password-is-incorrect": "كلمة المرور الحالية غير صحيحة",
   "login-failed": "فشل تسجيل الدخول",
   "invalid-authentication-scheme": "طريقة المصادقة غير صالحة.",
   "invalid-token-or-expired-token": "رمز الدخول غير صالح أو منتهي الصلاحية.",

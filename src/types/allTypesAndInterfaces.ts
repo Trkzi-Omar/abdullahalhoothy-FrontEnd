@@ -784,6 +784,7 @@ export interface ApiRequestOptions extends AxiosRequestConfig {
   body?: unknown;
   options?: AxiosRequestConfig;
   useCache?: boolean;
+  suppressAuthRedirectOn401?: boolean;
 }
 
 export interface CategoriesBrowserSubCategoriesProps {

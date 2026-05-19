@@ -3,14 +3,18 @@ import mapboxgl from 'mapbox-gl';
 import { StylesControl } from '../../components/Map/StylesControl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { CircleControl } from '../../components/Map/CircleControl';
+import { LayerActionsControl } from '../../components/Map/LayerActionsControl';
 import { useUIContext } from '../../context/UIContext';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useMapContext } from '../../context/MapContext';
+import { useLayerContext } from '../../context/LayerContext';
+import { t } from '../../i18n';
 
 export function useMapControls() {
   const { mapRef, drawRef, shouldInitializeFeatures } = useMapContext();
   const { isMobile } = useUIContext();
   const { currentStyle, setCurrentStyle } = useCatalogContext();
+  const { refreshAllLayersRef, clearAllLayersRef } = useLayerContext();
   const controlsAdded = useRef(false);
 
   useEffect(() => {
@@ -25,6 +29,7 @@ export function useMapControls() {
       circle?: mapboxgl.IControl;
       draw?: MapboxDraw;
       scale?: mapboxgl.ScaleControl;
+      layerActions?: mapboxgl.IControl;
     } = {};
 
     const addControls = () => {
@@ -64,6 +69,14 @@ export function useMapControls() {
 
         // Add draw control
         map.addControl(drawRef.current, nativeControlsPosition);
+
+        controls.layerActions = new LayerActionsControl({
+          getRefreshAll: () => refreshAllLayersRef.current,
+          getClearAll: () => clearAllLayersRef.current,
+          refreshTitle: t('refresh-all-layers'),
+          clearTitle: t('clear-all-layers'),
+        });
+        map.addControl(controls.layerActions, nativeControlsPosition);
 
         // Add scale control
         controls.scale = new mapboxgl.ScaleControl({
@@ -116,7 +129,7 @@ export function useMapControls() {
           }
 
           // Remove other controls
-          ['circle', 'navigation', 'styles'].forEach(key => {
+          ['layerActions', 'circle', 'navigation', 'styles'].forEach(key => {
             if (controls[key] && map.hasControl(controls[key])) {
               try {
                 map.removeControl(controls[key]);
@@ -133,5 +146,14 @@ export function useMapControls() {
         }
       }
     };
-  }, [mapRef, drawRef, currentStyle, setCurrentStyle, isMobile, shouldInitializeFeatures]);
+  }, [
+    mapRef,
+    drawRef,
+    currentStyle,
+    setCurrentStyle,
+    isMobile,
+    shouldInitializeFeatures,
+    refreshAllLayersRef,
+    clearAllLayersRef,
+  ]);
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { formatSubcategoryName, colorOptions, getDefaultLayerColor } from '../../utils/helperFunctions';
 import { IoClose } from 'react-icons/io5';
-import { MdKeyboardArrowDown, MdRefresh, MdTune } from 'react-icons/md';
+import { MdDelete, MdKeyboardArrowDown, MdRefresh, MdTune } from 'react-icons/md';
 import { LayerDisplaySubCategoriesProps } from '../../types/allTypesAndInterfaces';
 import { t } from '../../i18n';
 
@@ -15,6 +15,7 @@ const LayerDisplaySubCategories = ({
   onDescriptionChange,
   onActionChange,
   onRefresh,
+  onDelete,
   isFetching,
   saveStatus,
   listPrice,
@@ -91,6 +92,15 @@ const LayerDisplaySubCategories = ({
             <MdRefresh
               className={`text-base ${isFetching ? 'animate-spin' : ''}`}
             />
+          </button>
+          <button
+            type="button"
+            onClick={() => onDelete(layer.id)}
+            className="flex items-center justify-center w-7 h-7 text-red-600 hover:text-white hover:bg-red-600 rounded border border-red-300 bg-white shrink-0"
+            aria-label={t('delete-layer')}
+            title={t('delete-layer')}
+          >
+            <MdDelete className="text-base" />
           </button>
         </div>
 

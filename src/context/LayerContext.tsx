@@ -104,6 +104,8 @@ export function LayerProvider(props: { children: ReactNode }) {
   const [password, setPassword] = useState<string>('');
 
   const pageCountsRef = useRef<{ [layerId: string]: number }>({});
+  const refreshAllLayersRef = useRef<(() => void) | null>(null);
+  const clearAllLayersRef = useRef<(() => void) | null>(null);
 
   const [layerDataMap, setLayerDataMap] = useState<LayerDataMap>({});
   const [showErrorMessage, setShowErrorMessage] = useState<boolean>(false);
@@ -184,7 +186,12 @@ export function LayerProvider(props: { children: ReactNode }) {
     setCreateLayerformStage('initial');
   }
 
-  function updateGeoJSONDataset(data: any, layerId: number, layerName: string) {
+  function updateGeoJSONDataset(
+    data: any,
+    layerId: number,
+    layerName: string,
+    appendToExisting: boolean = false
+  ) {
     setGeoPoints((prevPoints: MapFeatures[] | MapFeatures | any) => {
       const layerKey = String(layerId);
 
@@ -200,10 +207,12 @@ export function LayerProvider(props: { children: ReactNode }) {
         (p: MapFeatures) => String(p.layerId) === String(layerId)
       );
 
+      const carriedFeatures = appendToExisting ? existingPoint?.features || [] : [];
+
       const newPoint = {
         type: 'FeatureCollection',
         features: [
-          ...(existingPoint?.features || []), // Keep existing features if any
+          ...carriedFeatures,
           ...data.features.map(f => ({
             type: 'Feature',
             geometry: f.geometry,
@@ -344,8 +353,10 @@ export function LayerProvider(props: { children: ReactNode }) {
         const layerPromises = layers.map(async layer => {
           if (!layer) return;
 
-          // Skip if layer already processed
-          if (layerDataMap[layer.id]) {
+          // Skip if layer already processed, unless this is an explicit
+          // per-layer refetch (layerId passed without pageToken).
+          const isExplicitRefetch = !pageToken && layerId === layer.id;
+          if (!isExplicitRefetch && layerDataMap[layer.id]) {
             return;
           }
 
@@ -415,7 +426,7 @@ export function LayerProvider(props: { children: ReactNode }) {
                 [layer.id]: res.data.data,
               }));
 
-              updateGeoJSONDataset(res.data.data, layer.id, defaultName);
+              updateGeoJSONDataset(res.data.data, layer.id, defaultName, !!pageToken);
             }
           } catch (error) {
             console.error(`Error fetching layer ${layer?.id}:`, error);
@@ -495,7 +506,7 @@ export function LayerProvider(props: { children: ReactNode }) {
               includedTypes: [textSearchInput?.trim()],
             },
           ];
-          updateGeoJSONDataset(res.data.data, 1, defaultName);
+          updateGeoJSONDataset(res.data.data, 1, defaultName, !!pageToken);
           setReqFetchDataset(prev => ({
             ...prev,
             layers: layers,
@@ -579,7 +590,7 @@ export function LayerProvider(props: { children: ReactNode }) {
               selectedCountry: customBody.country_name || prev.selectedCountry,
             }));
 
-            updateGeoJSONDataset(res.data.data, 1002, defaultName);
+            updateGeoJSONDataset(res.data.data, 1002, defaultName, !!pageToken);
 
             if (action === 'full data' || customBody.action === 'full data') {
               setCentralizeOnce(true);
@@ -1578,6 +1589,8 @@ export function LayerProvider(props: { children: ReactNode }) {
         handleFullDataFetchSuccess,
         isLoadingDataset,
         setIsLoadingDataset,
+        refreshAllLayersRef,
+        clearAllLayersRef,
       }}
     >
       {children}

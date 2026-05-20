@@ -36,7 +36,7 @@ const setAuthorizationHeader = (options: AxiosRequestConfig, token: string) => {
 const refreshAuthToken = async (refreshToken: string): Promise<AuthResponse> => {
   try {
     const res = await makeApiCall({
-      url: '/refresh-token',
+      url: urls.refresh_token,
       method: 'POST',
       body: {
         refresh_token: refreshToken,

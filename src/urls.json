@@ -17,6 +17,7 @@
   "layer_map_data": "layer_map_data",
   "save_catalog": "save_catalog",
   "login": "login",
+  "refresh_token": "refresh_token",
   "reset_password": "reset_password",
   "create_user_profile": "create_user_profile",
   "user_profile": "user_profile",

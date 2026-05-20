@@ -707,8 +707,18 @@ export function CatalogProvider(props: { children: ReactNode }) {
     setIsDraftSaving(true);
 
     try {
+      // Empty-layers mode: persist layer metadata only (no features, no legend).
+      // The side panel re-renders the layer cards on restore, but nothing draws on
+      // the map and no viewport/sample refetch is triggered until the user
+      // explicitly requests data.
       const draftData = {
-        geoPoints: geoPoints.filter((layer: MapFeatures) => !isIntelligentLayer(layer)),
+        geoPoints: geoPoints
+          .filter((layer: MapFeatures) => !isIntelligentLayer(layer))
+          .map((layer: MapFeatures) => ({
+            ...layer,
+            features: [],
+            layer_legend: '',
+          })),
         markers: markers,
         measurements: measurements,
         caseStudyContent: caseStudyContent,

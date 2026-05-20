@@ -161,7 +161,15 @@ const FetchDatasetForm = () => {
         if (draft.selectedCity) setSelectedCity(draft.selectedCity);
         if (draft.searchType) setSearchType(draft.searchType);
         if (draft.textSearchInput) setTextSearchInput(draft.textSearchInput);
-        if (draft.layers?.length) setLayers(draft.layers);
+        if (draft.layers?.length) {
+          // Empty-layers mode: seed signatures so the auto-fetch effect at line
+          // ~350 dedupes the hydrated layers and skips the implicit /fetch_dataset
+          // call. Users explicitly refresh a layer to load data.
+          draft.layers.forEach(layer => {
+            layerSignaturesRef.current[layer.id] = layerSignature(layer);
+          });
+          setLayers(draft.layers);
+        }
       }
       didHydrateRef.current = true;
     }

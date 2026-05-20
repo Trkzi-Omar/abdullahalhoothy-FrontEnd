@@ -210,28 +210,32 @@ const CategoriesBrowserSubCategories = ({
                 return (
                   <div
                     key={type}
-                    className={`flex items-center justify-between gap-2 py-2 px-3 bg-[#f0f0f0] border rounded text-[14px] min-w-0 ${colors} ${borderClass} ${hideAddRemoveButtons ? 'cursor-pointer' : ''} transition-colors`}
+                    className={`flex items-center text-center justify-between gap-2 py-2 px-3 bg-[#f0f0f0] border rounded text-[14px] min-w-0 ${colors} ${borderClass} ${hideAddRemoveButtons ? "cursor-pointer" : ""} transition-colors`}
                     onClick={() => hideAddRemoveButtons && onTypeClick?.(type)}
                   >
-                    <div className="flex flex-col min-w-0 flex-1">
-                      <span
-                        onClick={() => onTypeClick?.(type)}
-                        className={`break-words ${onTypeClick ? 'cursor-pointer hover:underline' : ''}`}
-                      >
-                        {formatSubcategoryName(type)}
-                      </span>
-                      {getPrice && <span className="text-xs mt-1 opacity-90">{getPrice(type)}</span>}
-                    </div>
+                    <div
+                      onClick={() => onTypeClick?.(type)}
+                      className={`flex flex-col break-words gap-1 ${onTypeClick ? "cursor-pointer hover:underline" : ""}`}
+                    >
+                      {formatSubcategoryName(type)}
 
-                    {!hideAddRemoveButtons && onToggleTypeInLayer && (
-                      <LayerAffectSelect
-                        type={type}
-                        selectedLayerIds={counts.includedCount}
-                        layers={layers || []}
-                        onToggleTypeInLayer={onToggleTypeInLayer}
-                        onCreateLayerWithType={onCreateLayerWithType}
-                      />
-                    )}
+                      {!hideAddRemoveButtons && onToggleTypeInLayer && (
+                        <LayerAffectSelect
+                          type={type}
+                          selectedLayerIds={counts.includedCount}
+                          layers={layers || []}
+                          onToggleTypeInLayer={onToggleTypeInLayer}
+                          onCreateLayerWithType={onCreateLayerWithType}
+                        />
+                      )}
+                    </div>
+                    <div className="flex flex-col">
+                      {getPrice && (
+                        <span className="text-xs mt-1 opacity-90">
+                          {getPrice(type)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 );
               })}

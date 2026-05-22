@@ -30,5 +30,5 @@ export interface Insights {
   highestDensity: Feature;
   youngestPopulation: Feature;
   oldestPopulation: Feature;
-  others: any[];
+  others: unknown[];
 }

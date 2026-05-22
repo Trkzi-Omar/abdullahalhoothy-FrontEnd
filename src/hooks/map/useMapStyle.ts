@@ -19,5 +19,6 @@ export function useMapStyle() {
     return () => {
       map?.off('styledata', handleStyleLoad);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapRef, currentStyle, shouldInitializeFeatures, setGeoPoints]);
 }

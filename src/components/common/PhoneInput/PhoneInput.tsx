@@ -5,18 +5,18 @@ import {
   parseCountry,
   usePhoneInput,
   CountryIso2,
-  ParsedCountry
+  ParsedCountry,
 } from 'react-international-phone';
 import 'react-international-phone/style.css';
-import { 
-  MdKeyboardArrowDown, 
-  MdSearch, 
-  MdSentimentDissatisfied, 
-  MdErrorOutline, 
-  MdCheckCircle 
+import {
+  MdKeyboardArrowDown,
+  MdSearch,
+  MdSentimentDissatisfied,
+  MdErrorOutline,
+  MdCheckCircle,
 } from 'react-icons/md';
-import { t } from '../../../i18n';
-
+import i18next, { t } from '../../../i18n';
+import { PhoneCountry } from '../../../types';
 
 interface PhoneInputProps {
   value: string;
@@ -30,6 +30,17 @@ interface PhoneInputProps {
 }
 
 const preferredCountryCodes: CountryIso2[] = ['sa', 'ae', 'us', 'gb'];
+
+const getBaseLanguage = (language?: string) => (language || 'en').split('-')[0];
+
+const getCountryDisplayName = (country: ParsedCountry, language: string) => {
+  try {
+    const displayNames = new Intl.DisplayNames([language], { type: 'region' });
+    return displayNames.of(country.iso2.toUpperCase()) || country.name;
+  } catch {
+    return country.name;
+  }
+};
 
 const PhoneInput: React.FC<PhoneInputProps> = ({
   value,
@@ -45,13 +56,17 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const language = getBaseLanguage(i18next.language);
 
   // Parse countries data
-  const countries: ParsedCountry[] = useMemo(() => {
-    return defaultCountries.map((country) => {
+  const countries: PhoneCountry[] = useMemo(() => {
+    return defaultCountries.map(country => {
       const parsed = parseCountry(country);
+      const displayName = getCountryDisplayName(parsed, language);
       return {
         name: parsed.name,
+        displayName,
+        searchName: `${displayName} ${parsed.name}`.toLowerCase(),
         iso2: parsed.iso2,
         dialCode: parsed.dialCode,
         format: parsed.format,
@@ -59,7 +74,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
         areaCodes: parsed.areaCodes,
       };
     });
-  }, []);
+  }, [language]);
 
   // Ensure value has proper format
   const normalizedValue = useMemo(() => {
@@ -72,17 +87,11 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
     return cleaned ? `+${cleaned}` : '';
   }, [value]);
 
-  const { 
-    inputValue, 
-    handlePhoneValueChange, 
-    inputRef, 
-    country, 
-    setCountry 
-  } = usePhoneInput({
+  const { inputValue, handlePhoneValueChange, inputRef, country, setCountry } = usePhoneInput({
     defaultCountry: 'sa',
     value: normalizedValue,
     countries: defaultCountries,
-    onChange: (data) => {
+    onChange: data => {
       // Remove + prefix and pass to parent
       const cleanValue = data.phone.startsWith('+') ? data.phone.slice(1) : data.phone;
       onChange(cleanValue);
@@ -94,13 +103,13 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
     const preferred = countries.filter(c => preferredCountryCodes.includes(c.iso2));
     const rest = countries.filter(c => !preferredCountryCodes.includes(c.iso2));
     // Sort preferred by their order in preferredCountryCodes
-    preferred.sort((a, b) => 
-      preferredCountryCodes.indexOf(a.iso2) - preferredCountryCodes.indexOf(b.iso2)
+    preferred.sort(
+      (a, b) => preferredCountryCodes.indexOf(a.iso2) - preferredCountryCodes.indexOf(b.iso2)
     );
     // Sort rest alphabetically
-    rest.sort((a, b) => a.name.localeCompare(b.name));
+    rest.sort((a, b) => a.displayName.localeCompare(b.displayName, language));
     return { preferred, rest };
-  }, [countries]);
+  }, [countries, language]);
 
   // Filtered countries based on search
   const filteredCountries = useMemo(() => {
@@ -108,11 +117,11 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
       return sortedCountries;
     }
     const query = searchQuery.toLowerCase();
-    const filterFn = (c: ParsedCountry) => 
-      c.name.toLowerCase().includes(query) || 
+    const filterFn = (c: PhoneCountry) =>
+      c.searchName.includes(query) ||
       c.dialCode.includes(query) ||
       c.iso2.toLowerCase().includes(query);
-    
+
     return {
       preferred: sortedCountries.preferred.filter(filterFn),
       rest: sortedCountries.rest.filter(filterFn),
@@ -125,12 +134,15 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   }, [country.iso2, countries]);
 
   // Handle country selection
-  const handleCountrySelect = useCallback((countryData: ParsedCountry) => {
-    setCountry(countryData.iso2);
-    setIsOpen(false);
-    setSearchQuery('');
-    inputRef.current?.focus();
-  }, [setCountry, inputRef]);
+  const handleCountrySelect = useCallback(
+    (countryData: PhoneCountry) => {
+      setCountry(countryData.iso2);
+      setIsOpen(false);
+      setSearchQuery('');
+      inputRef.current?.focus();
+    },
+    [setCountry, inputRef]
+  );
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -166,7 +178,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
 
   return (
     <div className={`relative w-full ${className}`} ref={containerRef}>
-      <div 
+      <div
         className={`
           flex items-center w-full bg-white rounded-lg border ${borderColor} 
           transition-all duration-200 ${focusBorderColor} ${focusRingColor}
@@ -185,17 +197,13 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
             focus:outline-none focus:bg-gray-50
             ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
           `}
-          aria-label={t("select-country")}
+          aria-label={t('select-country')}
           aria-expanded={isOpen}
         >
           {currentCountry && (
             <>
-              <FlagImage 
-                iso2={currentCountry.iso2} 
-                size="24px"
-                className="rounded-sm shadow-sm"
-              />
-              <MdKeyboardArrowDown 
+              <FlagImage iso2={currentCountry.iso2} size="24px" className="rounded-sm shadow-sm" />
+              <MdKeyboardArrowDown
                 className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
               />
             </>
@@ -210,7 +218,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           onChange={handlePhoneValueChange}
           onBlur={onBlur}
           disabled={disabled}
-          placeholder={t("5xxxxxxxx")}
+          placeholder={t('5xxxxxxxx')}
           className={`
             flex-1 px-3 py-2.5 bg-transparent text-gray-800 placeholder-gray-400
             focus:outline-none text-base rounded-e-lg
@@ -222,7 +230,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
 
       {/* Dropdown */}
       {isOpen && (
-        <div 
+        <div
           ref={dropdownRef}
           className="
             absolute z-50 mt-2 w-full min-w-[280px] max-w-[360px] bg-white 
@@ -234,15 +242,13 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           {/* Search Input */}
           <div className="p-3 border-b border-gray-100 bg-gray-50/50">
             <div className="relative">
-              <MdSearch 
-                className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
-              />
+              <MdSearch className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 ref={searchInputRef}
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t("search-countries")}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder={t('search-countries')}
                 className="
                   w-full ps-10 pe-4 py-2.5 text-sm bg-white border border-gray-200 
                   rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 
@@ -258,8 +264,10 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
             {/* Preferred Countries */}
             {filteredCountries.preferred.length > 0 && (
               <>
-                <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/50">{t("popular-2")}</div>
-                {filteredCountries.preferred.map((countryData) => (
+                <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/50">
+                  {t('popular-2')}
+                </div>
+                {filteredCountries.preferred.map(countryData => (
                   <CountryOption
                     key={countryData.iso2}
                     country={countryData}
@@ -267,9 +275,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
                     onClick={() => handleCountrySelect(countryData)}
                   />
                 ))}
-                {filteredCountries.rest.length > 0 && (
-                  <div className="h-px bg-gray-100 mx-3" />
-                )}
+                {filteredCountries.rest.length > 0 && <div className="h-px bg-gray-100 mx-3" />}
               </>
             )}
 
@@ -277,9 +283,11 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
             {filteredCountries.rest.length > 0 && (
               <>
                 {filteredCountries.preferred.length > 0 && (
-                  <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/50">{t("all-countries")}</div>
+                  <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-gray-50/50">
+                    {t('all-countries')}
+                  </div>
                 )}
-                {filteredCountries.rest.map((countryData) => (
+                {filteredCountries.rest.map(countryData => (
                   <CountryOption
                     key={countryData.iso2}
                     country={countryData}
@@ -293,7 +301,9 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
             {/* No Results */}
             {filteredCountries.preferred.length === 0 && filteredCountries.rest.length === 0 && (
               <div className="px-4 py-8 text-center text-gray-500 text-sm">
-                <MdSentimentDissatisfied className="w-12 h-12 mx-auto mb-3 text-gray-300" />{t("no-countries-found")}</div>
+                <MdSentimentDissatisfied className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                {t('no-countries-found')}
+              </div>
             )}
           </div>
         </div>
@@ -312,7 +322,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
 
 // Country Option Component
 interface CountryOptionProps {
-  country: ParsedCountry;
+  country: PhoneCountry;
   isSelected: boolean;
   onClick: () => void;
 }
@@ -328,20 +338,12 @@ const CountryOption: React.FC<CountryOptionProps> = ({ country, isSelected, onCl
         ${isSelected ? 'bg-blue-50 text-blue-700' : 'text-gray-700'}
       `}
     >
-      <FlagImage 
-        iso2={country.iso2} 
-        size="22px"
-        className="rounded-sm shadow-sm flex-shrink-0"
-      />
-      <span className="flex-1 text-sm font-medium truncate">
-        {country.name}
-      </span>
+      <FlagImage iso2={country.iso2} size="22px" className="rounded-sm shadow-sm flex-shrink-0" />
+      <span className="flex-1 text-sm font-medium truncate">{country.displayName}</span>
       <span className={`text-sm font-medium ${isSelected ? 'text-blue-600' : 'text-gray-400'}`}>
         +{country.dialCode}
       </span>
-      {isSelected && (
-        <MdCheckCircle className="w-4 h-4 text-blue-600 flex-shrink-0" />
-      )}
+      {isSelected && <MdCheckCircle className="w-4 h-4 text-blue-600 flex-shrink-0" />}
     </button>
   );
 };

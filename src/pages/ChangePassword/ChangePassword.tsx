@@ -81,13 +81,7 @@ const ChangePassword: React.FC = () => {
         navigate('/auth');
       }
     } catch (error) {
-      const status = (error as { status?: number; response?: { status?: number } })?.status
-        ?? (error as { response?: { status?: number } })?.response?.status;
-      if (status === 401) {
-        setError(new Error(t("current-password-is-incorrect")));
-      } else {
-        setError(new Error(translateError(error, "request-failed")));
-      }
+      setError(new Error(translateError(error, "request-failed")));
     } finally {
       setLoading(false);
     }

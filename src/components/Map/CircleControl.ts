@@ -45,7 +45,7 @@ function CircleControl(props: CircleControlProps) {
         return circle.geometry.coordinates;
       });
 
-      const multiPolygon: GeoJSON.Feature = {
+      const multiPolygon: GeoJSON.Feature<GeoJSON.MultiPolygon> & { id?: string | number } = {
         type: 'Feature',
         geometry: {
           type: 'MultiPolygon',
@@ -56,9 +56,9 @@ function CircleControl(props: CircleControlProps) {
         },
       };
 
-      const featureIds = draw.add(multiPolygon as any);
+      const featureIds = draw.add(multiPolygon);
       if (featureIds && featureIds.length > 0) {
-        (multiPolygon as any).id = featureIds[0];
+        multiPolygon.id = featureIds[0];
         _map.fire('draw.create', { features: [multiPolygon] });
 
         draw.changeMode('simple_select');

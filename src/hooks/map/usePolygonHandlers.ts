@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import * as turf from '@turf/turf';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useMapContext } from '../../context/MapContext';
+import type { DrawEvent } from '../../types';
 
 export function usePolygonHandlers() {
   const { mapRef, shouldInitializeFeatures, drawRef } = useMapContext();
@@ -20,7 +21,7 @@ export function usePolygonHandlers() {
         try {
           const feature = {
             type: 'Feature' as const,
-            geometry: polygon.geometry as any,
+            geometry: polygon.geometry,
             properties: polygon.properties || {},
             id: polygon.id,
           };
@@ -84,7 +85,7 @@ export function usePolygonHandlers() {
     /**
      * Draw handler for polygons, creates a new polygon
      */
-    const handleDrawCreate = (e: any) => {
+    const handleDrawCreate = (e: DrawEvent) => {
       if (!e.features || !e.features[0]) return;
 
       const geojson = e.features[0];
@@ -117,7 +118,7 @@ export function usePolygonHandlers() {
     /**
      * Update handler for polygons
      */
-    const handleDrawUpdate = (e: any) => {
+    const handleDrawUpdate = (e: DrawEvent) => {
       if (!e.features || !e.features[0]) return;
 
       const geojson = e.features[0];
@@ -150,7 +151,7 @@ export function usePolygonHandlers() {
     /**
      * Delete handler for polygons, deletes a polygon
      */
-    const handleDrawDelete = (e: any) => {
+    const handleDrawDelete = (e: DrawEvent) => {
       if (!e.features || !e.features[0]) return;
 
       const deletedPolygonsId = e.features[0].id;

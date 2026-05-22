@@ -6,7 +6,10 @@ import * as AiIcons from 'react-icons/ai';
 import * as BsIcons from 'react-icons/bs';
 import * as MdIcons from 'react-icons/md';
 
-const iconLibraries: { [key: string]: any } = {
+type IconComponent = React.ComponentType<{ className?: string }>;
+type IconLibrary = Record<string, IconComponent>;
+
+const iconLibraries: Record<string, IconLibrary> = {
   fa: FaIcons,
   io5: Io5Icons,
   gr: GrIcons,
@@ -17,7 +20,7 @@ const iconLibraries: { [key: string]: any } = {
 
 interface DynamicIconProps {
   iconString?: string;
-  fallbackIcon?: React.ComponentType<any>;
+  fallbackIcon?: IconComponent;
   className?: string;
 }
 
@@ -34,7 +37,7 @@ interface DynamicIconProps {
 export const DynamicIcon: React.FC<DynamicIconProps> = ({
   iconString,
   fallbackIcon: FallbackIcon = FaIcons.FaMapMarkedAlt,
-  className = "w-6 h-6"
+  className = 'w-6 h-6',
 }) => {
   if (!iconString) {
     return <FallbackIcon className={className} />;

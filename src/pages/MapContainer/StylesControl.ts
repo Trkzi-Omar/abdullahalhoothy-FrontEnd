@@ -69,7 +69,7 @@ StylesControl.prototype.onAdd = function (map) {
       if (selectedStyle && selectedStyle !== this.currentStyle) {
         this._map.setStyle(selectedStyle);
         this._updateButtons(selectedStyle);
-        this.setCurrentStyle(prev => selectedStyle);
+        this.setCurrentStyle(selectedStyle);
         this.currentStyle = selectedStyle;
         stylesContainer.classList.add('hidden');
         toggleButton.classList.remove('text-primary');

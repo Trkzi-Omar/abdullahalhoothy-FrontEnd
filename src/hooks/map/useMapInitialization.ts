@@ -1,4 +1,4 @@
-import { useEffect, MutableRefObject, useState } from 'react';
+import { useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import mapConfig from '../../mapConfig.json';
 import { useCatalogContext } from '../../context/CatalogContext';
@@ -80,6 +80,7 @@ export function useMapInitialization() {
         setIsStyleLoaded(false);
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStyle, mapContainerRef]);
 
   return isStyleLoaded;

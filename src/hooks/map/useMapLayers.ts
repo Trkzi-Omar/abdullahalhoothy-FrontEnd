@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps */
 import { useEffect, useState, useCallback, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { useCatalogContext } from '../../context/CatalogContext';
@@ -17,6 +17,7 @@ import _ from 'lodash';
 import { isIntelligentLayer } from '../../utils/layerUtils';
 
 import { LRUCache } from 'lru-cache';
+import { CityApiItem, CityBounds, WorkerFeatureResponse } from '../../types/map';
 
 const cache = new LRUCache({
   max: 100,
@@ -106,7 +107,7 @@ export function useMapLayers() {
   const map = mapRef.current;
   const { geoPoints } = useCatalogContext();
 
-  const [cityBounds, setCityBounds] = useState<Record<string, any>>({});
+  const [cityBounds, setCityBounds] = useState<Record<string, CityBounds>>({});
 
   // Add this ref
   const gridLayerIdRef = useRef<string | null>(null);
@@ -196,10 +197,10 @@ export function useMapLayers() {
           method: 'GET',
         });
 
-        const boundsMap: Record<string, any> = {};
-        Object.values(response.data.data)
+        const boundsMap: Record<string, CityBounds> = {};
+        (Object.values(response.data.data) as CityApiItem[][])
           .flat()
-          .forEach((city: any) => {
+          .forEach((city: CityApiItem) => {
             boundsMap[city.name.toLowerCase()] = {
               // Format: [west, south, east, north]
               bounds: [
@@ -315,16 +316,18 @@ export function useMapLayers() {
 
                     worker.postMessage({ featureCollection });
 
-                    const processedData = await new Promise<any>((resolve, reject) => {
-                      worker.onmessage = event => {
-                        if (event.data.error) {
-                          reject(new Error(event.data.error));
-                        } else {
-                          resolve(event.data);
-                        }
-                      };
-                      worker.onerror = err => reject(err);
-                    });
+                    const processedData = await new Promise<WorkerFeatureResponse>(
+                      (resolve, reject) => {
+                        worker.onmessage = event => {
+                          if (event.data.error) {
+                            reject(new Error(event.data.error));
+                          } else {
+                            resolve(event.data);
+                          }
+                        };
+                        worker.onerror = err => reject(err);
+                      }
+                    );
 
                     worker.terminate();
 
@@ -444,7 +447,7 @@ export function useMapLayers() {
 
                     worker.postMessage({ grid, featureCollection });
 
-                    grid.features = await new Promise<any[]>((resolve, reject) => {
+                    grid.features = await new Promise<GeoJSON.Feature[]>((resolve, reject) => {
                       worker.onmessage = event => {
                         resolve(event.data.features);
                       };
@@ -519,16 +522,18 @@ export function useMapLayers() {
                       basedon: featureCollection.basedon,
                     });
 
-                    const processedData = await new Promise<any>((resolve, reject) => {
-                      worker.onmessage = event => {
-                        if (event.data.error) {
-                          reject(new Error(event.data.error));
-                        } else {
-                          resolve(event.data);
-                        }
-                      };
-                      worker.onerror = err => reject(err);
-                    });
+                    const processedData = await new Promise<WorkerFeatureResponse>(
+                      (resolve, reject) => {
+                        worker.onmessage = event => {
+                          if (event.data.error) {
+                            reject(new Error(event.data.error));
+                          } else {
+                            resolve(event.data);
+                          }
+                        };
+                        worker.onerror = err => reject(err);
+                      }
+                    );
 
                     worker.terminate();
 
@@ -593,7 +598,9 @@ export function useMapLayers() {
                     hoveredStateId = e.features[0].id as number;
                     map.setFeatureState({ source: sourceId, id: hoveredStateId }, { hover: true });
 
-                    const coordinates = (e.features[0].geometry as any).coordinates.slice();
+                    const coordinates = (
+                      e.features[0].geometry as GeoJSON.Point
+                    ).coordinates.slice() as [number, number];
                     const properties = e.features[0].properties as CustomProperties;
 
                     // Show loading spinner in the popup
@@ -622,7 +629,9 @@ export function useMapLayers() {
                     } else {
                       debouncedStreetViewCheck(lat, lng, hasStreetView => {
                         if (popup) {
-                          popup.setHTML(generatePopupContent(properties, coordinates, false, hasStreetView));
+                          popup.setHTML(
+                            generatePopupContent(properties, coordinates, false, hasStreetView)
+                          );
                         }
                       });
                     }

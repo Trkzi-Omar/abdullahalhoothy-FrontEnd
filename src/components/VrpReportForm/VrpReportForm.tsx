@@ -288,11 +288,7 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
       const fmt = new GeoJSON();
       const features = fmt.readFeatures(parsed, { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' });
       if (!features.length) { setGeoJsonError(t("no-features-found")); return; }
-      features.forEach(f => {
-        const g = f.getGeometry();
-        f.setGeometryName('draw');
-        if (g) f.setGeometry(g);
-      });
+      features.forEach(f => f.setGeometryName('draw'));
       drawSource.getFeatures().filter(f => f.getGeometryName() === 'draw').forEach(f => drawSource.removeFeature(f));
       drawSource.addFeatures(features);
       // Normalise to FeatureCollection for formData

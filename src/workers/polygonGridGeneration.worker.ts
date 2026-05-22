@@ -2,10 +2,7 @@ import * as turf from '@turf/turf';
 import _ from 'lodash';
 import { Feature, Polygon, MultiPolygon } from 'geojson';
 
-const abbreviateBasedOn = (basedon: string) =>
-  'population' === basedon.toLowerCase().trim() ? 'PCNT' : basedon;
-
-self.onmessage = async event => {
+self.onmessage = async (event: MessageEvent<{ featureCollection: { features: Feature<Polygon | MultiPolygon>[] } }>) => {
   const { featureCollection } = event.data;
 
   try {
@@ -58,14 +55,14 @@ self.onmessage = async event => {
       }
     );
 
-    (self as any).postMessage({
+    self.postMessage({
       features: processedFeatures,
       type: 'FeatureCollection',
     });
   } catch (error) {
     console.error('Worker error:', error);
-    (self as any).postMessage({
-      error: error.message,
+    self.postMessage({
+      error: error instanceof Error ? error.message : String(error),
       details: {
         featureCollectionValid: !!featureCollection?.features,
       },

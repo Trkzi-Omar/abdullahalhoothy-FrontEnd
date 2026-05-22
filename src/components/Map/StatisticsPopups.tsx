@@ -10,7 +10,7 @@ export default function StatisticsPopups() {
   );
   return (
     <>
-      {polygonsStatisticsPopups.map((polygon, index) => (
+      {polygonsStatisticsPopups.map(polygon => (
         <StatisticsPopup key={`statistics-popup-${polygon.id}`} polygon={polygon} />
       ))}
     </>

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps, react-refresh/only-export-components */
+/* eslint-disable @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps, react-refresh/only-export-components */
 // src/context/LayerContext.tsx
 
 import React, {
@@ -24,6 +24,14 @@ import {
   MapFeatures,
   Insights,
 } from '../types/allTypesAndInterfaces';
+import {
+  ApiErrorWithResponse,
+  CustomFetchBody,
+  DatasetFeature,
+  FetchDatasetData,
+  IntelligenceFeature,
+  ViewportIntelligenceResponse,
+} from '../types/layer';
 import urls from '../urls.json';
 import { useCatalogContext } from './CatalogContext';
 import { useAuth } from '../context/AuthContext';
@@ -39,6 +47,9 @@ import { t } from '../i18n';
 import { translateApiMessage } from '../utils/apiMessages';
 
 const LayerContext = createContext<LayerContextType | undefined>(undefined);
+
+const hasApiErrorResponse = (error: unknown): error is ApiErrorWithResponse =>
+  typeof error === 'object' && error !== null && 'response' in error;
 
 export function LayerProvider(props: { children: ReactNode }) {
    const { 
@@ -122,7 +133,7 @@ export function LayerProvider(props: { children: ReactNode }) {
 
   const currentZoomLevel = useMemo(() => backendZoom ?? defaultMapConfig.zoomLevel, [backendZoom]);
 
-  const [currentViewportInsights, setCurrentViewportInsights] = useState<Insights | any | null>(
+  const [currentViewportInsights, setCurrentViewportInsights] = useState<Insights | null>(
     null
   );
 
@@ -239,12 +250,12 @@ export function LayerProvider(props: { children: ReactNode }) {
   }
 
   function updateGeoJSONDataset(
-    data: any,
+    data: FetchDatasetData,
     layerId: number,
     layerName: string,
     appendToExisting: boolean = false
   ) {
-    setGeoPoints((prevPoints: MapFeatures[] | MapFeatures | any) => {
+    setGeoPoints((prevPoints: MapFeatures[]) => {
       const layerKey = String(layerId);
 
       pageCountsRef.current[layerKey] = (pageCountsRef.current[layerKey] || 0) + 1;
@@ -265,7 +276,7 @@ export function LayerProvider(props: { children: ReactNode }) {
         type: 'FeatureCollection',
         features: [
           ...carriedFeatures,
-          ...data.features.map(f => ({
+          ...data.features.map((f: DatasetFeature) => ({
             type: 'Feature',
             geometry: f.geometry,
             properties: f.properties,
@@ -305,11 +316,11 @@ export function LayerProvider(props: { children: ReactNode }) {
     });
   }
   //To be removed after fixed on backend
-  function assignPopularityCategory(json: any): void {
+  function assignPopularityCategory(json: FetchDatasetData): void {
     const features = json.features;
 
     // Extract popularity scores
-    const scores = features.map(f => f.properties.popularity_score);
+    const scores = features.map(f => Number(f.properties.popularity_score ?? 0));
 
     // Compute percentiles
     scores.sort((a, b) => b - a);
@@ -324,7 +335,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     // Assign categories
     features.forEach(feature => {
       if (!feature.properties.popularity_score_category) {
-        const score = feature.properties.popularity_score;
+        const score = Number(feature.properties.popularity_score ?? 0);
         if (score >= thresholds.very_high) {
           feature.properties.popularity_score_category = 'very high';
         } else if (score >= thresholds.high) {
@@ -348,7 +359,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     pageToken?: string,
     layerId?: number,
     prevLayerId?: string,
-    customBody?: any
+    customBody?: CustomFetchBody
   ) {
     if (!pageToken && !layerId) {
       setIsLoadingDataset(true);
@@ -482,7 +493,10 @@ export function LayerProvider(props: { children: ReactNode }) {
             }
           } catch (error) {
             console.error(`Error fetching layer ${layer?.id}:`, error);
-            if (error?.response?.data?.detail === 'Insufficient balance in wallet') {
+            if (
+              hasApiErrorResponse(error) &&
+              error.response?.data?.detail === 'Insufficient balance in wallet'
+            ) {
               resetFormStage();
               setShowErrorMessage(true);
               throw error;
@@ -515,7 +529,7 @@ export function LayerProvider(props: { children: ReactNode }) {
           };
         }
 
-        const requestBody: any = {
+        const requestBody: Record<string, unknown> = {
           country_name: reqFetchDataset.selectedCountry,
           city_name: reqFetchDataset.selectedCity,
           boolean_query: `@${textSearchInput?.trim()}@`, // Use the search term as the boolean query
@@ -580,7 +594,7 @@ export function LayerProvider(props: { children: ReactNode }) {
             `${customBody.city_name || customBody.selectedCity} ${_.upperFirst(customBody.boolean_query)}`;
 
           // If this is coming from the LLM, we need to prepare the body for the fetch_dataset endpoint
-          const fetchBody: any = {
+          const fetchBody: CustomFetchBody = {
             user_id: authResponse?.localId,
             city_name: customBody.city_name || customBody.selectedCity,
             country_name: customBody.country_name || customBody.selectedCountry,
@@ -678,7 +692,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     }
   }
 
-  async function fetchAllPages(layerId: number, initialPageToken: string, customBody?: any) {
+  async function fetchAllPages(layerId: number, initialPageToken: string, customBody?: CustomFetchBody) {
     let pageToken = initialPageToken;
     let prevLayerId = '';
 
@@ -899,7 +913,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       withRealEstate?: boolean;
       shouldReturnFeatures?: boolean;
       sample?: boolean;
-    }): Promise<any> => {
+    }): Promise<ViewportIntelligenceResponse | null | undefined> => {
       const map = mapRef.current;
       if (!map) {
         console.warn('Map not initialized');
@@ -1468,7 +1482,7 @@ export function LayerProvider(props: { children: ReactNode }) {
     incrementFormStage();
   }
 
-  function calculateInsights(features: any) {
+  function calculateInsights(features: IntelligenceFeature[]) {
     if (features.length === 0) return null;
 
     // Initialize aggregation variables

@@ -11,7 +11,6 @@ import {
   FaCoffee,
   FaShoppingBag,
 } from 'react-icons/fa';
-import { MetricKey } from '../../types/allTypesAndInterfaces';
 
 // Business type specific icon strategies
 const iconStrategies: Record<string, Record<string, () => JSX.Element>> = {
@@ -48,7 +47,7 @@ const iconStrategies: Record<string, Record<string, () => JSX.Element>> = {
 export const getMetricIcon = (
   metric: string,
   businessType: string = 'pharmacy',
-  businessConfig?: any
+  businessConfig?: { metrics?: Record<string, { icon?: React.ReactNode }> }
 ): JSX.Element => {
   // If we have business config with metric icons, use those
   if (businessConfig?.metrics?.[metric]?.icon) {

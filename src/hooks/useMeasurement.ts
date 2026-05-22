@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useCallback, useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import apiRequest from '../services/apiRequest';
@@ -10,17 +10,16 @@ import { useUIContext } from '../context/UIContext';
 import { MeasurementForm } from '../components/MeasurementForm/MeasurementForm';
 import React from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { MarkerType } from '../types';
+import { MarkerType, MeasurementApiResponse, MeasurementResult, PopupElement } from '../types';
 import i18n, { t } from '../i18n';
-
 
 export interface MeasurementState {
   isMeasuring: boolean;
   measureSourcePoint: mapboxgl.LngLat | null;
   measureDestinationPoint: mapboxgl.LngLat | null;
-  measurementResult: any | null;
-  measureLine: any | null;
-  previewLine: any | null;
+  measurementResult: MeasurementResult | null;
+  measureLine: GeoJSON.Feature<GeoJSON.LineString> | null;
+  previewLine: GeoJSON.Feature<GeoJSON.LineString> | null;
   measurementPopup: mapboxgl.Popup | null;
 }
 
@@ -30,7 +29,7 @@ export interface MeasurementActions {
   handleMapClickForMeasurement: (e: mapboxgl.MapMouseEvent) => Promise<void>;
   clearMeasurementLayers: () => void;
   displayRouteOnMap: (
-    polygonData: any,
+    polygonData: GeoJSON.GeoJSON,
     savedMeasurement?: {
       id: string;
       name: string;
@@ -43,7 +42,7 @@ export interface MeasurementActions {
   setIsMeasuring: (isMeasuring: boolean) => void;
   setMeasureSourcePoint: (point: mapboxgl.LngLat | null) => void;
   setMeasureDestinationPoint: (point: mapboxgl.LngLat | null) => void;
-  setMeasurementResult: (result: any | null) => void;
+  setMeasurementResult: (result: MeasurementResult | null) => void;
 }
 
 export const useMeasurement = (): MeasurementState & MeasurementActions => {
@@ -66,9 +65,9 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
   const [measureDestinationPoint, setMeasureDestinationPoint] = useState<mapboxgl.LngLat | null>(
     null
   );
-  const [measurementResult, setMeasurementResult] = useState<any | null>(null);
-  const [measureLine, setMeasureLine] = useState<any | null>(null);
-  const [previewLine, setPreviewLine] = useState<any | null>(null);
+  const [measurementResult, setMeasurementResult] = useState<MeasurementResult | null>(null);
+  const [measureLine, setMeasureLine] = useState<GeoJSON.Feature<GeoJSON.LineString> | null>(null);
+  const [previewLine, setPreviewLine] = useState<GeoJSON.Feature<GeoJSON.LineString> | null>(null);
   const [measurementPopup, setMeasurementPopup] = useState<mapboxgl.Popup | null>(null);
 
   const isExitingRef = useRef<boolean>(false);
@@ -177,7 +176,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
 
       // Remove all popups
       document.querySelectorAll('.mapboxgl-popup').forEach(popup => {
-        const popupInstance = (popup as any)._mapboxgl_popup;
+        const popupInstance = (popup as PopupElement)._mapboxgl_popup;
         if (popupInstance && popupInstance.remove) {
           popupInstance.remove();
         } else {
@@ -290,7 +289,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
 
   const displayRouteOnMap = useCallback(
     (
-      polygonData: any,
+      polygonData: GeoJSON.GeoJSON,
       savedMeasurement?: {
         id: string;
         name: string;
@@ -333,7 +332,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
           },
         });
 
-        const debugMapClick = (e: any) => {
+        const debugMapClick = (e: mapboxgl.MapMouseEvent) => {
           console.log('🗺️ General map click:', e.lngLat);
           const features = map.queryRenderedFeatures(e.point);
           console.log(
@@ -357,24 +356,24 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                   `
                   <div class="p-3 bg-white rounded-lg shadow-md">
                     <div class="text-sm">
-                      <strong>${t("measurement-name")}:</strong> ${savedMeasurement.name}
+                      <strong>${t('measurement-name')}:</strong> ${savedMeasurement.name}
                       <br />
-                      <strong>${t("description")}:</strong> ${savedMeasurement.description || '-'}
+                      <strong>${t('description')}:</strong> ${savedMeasurement.description || '-'}
                       <br />
-                      <strong>${t("distance")}:</strong> ${savedMeasurement.distance.toFixed(2)} km
+                      <strong>${t('distance')}:</strong> ${savedMeasurement.distance.toFixed(2)} km
                       <br />
-                      <strong>${t("drive-time")}:</strong> ${savedMeasurement.duration.toFixed(0)} min
+                      <strong>${t('drive-time')}:</strong> ${savedMeasurement.duration.toFixed(0)} min
                     </div>
                     <div class="mt-3 flex justify-end gap-2">
                       <button
                         class="delete-measurement-hook px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
                       >
-                        ${t("delete")}
+                        ${t('delete')}
                       </button>
                        <button
                         class="edit-measurement-hook px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs"
                       >
-                        ${t("edit")}
+                        ${t('edit')}
                       </button>
                     </div>
                   </div>
@@ -431,24 +430,24 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
                 `
                 <div class="p-3 bg-white rounded-lg shadow-md">
                   <div class="text-sm">
-                    <strong>${t("measurement-name")}:</strong> ${savedMeasurement.name}
+                    <strong>${t('measurement-name')}:</strong> ${savedMeasurement.name}
                     <br />
-                    <strong>${t("description")}:</strong> ${savedMeasurement.description || '-'}
+                    <strong>${t('description')}:</strong> ${savedMeasurement.description || '-'}
                     <br />
-                    <strong>${t("distance")}:</strong> ${savedMeasurement.distance.toFixed(2)} km
+                    <strong>${t('distance')}:</strong> ${savedMeasurement.distance.toFixed(2)} km
                     <br />
-                    <strong>${t("drive-time")}:</strong> ${savedMeasurement.duration.toFixed(0)} min
+                    <strong>${t('drive-time')}:</strong> ${savedMeasurement.duration.toFixed(0)} min
                   </div>
                   <div class="mt-3 flex justify-end gap-2">
                     <button
                       class="delete-measurement-hook px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs"
                     >
-                      ${t("delete")}
+                      ${t('delete')}
                     </button>
                     <button
                       class="edit-measurement-hook px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs"
                     >
-                    ${t("edit")}
+                    ${t('edit')}
                     </button>
                   </div>
                 </div>
@@ -522,7 +521,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
 
       const existingLoadingPopups = document.querySelectorAll('.loading-popup');
       existingLoadingPopups.forEach(popup => {
-        const popupInstance = (popup as any)._mapboxgl_popup;
+        const popupInstance = (popup as PopupElement)._mapboxgl_popup;
         if (popupInstance && popupInstance.remove) {
           popupInstance.remove();
         } else {
@@ -540,7 +539,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
           `
         <div class="p-2 flex items-center bg-white rounded-lg shadow-sm">
           <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 me-2"></div>
-          <span>${t("calculating-route")}</span>
+          <span>${t('calculating-route')}</span>
         </div>
       `
         )
@@ -553,7 +552,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
   );
 
   const handleSaveMeasurement = useCallback(
-    (point1: mapboxgl.LngLat, point2: mapboxgl.LngLat, apiResult: any) => {
+    (point1: mapboxgl.LngLat, point2: mapboxgl.LngLat, apiResult: MeasurementApiResponse) => {
       const handleSubmit = (name: string, description: string) => {
         // Generate measurement ID
         const measurementId = uuidv4();
@@ -646,7 +645,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
           }
         }
 
-        toast.success(t("measurement-saved-successfully"));
+        toast.success(t('measurement-saved-successfully'));
         closeModal();
 
         setIsMeasuring(false);
@@ -691,7 +690,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
   );
 
   const showRouteResult = useCallback(
-    (point1: mapboxgl.LngLat, point2: mapboxgl.LngLat, apiResult: any) => {
+    (point1: mapboxgl.LngLat, point2: mapboxgl.LngLat, apiResult: MeasurementApiResponse) => {
       if (!mapRef.current) return null;
 
       const midpoint = new mapboxgl.LngLat(
@@ -709,13 +708,13 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
         className: 'measure-popup',
       })
         .setLngLat(midpoint)
-      .setHTML(
-        `
+        .setHTML(
+          `
           <div class="p-3 bg-white rounded-lg shadow-md">
             <div class="text-sm">
-              <strong>${t("distance")}:</strong> ${(apiResult.data?.distance_in_km ?? 0).toFixed(2)} km
+              <strong>${t('distance')}:</strong> ${(apiResult.data?.distance_in_km ?? 0).toFixed(2)} km
               <br />
-              <strong>${t("drive-time")}:</strong> ${(apiResult.data?.drive_time_in_min ?? 0).toFixed(0)} min
+              <strong>${t('drive-time')}:</strong> ${(apiResult.data?.drive_time_in_min ?? 0).toFixed(0)} min
             </div>
             <div class="mt-3 flex justify-end gap-2">
               <button
@@ -731,7 +730,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
             </div>
           </div>
         `
-      )
+        )
         .addTo(mapRef.current);
 
       const popupElement = popup.getElement();
@@ -803,7 +802,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
           `
           <div class="p-3 bg-white rounded-lg shadow-md">
             <div class="text-sm">
-              <strong>${t("distance")}:</strong> ${formattedDistance}
+              <strong>${t('distance')}:</strong> ${formattedDistance}
               ${errorMessage ? `<div class="text-red-500 text-xs mt-1">${errorMessage}</div>` : ''}
             </div>
             <div class="mt-3 flex justify-end">
@@ -899,8 +898,9 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
 
         const lineColor = generateRandomColor();
 
-        const lineFeature = {
+        const lineFeature: GeoJSON.Feature<GeoJSON.LineString> = {
           type: 'Feature',
+          properties: {},
           geometry: {
             type: 'LineString',
             coordinates: [
@@ -916,12 +916,12 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
         }
 
         if (map.getSource('measure-line')) {
-          (map.getSource('measure-line') as mapboxgl.GeoJSONSource).setData(lineFeature as any);
+          (map.getSource('measure-line') as mapboxgl.GeoJSONSource).setData(lineFeature);
           map.setPaintProperty('measure-line-layer', 'line-color', lineColor);
         } else {
           map.addSource('measure-line', {
             type: 'geojson',
-            data: lineFeature as any,
+            data: lineFeature,
           });
 
           map.addLayer({
@@ -944,8 +944,8 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
         };
 
         if (measureSourcePoint.lat === e.lngLat.lat && measureSourcePoint.lng === e.lngLat.lng) {
-          toast.warning(t("measurement-api-call-source-and-destination-points-are-identical"), {
-            description:t("please-select-different-points"),
+          toast.warning(t('measurement-api-call-source-and-destination-points-are-identical'), {
+            description: t('please-select-different-points'),
           });
           console.warn('Measurement API Call: Source and Destination points are identical.', body);
         }
@@ -980,10 +980,10 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
           // Extract route data from the new API response structure
           // API returns: data.route[0].distance (meters), data.route[0].duration ("1618s"), data.route[0].polyline
           const route = apiData.data?.route?.[0];
-          
+
           // Convert distance from meters to kilometers
           const distanceInKm = route?.distance ? route.distance / 1000 : null;
-          
+
           // Convert duration from "1618s" string to minutes (number)
           let durationInMin: number | null = null;
           if (route?.duration) {
@@ -993,7 +993,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
               durationInMin = durationSeconds / 60;
             }
           }
-          
+
           // Get polyline from route
           const polyline = route?.polyline || apiData.data?.drive_polygon;
 
@@ -1176,7 +1176,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
     const handleMouseMove = (e: mapboxgl.MapMouseEvent) => {
       if (!measureSourcePoint || measureDestinationPoint) return;
 
-      const lineFeature = {
+      const lineFeature: GeoJSON.Feature<GeoJSON.LineString> = {
         type: 'Feature',
         properties: {},
         geometry: {
@@ -1188,7 +1188,7 @@ export const useMeasurement = (): MeasurementState & MeasurementActions => {
         },
       };
 
-      (map.getSource('preview-line') as mapboxgl.GeoJSONSource).setData(lineFeature as any);
+      (map.getSource('preview-line') as mapboxgl.GeoJSONSource).setData(lineFeature);
       setPreviewLine(lineFeature);
     };
 

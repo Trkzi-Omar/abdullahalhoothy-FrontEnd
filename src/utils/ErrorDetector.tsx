@@ -6,8 +6,6 @@ const detectBlockedByClient = (callback: (isBlocked: boolean) => void) => {
   const monitorAjaxRequests = () => {
     // Override XMLHttpRequest
     const originalOpen = XMLHttpRequest.prototype.open;
-    const originalSend = XMLHttpRequest.prototype.send;
-
     XMLHttpRequest.prototype.open = function (
       this: XMLHttpRequest,
       method: string,

@@ -118,6 +118,7 @@ export function useTierPricing(params: UseTierPricingParams): UseTierPricingRetu
         setIsLoading(false);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authResponse?.localId, params.country, params.city, datasetsKey, params.report_potential_business_type, params.enabled]);
 
   // Fetch on mount and when dependencies change (debounced)
@@ -245,6 +246,7 @@ export function useLocationPricing(params: UseLocationPricingParams): UseLocatio
         setIsLoading(false);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authResponse?.localId, params.country, params.city, datasetsKey, params.reportType, params.report_potential_business_type, params.enabled]);
 
   // Fetch on mount and when dependencies change (debounced)
@@ -354,6 +356,7 @@ export function useAdditionalCost(params: UseAdditionalCostParams): UseAdditiona
         setIsLoading(false);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authResponse?.localId, params.country, params.city, params.reportTier, params.report_potential_business_type, params.enabled, datasetsKey]);
 
   // Fetch on mount and when dependencies change (debounced)

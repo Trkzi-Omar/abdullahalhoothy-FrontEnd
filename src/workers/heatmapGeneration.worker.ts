@@ -1,12 +1,14 @@
 import pMap from 'p-map';
-import _ from 'lodash';
+import { HeatmapFeature } from '../types';
 
 interface HeatmapProperties {
   density: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
-self.onmessage = async event => {
+self.onmessage = async (
+  event: MessageEvent<{ featureCollection: { features: HeatmapFeature[] }; basedon?: string }>
+) => {
   const { featureCollection, basedon } = event.data;
   const concurrency = navigator.hardwareConcurrency || 4;
 
@@ -14,7 +16,7 @@ self.onmessage = async event => {
     console.time('Processing Features');
     const processedFeatures = await pMap(
       featureCollection.features,
-      async (feature: any) => {
+      async (feature: HeatmapFeature) => {
         let density = 1;
 
         if (basedon && feature.properties[basedon]) {
@@ -61,7 +63,7 @@ self.onmessage = async event => {
       },
     }));
 
-    (self as any).postMessage({
+    self.postMessage({
       features: normalizedFeatures,
       stats: {
         originalRange: { min: minDensity, max: maxDensity },
@@ -75,12 +77,12 @@ self.onmessage = async event => {
     });
   } catch (error) {
     console.error('Error in heatmap worker:', error);
-    console.error('Stack:', error.stack);
+    console.error('Stack:', error instanceof Error ? error.stack : undefined);
     console.error('Context:', {
       featureCount: featureCollection?.features?.length,
       basedon,
       concurrency,
     });
-    (self as any).postMessage({ error: error.message });
+    self.postMessage({ error: error instanceof Error ? error.message : String(error) });
   }
 };

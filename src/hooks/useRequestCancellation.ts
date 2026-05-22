@@ -4,8 +4,8 @@ import axios, { CancelTokenSource } from 'axios';
 interface CancellationConfig {
   cancelSourcesRef: MutableRefObject<CancelTokenSource[]>;
   conditions?: {
-    dependencies: any[];
-    shouldCancel: (...deps: any[]) => boolean;
+    dependencies: unknown[];
+    shouldCancel: (...deps: unknown[]) => boolean;
     message?: string;
   };
   cleanupOnUnmount?: boolean;
@@ -25,6 +25,7 @@ export const useRequestCancellation = ({
         cancelAllRequests(message);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, conditions ? conditions.dependencies : []);
 
   // Cleanup on unmount
@@ -34,6 +35,7 @@ export const useRequestCancellation = ({
         cancelAllRequests('Component unmounted');
       };
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const createCancelToken = () => {
@@ -55,7 +57,7 @@ export const useRequestCancellation = ({
       cancelSourcesRef.current = [];
     }
   };
-  const isCancellationError = (error: any) => {
+  const isCancellationError = (error: unknown) => {
    return  axios.isCancel(error);
   };
   return {

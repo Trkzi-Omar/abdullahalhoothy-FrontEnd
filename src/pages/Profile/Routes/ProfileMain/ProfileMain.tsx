@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
 import {
   FaTimes,
@@ -23,7 +23,10 @@ import { toast } from 'sonner';
 import { t } from '../../../../i18n';
 import i18n from '../../../../i18n';
 import { toTranslationKey } from '../../../../utils/i18nHelpers';
+import { ProfileRecord } from '../../../../types';
 
+const isProfileRecord = (value: unknown): value is ProfileRecord =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const ProfileMain: React.FC = () => {
   const [profile, setProfile] = useState<UserProfile>({
@@ -59,7 +62,7 @@ const ProfileMain: React.FC = () => {
 
   const fetchProfile = async () => {
     if (!authResponse || !('idToken' in authResponse)) {
-      setError(new Error(t("authentication-information-is-missing")));
+      setError(new Error(t('authentication-information-is-missing')));
       setIsLoading(false);
       navigate('/auth');
       return;
@@ -77,7 +80,7 @@ const ProfileMain: React.FC = () => {
     } catch (err) {
       console.error('Unexpected error:', err);
       logout();
-      setError(new Error(t("an-unexpected-error-occurred-please-try-again")));
+      setError(new Error(t('an-unexpected-error-occurred-please-try-again')));
       navigate('/auth');
     } finally {
       setIsLoading(false);
@@ -111,7 +114,7 @@ const ProfileMain: React.FC = () => {
       const now = new Date();
       const diffTime = date.getTime() - now.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
+
       const main = date.toLocaleDateString(i18n.language === 'ar' ? 'ar-SA' : 'en-US', {
         year: 'numeric',
         month: 'short',
@@ -122,11 +125,11 @@ const ProfileMain: React.FC = () => {
 
       let relative = '';
       if (diffDays > 0) {
-        relative = t("days-from-now", { count: diffDays });
+        relative = t('days-from-now', { count: diffDays });
       } else if (diffDays < 0) {
-        relative = t("days-ago", { count: Math.abs(diffDays) });
+        relative = t('days-ago', { count: Math.abs(diffDays) });
       } else {
-        relative = t("today");
+        relative = t('today');
       }
 
       return { main, relative };
@@ -151,7 +154,7 @@ const ProfileMain: React.FC = () => {
   };
 
   // Render a single field value with smart formatting
-  const renderFieldValue = (key: string, value: any): JSX.Element => {
+  const renderFieldValue = (key: string, value: ProfileValue): JSX.Element => {
     if (value === null || value === undefined) {
       return <span className="text-sm text-gray-700 break-words leading-relaxed">—</span>;
     }
@@ -159,13 +162,13 @@ const ProfileMain: React.FC = () => {
     // Boolean values
     if (typeof value === 'boolean') {
       return (
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-          value 
-            ? 'bg-green-100 text-green-800' 
-            : 'bg-red-100 text-red-600'
-        }`}>
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+            value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-600'
+          }`}
+        >
           {value ? <FaCheck size={10} /> : <FaTimes size={10} />}
-          {value ?t("yes") :t("no")}
+          {value ? t('yes') : t('no')}
         </span>
       );
     }
@@ -176,19 +179,29 @@ const ProfileMain: React.FC = () => {
         return (
           <div className="flex items-center gap-3 w-full">
             <div className="flex-1 h-2 bg-gray-200 rounded overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-[#115740] to-[#489E46] rounded transition-all duration-500 ease-in-out" 
+              <div
+                className="h-full bg-gradient-to-r from-[#115740] to-[#489E46] rounded transition-all duration-500 ease-in-out"
                 style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
               />
             </div>
-            <span className="text-sm font-semibold text-[#115740] min-w-[45px] text-end">{value}%</span>
+            <span className="text-sm font-semibold text-[#115740] min-w-[45px] text-end">
+              {value}%
+            </span>
           </div>
         );
       }
       if (key.toLowerCase().includes('count') || key.toLowerCase().includes('credits')) {
-        return <span className="text-sm text-gray-700 break-words leading-relaxed">{value.toLocaleString()}</span>;
+        return (
+          <span className="text-sm text-gray-700 break-words leading-relaxed">
+            {value.toLocaleString()}
+          </span>
+        );
       }
-      return <span className="text-sm text-gray-700 break-words leading-relaxed">{translateProfileValue(value)}</span>;
+      return (
+        <span className="text-sm text-gray-700 break-words leading-relaxed">
+          {translateProfileValue(String(value))}
+        </span>
+      );
     }
 
     // String values
@@ -211,7 +224,10 @@ const ProfileMain: React.FC = () => {
       if (isColor(value)) {
         return (
           <span className="inline-flex items-center gap-2">
-            <span className="w-5 h-5 rounded border-2 border-black/10 shadow-sm" style={{ backgroundColor: value }} />
+            <span
+              className="w-5 h-5 rounded border-2 border-black/10 shadow-sm"
+              style={{ backgroundColor: value }}
+            />
             <span>{value}</span>
           </span>
         );
@@ -220,12 +236,13 @@ const ProfileMain: React.FC = () => {
       // Links/URLs
       if (isLink(value)) {
         return (
-          <a 
-            href={value} 
-            target="_blank" 
-            rel="noopener noreferrer" 
+          <a
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-[#115740] no-underline font-medium inline-flex items-center gap-1.5 transition-all duration-200 hover:text-[#489E46] hover:underline"
-          >{t("view-report")}{' '}<FaExternalLinkAlt size={10} />
+          >
+            {t('view-report')} <FaExternalLinkAlt size={10} />
           </a>
         );
       }
@@ -233,40 +250,46 @@ const ProfileMain: React.FC = () => {
       return <span className="text-sm text-gray-700 break-words leading-relaxed">{value}</span>;
     }
 
-    return <span className="text-sm text-gray-700 break-words leading-relaxed">{String(value)}</span>;
+    return (
+      <span className="text-sm text-gray-700 break-words leading-relaxed">{String(value)}</span>
+    );
   };
 
   // Render nested object data
-  const renderNestedObject = (data: Record<string, any>): JSX.Element => {
+  const renderNestedObject = (data: ProfileRecord): JSX.Element => {
     const entries = Object.entries(data);
-    
+
     if (entries.length === 0) {
       return (
         <div className="text-center py-8 px-4 text-gray-500">
           <div className="text-4xl mb-3 opacity-50">📭</div>
-          <div className="text-sm">{t("no-data-available")}</div>
+          <div className="text-sm">{t('no-data-available')}</div>
         </div>
       );
     }
 
     // Check if this is an object with nested report entries (like standard reports)
-    const hasNestedReports = entries.every(([, v]) =>
-      typeof v === 'object' && v !== null && !Array.isArray(v) && 
-      (v.report_link || v.purchase_date)
+    const hasNestedReports = entries.every(
+      ([, v]) => isProfileRecord(v) && (v.report_link || v.purchase_date)
     );
 
     if (hasNestedReports) {
       return (
         <div>
           {entries.map(([nestedKey, nestedValue], index) => (
-            <div key={nestedKey} className="bg-white border border-[#115740]/12 rounded-xl mb-4 overflow-hidden">
+            <div
+              key={nestedKey}
+              className="bg-white border border-[#115740]/12 rounded-xl mb-4 overflow-hidden"
+            >
               <div className="flex items-center justify-between px-4 py-3.5 bg-gradient-to-r from-[#f0f7f4] to-[#e8f5e9] border-b border-[#115740]/8 cursor-pointer transition-all duration-200 hover:from-[#e8f5e9] hover:to-[#dcedc8]">
-                <h4 className="text-sm font-semibold text-[#115740] m-0">{translateProfileLabel(nestedKey)}</h4>
-                <span className="text-xs font-medium text-white bg-[#115740] px-2.5 py-0.5 rounded-xl">#{index + 1}</span>
+                <h4 className="text-sm font-semibold text-[#115740] m-0">
+                  {translateProfileLabel(nestedKey)}
+                </h4>
+                <span className="text-xs font-medium text-white bg-[#115740] px-2.5 py-0.5 rounded-xl">
+                  #{index + 1}
+                </span>
               </div>
-              <div className="p-4">
-                {renderDataFields(nestedValue as Record<string, any>)}
-              </div>
+              <div className="p-4">{renderDataFields(nestedValue as ProfileRecord)}</div>
             </div>
           ))}
         </div>
@@ -277,9 +300,16 @@ const ProfileMain: React.FC = () => {
   };
 
   // Render data fields in a clean format
-  const renderDataFields = (data: Record<string, any>): JSX.Element => {
+  const renderDataFields = (data: ProfileRecord): JSX.Element => {
     // Sort entries to show important fields first
-    const priorityFields = ['layer_name', 'city_name', 'records_count', 'progress', 'purchase_date', 'expiration_date'];
+    const priorityFields = [
+      'layer_name',
+      'city_name',
+      'records_count',
+      'progress',
+      'purchase_date',
+      'expiration_date',
+    ];
     const entries = Object.entries(data).sort((a, b) => {
       const aIndex = priorityFields.indexOf(a[0]);
       const bIndex = priorityFields.indexOf(b[0]);
@@ -293,22 +323,30 @@ const ProfileMain: React.FC = () => {
       <>
         {entries.map(([key, value]) => {
           // Skip rendering nested objects here, handle separately
-          if (typeof value ==="object" && value !== null && !Array.isArray(value)) {
+          if (isProfileRecord(value)) {
             return (
-              <div key={key} className="bg-white border border-[#115740]/12 rounded-xl mb-4 overflow-hidden">
+              <div
+                key={key}
+                className="bg-white border border-[#115740]/12 rounded-xl mb-4 overflow-hidden"
+              >
                 <div className="flex items-center justify-between px-4 py-3.5 bg-gradient-to-r from-[#f0f7f4] to-[#e8f5e9] border-b border-[#115740]/8 cursor-pointer transition-all duration-200 hover:from-[#e8f5e9] hover:to-[#dcedc8]">
-                  <h4 className="text-sm font-semibold text-[#115740] m-0">{translateProfileLabel(key)}</h4>
+                  <h4 className="text-sm font-semibold text-[#115740] m-0">
+                    {translateProfileLabel(key)}
+                  </h4>
                 </div>
-                <div className="p-4">
-                  {renderNestedObject(value)}
-                </div>
+                <div className="p-4">{renderNestedObject(value)}</div>
               </div>
             );
           }
 
           return (
-            <div key={key} className="flex flex-col px-4 py-3 bg-[#f8faf9] rounded-lg mb-3 border border-[#115740]/8 transition-all duration-200 hover:bg-[#f0f7f4] hover:border-[#115740]/15">
-              <span className="text-[0.7rem] font-semibold text-[#115740] uppercase tracking-wide mb-1.5">{translateProfileLabel(key)}</span>
+            <div
+              key={key}
+              className="flex flex-col px-4 py-3 bg-[#f8faf9] rounded-lg mb-3 border border-[#115740]/8 transition-all duration-200 hover:bg-[#f0f7f4] hover:border-[#115740]/15"
+            >
+              <span className="text-[0.7rem] font-semibold text-[#115740] uppercase tracking-wide mb-1.5">
+                {translateProfileLabel(key)}
+              </span>
               {renderFieldValue(key, value)}
             </div>
           );
@@ -317,12 +355,12 @@ const ProfileMain: React.FC = () => {
     );
   };
 
-  const renderValue = (key: string, value: any): JSX.Element => {
+  const renderValue = (key: string, value: ProfileValue): JSX.Element => {
     if (value === null || value === undefined) {
       return (
         <div className="text-center py-8 px-4 text-gray-500">
           <div className="text-4xl mb-3 opacity-50">📭</div>
-          <div className="text-sm">{t("no-data-available")}</div>
+          <div className="text-sm">{t('no-data-available')}</div>
         </div>
       );
     }
@@ -331,12 +369,17 @@ const ProfileMain: React.FC = () => {
       return (
         <div>
           {value.map((item, index) => (
-            <div key={index} className="bg-white border border-[#115740]/12 rounded-xl mb-4 overflow-hidden">
+            <div
+              key={index}
+              className="bg-white border border-[#115740]/12 rounded-xl mb-4 overflow-hidden"
+            >
               <div className="flex items-center justify-between px-4 py-3.5 bg-gradient-to-r from-[#f0f7f4] to-[#e8f5e9] border-b border-[#115740]/8 cursor-pointer transition-all duration-200 hover:from-[#e8f5e9] hover:to-[#dcedc8]">
-                <h4 className="text-sm font-semibold text-[#115740] m-0">{t("item-2")}{' '}{index + 1}</h4>
+                <h4 className="text-sm font-semibold text-[#115740] m-0">
+                  {t('item-2')} {index + 1}
+                </h4>
               </div>
               <div className="p-4">
-                {typeof item ==="object" ? renderNestedObject(item) : renderFieldValue(key, item)}
+                {isProfileRecord(item) ? renderNestedObject(item) : renderFieldValue(key, item)}
               </div>
             </div>
           ))}
@@ -344,19 +387,21 @@ const ProfileMain: React.FC = () => {
       );
     }
 
-    if (typeof value === 'object') {
+    if (isProfileRecord(value)) {
       return renderNestedObject(value);
     }
 
     return (
       <div className="flex flex-col px-4 py-3 bg-[#f8faf9] rounded-lg mb-3 border border-[#115740]/8 transition-all duration-200 hover:bg-[#f0f7f4] hover:border-[#115740]/15">
-        <span className="text-[0.7rem] font-semibold text-[#115740] uppercase tracking-wide mb-1.5">{translateProfileLabel(key)}</span>
+        <span className="text-[0.7rem] font-semibold text-[#115740] uppercase tracking-wide mb-1.5">
+          {translateProfileLabel(key)}
+        </span>
         {renderFieldValue(key, value)}
       </div>
     );
   };
 
-  const handleItemClick = (type: string, name: string, data: any) => {
+  const handleItemClick = (type: string, name: string, data: ProfileValue) => {
     setPopupInfo({ type, name, data });
   };
 
@@ -371,27 +416,27 @@ const ProfileMain: React.FC = () => {
 
   // Get type label for modal subtitle
   const getTypeLabel = (type: string): string => {
-    if (type.includes('layer')) return t("layer-details");
-    if (type.includes('catalog')) return t("catalog-details");
-    if (type.includes('report') || type.includes('standard')) return t("report-details");
-    if (type.includes('dataset')) return t("dataset-details");
-    return t("details");
+    if (type.includes('layer')) return t('layer-details');
+    if (type.includes('catalog')) return t('catalog-details');
+    if (type.includes('report') || type.includes('standard')) return t('report-details');
+    if (type.includes('dataset')) return t('dataset-details');
+    return t('details');
   };
 
   const renderPopup = () => {
     if (!popupInfo) return null;
 
     return (
-      <div 
+      <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-[9999] animate-fade-in"
-        onClick={(e) => {
+        onClick={e => {
           if (e.target === e.currentTarget) setPopupInfo(null);
         }}
       >
         <div className="bg-gradient-to-br from-white to-[#f8fdf8] p-0 rounded-2xl max-w-[min(600px,90vw)] max-h-[85vh] overflow-hidden relative shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25),0_0_0_1px_rgba(17,87,64,0.1)] animate-slide-up">
           <div className="bg-gradient-to-r from-[#115740] to-[#1a7a5a] px-6 py-5 pe-12 relative">
-            <button 
-              className="absolute top-4 end-4 w-8 h-8 flex items-center justify-center bg-white/15 border-none rounded-lg text-base cursor-pointer text-white transition-all duration-200 hover:bg-white/25 hover:scale-105 active:scale-95" 
+            <button
+              className="absolute top-4 end-4 w-8 h-8 flex items-center justify-center bg-white/15 border-none rounded-lg text-base cursor-pointer text-white transition-all duration-200 hover:bg-white/25 hover:scale-105 active:scale-95"
               onClick={() => setPopupInfo(null)}
             >
               <FaTimes />
@@ -409,26 +454,17 @@ const ProfileMain: React.FC = () => {
     );
   };
 
-  const renderSection = (
-    title: string,
-    icon: JSX.Element,
-    items: Record<string, any>,
-    type: string
-  ) => {
+  const renderSection = (title: string, icon: JSX.Element, items: ProfileRecord, type: string) => {
     // Function to handle delete icon click
-    const handleDeleteClick = async (
-      type: string,
-      key: string,
-      value: any
-    ) => {
-      if (type.includes('layer')) {
+    const handleDeleteClick = async (type: string, key: string, value: ProfileValue) => {
+      if (type.includes('layer') && isProfileRecord(value)) {
         await apiRequest({
           url: urls.delete_layer,
           method: 'DELETE',
           isAuthRequest: true,
           body: { user_id: authResponse?.localId, layer_id: value.layer_id },
         });
-      } else if (type.includes('catalog')) {
+      } else if (type.includes('catalog') && isProfileRecord(value)) {
         await apiRequest({
           url: urls.delete_catalog,
           method: 'DELETE',
@@ -449,15 +485,23 @@ const ProfileMain: React.FC = () => {
         {Object.entries(items).length > 0 ? (
           <ul className="list-none p-0">
             {Object.entries(items).map(([key, value]) => (
-              <li key={key} className="flex justify-between items-center px-2.5 py-1.5 mb-1.5 bg-[#f0f8f0] rounded cursor-pointer min-w-0 break-words overflow-wrap-anywhere transition-colors hover:bg-[#d0e8d0]">
-                <span 
+              <li
+                key={key}
+                className="flex justify-between items-center px-2.5 py-1.5 mb-1.5 bg-[#f0f8f0] rounded cursor-pointer min-w-0 break-words overflow-wrap-anywhere transition-colors hover:bg-[#d0e8d0]"
+              >
+                <span
                   onClick={() => handleItemClick(type, key, value)}
                   className="flex-1 min-w-0 break-words overflow-wrap-anywhere hyphens-auto"
                 >
-                  {value?.layer_name || value?.catalog_name || value?.name || translateProfileLabel(key)}
+                  {isProfileRecord(value)
+                    ? value.layer_name ||
+                      value.catalog_name ||
+                      value.name ||
+                      translateProfileLabel(key)
+                    : translateProfileLabel(key)}
                 </span>
                 {/* Conditionally render the delete icon */}
-                {type.includes("layer") || type.includes("catalog") ? (
+                {type.includes('layer') || type.includes('catalog') ? (
                   <div className="flex items-center gap-2 flex-shrink-0 ms-2">
                     <div className="h-5 w-px bg-gray-300" />
                     <FaTrash
@@ -470,7 +514,7 @@ const ProfileMain: React.FC = () => {
             ))}
           </ul>
         ) : (
-          <p>{t("no-items-available", { item: title })}</p>
+          <p>{t('no-items-available', { item: title })}</p>
         )}
       </div>
     );
@@ -485,7 +529,8 @@ const ProfileMain: React.FC = () => {
     setTimeout(() => navigate('/auth'), 500);
     return null;
   }
-  if (isLoading) return <div className="text-lg text-center mt-12 text-[#006400]">{t("loading-profile")}</div>;
+  if (isLoading)
+    return <div className="text-lg text-center mt-12 text-[#006400]">{t('loading-profile')}</div>;
 
   if (error) {
     setTimeout(() => navigate('/auth'), 500);
@@ -501,43 +546,44 @@ const ProfileMain: React.FC = () => {
     <div className="w-full h-full overflow-y-auto lg:px-10 px-4 text-sm">
       <div className="m-5 mx-auto p-5 bg-[#f0f8f0] rounded-lg shadow-md">
         <div className="flex justify-between items-center mb-5">
-          <h2 className="text-2xl text-[#006400] mb-5 text-center">{t("user-profile")}</h2>
+          <h2 className="text-2xl text-[#006400] mb-5 text-center">{t('user-profile')}</h2>
           <button
             onClick={handleLogout}
             className="flex items-center px-4 py-2 bg-[#f44336] text-white border-none rounded cursor-pointer text-base hover:bg-[#d32f2f]"
           >
-            <FaSignOutAlt className="me-2" />{' '}{t("logout")}</button>
+            <FaSignOutAlt className="me-2" /> {t('logout')}
+          </button>
         </div>
         <div className="bg-white p-5 rounded-lg mb-5">
           <div className="flex items-start mb-2.5">
             <FaUser className="me-2.5 text-[#006400]" />
-            <span className="font-bold me-1.5 min-w-[100px]">{t("username")}</span>
+            <span className="font-bold me-1.5 min-w-[100px]">{t('username')}</span>
             {profile.username}
           </div>
           <div className="flex items-start mb-2.5">
             <FaEnvelope className="me-2.5 text-[#006400]" />
-            <span className="font-bold me-1.5 min-w-[100px]">{t("email-2")}</span>
+            <span className="font-bold me-1.5 min-w-[100px]">{t('email-2')}</span>
             {profile.email}
           </div>
           <div className="flex items-start mb-2.5">
-            <span className="font-bold me-1.5 min-w-[100px]">{t("phone-2")}</span>
+            <span className="font-bold me-1.5 min-w-[100px]">{t('phone-2')}</span>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center flex-1 gap-2 w-full sm:w-auto">
               <input
                 type="tel"
                 value={phoneInput}
-                onChange={(e) => setPhoneInput(e.target.value)}
-                placeholder={t("enter-phone-number")}
+                onChange={e => setPhoneInput(e.target.value)}
+                placeholder={t('enter-phone-number')}
                 className="flex-1 min-w-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
               />
               <button
                 onClick={() => {
                   if (!authResponse || !('idToken' in authResponse)) {
-                    setError(new Error(t("authentication-information-is-missing")));
+                    setError(new Error(t('authentication-information-is-missing')));
                     return;
                   }
-                  
+
                   if (!phoneInput || phoneInput.trim() === '') {
-                    toast.error(t("please-enter-a-valid-phone-number"));
+                    toast.error(t('please-enter-a-valid-phone-number'));
                     return;
                   }
 
@@ -561,10 +607,10 @@ const ProfileMain: React.FC = () => {
                           },
                         });
                         setProfile(prev => ({ ...prev, phone: phoneInput }));
-                        toast.success(t("phone-number-updated-successfully"));
+                        toast.success(t('phone-number-updated-successfully'));
                       } catch (error) {
                         console.error('Failed to update phone number:', error);
-                        toast.error(t("failed-to-update-phone-number"));
+                        toast.error(t('failed-to-update-phone-number'));
                         // Revert on error
                         setPhoneInput(profile.phone || '');
                       } finally {
@@ -580,7 +626,7 @@ const ProfileMain: React.FC = () => {
                 disabled={isSavingPhone || phoneInput === (profile.phone || '')}
                 className="sm:ms-2 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
               >
-                {isSavingPhone ?t("saving-2") :t("save")}
+                {isSavingPhone ? t('saving-2') : t('save')}
               </button>
             </div>
           </div>
@@ -592,7 +638,7 @@ const ProfileMain: React.FC = () => {
                 onChange={async e => {
                   await setShowPrice(e.target.checked);
                   if (!authResponse || !('idToken' in authResponse)) {
-                    setError(new Error(t("authentication-information-is-missing")));
+                    setError(new Error(t('authentication-information-is-missing')));
                     setIsLoading(false);
                     navigate('/auth');
                     return;
@@ -612,21 +658,21 @@ const ProfileMain: React.FC = () => {
                 }}
                 className="me-2 h-4 w-4 border-gray-300 rounded focus:ring-green-600 text-green-700"
               />
-              <span className="text-gray-700 font-medium">{t("show-price")}</span>
+              <span className="text-gray-700 font-medium">{t('show-price')}</span>
             </label>
           </div>
           {profile.maker && Object.keys(profile.maker).length > 0 && (
             <div className="mb-5">
-              <h3 className="text-xl text-[#006400] mt-5 mb-2.5">{t("maker-information")}</h3>
+              <h3 className="text-xl text-[#006400] mt-5 mb-2.5">{t('maker-information')}</h3>
               {Object.entries(profile.maker).map(([key, value]) => {
                 const title = translateProfileLabel(key);
                 let icon = <FaDatabase />;
-                if (key.includes("layer")) icon = <FaLayerGroup />;
-                else if (key.includes("catalog")) icon = <FaBook />;
-                else if (key.includes("report")) icon = <FaBook />;
-                else if (key.includes("intelligence")) icon = <FaDatabase />;
-                
-                return renderSection(title, icon, value as Record<string, any>, key);
+                if (key.includes('layer')) icon = <FaLayerGroup />;
+                else if (key.includes('catalog')) icon = <FaBook />;
+                else if (key.includes('report')) icon = <FaBook />;
+                else if (key.includes('intelligence')) icon = <FaDatabase />;
+
+                return isProfileRecord(value) ? renderSection(title, icon, value, key) : null;
               })}
             </div>
           )}

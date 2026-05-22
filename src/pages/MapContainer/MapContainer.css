@@ -151,6 +151,19 @@
   background-position: center;
 }
 
+@media (max-width: 1024px) {
+  .map-legend {
+    top: 10px !important;
+    bottom: auto !important;
+    right: 10px !important;
+    left: auto !important;
+    width: fit-content !important;
+    min-width: 0 !important;
+    max-width: calc(100% - 20px) !important;
+    max-height: calc(100% - 20px) !important;
+  }
+}
+
 .marker-popup {
   z-index: 10;
 }

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useCatalogContext } from '../../context/CatalogContext';
 import CatalogMenu from '../CatalogMenu/CatalogMenu';
 import CatalogDetailsForm from '../CatalogDetailsForm/CatalogDetailsForm';
@@ -15,11 +15,11 @@ const CatalogFormLoader = () => {
   }, [resetFormStage, setSidebarMode]);
 
   return (
-    <div className="flex-1 lg:h-full">
+    <>
       {formStage ==="catalog" && <CatalogMenu />}
 
       {formStage ==="catalogDetails" && <CatalogDetailsForm />}
-    </div>
+    </>
   );
 };
 

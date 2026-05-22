@@ -17,10 +17,6 @@ function SaveOptions() {
     ? layerContext.setSaveOption
     : catalogContext.setSaveMethod;
 
-  const handleSaveLayer = isLayerContextActive
-    ? layerContext.handleSaveLayer
-    : catalogContext.handleSaveLayer;
-
   const { saveResponse } = isLayerContextActive ? layerContext : catalogContext;
 
   function handleOptionChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -30,7 +26,51 @@ function SaveOptions() {
   }
 
   function handleSaveClick() {
-    handleSaveLayer();
+    if (isLayerContextActive) {
+      void (layerContext.handleSaveLayer as (layerData?: unknown) => Promise<unknown>)();
+      return;
+    }
+
+    const existingNames = new Set(
+      catalogContext.geoPoints
+        .filter(point => !point.isTemporary)
+        .map(point => point.layer_name || point.layer_legend || '')
+    );
+    const layersToSave = catalogContext.geoPoints
+      .filter(point => !point.isTemporary)
+      .map(point => {
+        const hasCustomizations =
+          (point.applied_filters && point.applied_filters.length > 0) ||
+          (point.applied_recolors && point.applied_recolors.length > 0);
+        const originalName = point.layer_name || point.layer_legend || 'Layer';
+        const baseName =
+          hasCustomizations &&
+          !originalName.startsWith('customised') &&
+          !originalName.startsWith('customized')
+          ? `customised ${originalName}`
+          : originalName;
+        // Resolve duplicate names
+        let name = baseName;
+        if (existingNames.has(name)) {
+          const suffix = point.applied_filters?.[0]?.name || point.applied_recolors?.[0]?.name || 'custom';
+          name = `${baseName} (${suffix})`;
+        }
+        // Add the new name to the set to avoid further collisions within this batch
+        existingNames.add(name);
+        return {
+          name,
+          legend: point.layer_legend || point.layer_name || 'Layer',
+          description: point.layer_description || '',
+          color: point.points_color || '#000000',
+          layerId: Number(point.layerId ?? point.layer_id ?? 0),
+          bknd_dataset_id: point.bknd_dataset_id || point.layer_id || '',
+          createNewLayer: true,
+          applied_filters: point.applied_filters || [],
+          applied_recolors: point.applied_recolors || [],
+        };
+      });
+
+    void layerContext.handleSaveLayer({ layers: layersToSave });
     // !isLayerContextActive && setSidebarMode('catalog')
 
     // layerContext.resetFormStage();
@@ -95,7 +135,7 @@ function SaveOptions() {
             </label>
           </div>
           <div className={styles.buttonContainer}>
-            <button className={styles.button} onClick={handleSaveClick} disabled={!selectedOption}>{t("save")}</button>
+            <button className={styles.button} onClick={handleSaveClick}>{t("save")}</button>
           </div>
         </>
       )}

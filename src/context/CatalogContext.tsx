@@ -6,6 +6,7 @@ import {
   GradientColorBasedOnZone,
   MapFeatures,
   ReqGradientColorBasedOnZone,
+  ReqFilterProperty,
   SaveResponse,
   VisualizationMode,
   MarkerData,
@@ -1055,6 +1056,58 @@ export function CatalogProvider(props: { children: ReactNode }) {
     }
   }
 
+  async function handleFilteredProperty(
+    requestData?: ReqFilterProperty
+  ): Promise<GradientColorBasedOnZone[]> {
+    if (!requestData) {
+      return [];
+    }
+
+    try {
+      const res = await apiRequest({
+        url: urls.filter_property,
+        method: 'post',
+        body: requestData,
+        isAuthRequest: true,
+      });
+      if (res.data?.data && Array.isArray(res.data.data)) {
+        setGradientColorBasedOnZone(res.data.data);
+        return res.data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error('Request failed:', error);
+      setIsError(error instanceof Error ? error : new Error(String(error)));
+      return [];
+    }
+  }
+
+  async function handleRecolorProperty(
+    requestData?: ReqFilterProperty
+  ): Promise<GradientColorBasedOnZone[]> {
+    if (!requestData) {
+      return [];
+    }
+
+    try {
+      const res = await apiRequest({
+        url: urls.recolor_property,
+        method: 'post',
+        body: requestData,
+        isAuthRequest: true,
+      });
+      if (res.data?.data && Array.isArray(res.data.data)) {
+        setGradientColorBasedOnZone(res.data.data);
+        return res.data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error('Request failed:', error);
+      setIsError(error instanceof Error ? error : new Error(String(error)));
+      return [];
+    }
+  }
+
   function addMarker(
     name: string,
     description: string,
@@ -1417,6 +1470,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
         handleStoreUnsavedGeoPoint,
         handleNameBasedColorZone,
         handleFilteredZone,
+        handleFilteredProperty,
+        handleRecolorProperty,
         markers,
         setMarkers,
         addMarker,

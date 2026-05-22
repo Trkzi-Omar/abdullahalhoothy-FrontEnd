@@ -210,6 +210,12 @@ export interface CatalogContextType {
   handleFilteredZone: (
     requestData?: ReqGradientColorBasedOnZone
   ) => Promise<GradientColorBasedOnZone[]>;
+  handleFilteredProperty: (
+    requestData?: ReqFilterProperty
+  ) => Promise<GradientColorBasedOnZone[]>;
+  handleRecolorProperty: (
+    requestData?: ReqFilterProperty
+  ) => Promise<GradientColorBasedOnZone[]>;
   markers: MarkerData[];
   setMarkers: React.Dispatch<React.SetStateAction<MarkerData[]>>;
   addMarker: (
@@ -296,6 +302,17 @@ export interface ReqGradientColorBasedOnZone {
   color_based_on: string;
   threshold?: number | string;
   list_names?: string[];
+}
+
+export interface ReqFilterProperty {
+  change_layer_id: string;
+  change_layer_name: string;
+  change_layer_current_color: string;
+  change_layer_new_color: string;
+  evaluation_property_name: string;
+  evaluation_comparison_operator: 'more' | 'less';
+  property_threshold: number | string;
+  evaluation_name_list?: string[];
 }
 
 interface Color {
@@ -543,6 +560,25 @@ export interface FetchDatasetResponse {
 
 export type Bounds = [number, number, number, number]; // [west, south, east, north]
 
+export interface AppliedFilter {
+  id: string;
+  name: string;
+  features: Feature[];
+  save_request?: ReqFilterProperty | ReqGradientColorBasedOnZone;
+}
+
+export interface AppliedRecolor {
+  id: string;
+  name: string;
+  baseColor: string;
+  groups: {
+    color: string;
+    legend: string;
+    features: Feature[];
+  }[];
+  save_request?: ReqFilterProperty | ReqGradientColorBasedOnZone;
+}
+
 export interface MapFeatures extends FetchDatasetResponse {
   layer_name?: string;
   points_color?: string;
@@ -559,6 +595,9 @@ export interface MapFeatures extends FetchDatasetResponse {
   gradient_groups?: GradientGroup[];
   is_gradient?: boolean;
   gradient_based_on?: string;
+  original_features?: Feature[];
+  applied_filters?: AppliedFilter[];
+  applied_recolors?: AppliedRecolor[];
   [key: string]: unknown;
 }
 
@@ -867,6 +906,8 @@ export interface NavigationSetupProps {
 
 export interface BasedOnLayerDropdownProps {
   layerIndex: number;
+  isPropertyOnly?: boolean;
+  onPropertyOnlyChange?: (enabled: boolean) => void;
 }
 
 export interface BasedOnDropdownProps {

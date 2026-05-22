@@ -140,7 +140,31 @@ export function LayerProvider(props: { children: ReactNode }) {
     }
   }
 
-  async function handleSaveLayer(layerData: LayerCustomization | { layers: LayerCustomization[] }) {
+  async function handleSaveLayer(layerData?: LayerCustomization | { layers: LayerCustomization[] }) {
+    // If no layerData provided, build from current temporary geoPoints and reqSaveLayer
+    if (!layerData) {
+      const tempLayers = (geoPoints || [])
+        .filter((p: any) => p.isTemporary)
+        .map((p: any) => ({
+          name: reqSaveLayer.name || p.layer_name || p.layer_legend || 'Layer',
+          legend: reqSaveLayer.legend || p.layer_legend || p.layer_name || 'Layer',
+          description: reqSaveLayer.description || p.layer_description || '',
+          color: p.points_color || '#000000',
+          layerId: Number(p.layerId) || 0,
+          bknd_dataset_id: p.bknd_dataset_id,
+          createNewLayer: true,
+          applied_filters: p.applied_filters || [],
+          applied_recolors: p.applied_recolors || [],
+          saved_recipe: p.saved_recipe || [],
+        } as LayerCustomization));
+
+      for (const l of tempLayers) {
+        await saveSingleLayer(l);
+      }
+
+      return;
+    }
+
     if ('layers' in layerData) {
       // Handle multiple layers
       for (const layer of layerData.layers) {
@@ -153,15 +177,43 @@ export function LayerProvider(props: { children: ReactNode }) {
   }
 
   async function saveSingleLayer(layerData: LayerCustomization) {
-    const postData = {
+    const sanitizeAppliedFilters = (filters: LayerCustomization['applied_filters']) =>
+      (filters || []).map(filter => ({
+        id: filter.id,
+        name: filter.name,
+        save_request: filter.save_request,
+      }));
+
+    const sanitizeAppliedRecolors = (recolors: LayerCustomization['applied_recolors']) =>
+      (recolors || []).map(recolor => ({
+        id: recolor.id,
+        name: recolor.name,
+        baseColor: recolor.baseColor,
+        save_request: recolor.save_request,
+      }));
+
+    // Attempt to attach any applied filters/recolors from the current geoPoints
+    const matchingPoint = Array.isArray(geoPoints)
+      ? geoPoints.find((p: any) => String(p.layerId) === String(layerData.layerId) || p.layer_id === layerDataMap[layerData.layerId]?.layer_id)
+      : undefined;
+
+    const existingLayerId = layerDataMap[layerData.layerId]?.layer_id;
+
+    const postData: any = {
       layer_name: layerData.name,
-      layer_id: layerDataMap[layerData.layerId]?.layer_id,
-      bknd_dataset_id: layerDataMap[layerData.layerId]?.bknd_dataset_id,
+      ...(layerData.createNewLayer ? {} : { layer_id: existingLayerId }),
+      bknd_dataset_id:
+        layerData.bknd_dataset_id ||
+        matchingPoint?.bknd_dataset_id ||
+        layerDataMap[layerData.layerId]?.bknd_dataset_id,
       points_color: layerData.color,
       layer_legend: layerData.legend,
       layer_description: layerData.description,
       city_name: reqFetchDataset.selectedCity,
       user_id: authResponse?.localId,
+      applied_filters: sanitizeAppliedFilters(layerData.applied_filters || matchingPoint?.applied_filters),
+      applied_recolors: sanitizeAppliedRecolors(layerData.applied_recolors || matchingPoint?.applied_recolors),
+      saved_recipe: layerData.saved_recipe || matchingPoint?.saved_recipe || [],
     };
 
     try {

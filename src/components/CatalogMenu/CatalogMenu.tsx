@@ -20,7 +20,7 @@ function CatalogMenu() {
 
   const {
     setSelectedContainerType,
-    setSelectedContainerLayerModalOpen,
+    selectedContainerLayerModalOpen,
     resetState,
     setFormStage,
     setLegendList,
@@ -34,7 +34,7 @@ function CatalogMenu() {
     setBenchmarks,
     setIsBenchmarkControlOpen,
   } = useCatalogContext();
-  const { setSelectedCity, setSelectedCountry } = useLayerContext();
+  const { setSelectedCity, setSelectedCountry, handleSaveLayer } = useLayerContext();
 
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
 
@@ -158,7 +158,42 @@ function CatalogMenu() {
     ? geoPoints.filter(point => !point.isTemporary)
     : [];
 
-  function handleSaveClick() {
+  async function handleSaveClick() {
+    const existingNames = new Set(safeGeoPoints.map(p => p.layer_name || p.layer_legend || ''));
+    const layersToSave = safeGeoPoints.map(point => {
+      const hasCustomizations = (point.applied_filters && point.applied_filters.length > 0) || (point.applied_recolors && point.applied_recolors.length > 0);
+      const originalName = point.layer_name || point.layer_legend || 'Layer';
+      const baseName = hasCustomizations && !originalName.startsWith('customised') && !originalName.startsWith('customized')
+        ? `customised ${originalName}`
+        : originalName;
+      // Resolve duplicate names
+      let name = baseName;
+      if (existingNames.has(name)) {
+        const suffix = point.applied_filters?.[0]?.name || point.applied_recolors?.[0]?.name || 'custom';
+        name = `${baseName} (${suffix})`;
+      }
+      existingNames.add(name);
+      return {
+        name,
+        legend: point.layer_legend || point.layer_name || 'Layer',
+        description: point.layer_description || '',
+        color: point.points_color || '#000000',
+        layerId: Number(point.layerId ?? point.layer_id ?? 0),
+        bknd_dataset_id: point.bknd_dataset_id || point.layer_id || '',
+        createNewLayer: true,
+        applied_filters: point.applied_filters || [],
+        applied_recolors: point.applied_recolors || [],
+      };
+    });
+
+    try {
+      if (layersToSave.length > 0) {
+        await handleSaveLayer({ layers: layersToSave });
+      }
+    } catch (error) {
+      console.error('Error saving catalog layers', error);
+    }
+
     const legends = safeGeoPoints
       .map(function (featureCollection) {
         return featureCollection.layer_legend;
@@ -173,7 +208,7 @@ function CatalogMenu() {
   }
 
   return (
-    <div className="flex flex-col justify-between h-full w-full pt-3 lg:pe-1.5">
+    <div className="flex-1 flex flex-col justify-between overflow-y-auto relative w-full pt-3 lg:pe-1.5 min-h-0">
       <div className={`flex flex-col justify-start my-3 flex-1 min-h-0`}>
         <CaseStudyToggle />
         <div className="flex justify-between items-center mx-8 my-2">
@@ -239,35 +274,41 @@ function CatalogMenu() {
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
           <div className="flex flex-col justify-start items-center px-4">
             {safeGeoPoints.map(function (layer, index) {
-              return <MultipleLayersSetting key={layer.uniqueId || index} layerIndex={index} />;
+              return <MultipleLayersSetting key={layer.layerId ?? index} layerIndex={index} />;
             })}
           </div>
         </div>
         <div className="mt-auto flex items-center justify-center">
-        	<button className="px-4 py-2 text-orange-700"
-	        	onClick={() => {
-	        		setSelectedContainerLayerModalOpen(true)
-		        	handleAddLayerClick()
-	        	}}>
-		        {t("add-your-own-data")}
-	        </button>
+          <button
+            className="px-4 py-2 text-orange-700"
+            onClick={() => {
+              selectedContainerLayerModalOpen(true);
+              handleAddLayerClick();
+            }}
+          >
+            {t('add-your-own-data')}
+          </button>
         </div>
-      </div>
-      <div className="w-full flex-col flex px-2 py-2 select-none border-t lg:mb-0 mb-14">
-        <div className="flex w-full gap-2">
-          <button
-            disabled={!(safeGeoPoints.length > 0)}
-            onClick={handleDiscardClick}
-            className="w-full h-10  bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
+        <div className="w-full flex-col flex px-2 py-2 select-none border-t lg:mb-0 mb-14">
+          <div className="flex w-full gap-2">
+            <button
+              disabled={!(safeGeoPoints.length > 0)}
+              onClick={handleDiscardClick}
+              className="w-full h-10  bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
                  hover:bg-white transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-slate-100 disabled:cursor-not-allowed"
-          >{t("discard")}</button>
+            >
+              {t('discard')}
+            </button>
 
-          <button
-            onClick={handleSaveClick}
-            disabled={!(safeGeoPoints.length > 0)}
-            className="w-full h-10  bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] 
+            <button
+              onClick={handleSaveClick}
+              disabled={!(safeGeoPoints.length > 0)}
+              className="w-full h-10  bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] 
             transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-[#115740] disabled:cursor-not-allowed"
-          >{t("save")}</button>
+            >
+              {t('save')}
+            </button>
+          </div>
         </div>
       </div>
     </div>

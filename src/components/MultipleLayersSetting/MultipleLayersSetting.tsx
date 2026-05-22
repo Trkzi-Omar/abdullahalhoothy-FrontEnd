@@ -12,9 +12,25 @@ import apiRequest from '../../services/apiRequest';
 import BasedOnLayerDropdown from './BasedOnLayerDropdown';
 import { toast } from 'sonner';
 import { t } from '../../i18n';
+import { v4 as uuidv4 } from 'uuid';
+import { AppliedFilter, AppliedRecolor, Feature } from '../../types';
+import { ReqFilterProperty, ReqGradientColorBasedOnZone } from '../../types/allTypesAndInterfaces';
 
 
 const initialBasedon = 'radius';
+
+type LayerMatch = {
+  bknd_dataset_id: string;
+  features?: Feature[];
+  points_color?: string;
+  layer_legend?: string;
+};
+
+type ZoneFilterRequest = ReqGradientColorBasedOnZone & {
+  change_layer_current_color: string;
+  change_layer_new_color: string;
+  comparison_type: 'more' | 'less';
+};
 
 const getFormattedThreshold = (value: string, basedOn: string | null) => {
   if (
@@ -39,6 +55,105 @@ const getFormattedThreshold = (value: string, basedOn: string | null) => {
   }
 
   return value;
+};
+
+const recomputeFeatures = (originalFeatures: Feature[], filters: AppliedFilter[]) => {
+  if (!filters || filters.length === 0) return originalFeatures;
+  let currentFeatures = [...originalFeatures];
+
+  for (const filter of filters) {
+    const filterSet = new Set(
+      filter.features.map(f => {
+        const coords = f.geometry.coordinates;
+        return `${coords[0]},${coords[1]}`;
+      })
+    );
+    currentFeatures = currentFeatures.filter(f => {
+      const coords = f.geometry.coordinates;
+      return filterSet.has(`${coords[0]},${coords[1]}`);
+    });
+  }
+  return currentFeatures;
+};
+
+const recomputeLayerState = (
+  originalFeatures: Feature[],
+  filters: AppliedFilter[] | undefined,
+  recolors: AppliedRecolor[] | undefined,
+  layerLegend?: string
+) => {
+  const filtered = recomputeFeatures(originalFeatures, filters || []);
+
+  if (!recolors || recolors.length === 0) {
+    return {
+      features: filtered.map(f => {
+        const newF = { ...f, properties: { ...f.properties } };
+        delete newF.properties.gradient_color;
+        delete newF.properties.gradient_legend;
+        return newF;
+      }),
+      gradient_groups: undefined,
+      layer_legend: layerLegend,
+      is_gradient: false
+    };
+  }
+
+  const getCoordKey = (f: Feature) => {
+    const coords = f.geometry.coordinates;
+    return `${coords[0]},${coords[1]}`;
+  };
+
+  const featureStyles = new Map<string, { color: string, legend: string }>();
+
+  for (const recolor of recolors) {
+    for (const group of recolor.groups) {
+      const isBaseColor = group.color.toLowerCase() === recolor.baseColor.toLowerCase();
+
+      for (const f of group.features) {
+        const key = getCoordKey(f);
+        if (!isBaseColor || !featureStyles.has(key)) {
+          featureStyles.set(key, { color: group.color, legend: group.legend });
+        }
+      }
+    }
+  }
+
+  const coloredFeatures = filtered.map(f => {
+    const style = featureStyles.get(getCoordKey(f));
+    if (style) {
+      return {
+        ...f,
+        properties: {
+          ...f.properties,
+          gradient_color: style.color,
+          gradient_legend: style.legend
+        }
+      };
+    }
+    return f;
+  });
+
+  const groupMap = new Map<string, { color: string, legend: string, count: number }>();
+  for (const f of coloredFeatures) {
+    const color = f.properties.gradient_color as string;
+    const legend = f.properties.gradient_legend as string;
+    if (color && legend) {
+      const key = `${color}-${legend}`;
+      if (!groupMap.has(key)) {
+        groupMap.set(key, { color, legend, count: 0 });
+      }
+      groupMap.get(key)!.count++;
+    }
+  }
+  const gradient_groups = Array.from(groupMap.values());
+  const layer_legend = gradient_groups.map(g => g.legend).join(' | ');
+
+  return {
+    features: coloredFeatures,
+    gradient_groups,
+    layer_legend,
+    is_gradient: true
+  };
 };
 
 function MultipleLayersSetting(props: MultipleLayersSettingProps) {
@@ -69,7 +184,9 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setIsLoading,
     isLoading,
     handleFilteredZone,
+    handleFilteredProperty,
     handleNameBasedColorZone,
+    handleRecolorProperty,
     nameInputs,
     selectedOption,
     setSelectedOption,
@@ -95,16 +212,18 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const [, setIsError] = useState<Error | null>(null);
   // Add state for the recolor color selection
   const [recolorSelectedColor, setRecolorSelectedColor] = useState<string>('#ff0000');
+  const [isPropertyOnly, setIsPropertyOnly] = useState(false);
+  const hydratedLayerSignatureRef = useRef<string | null>(null);
 
   const dropdownIndex = layerIndex ?? -1;
   const isOpen = openDropdownIndices[1] === dropdownIndex;
 
   const handleGetGradientColors = useCallback(async () => {
     try {
-      const res = await apiRequest({
+      const res = (await apiRequest({
         url: urls.fetch_gradient_colors,
         method: 'get',
-      });
+      })) as { data: { data: string[][] } };
       setColors(res.data.data);
     } catch (error) {
       setIsError(error instanceof Error ? error : new Error(String(error)));
@@ -130,6 +249,126 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       setCoverageValue(String(layer.radius_meters));
     }
   }, [handleGetGradientColors, layer.basedon, layer.radius_meters, setCoverageValue, setSelectedBasedon]);
+
+  // Dynamic re-application of filters/recolors on load
+  useEffect(() => {
+    if (!layer) return;
+
+    const hydrationSignature = [
+      layer.layer_id,
+      (layer.applied_filters || []).map(filter => filter.id).join(','),
+      (layer.applied_recolors || []).map(recolor => recolor.id).join(','),
+    ].join('|');
+
+    if (hydratedLayerSignatureRef.current === hydrationSignature) {
+      return;
+    }
+
+    hydratedLayerSignatureRef.current = hydrationSignature;
+
+    const resolveFilters = async () => {
+      let needsUpdate = false;
+      const newFilters = [...(layer.applied_filters || [])];
+      const newRecolors = [...(layer.applied_recolors || [])];
+
+      // Handle applied_filters
+      for (let i = 0; i < newFilters.length; i++) {
+        const filter = newFilters[i];
+        if ((!filter.features || filter.features.length === 0) && filter.save_request) {
+          try {
+            const req = filter.save_request;
+            let filterResponse;
+            if (req.based_on_layer_id) {
+              filterResponse = await handleFilteredZone(req);
+            } else {
+              filterResponse = await handleFilteredProperty(req);
+            }
+
+            if (filterResponse && filterResponse.length > 0) {
+              const matchedFilterData = filterResponse.filter(
+                (f: LayerMatch) => f.bknd_dataset_id === layer.layer_id
+              );
+              if (matchedFilterData.length > 0) {
+                newFilters[i] = {
+                  ...filter,
+                  features: matchedFilterData.flatMap((f: LayerMatch) => f.features || [])
+                };
+                needsUpdate = true;
+              }
+            }
+          } catch (e) {
+            console.error("Error resolving filter", e);
+          }
+        }
+      }
+
+      // Handle applied_recolors
+      for (let i = 0; i < newRecolors.length; i++) {
+        const recolor = newRecolors[i];
+        // For recolors, the features are inside groups
+        const needsFetch = !recolor.groups || recolor.groups.length === 0 || recolor.groups.some(g => !g.features || g.features.length === 0);
+
+        if (needsFetch && recolor.save_request) {
+          try {
+            const req = recolor.save_request;
+            let gradientData;
+            if (req.based_on_layer_id) {
+              gradientData = await handleNameBasedColorZone(req);
+            } else {
+              gradientData = await handleRecolorProperty(req);
+            }
+
+            if (gradientData && gradientData.length > 0) {
+              newRecolors[i] = {
+                ...recolor,
+                groups: gradientData.map((group: LayerMatch) => ({
+                  color: group.points_color || '#000000',
+                  legend: group.layer_legend || '',
+                  features: group.features as Feature[]
+                }))
+              };
+              needsUpdate = true;
+            }
+          } catch (e) {
+            console.error("Error resolving recolor", e);
+          }
+        }
+      }
+
+      if (needsUpdate) {
+        setGeoPoints(prev => prev.map((p, idx) => {
+          if (idx === layerIndex) {
+            const original_features = p.original_features || p.features;
+            const recomputed = recomputeLayerState(
+              original_features as Feature[],
+              newFilters,
+              newRecolors,
+              layer.layer_legend
+            );
+            return {
+              ...p,
+              original_features, // Make sure to preserve original_features
+              applied_filters: newFilters,
+              applied_recolors: newRecolors,
+              ...recomputed
+            };
+          }
+          return p;
+        }));
+      }
+    };
+
+    resolveFilters();
+  }, [
+    layer,
+    layerIndex,
+    setGeoPoints,
+    handleFilteredProperty,
+    handleFilteredZone,
+    handleNameBasedColorZone,
+    handleRecolorProperty,
+  ]);
+
 
   useEffect(
     function () {
@@ -168,11 +407,11 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
 
   function handleRemoveLayer() {
     // Check if the removed layer is a population or income layer and turn off the toggle
-    if (layer.layer_id === 1001 || layer.basedon === 'population') {
+    if (Number(layer.layer_id) === 1001 || layer.basedon === 'population') {
       setIncludePopulation(false);
     }
 
-    if (layer.layer_id === 1003 || layer.basedon === 'income') {
+    if (Number(layer.layer_id) === 1003 || layer.basedon === 'income') {
       setIncludeIncome(false);
     }
 
@@ -196,10 +435,11 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     });
 
     // Clean up layerDataMap
-    if (layer.id) {
+    const layerMapKey = Number(layer.id);
+    if (!Number.isNaN(layerMapKey)) {
       setLayerDataMap(prev => {
         const newMap = { ...prev };
-        delete newMap[layer.id];
+        delete newMap[layerMapKey];
         return newMap;
       });
     }
@@ -248,19 +488,155 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     setRecolorSelectedColor(color);
   };
 
+  const handleDeleteFilter = (layerIndex: number, filterId: string) => {
+    setGeoPoints(prevGeoPoints =>
+      prevGeoPoints.map((layer, idx) => {
+        if (idx === layerIndex) {
+          if (!layer.applied_filters) return layer;
+
+          const applied_filters = layer.applied_filters.filter(f => f.id !== filterId);
+          const original_features = layer.original_features || layer.features;
+          const recomputed = recomputeLayerState(
+            original_features as Feature[],
+            applied_filters,
+            layer.applied_recolors,
+            layer.layer_legend
+          );
+
+          return {
+            ...layer,
+            applied_filters,
+            ...recomputed
+          };
+        }
+        return layer;
+      })
+    );
+  };
+
+  const handleDeleteRecolor = (layerIndex: number, recolorId: string) => {
+    setGeoPoints(prevGeoPoints =>
+      prevGeoPoints.map((layer, idx) => {
+        if (idx === layerIndex) {
+          if (!layer.applied_recolors) return layer;
+
+          const applied_recolors = layer.applied_recolors.filter(r => r.id !== recolorId);
+          const original_features = layer.original_features || layer.features;
+          const recomputed = recomputeLayerState(
+            original_features as Feature[],
+            layer.applied_filters,
+            applied_recolors,
+            layer.layer_legend
+          );
+
+          return {
+            ...layer,
+            applied_recolors,
+            ...recomputed
+          };
+        }
+        return layer;
+      })
+    );
+  };
+
   const handleApplyFilter = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-
-    // Validate required fields
-    if (!coverageValue || !basedOnLayerId) {
-      toast.error(t("please-fill-in-all-required-fields-distance-and-layer"));
-      return;
-    }
 
     setIsLoading(true);
 
     try {
       const currentLayer = geoPoints[layerIndex];
+      if (!currentLayer) {
+        toast.error(t("missing-required-fields-for-filtering"));
+        return;
+      }
+
+      if (isPropertyOnly) {
+        if (!basedOnProperty) {
+          toast.error(t("missing-required-fields-for-filtering"));
+          return;
+        }
+
+        if (basedOnProperty !== 'name' && !propertyThreshold) {
+          toast.error(t("missing-required-fields-for-filtering"));
+          return;
+        }
+
+        const filterPropertyRequest: ReqFilterProperty = {
+          change_layer_id: currentLayer.layer_id,
+          change_layer_name: currentLayer.layer_name || `Layer ${currentLayer.layerId}`,
+          change_layer_current_color: currentLayer.points_color || '#000000',
+          change_layer_new_color: recolorSelectedColor,
+          evaluation_property_name: basedOnProperty,
+          evaluation_comparison_operator: comparisonType,
+          property_threshold:
+            basedOnProperty === 'name'
+              ? 0
+              : getFormattedThreshold(propertyThreshold, basedOnProperty ?? null),
+          evaluation_name_list: nameInputs.filter(name => name.trim() !== ''),
+        };
+
+        const filterResponse = await handleFilteredProperty(filterPropertyRequest);
+
+        if (!filterResponse || filterResponse.length === 0) {
+          toast.error(t("no-features-found-based-on-the-given-criteria"));
+          return;
+        }
+
+        setGeoPoints(prevGeoPoints =>
+          prevGeoPoints.map(layer => {
+            const matchedFilterData = filterResponse.filter(
+              filter => filter.bknd_dataset_id === layer.layer_id
+            );
+
+            if (matchedFilterData.length > 0) {
+              const mergedFeatures = matchedFilterData.flatMap(
+                filter => filter.features || []
+              );
+
+              const original_features = layer.original_features || layer.features;
+              const symbol = comparisonType === 'less' ? '≤' : '≥';
+              const filterName = basedOnProperty === 'name'
+                ? t('name-contains', { names: nameInputs.join(', ') })
+                : t('property-comparison', { property: basedOnProperty, symbol, threshold: propertyThreshold });
+
+              const newFilter: AppliedFilter = {
+                id: uuidv4(),
+                name: filterName,
+                features: mergedFeatures as Feature[],
+                save_request: filterPropertyRequest,
+              };
+
+              const applied_filters = [...(layer.applied_filters || []), newFilter];
+              const recomputed = recomputeLayerState(
+                original_features as Feature[],
+                applied_filters,
+                layer.applied_recolors,
+                layer.layer_legend
+              );
+
+              return {
+                ...layer,
+                original_features,
+                applied_filters,
+                ...recomputed,
+                points_color: matchedFilterData[0].points_color || layer.points_color,
+              };
+            }
+
+            return layer;
+          })
+        );
+        return;
+      }
+
+      // Validate required fields
+      if (!coverageValue || !basedOnLayerId) {
+        toast.error(t("please-fill-in-all-required-fields-distance-and-layer"));
+        return;
+      }
+
       const baseLayer = geoPoints.find(layer => layer.layer_id === basedOnLayerId);
       const selectedColors = colors[chosenPallet || 0];
 
@@ -270,7 +646,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         return;
       }
 
-      const filterRequest = {
+      const filterRequest: ZoneFilterRequest = {
         layer_id: currentLayer.layer_id,
         user_id: authResponse?.localId || '',
         color_grid_choice: selectedColors,
@@ -283,7 +659,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         coverage_value: parseInt(coverageValue) || 0,
         color_based_on: basedOnProperty || '',
         list_names: nameInputs.filter(name => name.trim() !== ''),
-        threshold: getFormattedThreshold(propertyThreshold, basedOnProperty),
+        threshold: getFormattedThreshold(propertyThreshold, basedOnProperty ?? null),
         change_layer_new_color: recolorSelectedColor, // Use the selected color
         comparison_type: comparisonType, // Add comparison_type to the request
       };
@@ -306,9 +682,36 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
           if (matchedFilterData.length > 0) {
             const mergedFeatures = matchedFilterData.flatMap(filter => filter.features || []);
 
+            const original_features = layer.original_features || layer.features;
+
+            const symbol = comparisonType === 'less' ? '≤' : '≥';
+            let propDesc = '';
+            if (basedOnProperty) {
+              if (basedOnProperty === 'name') propDesc = t('and-name-list', { names: nameInputs.join(', ') });
+              else propDesc = t('and-property-comparison', { property: basedOnProperty, symbol, threshold: propertyThreshold });
+            }
+            const coverageStr = coverageType === 'radius' ? `${coverageValue}km` : `${coverageValue}min`;
+            const filterName = t('within-of', { coverage: coverageStr, layer: baseLayer?.layer_name || '', propDesc });
+
+            const newFilter: AppliedFilter = {
+              id: uuidv4(),
+              name: filterName,
+              features: mergedFeatures as Feature[],
+              save_request: filterRequest,
+            };
+
+            const applied_filters = [...(layer.applied_filters || []), newFilter];
+            const recomputed = recomputeLayerState(
+              original_features as Feature[],
+              applied_filters,
+              layer.applied_recolors
+            );
+
             return {
               ...layer,
-              features: mergedFeatures,
+              original_features,
+              applied_filters,
+              ...recomputed,
               points_color: matchedFilterData[0].points_color || layer.points_color,
             };
           }
@@ -327,16 +730,102 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const handleApplayerecolor = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    // Validate required fields for recolor
-    if (!coverageValue || !basedOnLayerId) {
-      toast.error(t("please-fill-in-all-required-fields-distance-and-layer"));
-      return;
-    }
-
     setIsLoading(true);
 
     try {
       const currentLayer = geoPoints[layerIndex];
+      if (!currentLayer) {
+        toast.error(t("missing-required-fields-for-recoloring"));
+        return;
+      }
+
+      if (isPropertyOnly) {
+        if (!basedOnProperty) {
+          toast.error(t("missing-required-fields-for-recoloring"));
+          return;
+        }
+
+        if (basedOnProperty !== 'name' && !propertyThreshold) {
+          toast.error(t("missing-required-fields-for-recoloring"));
+          return;
+        }
+
+        const recolorPropertyRequest: ReqFilterProperty = {
+          change_layer_id: currentLayer.layer_id,
+          change_layer_name: currentLayer.layer_name || `Layer ${currentLayer.layerId}`,
+          change_layer_current_color: currentLayer.points_color || '#000000',
+          change_layer_new_color: recolorSelectedColor,
+          evaluation_property_name: basedOnProperty,
+          evaluation_comparison_operator: comparisonType,
+          property_threshold:
+            basedOnProperty === 'name'
+              ? 0
+              : getFormattedThreshold(propertyThreshold, basedOnProperty ?? null),
+          evaluation_name_list: nameInputs.filter(name => name.trim() !== ''),
+        };
+
+        const gradientData = await handleRecolorProperty(recolorPropertyRequest);
+
+        if (!gradientData || gradientData.length === 0) {
+          throw new Error(t("no-gradient-data-received"));
+        }
+
+        setGeoPoints(prev => {
+          return prev.map(point => {
+            if (point.layer_id === currentLayer.layer_id) {
+              const original_features = point.original_features || point.features;
+
+              const symbol = comparisonType === 'less' ? '≤' : '≥';
+              let propDesc = '';
+              if (basedOnProperty) {
+                if (basedOnProperty === 'name') propDesc = t('and-name-list', { names: nameInputs.join(', ') });
+                else propDesc = t('and-property-comparison', { property: basedOnProperty, symbol, threshold: propertyThreshold });
+              }
+              const coverageStr = coverageType === 'radius' ? `${coverageValue}km` : `${coverageValue}min`;
+              const filterName = isPropertyOnly
+                ? t('recolor-by', { property: basedOnProperty })
+                : t('within-of', { coverage: coverageStr, layer: baseLayer?.layer_name || '', propDesc });
+
+              const newRecolor: AppliedRecolor = {
+                id: uuidv4(),
+                name: filterName,
+                baseColor: point.points_color || '#000000',
+                groups: gradientData.map(group => ({
+                  color: group.points_color || '#000000',
+                  legend: group.layer_legend || '',
+                  features: group.features as Feature[]
+                })),
+                save_request: recolorPropertyRequest,
+              };
+
+              const applied_recolors = [...(point.applied_recolors || []), newRecolor];
+              const recomputed = recomputeLayerState(
+                original_features as Feature[],
+                point.applied_filters,
+                applied_recolors,
+                point.layer_legend
+              );
+
+              return {
+                ...point,
+                original_features,
+                applied_recolors,
+                ...recomputed,
+                gradient_based_on: basedOnLayerId || '',
+              };
+            }
+            return point;
+          });
+        });
+        return;
+      }
+
+      // Validate required fields for recolor
+      if (!coverageValue || !basedOnLayerId) {
+        toast.error(t("please-fill-in-all-required-fields-distance-and-layer"));
+        return;
+      }
+
       const baseLayer = geoPoints.find(layer => layer.layer_id === basedOnLayerId);
       const currentLayerId = currentLayer.layer_id;
       const selectedColors = colors[chosenPallet || 0];
@@ -376,33 +865,44 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         throw new Error(t("no-gradient-data-received"));
       }
 
-      // Process gradient data for UI update
-      const combinedFeatures = gradientData.flatMap(group =>
-        group.features.map(feature => ({
-          ...feature,
-          properties: {
-            ...feature.properties,
-            gradient_color: group.points_color,
-            gradient_legend: group.layer_legend,
-          },
-        }))
-      );
-
       setGeoPoints(prev => {
         return prev.map(point => {
           if (point.layer_id === currentLayerId) {
-            return {
-              ...point,
-              layer_name: gradientData[0]?.layer_name,
-              layer_legend: gradientData.map(g => g.layer_legend).join(' | '),
-              records_count: gradientData.reduce((sum, g) => sum + g.records_count, 0),
-              features: combinedFeatures,
-              gradient_groups: gradientData.map(group => ({
+            const original_features = point.original_features || point.features;
+
+            const symbol = comparisonType === 'less' ? '≤' : '≥';
+            let propDesc = '';
+            if (basedOnProperty) {
+              if (basedOnProperty === 'name') propDesc = t('and-name-list', { names: nameInputs.join(', ') });
+              else propDesc = t('and-property-comparison', { property: basedOnProperty, symbol, threshold: propertyThreshold });
+            }
+            const coverageStr = coverageType === 'radius' ? `${coverageValue}km` : `${coverageValue}min`;
+            const filterName = t('within-of', { coverage: coverageStr, layer: baseLayer?.layer_name || '', propDesc });
+
+            const newRecolor: AppliedRecolor = {
+              id: uuidv4(),
+              name: filterName,
+              baseColor: point.points_color || '#000000',
+              groups: gradientData.map(group => ({
                 color: group.points_color || '#000000',
                 legend: group.layer_legend || '',
-                count: group.records_count,
+                features: group.features as Feature[]
               })),
-              is_gradient: true,
+              save_request: gradientRequest,
+            };
+
+            const applied_recolors = [...(point.applied_recolors || []), newRecolor];
+            const recomputed = recomputeLayerState(
+              original_features as Feature[],
+              point.applied_filters,
+              applied_recolors
+            );
+
+            return {
+              ...point,
+              original_features,
+              applied_recolors,
+              ...recomputed,
               gradient_based_on: basedOnLayerId || '',
             };
           }
@@ -569,9 +1069,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 />
                 <label
                   htmlFor="regular-display"
-                  className={`my-[2px] whitespace-nowrap cursor-pointer ${
-                    layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
-                  }`}
+                  className={`my-[2px] whitespace-nowrap cursor-pointer ${layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
+                    }`}
                 >{t("points-2")}</label>
               </div>
 
@@ -592,9 +1091,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 />
                 <label
                   htmlFor="heatmap-display"
-                  className={`my-[2px] whitespace-nowrap cursor-pointer ${
-                    layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
-                  }`}
+                  className={`my-[2px] whitespace-nowrap cursor-pointer ${layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
+                    }`}
                 >{t("heatmap")}</label>
               </div>
 
@@ -615,9 +1113,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 />
                 <label
                   htmlFor="grid-display"
-                  className={`my-[2px] whitespace-nowrap cursor-pointer ${
-                    layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
-                  }`}
+                  className={`my-[2px] whitespace-nowrap cursor-pointer ${layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
+                    }`}
                 >{t("grid")}</label>
               </div>
             </div>
@@ -626,19 +1123,17 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
               <div className="flex border-b">
                 <button
                   onClick={() => setSelectedOption('recolor')}
-                  className={`px-4 py-2 text-sm font-medium flex text-center items-center gap-2 border-b-2 ${
-                    selectedOption === 'recolor'
-                      ? 'border-primary text-primary font-bold' // Active tab styling
-                      : 'border-transparent text-gray-500 hover:text-black'
-                  }`}
+                  className={`px-4 py-2 text-sm font-medium flex text-center items-center gap-2 border-b-2 ${selectedOption === 'recolor'
+                    ? 'border-primary text-primary font-bold' // Active tab styling
+                    : 'border-transparent text-gray-500 hover:text-black'
+                    }`}
                 >{t("recolor")}</button>
                 <button
                   onClick={() => setSelectedOption('filter')}
-                  className={`px-4 py-2 text-sm font-medium flex items-center text-center gap-2 border-b-2 ${
-                    selectedOption === 'filter'
-                      ? 'border-primary text-primary font-bold' // Active tab styling
-                      : 'border-transparent text-gray-500 hover:text-black'
-                  }`}
+                  className={`px-4 py-2 text-sm font-medium flex items-center text-center gap-2 border-b-2 ${selectedOption === 'filter'
+                    ? 'border-primary text-primary font-bold' // Active tab styling
+                    : 'border-transparent text-gray-500 hover:text-black'
+                    }`}
                 >{t("filter")}</button>
               </div>
             </div>
@@ -648,10 +1143,48 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
             <BasedOnLayerDropdown
               layerIndex={layerIndex}
               onRecolorColorChange={handleRecolorColorChange}
+              isPropertyOnly={isPropertyOnly}
+              onPropertyOnlyChange={setIsPropertyOnly}
             />
 
+            {layer.applied_filters && layer.applied_filters.length > 0 && selectedOption === 'filter' && (
+              <div className="mt-2 flex flex-col gap-2">
+                <span className="text-xs font-semibold text-gray-700">{t("active-filters")}</span>
+                {layer.applied_filters.map(filter => (
+                  <div key={filter.id} className="flex justify-between items-center bg-gray-100 p-2 rounded-md border border-gray-200 text-xs">
+                    <span className="text-gray-800 font-medium">{filter.name}</span>
+                    <button
+                      onClick={() => handleDeleteFilter(layerIndex, filter.id)}
+                      className="text-red-500 hover:text-red-700 p-1"
+                      title={t('remove-filter')}
+                    >
+                      <FaTrash size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {layer.applied_recolors && layer.applied_recolors.length > 0 && selectedOption === 'recolor' && (
+              <div className="mt-2 flex flex-col gap-2">
+                <span className="text-xs font-semibold text-gray-700">{t('active-recolors')}</span>
+                {layer.applied_recolors.map(recolor => (
+                  <div key={recolor.id} className="flex justify-between items-center bg-gray-100 p-2 rounded-md border border-gray-200 text-xs">
+                    <span className="text-gray-800 font-medium">{recolor.name}</span>
+                    <button
+                      onClick={() => handleDeleteRecolor(layerIndex, recolor.id)}
+                      className="text-red-500 hover:text-red-700 p-1"
+                      title={t('remove-recolor')}
+                    >
+                      <FaTrash size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div>
-              {selectedOption ==="recolor" ? (
+              {selectedOption === "recolor" ? (
                 <button
                   onClick={e => handleApplayerecolor(e)}
                   disabled={isLoading}

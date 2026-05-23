@@ -21,6 +21,7 @@ const initialBasedon = 'radius';
 
 type LayerMatch = {
   bknd_dataset_id: string;
+  layer_id?: string;
   features?: Feature[];
   points_color?: string;
   layer_legend?: string;
@@ -62,8 +63,13 @@ const recomputeFeatures = (originalFeatures: Feature[], filters: AppliedFilter[]
   let currentFeatures = [...originalFeatures];
 
   for (const filter of filters) {
+    const filterFeatures = Array.isArray(filter.features) ? filter.features : [];
+    if (filterFeatures.length === 0) {
+      continue;
+    }
+
     const filterSet = new Set(
-      filter.features.map(f => {
+      filterFeatures.map(f => {
         const coords = f.geometry.coordinates;
         return `${coords[0]},${coords[1]}`;
       })
@@ -74,6 +80,20 @@ const recomputeFeatures = (originalFeatures: Feature[], filters: AppliedFilter[]
     });
   }
   return currentFeatures;
+};
+
+const getLayerMatchKey = (layer: { bknd_dataset_id?: string; layer_id?: string | number }) =>
+  String(layer.bknd_dataset_id ?? layer.layer_id ?? '');
+
+const extractMatchedFeatures = (matches: LayerMatch[], layerKey: string) => {
+  const exactMatches = matches.filter(match => {
+    const matchKey = String(match.bknd_dataset_id ?? match.layer_id ?? '');
+    return matchKey === layerKey;
+  });
+
+  const matchesToUse = exactMatches.length > 0 ? exactMatches : matches.length === 1 ? matches : [];
+
+  return matchesToUse.flatMap(match => match.features || []);
 };
 
 const recomputeLayerState = (
@@ -108,8 +128,13 @@ const recomputeLayerState = (
   for (const recolor of recolors) {
     for (const group of recolor.groups) {
       const isBaseColor = group.color.toLowerCase() === recolor.baseColor.toLowerCase();
+      const groupFeatures = Array.isArray(group.features) ? group.features : [];
 
-      for (const f of group.features) {
+      if (groupFeatures.length === 0) {
+        continue;
+      }
+
+      for (const f of groupFeatures) {
         const key = getCoordKey(f);
         if (!isBaseColor || !featureStyles.has(key)) {
           featureStyles.set(key, { color: group.color, legend: group.legend });
@@ -254,6 +279,8 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   useEffect(() => {
     if (!layer) return;
 
+    const layerMatchKey = getLayerMatchKey(layer);
+
     const hydrationSignature = [
       layer.layer_id,
       (layer.applied_filters || []).map(filter => filter.id).join(','),
@@ -285,13 +312,12 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
             }
 
             if (filterResponse && filterResponse.length > 0) {
-              const matchedFilterData = filterResponse.filter(
-                (f: LayerMatch) => f.bknd_dataset_id === layer.layer_id
-              );
-              if (matchedFilterData.length > 0) {
+              const matchedFeatures = extractMatchedFeatures(filterResponse, layerMatchKey);
+
+              if (matchedFeatures.length > 0) {
                 newFilters[i] = {
                   ...filter,
-                  features: matchedFilterData.flatMap((f: LayerMatch) => f.features || [])
+                  features: matchedFeatures
                 };
                 needsUpdate = true;
               }
@@ -306,7 +332,10 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       for (let i = 0; i < newRecolors.length; i++) {
         const recolor = newRecolors[i];
         // For recolors, the features are inside groups
-        const needsFetch = !recolor.groups || recolor.groups.length === 0 || recolor.groups.some(g => !g.features || g.features.length === 0);
+        const needsFetch =
+          !recolor.groups ||
+          recolor.groups.length === 0 ||
+          recolor.groups.some(g => !Array.isArray(g.features) || g.features.length === 0);
 
         if (needsFetch && recolor.save_request) {
           try {
@@ -584,16 +613,14 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
           return;
         }
 
+        const currentLayerKey = getLayerMatchKey(currentLayer);
+
         setGeoPoints(prevGeoPoints =>
           prevGeoPoints.map(layer => {
-            const matchedFilterData = filterResponse.filter(
-              filter => filter.bknd_dataset_id === layer.layer_id
-            );
+            const layerKey = getLayerMatchKey(layer);
+            const mergedFeatures = extractMatchedFeatures(filterResponse, layerKey);
 
-            if (matchedFilterData.length > 0) {
-              const mergedFeatures = matchedFilterData.flatMap(
-                filter => filter.features || []
-              );
+            if (layerKey === currentLayerKey && mergedFeatures.length > 0) {
 
               const original_features = layer.original_features || layer.features;
               const symbol = comparisonType === 'less' ? '≤' : '≥';
@@ -621,7 +648,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 original_features,
                 applied_filters,
                 ...recomputed,
-                points_color: matchedFilterData[0].points_color || layer.points_color,
+                points_color: filterResponse[0].points_color || layer.points_color,
               };
             }
 
@@ -673,14 +700,14 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         return;
       }
 
+      const currentLayerKey = getLayerMatchKey(currentLayer);
+
       setGeoPoints(prevGeoPoints =>
         prevGeoPoints.map(layer => {
-          const matchedFilterData = filterResponse.filter(
-            filter => filter.bknd_dataset_id === layer.layer_id
-          );
+          const layerKey = getLayerMatchKey(layer);
+          const mergedFeatures = extractMatchedFeatures(filterResponse, layerKey);
 
-          if (matchedFilterData.length > 0) {
-            const mergedFeatures = matchedFilterData.flatMap(filter => filter.features || []);
+          if (layerKey === currentLayerKey && mergedFeatures.length > 0) {
 
             const original_features = layer.original_features || layer.features;
 
@@ -712,7 +739,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
               original_features,
               applied_filters,
               ...recomputed,
-              points_color: matchedFilterData[0].points_color || layer.points_color,
+              points_color: filterResponse[0].points_color || layer.points_color,
             };
           }
 

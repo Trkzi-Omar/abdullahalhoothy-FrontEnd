@@ -2,7 +2,9 @@ import * as turf from '@turf/turf';
 import _ from 'lodash';
 import { Feature, Polygon, MultiPolygon } from 'geojson';
 
-self.onmessage = async (event: MessageEvent<{ featureCollection: { features: Feature<Polygon | MultiPolygon>[] } }>) => {
+self.onmessage = async (
+  event: MessageEvent<{ featureCollection: { features: Feature<Polygon | MultiPolygon>[] } }>
+) => {
   const { featureCollection } = event.data;
 
   try {

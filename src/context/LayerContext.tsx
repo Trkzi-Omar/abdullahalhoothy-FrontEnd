@@ -155,8 +155,8 @@ export function LayerProvider(props: { children: ReactNode }) {
     // If no layerData provided, build from current temporary geoPoints and reqSaveLayer
     if (!layerData) {
       const tempLayers = (geoPoints || [])
-        .filter((p: any) => p.isTemporary)
-        .map((p: any) => ({
+        .filter(p => p.isTemporary)
+        .map(p => ({
           name: reqSaveLayer.name || p.layer_name || p.layer_legend || 'Layer',
           legend: reqSaveLayer.legend || p.layer_legend || p.layer_name || 'Layer',
           description: reqSaveLayer.description || p.layer_description || '',
@@ -166,7 +166,7 @@ export function LayerProvider(props: { children: ReactNode }) {
           createNewLayer: true,
           applied_filters: p.applied_filters || [],
           applied_recolors: p.applied_recolors || [],
-          saved_recipe: p.saved_recipe || [],
+          saved_recipe: Array.isArray(p.saved_recipe) ? p.saved_recipe : [],
         } as LayerCustomization));
 
       for (const l of tempLayers) {
@@ -205,12 +205,16 @@ export function LayerProvider(props: { children: ReactNode }) {
 
     // Attempt to attach any applied filters/recolors from the current geoPoints
     const matchingPoint = Array.isArray(geoPoints)
-      ? geoPoints.find((p: any) => String(p.layerId) === String(layerData.layerId) || p.layer_id === layerDataMap[layerData.layerId]?.layer_id)
+      ? geoPoints.find(
+          p =>
+            String(p.layerId) === String(layerData.layerId) ||
+            p.layer_id === layerDataMap[layerData.layerId]?.layer_id
+        )
       : undefined;
 
     const existingLayerId = layerDataMap[layerData.layerId]?.layer_id;
 
-    const postData: any = {
+    const postData = {
       layer_name: layerData.name,
       ...(layerData.createNewLayer ? {} : { layer_id: existingLayerId }),
       bknd_dataset_id:
@@ -224,7 +228,9 @@ export function LayerProvider(props: { children: ReactNode }) {
       user_id: authResponse?.localId,
       applied_filters: sanitizeAppliedFilters(layerData.applied_filters || matchingPoint?.applied_filters),
       applied_recolors: sanitizeAppliedRecolors(layerData.applied_recolors || matchingPoint?.applied_recolors),
-      saved_recipe: layerData.saved_recipe || matchingPoint?.saved_recipe || [],
+      saved_recipe:
+        layerData.saved_recipe ||
+        (Array.isArray(matchingPoint?.saved_recipe) ? matchingPoint.saved_recipe : []),
     };
 
     try {

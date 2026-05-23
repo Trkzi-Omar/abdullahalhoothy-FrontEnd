@@ -718,6 +718,11 @@ export interface LayerCustomization {
   description: string;
   color: string;
   layerId: number;
+  bknd_dataset_id?: string;
+  createNewLayer?: boolean;
+  applied_filters?: AppliedFilter[];
+  applied_recolors?: AppliedRecolor[];
+  saved_recipe?: unknown[];
 }
 
 // Update ReqSaveLayer interface

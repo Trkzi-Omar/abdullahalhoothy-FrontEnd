@@ -10,3 +10,4 @@ export * from './phone';
 export * from './measurement';
 export * from './profile';
 export * from './heatmap';
+export * from './dataContainer';

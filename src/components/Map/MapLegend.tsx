@@ -1,6 +1,44 @@
 import { MapFeatures } from '../../types/allTypesAndInterfaces';
 import defaultMapConfig from '../../mapConfig.json';
-import { t } from '../../i18n';
+import i18next, { t } from '../../i18n';
+import { formatSubcategoryName } from '../../utils/helperFunctions';
+
+const RIYADH_LEGEND_PREFIX = /^Saudi Arabia Riyadh\s+/i;
+const RIYADH_ARABIC_SUFFIX = /\s+في الرياض، السعودية$/;
+
+const translateDatasetName = (name: string) => {
+  const trimmed = name.trim();
+  const normalized = trimmed.toLowerCase().replace(/[\s-]+/g, '_');
+  const translated = formatSubcategoryName(normalized);
+  return translated !== normalized ? translated : trimmed;
+};
+
+const translateLegend = (legend: string) => {
+  const exactTranslation = t(legend, { defaultValue: '' });
+  if (exactTranslation) return exactTranslation;
+
+  if (i18next.language.startsWith('ar') && RIYADH_LEGEND_PREFIX.test(legend)) {
+    const datasetNames = legend
+      .replace(RIYADH_LEGEND_PREFIX, '')
+      .split(/\s*\+\s*/)
+      .map(translateDatasetName)
+      .join(' + ');
+
+    return `${datasetNames} في الرياض، السعودية`;
+  }
+
+  if (i18next.language.startsWith('ar') && RIYADH_ARABIC_SUFFIX.test(legend)) {
+    const datasetNames = legend
+      .replace(RIYADH_ARABIC_SUFFIX, '')
+      .split(/\s*\+\s*/)
+      .map(translateDatasetName)
+      .join(' + ');
+
+    return `${datasetNames} في الرياض، السعودية`;
+  }
+
+  return legend;
+};
 
 function MapLegend(legendElement: HTMLDivElement, geoPoints: MapFeatures[]) {
   // Clear existing content
@@ -29,7 +67,7 @@ function MapLegend(legendElement: HTMLDivElement, geoPoints: MapFeatures[]) {
   // Create legend header
   const header = document.createElement('div');
   header.className = 'p-2 border-b font-medium text-sm';
-  header.textContent = t("legend");
+  header.textContent = t('legend');
   legendElement.appendChild(header);
 
   // Create legend content
@@ -58,7 +96,7 @@ function MapLegend(legendElement: HTMLDivElement, geoPoints: MapFeatures[]) {
         const groupCount = typeof group.count === 'number' ? group.count : 0;
         item.innerHTML = `
           <div class="w-3 h-3 rounded-full border border-[${defaultMapConfig.circleStrokeColor}]" style="background-color: ${group.color}"></div>
-          <span class="text-sm">${group.legend}</span>
+          <span class="text-sm">${translateLegend(group.legend)}</span>
           <span class="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280]">${t('legend-feature-count', { count: groupCount })}</span>
         `;
         groupDiv.appendChild(item);
@@ -70,7 +108,7 @@ function MapLegend(legendElement: HTMLDivElement, geoPoints: MapFeatures[]) {
       item.className = 'flex items-center gap-2 mb-1';
       item.innerHTML = `
         <div class="w-3 h-3 rounded-full border border-[${defaultMapConfig.circleStrokeColor}]  " style="background-color: ${point.points_color}"></div>
-        <span class="text-sm">${getLayerLabel(point)}</span>
+        <span class="text-sm">${translateLegend(point.layer_legend)}</span>
         <span class="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280]">${t('legend-total-features', { count: totalFeatureCount })}</span>
       `;
       content.appendChild(item);

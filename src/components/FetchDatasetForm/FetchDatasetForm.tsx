@@ -839,9 +839,21 @@ const FetchDatasetForm = () => {
   };
 
   const handleLayerColorChange = (index: number, color: string) => {
-    setLayers(prev =>
-      prev.map((layer, i) => (i === index ? { ...layer, points_color: color } : layer))
-    );
+    setLayers(prev => {
+      const targetLayer = prev[index];
+
+      if (targetLayer) {
+        setGeoPoints(prevPoints =>
+          prevPoints.map(point =>
+            String(point.layerId) === String(targetLayer.id)
+              ? { ...point, points_color: color }
+              : point
+          )
+        );
+      }
+
+      return prev.map((layer, i) => (i === index ? { ...layer, points_color: color } : layer));
+    });
   };
 
   const handleLayerLegendChange = (index: number, legend: string) => {

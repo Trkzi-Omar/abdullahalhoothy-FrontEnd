@@ -41,6 +41,8 @@ const translateLegend = (legend: string) => {
 };
 
 function MapLegend(legendElement: HTMLDivElement, geoPoints: MapFeatures[]) {
+  const isCollapsed = legendElement.dataset.collapsed === 'true';
+
   // Clear existing content
   legendElement.innerHTML = '';
 
@@ -65,14 +67,31 @@ function MapLegend(legendElement: HTMLDivElement, geoPoints: MapFeatures[]) {
   const getLayerLabel = (point: MapFeatures) => point.layer_name || point.layer_legend || '';
 
   // Create legend header
-  const header = document.createElement('div');
-  header.className = 'p-2 border-b font-medium text-sm';
-  header.textContent = t('legend');
+  const header = document.createElement('button');
+  header.type = 'button';
+  header.className = 'w-full p-2 border-b font-medium text-sm flex items-center justify-between gap-3 cursor-pointer';
+  header.setAttribute('aria-expanded', String(!isCollapsed));
+  header.innerHTML = `
+    <span>${t('legend')}</span>
+    <span class="inline-flex size-7 items-center justify-center rounded-full bg-[#f3f4f6] text-[#115740] ring-1 ring-black/5 shadow-sm transition-transform ${isCollapsed ? '' : 'rotate-180'}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+  `;
   legendElement.appendChild(header);
 
   // Create legend content
   const content = document.createElement('div');
-  content.className = 'p-2';
+  content.className = `p-2 ${isCollapsed ? 'hidden' : ''}`;
+  header.addEventListener('click', () => {
+    const nextCollapsed = legendElement.dataset.collapsed !== 'true';
+    legendElement.dataset.collapsed = String(nextCollapsed);
+    content.classList.toggle('hidden', nextCollapsed);
+    header.setAttribute('aria-expanded', String(!nextCollapsed));
+    const icon = header.querySelector('span:last-child');
+    icon?.classList.toggle('rotate-180', !nextCollapsed);
+  });
 
   geoPoints.forEach(point => {
     if (!point.display) return;

@@ -28,6 +28,7 @@ import { FaWandMagicSparkles } from 'react-icons/fa6';
 import { useDatasetPrices } from '../../hooks/useDatasetPrices';
 import { isIntelligentLayer } from '../../utils/layerUtils';
 import { toast } from 'sonner';
+import { useUIContext } from '../../context/UIContext';
 
 import { t } from '../../i18n';
 import { translateError } from '../../utils/apiMessages';
@@ -132,6 +133,7 @@ const FetchDatasetForm = () => {
   } = useLayerContext();
 
   const { setSelectedHomeTab, fetchGeoPoints, setGeoPoints } = useCatalogContext();
+  const { isMobile } = useUIContext();
   const { authResponse, authLoading } = useAuth();
   const [isPriceVisible, setIsPriceVisible] = useState<boolean>(false);
   const [layers, setLayers] = useState<Layer[]>([]);
@@ -141,6 +143,7 @@ const FetchDatasetForm = () => {
   const [, setCostEstimate] = useState<number>(0.0);
   const [openedCategories, setOpenedCategories] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const shouldShowLayersBox = !isMobile || layers.length > 0;
 
   const categoriesRef = useRef<HTMLDivElement>(null);
   const chatAnchorRef = useRef<HTMLDivElement>(null);
@@ -1015,32 +1018,36 @@ const FetchDatasetForm = () => {
           </div>
 
           <div className={`${!selectedCountry || !selectedCity ? 'opacity-50 pointer-events-none' : ''}`}>
-          <label className="block my-2 text-base font-medium text-black" htmlFor="layers">{t("layers")}</label>
-          <div
-            id="layers"
-            className="flex text-sm flex-col border border-gray-300 rounded-lg p-4 gap-4"
-          >
-            {layers.map((layer, index) => (
-              <LayerDisplaySubCategories
-                key={layer.id}
-                layer={layer}
-                layerIndex={index}
-                onRemoveType={(type: string) => removeTypeFromLayer(type, layer.id, false)}
-                onNameChange={handleLayerNameChange}
-                onColorChange={handleLayerColorChange}
-                onLegendChange={handleLayerLegendChange}
-                onDescriptionChange={handleLayerDescriptionChange}
-                onActionChange={handleLayerActionChange}
-                onRefresh={refreshLayer}
-                onDelete={deleteLayer}
-                isFetching={fetchingLayers.has(layer.id)}
-                saveStatus={getLayerSaveStatus(layer)}
-                listPrice={getLayerListPrice(layer)}
-                formatPrice={formatPrice}
-                isPriceVisible={isPriceVisible}
-              />
-            ))}
-          </div>
+          {shouldShowLayersBox && (
+            <>
+              <label className="block my-2 text-base font-medium text-black" htmlFor="layers">{t("layers")}</label>
+              <div
+                id="layers"
+                className="flex text-sm flex-col border border-gray-300 rounded-lg p-4 gap-4"
+              >
+                {layers.map((layer, index) => (
+                  <LayerDisplaySubCategories
+                    key={layer.id}
+                    layer={layer}
+                    layerIndex={index}
+                    onRemoveType={(type: string) => removeTypeFromLayer(type, layer.id, false)}
+                    onNameChange={handleLayerNameChange}
+                    onColorChange={handleLayerColorChange}
+                    onLegendChange={handleLayerLegendChange}
+                    onDescriptionChange={handleLayerDescriptionChange}
+                    onActionChange={handleLayerActionChange}
+                    onRefresh={refreshLayer}
+                    onDelete={deleteLayer}
+                    isFetching={fetchingLayers.has(layer.id)}
+                    saveStatus={getLayerSaveStatus(layer)}
+                    listPrice={getLayerListPrice(layer)}
+                    formatPrice={formatPrice}
+                    isPriceVisible={isPriceVisible}
+                  />
+                ))}
+              </div>
+            </>
+          )}
 
           <div className="border-t mt-4 pt-2">
             <label className="block mb-2 text-md font-medium text-black" htmlFor="searchType">{t("search-type")}</label>

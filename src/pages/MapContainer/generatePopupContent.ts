@@ -3,6 +3,74 @@ import urls from '../../urls.json';
 import { t } from '../../i18n';
 const googleStreetViewUrl = urls.street_view_link;
 
+const POPUP_KEY_TRANSLATIONS: Record<string, string> = {
+  id: 'google-place-id',
+  googleMapsUri: 'maps-link',
+  primaryType: 'primary-type',
+  popularity_score: 'popularity-score',
+  popularity_score_category: 'popularity-score-category',
+};
+
+function normalizeTranslationKey(value: string): string {
+  return value
+    .replace(/([a-z])([A-Z])/g, '$1-$2')
+    .replace(/[/_,\s]+/g, '-')
+    .replace(/[^a-zA-Z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .toLowerCase();
+}
+
+function translateKey(key: string): string {
+  const candidates = [
+    POPUP_KEY_TRANSLATIONS[key],
+    key,
+    normalizeTranslationKey(key),
+    `backend.categories.${key}`,
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    const translated = t(candidate);
+    if (translated !== candidate) return translated;
+  }
+
+  return key;
+}
+
+function translateValue(value: string): string {
+  const normalized = normalizeTranslationKey(value);
+  const backendKey = value.trim().toLowerCase().replace(/\s+/g, '_');
+  const candidates = [
+    value,
+    normalized,
+    `backend.categories.${backendKey}`,
+  ];
+
+  for (const candidate of candidates) {
+    const translated = t(candidate);
+    if (translated !== candidate) return translated;
+  }
+
+  return value;
+}
+
+function formatPopupValue(value: string | number | string[]): string {
+  if (Array.isArray(value)) {
+    return value.map(item => translateValue(String(item))).join(', ');
+  }
+
+  if (typeof value === 'number') return String(value);
+
+  return translateValue(value);
+}
+
+function renderHiddenPopupValue(key: string, value: string | number): string {
+  return `
+    <details class="popup-content-div">
+      <summary class="cursor-pointer text-blue-500 underline">${translateKey(key)}: ${t("show")}</summary>
+      <div class="break-all text-gray-700">${formatPopupValue(value)}</div>
+    </details>`;
+}
+
 export function generatePopupContent(
   properties: CustomProperties,
   coordinates: [number, number],
@@ -35,12 +103,14 @@ export function generatePopupContent(
       }
 
       if (Array.isArray(parsedValue)) {
-        content += `<div class="popup-content-div">${key}: ${parsedValue.join(', ')}</div>`;
+        content += `<div class="popup-content-div">${translateKey(key)}: ${formatPopupValue(parsedValue)}</div>`;
       } else {
         content +=
-          typeof parsedValue === 'string' && parsedValue.startsWith('http')
-            ? `<div class="popup-content-div">${key}: <a target='_blank' class="text-xs text-blue-500 underline" href=${parsedValue}>${t("click-here")}</a></div>`
-            : `<div class="popup-content-div">${key}: ${parsedValue}</div>`;
+          key === 'id'
+            ? renderHiddenPopupValue(key, parsedValue)
+            : typeof parsedValue === 'string' && parsedValue.startsWith('http')
+            ? `<div class="popup-content-div">${translateKey(key)}: <a target='_blank' class="text-xs text-blue-500 underline" href=${parsedValue}>${t("click-here")}</a></div>`
+            : `<div class="popup-content-div">${translateKey(key)}: ${formatPopupValue(parsedValue)}</div>`;
       }
     }
   }

@@ -1,5 +1,7 @@
 // Define the StylesControl function (constructor)
 
+import { t } from '../../i18n';
+
 type SetCurrentStyle = (style: string) => void;
 
 type currentStyle = string;
@@ -9,12 +11,12 @@ function StylesControl(currentStyle: currentStyle, setCurrentStyle: SetCurrentSt
   this.setCurrentStyle = setCurrentStyle;
 
   this.styles = [
-    { name: 'Light', url: 'mapbox://styles/mapbox/streets-v11' },
+    { name: 'map-style-light', url: 'mapbox://styles/mapbox/streets-v11' },
     {
-      name: 'Satellite Streets',
+      name: 'map-style-satellite-streets',
       url: 'mapbox://styles/mapbox/satellite-streets-v11',
     },
-    { name: 'Dark', url: 'mapbox://styles/mapbox/dark-v10' },
+    { name: 'map-style-dark', url: 'mapbox://styles/mapbox/dark-v10' },
   ];
 }
 
@@ -46,7 +48,7 @@ StylesControl.prototype.onAdd = function (map) {
       <button class="bg-gray-200 !rounded text-nowrap !w-auto !h-auto !px-4 !p-2 text-sm font-medium !border-none transition-colors
      ${style.url === this.currentStyle ? '!bg-primary !text-white' : ''}"
          data-style="${style.url}">
-        ${style.name}
+        ${t(style.name)}
       </button>
     `
     )

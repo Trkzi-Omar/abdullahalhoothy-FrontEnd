@@ -51,6 +51,9 @@ type CurrentLocationUpdate = {
   properties?: { price?: number; avg_order_value?: number };
 };
 
+const hasValidLocation = (location: { lat?: number | null; lng?: number | null }) =>
+  Number(location.lat) !== 0 && Number(location.lng) !== 0;
+
 const extractErrorMessage = (error: unknown): string => {
   return translateError(error, "an-unexpected-error-occurred-please-try-again");
 };
@@ -718,6 +721,7 @@ const CustomReportForm = () => {
 
     try {
       // Prepare form data with default values for optional locations
+      const hasCurrentLocation = hasValidLocation(formData.current_location);
       const submissionData: ReportSubmissionRequestBody = {
         user_id: formData.user_id,
         city_name: formData.city_name,
@@ -737,14 +741,16 @@ const CustomReportForm = () => {
             price: loc.properties?.price || 0,
           },
         })),
-        current_location: {
-          lat: formData.current_location.lat || 0,
-          lng: formData.current_location.lng || 0,
-          properties: {
-            price: formData.current_location.properties?.price || 0,
-            avg_order_value: formData.current_location.properties?.avg_order_value || 30,
+        ...(hasCurrentLocation && {
+          current_location: {
+            lat: formData.current_location.lat,
+            lng: formData.current_location.lng,
+            properties: {
+              price: formData.current_location.properties?.price || 0,
+              avg_order_value: formData.current_location.properties?.avg_order_value || 30,
+            },
           },
-        },
+        }),
         single_location: reportType === 'location',
         report_tier:
           reportType === 'location'
@@ -1328,8 +1334,8 @@ const CustomReportForm = () => {
   const isLastStep = reportType && currentStep > 0 && getActualStepContent(currentStep, reportType) === 'report-tier';
 
   return (
-    <main className="fixed inset-0 w-full h-full flex flex-col bg-white overflow-hidden">
-      {/* Header - No background, hide title on last step */}
+    <main className="fixed inset-0 z-[9998] w-screen h-svh flex flex-col bg-white overflow-hidden">
+      {/* Header */}
       <div className="px-4 pt-2 pb-1 text-gray-900 flex-shrink-0">
         <div className="flex items-center justify-between">
           <button
@@ -1340,17 +1346,15 @@ const CustomReportForm = () => {
             <FaArrowLeft className="w-3 h-3 me-1 rtl:rotate-180" />
             <span>{t("back")}</span>
           </button>
-          {!isLastStep && (
-            <div className="text-center flex-1">
-              <h1 className="text-lg font-bold text-gray-900">
-                {reportType ==="location"
-                  ?t("evaluate-your-location")
-                  : reportType ==="full"
-                    ?t("full-expansion-report")
-                    :t("location-expansion-report")}
-              </h1>
-            </div>
-          )}
+          <div className="text-center flex-1">
+            <h1 className="text-lg font-bold text-gray-900">
+              {reportType ==="location"
+                ?t("evaluate-your-location")
+                : reportType ==="full"
+                  ?t("full-expansion-report")
+                  :t("location-expansion-report")}
+            </h1>
+          </div>
           <button
             type="button"
             onClick={toggleLanguage}
@@ -1376,17 +1380,17 @@ const CustomReportForm = () => {
             reportType={reportType || undefined}
             isAdvancedMode={isAdvancedMode}
             needsPhoneVerification={needsPhoneVerificationInitial}
-            hideLabels={isLastStep || false}
+            hideLabels={false}
           />
         </div>
       )}
 
       {/* Content Area - No scrolling, fits viewport */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        <div className={`flex-1 ${isLastStep ? 'overflow-hidden' : 'overflow-y-auto'} px-4 sm:px-6 py-4 ${formData && currentStep > 0 && !isLastStep ? 'pb-24' : ''}`}>
-          <form className="h-full flex flex-col" onSubmit={e => e.preventDefault()}>
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+        <div className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-4 ${formData && currentStep > 0 && !isLastStep ? 'pb-24' : ''}`}>
+          <form className="min-h-full flex flex-col" onSubmit={e => e.preventDefault()}>
             {/* Current Step Content */}
-            <div className={`flex-1 flex flex-col ${isLastStep ? 'overflow-hidden' : ''}`}>
+            <div className="flex-1 min-h-0 flex flex-col">
               {renderCurrentStep()}
             </div>
 

@@ -3,8 +3,126 @@ import mapConfig from '../../mapConfig.json';
 import { BusinessTypeConfig } from './services/businessMetricsService';
 import { t } from '../../i18n';
 
-
 export const CITY_OPTIONS = ['Riyadh', 'Mecca', 'Jeddah'];
+
+type StepDefinition = {
+  id: number;
+  title: string;
+  description: string;
+  content: string;
+  isAdvanced?: boolean;
+};
+
+const getBaseStepDefinitions = (reportType: 'full' | 'location'): StepDefinition[] =>
+  reportType === 'full'
+    ? [
+        {
+          id: 1,
+          title: t('basic-information'),
+          description: t('city-and-location-details'),
+          content: 'basic-info',
+        },
+        {
+          id: 2,
+          title: t('segment-selection'),
+          description: t('select-segment-type'),
+          content: 'segment-selection',
+        },
+        {
+          id: 3,
+          title: t('delivery-vs-in-store'),
+          description: t('set-delivery-preferences'),
+          content: 'delivery-in-store',
+          isAdvanced: true,
+        },
+        {
+          id: 4,
+          title: t('evaluation-metrics'),
+          description: t('set-importance-weights'),
+          content: 'evaluation-metrics',
+          isAdvanced: true,
+        },
+        {
+          id: 5,
+          title: t('set-attributes'),
+          description: t('set-required-attributes'),
+          content: 'attributes',
+          isAdvanced: true,
+        },
+        {
+          id: 6,
+          title: t('custom-locations'),
+          description: t('add-specific-locations'),
+          content: 'custom-locations',
+          isAdvanced: true,
+        },
+        {
+          id: 7,
+          title: t('current-location'),
+          description: t('set-your-current-position'),
+          content: 'current-location',
+          isAdvanced: true,
+        },
+        {
+          id: 8,
+          title: t('report-tier'),
+          description: t('choose-report-tier'),
+          content: 'report-tier',
+        },
+      ]
+    : [
+        {
+          id: 1,
+          title: t('basic-information'),
+          description: t('city-and-location-details'),
+          content: 'basic-info',
+        },
+        {
+          id: 2,
+          title: t('segment-selection'),
+          description: t('select-segment-type'),
+          content: 'segment-selection',
+        },
+        {
+          id: 3,
+          title: t('delivery-vs-in-store'),
+          description: t('set-delivery-preferences'),
+          content: 'delivery-in-store',
+          isAdvanced: true,
+        },
+        {
+          id: 4,
+          title: t('evaluation-metrics'),
+          description: t('set-importance-weights'),
+          content: 'evaluation-metrics',
+          isAdvanced: true,
+        },
+        {
+          id: 5,
+          title: t('set-attributes'),
+          description: t('set-required-attributes'),
+          content: 'attributes',
+          isAdvanced: true,
+        },
+        {
+          id: 6,
+          title: t('custom-location'),
+          description: t('location-to-evaluate-2'),
+          content: 'custom-locations',
+        },
+        {
+          id: 7,
+          title: t('current-location'),
+          description: t('set-your-current-position'),
+          content: 'current-location',
+        },
+        {
+          id: 8,
+          title: t('report-tier'),
+          description: t('choose-report-tier'),
+          content: 'report-tier',
+        },
+      ];
 
 export const getTotalSteps = (
   reportType: 'full' | 'location' | null,
@@ -13,8 +131,7 @@ export const getTotalSteps = (
 ): number => {
   if (!reportType) return 1; // Step 0 only
 
-  const stepDefinitions =
-    reportType === 'full' ? FULL_REPORT_STEP_DEFINITIONS : LOCATION_REPORT_STEP_DEFINITIONS;
+  const stepDefinitions = getBaseStepDefinitions(reportType);
   const filteredSteps = isAdvancedMode
     ? stepDefinitions
     : stepDefinitions.filter(step => !step.isAdvanced);
@@ -29,128 +146,25 @@ export const getStepDefinitions = (
 ) => {
   if (!reportType) return [];
 
-  const baseSteps =
-    reportType === 'full' ? FULL_REPORT_STEP_DEFINITIONS : LOCATION_REPORT_STEP_DEFINITIONS;
-  
+  const baseSteps = getBaseStepDefinitions(reportType);
   const steps = isAdvancedMode ? [...baseSteps] : baseSteps.filter(step => !step.isAdvanced);
 
   if (needsPhoneVerification) {
     // Insert Phone Verification step before the last step (Report Tier)
     const lastStepIndex = steps.length - 1;
     const phoneStep = {
-        id: steps.length + 100, // Temporary ID to avoid conflict, will be re-indexed if needed, but display logic relies on index
-        title:t("phone-verification-2"),
-        description:t("verify-your-phone-number"),
-        content: 'phone-verification',
+      id: steps.length + 100, // Temporary ID to avoid conflict, but display logic relies on index.
+      title: t('phone-verification-2'),
+      description: t('verify-your-phone-number'),
+      content: 'phone-verification',
     };
-    
+
     // Insert before Report Tier (which is usually the last one)
     steps.splice(lastStepIndex, 0, phoneStep);
   }
 
   return steps;
 };
-
-// Step definitions for progress indicator and form rendering
-export const FULL_REPORT_STEP_DEFINITIONS = [
-  {
-    id: 1,
-    title:t("basic-information"),
-    description:t("city-and-location-details"),
-    content: 'basic-info',
-  },
-  {
-    id: 2,
-    title:t("segment-selection"),
-    description:t("select-segment-type"),
-    content: 'segment-selection',
-  },
-  {
-    id: 3,
-    title:t("delivery-vs-in-store"),
-    description:t("set-delivery-preferences"),
-    content: 'delivery-in-store',
-    isAdvanced: true,
-  },
-  {
-    id: 4,
-    title:t("evaluation-metrics"),
-    description:t("set-importance-weights"),
-    content: 'evaluation-metrics',
-    isAdvanced: true,
-  },
-  {
-    id: 5,
-    title:t("set-attributes"),
-    description:t("set-required-attributes"),
-    content: 'attributes',
-    isAdvanced: true,
-  },
-  {
-    id: 6,
-    title:t("custom-locations"),
-    description:t("add-specific-locations"),
-    content: 'custom-locations',
-    isAdvanced: true,
-  },
-  {
-    id: 7,
-    title:t("current-location"),
-    description:t("set-your-current-position"),
-    content: 'current-location',
-    isAdvanced: true,
-  },
-  { id: 8, title:t("report-tier"), description:t("choose-report-tier"), content: 'report-tier' },
-];
-
-export const LOCATION_REPORT_STEP_DEFINITIONS = [
-  {
-    id: 1,
-    title:t("basic-information"),
-    description:t("city-and-location-details"),
-    content: 'basic-info',
-  },
-  {
-    id: 2,
-    title:t("segment-selection"),
-    description:t("select-segment-type"),
-    content: 'segment-selection',
-  },
-  {
-    id: 3,
-    title:t("delivery-vs-in-store"),
-    description:t("set-delivery-preferences"),
-    content: 'delivery-in-store',
-    isAdvanced: true,
-  },
-  {
-    id: 4,
-    title:t("evaluation-metrics"),
-    description:t("set-importance-weights"),
-    content: 'evaluation-metrics',
-    isAdvanced: true,
-  },
-  {
-    id: 5,
-    title:t("set-attributes"),
-    description:t("set-required-attributes"),
-    content: 'attributes',
-    isAdvanced: true,
-  },
-  {
-    id: 6,
-    title:t("custom-location"),
-    description:t("location-to-evaluate-2"),
-    content: 'custom-locations',
-  },
-  {
-    id: 7,
-    title:t("current-location"),
-    description:t("set-your-current-position"),
-    content: 'current-location',
-  },
-  { id: 8, title:t("report-tier"), description:t("choose-report-tier"), content: 'report-tier' },
-];
 
 export const getInitialFormData = (
   businessType: string,

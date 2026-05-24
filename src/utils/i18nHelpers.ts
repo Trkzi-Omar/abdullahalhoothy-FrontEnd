@@ -1,3 +1,5 @@
+import { t } from '../i18n';
+
 export const toTranslationKey = (value: string): string =>
   value
     .replace(/([a-z])([A-Z])/g, '$1-$2')
@@ -7,3 +9,10 @@ export const toTranslationKey = (value: string): string =>
     .replace(/[^a-zA-Z0-9-]/g, '')
     .replace(/-+/g, '-')
     .toLowerCase();
+
+export const translateLocationName = (value: string): string => {
+  const key = `location-${toTranslationKey(value)}`;
+  const translated = t(key);
+
+  return translated === key ? value : translated;
+};

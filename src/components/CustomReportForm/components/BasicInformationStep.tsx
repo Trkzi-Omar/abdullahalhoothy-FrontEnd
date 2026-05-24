@@ -10,6 +10,7 @@ import {
 import { CITY_OPTIONS } from '../constants';
 import { t } from '../../../i18n';
 import { formatSubcategoryName } from '../../../utils/helperFunctions';
+import { translateLocationName } from '../../../utils/i18nHelpers';
 
 
 const formatCategoryName = (category: string): string =>
@@ -158,7 +159,7 @@ const BasicInformationStep = ({
           <input
             type="text"
             id="country_name"
-            value={formData.country_name}
+            value={translateLocationName(formData.country_name)}
             readOnly
             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-600 cursor-not-allowed"
           />
@@ -186,7 +187,7 @@ const BasicInformationStep = ({
           >
             {CITY_OPTIONS.map(city => (
               <option key={city} value={city}>
-                {city}
+                {translateLocationName(city)}
               </option>
             ))}
           </select>

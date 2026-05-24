@@ -7,6 +7,7 @@ import {
 } from 'react-icons/fa';
 import { CITY_OPTIONS } from '../constants';
 import { t } from '../../../i18n';
+import { translateLocationName } from '../../../utils/i18nHelpers';
 
 interface BasicInformationStepProps {
   formData: {
@@ -119,7 +120,7 @@ const BasicInformationStep = (obj: BasicInformationStepProps) => {
           <input
             type="text"
             id="country_name"
-            value={formData.country_name}
+            value={translateLocationName(formData.country_name)}
             readOnly
             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-600 cursor-not-allowed"
           />
@@ -149,7 +150,7 @@ const BasicInformationStep = (obj: BasicInformationStepProps) => {
           >
             {CITY_OPTIONS.map(city => (
               <option key={city} value={city}>
-                {city}
+                {translateLocationName(city)}
               </option>
             ))}
           </select>

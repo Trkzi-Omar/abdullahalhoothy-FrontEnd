@@ -28,10 +28,10 @@ import { FaWandMagicSparkles } from 'react-icons/fa6';
 import { useDatasetPrices } from '../../hooks/useDatasetPrices';
 import { isIntelligentLayer } from '../../utils/layerUtils';
 import { toast } from 'sonner';
-import { useUIContext } from '../../context/UIContext';
 
 import { t } from '../../i18n';
 import { translateError } from '../../utils/apiMessages';
+import { translateLocationName } from '../../utils/i18nHelpers';
 
 const DRAFT_KEY_PREFIX = 'fetchDatasetForm.draft.v1.';
 
@@ -133,7 +133,6 @@ const FetchDatasetForm = () => {
   } = useLayerContext();
 
   const { setSelectedHomeTab, fetchGeoPoints, setGeoPoints } = useCatalogContext();
-  const { isMobile } = useUIContext();
   const { authResponse, authLoading } = useAuth();
   const [isPriceVisible, setIsPriceVisible] = useState<boolean>(false);
   const [layers, setLayers] = useState<Layer[]>([]);
@@ -143,7 +142,7 @@ const FetchDatasetForm = () => {
   const [, setCostEstimate] = useState<number>(0.0);
   const [openedCategories, setOpenedCategories] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const shouldShowLayersBox = !isMobile || layers.length > 0;
+  const shouldShowLayersBox = layers.length > 0;
 
   const categoriesRef = useRef<HTMLDivElement>(null);
   const chatAnchorRef = useRef<HTMLDivElement>(null);
@@ -956,7 +955,6 @@ const FetchDatasetForm = () => {
       <div className="flex-1 flex flex-col justify-between overflow-y-auto relative">
         <div className="w-full p-4 overflow-y-auto ">
           <div className="mb-6">
-            <label className="block mb-2 text-base font-medium text-black" htmlFor="ai-fetch">{t("ai-powered-dataset-finder")}</label>
             <div className="flex relative w-full" ref={chatAnchorRef}>
               <ChatTrigger
                 title={t("ai-dataset-finder")}
@@ -989,7 +987,7 @@ const FetchDatasetForm = () => {
               <option value="" disabled>{t("select-a-country")}</option>
               {countries.map(country => (
                 <option value={country} key={country}>
-                  {country}
+                  {translateLocationName(country)}
                 </option>
               ))}
             </select>
@@ -1011,7 +1009,7 @@ const FetchDatasetForm = () => {
               <option value="" disabled>{t("select-a-city")}</option>
               {cities.map(city => (
                 <option key={city.name} value={city.name}>
-                  {city.name}
+                  {translateLocationName(city.name)}
                 </option>
               ))}
             </select>

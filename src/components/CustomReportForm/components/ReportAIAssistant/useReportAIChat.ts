@@ -21,8 +21,8 @@ export interface UseReportAIChatReturn {
   clearMessages: () => void;
 }
 
-// TODO: Temporary solution for demo — move to env var (VITE_REPORT_AI_CHAT_URL) before production
-const CHAT_URL = 'http://37.27.195.216:9000/chat';
+const CHAT_URL =
+  import.meta.env.VITE_REPORT_AI_CHAT_URL || 'http://localhost:9000/chat';
 
 export function useReportAIChat(): UseReportAIChatReturn {
   const [messages, setMessages] = useState<ReportAIChatMessage[]>([]);

@@ -31,6 +31,11 @@ const metricLabel = (metricKey: string) => {
   return i18n.exists(key) ? t(key) : metricKey.replace(/_/g, ' ');
 };
 
+const metricTooltip = (metricKey: string, fallback?: string) => {
+  const key = `evaluation-metric-tooltip-${metricKey.replace(/_/g, '-').toLowerCase()}`;
+  return i18n.exists(key) ? t(key) : fallback;
+};
+
 const MetricItem = ({
   metricKey,
   value,
@@ -41,6 +46,8 @@ const MetricItem = ({
   error,
   className = '',
 }: MetricItemProps) => {
+  const tooltip = metricTooltip(metricKey, businessConfig?.metrics?.[metricKey]?.description);
+
   return (
     <div
       className={`bg-white border-2 border-gray-100 rounded-lg p-4 hover:border-primary/30 transition-all duration-200 ${className}`}
@@ -55,12 +62,12 @@ const MetricItem = ({
               {getMetricIcon(metricKey, businessType, businessConfig)}
             </span>
             <span className="me-1">{metricLabel(metricKey)}</span>
-            {businessConfig?.metrics?.[metricKey]?.description && (
+            {tooltip && (
               <div className="group relative ms-1">
                 <FaInfoCircle className="text-gray-400 hover:text-primary transition-colors cursor-help w-3.5 h-3.5" />
-                <div className="absolute bottom-full start-1/2 -translate-x-1/2 rtl:translate-x-1/2 mb-2 w-48 p-2 bg-gray-900/90 backdrop-blur-sm text-white text-xs font-normal rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 text-center shadow-lg transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
-                  {businessConfig.metrics[metricKey].description}
-                  <div className="absolute top-full start-1/2 -translate-x-1/2 rtl:translate-x-1/2 border-4 border-transparent border-t-gray-900/90"></div>
+                <div className="absolute bottom-full end-0 mb-3 w-72 max-w-[calc(100vw-2rem)] p-3 bg-gray-900/95 backdrop-blur-sm text-white text-xs font-normal leading-relaxed rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[60] text-start shadow-xl transform translate-y-2 group-hover:translate-y-0 pointer-events-none normal-case">
+                  {tooltip}
+                  <div className="absolute top-full end-3 border-4 border-transparent border-t-gray-900/95"></div>
                 </div>
               </div>
             )}

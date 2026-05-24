@@ -3,6 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { defaultMapConfig } from '../../hooks/map/useMapInitialization';
 import { t } from '../../i18n';
+import { translateLocationName } from '../../utils/i18nHelpers';
 
 
 interface Location {
@@ -63,9 +64,38 @@ const MapLocationPicker = ({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
+  const onChangeRef = useRef(onChange);
+  const initialCityRef = useRef(city);
   const [isLoaded, setIsLoaded] = useState(false);
+  const selectedLat = selectedLocation?.lat ?? 0;
+  const selectedLng = selectedLocation?.lng ?? 0;
 
-  const memoizedOnChange = useCallback(onChange, [onChange]);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  const setMarkerLocation = useCallback((lng: number, lat: number) => {
+    if (!map.current) return;
+
+    if (!marker.current) {
+      marker.current = new mapboxgl.Marker({
+        color: defaultMapConfig.defaultColor,
+        draggable: true,
+      })
+        .setLngLat([lng, lat])
+        .addTo(map.current);
+
+      marker.current.on('dragend', () => {
+        if (!marker.current) return;
+
+        const lngLat = marker.current.getLngLat();
+        onChangeRef.current({ lat: lngLat.lat, lng: lngLat.lng });
+      });
+      return;
+    }
+
+    marker.current.setLngLat([lng, lat]);
+  }, []);
 
   useEffect(() => {
     if (import.meta.env.VITE_MAPBOX_KEY) {
@@ -81,7 +111,7 @@ const MapLocationPicker = ({
   useEffect(() => {
     if (!isLoaded || !mapContainer.current || map.current) return;
 
-    const cityConfig = CITY_CONFIG[city as keyof typeof CITY_CONFIG] || CITY_CONFIG.Riyadh;
+    const cityConfig = CITY_CONFIG[initialCityRef.current as keyof typeof CITY_CONFIG] || CITY_CONFIG.Riyadh;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -96,30 +126,8 @@ const MapLocationPicker = ({
     const handleMapClick = (e: mapboxgl.MapMouseEvent) => {
       const { lng, lat } = e.lngLat;
 
-      if (marker.current) {
-        marker.current.remove();
-      }
-
-      if (map.current) {
-        marker.current = new mapboxgl.Marker({
-          color: defaultMapConfig.defaultColor,
-          draggable: true,
-        })
-          .setLngLat([lng, lat])
-          .addTo(map.current);
-      }
-
-      if (marker.current) {
-        const handleMarkerDragEnd = () => {
-          if (marker.current) {
-            const lngLat = marker.current.getLngLat();
-            memoizedOnChange({ lat: lngLat.lat, lng: lngLat.lng });
-          }
-        };
-        marker.current.on('dragend', handleMarkerDragEnd);
-      }
-
-      memoizedOnChange({ lat, lng });
+      setMarkerLocation(lng, lat);
+      onChangeRef.current({ lat, lng });
     };
 
     map.current.on('click', handleMapClick);
@@ -129,36 +137,29 @@ const MapLocationPicker = ({
         map.current.off('click', handleMapClick);
         map.current.remove();
         map.current = null;
+        marker.current = null;
       }
     };
-  }, [isLoaded, city, memoizedOnChange]);
+  }, [isLoaded, setMarkerLocation]);
 
   useEffect(() => {
-    if (!map.current || !selectedLocation) return;
+    if (!map.current) return;
 
-    if (marker.current) {
-      marker.current.remove();
+    const cityConfig = CITY_CONFIG[city as keyof typeof CITY_CONFIG] || CITY_CONFIG.Riyadh;
+    map.current.setMaxBounds(cityConfig.bounds);
+    map.current.flyTo({
+      center: cityConfig.center,
+      zoom: cityConfig.zoom,
+    });
+  }, [city]);
+
+  useEffect(() => {
+    if (!map.current) return;
+
+    if (selectedLat !== 0 && selectedLng !== 0) {
+      setMarkerLocation(selectedLng, selectedLat);
     }
-
-    if (selectedLocation.lat !== 0 && selectedLocation.lng !== 0) {
-      marker.current = new mapboxgl.Marker({
-        color: defaultMapConfig.defaultColor,
-        draggable: true,
-      })
-        .setLngLat([selectedLocation.lng, selectedLocation.lat])
-        .addTo(map.current);
-
-      if (marker.current) {
-        const handleMarkerDragEnd = () => {
-          if (marker.current) {
-            const lngLat = marker.current.getLngLat();
-            memoizedOnChange({ lat: lngLat.lat, lng: lngLat.lng });
-          }
-        };
-        marker.current.on('dragend', handleMarkerDragEnd);
-      }
-    }
-  }, [selectedLocation, memoizedOnChange]);
+  }, [selectedLat, selectedLng, setMarkerLocation]);
 
   const centerOnCity = () => {
     if (!map.current) return;
@@ -189,7 +190,7 @@ const MapLocationPicker = ({
           onMouseLeave={e => {
             e.currentTarget.style.backgroundColor = defaultMapConfig.defaultColor;
           }}
-        >{t("center-on")}{' '}{city}
+        >{t("center-on")}{' '}{translateLocationName(city)}
         </button>
       </div>
 

@@ -294,96 +294,101 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     hydratedLayerSignatureRef.current = hydrationSignature;
 
     const resolveFilters = async () => {
-      let needsUpdate = false;
-      const newFilters = [...(layer.applied_filters || [])];
-      const newRecolors = [...(layer.applied_recolors || [])];
+      setIsLoading(true);
+      try {
+        let needsUpdate = false;
+        const newFilters = [...(layer.applied_filters || [])];
+        const newRecolors = [...(layer.applied_recolors || [])];
 
-      // Handle applied_filters
-      for (let i = 0; i < newFilters.length; i++) {
-        const filter = newFilters[i];
-        if ((!filter.features || filter.features.length === 0) && filter.save_request) {
-          try {
-            const req = filter.save_request;
-            let filterResponse;
-            if (req.based_on_layer_id) {
-              filterResponse = await handleFilteredZone(req);
-            } else {
-              filterResponse = await handleFilteredProperty(req);
+        // Handle applied_filters
+        for (let i = 0; i < newFilters.length; i++) {
+          const filter = newFilters[i];
+          if ((!filter.features || filter.features.length === 0) && filter.save_request) {
+            try {
+              const req = filter.save_request;
+              let filterResponse;
+              if (req.based_on_layer_id) {
+                filterResponse = await handleFilteredZone(req);
+              } else {
+                filterResponse = await handleFilteredProperty(req);
+              }
+
+              if (filterResponse && filterResponse.length > 0) {
+                const matchedFeatures = extractMatchedFeatures(filterResponse, layerMatchKey);
+
+                if (matchedFeatures.length > 0) {
+                  newFilters[i] = {
+                    ...filter,
+                    features: matchedFeatures
+                  };
+                  needsUpdate = true;
+                }
+              }
+            } catch (e) {
+              console.error("Error resolving filter", e);
             }
+          }
+        }
 
-            if (filterResponse && filterResponse.length > 0) {
-              const matchedFeatures = extractMatchedFeatures(filterResponse, layerMatchKey);
+        // Handle applied_recolors
+        for (let i = 0; i < newRecolors.length; i++) {
+          const recolor = newRecolors[i];
+          // For recolors, the features are inside groups
+          const needsFetch =
+            !recolor.groups ||
+            recolor.groups.length === 0 ||
+            recolor.groups.some(g => !Array.isArray(g.features) || g.features.length === 0);
 
-              if (matchedFeatures.length > 0) {
-                newFilters[i] = {
-                  ...filter,
-                  features: matchedFeatures
+          if (needsFetch && recolor.save_request) {
+            try {
+              const req = recolor.save_request;
+              let gradientData;
+              if (req.based_on_layer_id) {
+                gradientData = await handleNameBasedColorZone(req);
+              } else {
+                gradientData = await handleRecolorProperty(req);
+              }
+
+              if (gradientData && gradientData.length > 0) {
+                newRecolors[i] = {
+                  ...recolor,
+                  groups: gradientData.map((group: LayerMatch) => ({
+                    color: group.points_color || '#000000',
+                    legend: group.layer_legend || '',
+                    features: group.features as Feature[]
+                  }))
                 };
                 needsUpdate = true;
               }
+            } catch (e) {
+              console.error("Error resolving recolor", e);
             }
-          } catch (e) {
-            console.error("Error resolving filter", e);
           }
         }
-      }
 
-      // Handle applied_recolors
-      for (let i = 0; i < newRecolors.length; i++) {
-        const recolor = newRecolors[i];
-        // For recolors, the features are inside groups
-        const needsFetch =
-          !recolor.groups ||
-          recolor.groups.length === 0 ||
-          recolor.groups.some(g => !Array.isArray(g.features) || g.features.length === 0);
-
-        if (needsFetch && recolor.save_request) {
-          try {
-            const req = recolor.save_request;
-            let gradientData;
-            if (req.based_on_layer_id) {
-              gradientData = await handleNameBasedColorZone(req);
-            } else {
-              gradientData = await handleRecolorProperty(req);
-            }
-
-            if (gradientData && gradientData.length > 0) {
-              newRecolors[i] = {
-                ...recolor,
-                groups: gradientData.map((group: LayerMatch) => ({
-                  color: group.points_color || '#000000',
-                  legend: group.layer_legend || '',
-                  features: group.features as Feature[]
-                }))
+        if (needsUpdate) {
+          setGeoPoints(prev => prev.map((p, idx) => {
+            if (idx === layerIndex) {
+              const original_features = p.original_features || p.features;
+              const recomputed = recomputeLayerState(
+                original_features as Feature[],
+                newFilters,
+                newRecolors,
+                layer.layer_legend
+              );
+              return {
+                ...p,
+                original_features, // Make sure to preserve original_features
+                applied_filters: newFilters,
+                applied_recolors: newRecolors,
+                ...recomputed
               };
-              needsUpdate = true;
             }
-          } catch (e) {
-            console.error("Error resolving recolor", e);
-          }
+            return p;
+          }));
         }
-      }
-
-      if (needsUpdate) {
-        setGeoPoints(prev => prev.map((p, idx) => {
-          if (idx === layerIndex) {
-            const original_features = p.original_features || p.features;
-            const recomputed = recomputeLayerState(
-              original_features as Feature[],
-              newFilters,
-              newRecolors,
-              layer.layer_legend
-            );
-            return {
-              ...p,
-              original_features, // Make sure to preserve original_features
-              applied_filters: newFilters,
-              applied_recolors: newRecolors,
-              ...recomputed
-            };
-          }
-          return p;
-        }));
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -392,6 +397,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     layer,
     layerIndex,
     setGeoPoints,
+    setIsLoading,
     handleFilteredProperty,
     handleFilteredZone,
     handleNameBasedColorZone,

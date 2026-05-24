@@ -844,6 +844,7 @@
   "reports": "التقارير",
   "request-access": "طلب صلاحية الوصول",
   "request-failed": "فشل الطلب",
+  "layer-name-already-exists": "يوجد بالفعل طبقة بهذا الاسم. يرجى اختيار اسم مختلف.",
   "request-from-frontend": "طلب من الواجهة الأمامية",
   "required": "مطلوب",
   "resend-code": "إعادة إرسال الرمز",

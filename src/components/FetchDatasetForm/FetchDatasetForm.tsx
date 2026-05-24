@@ -104,7 +104,6 @@ const FetchDatasetForm = () => {
     setReqFetchDataset,
     showErrorMessage,
     setShowErrorMessage,
-    resetFetchDatasetForm,
     categories,
     setCategories,
     countries,
@@ -153,7 +152,8 @@ const FetchDatasetForm = () => {
   const didHydrateRef = useRef(false);
 
   useEffect(() => {
-    resetFetchDatasetForm();
+    // Resetting the form is now handled by the Home tab switch logic so
+    // we don't reset when the user navigates between pages.
     handleGetCountryCityCategory();
 
     if (!didHydrateRef.current) {
@@ -819,10 +819,12 @@ const FetchDatasetForm = () => {
     setLayers(prevLayers => {
       const newLayerId =
         prevLayers.length > 0 ? Math.max(...prevLayers.map(l => l.id)) + 1 : 1;
+      const randomFour = Math.floor(1000 + Math.random() * 9000);
+      const defaultName = `Layer ${randomFour}`;
       const newLayer: Layer = {
         id: newLayerId,
-        name: `Layer ${newLayerId}`,
-        layer_name: `Layer ${newLayerId}`,
+        name: defaultName,
+        layer_name: defaultName,
         includedTypes: [type],
         excludedTypes: [],
         display: true,

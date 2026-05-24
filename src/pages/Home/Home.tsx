@@ -97,7 +97,7 @@ export function HomeContent() {
     handleStoreUnsavedGeoPoint,
     setPolygons,
   } = useCatalogContext();
-  const { isLoadingDataset } = useLayerContext();
+  const { isLoadingDataset, resetFetchDatasetForm } = useLayerContext();
   const { exitMeasureMode, clearMeasurementLayers } = useMeasurement();
 
   const handleTabSwitch = (tab: 'LAYER' | 'CATALOG') => {
@@ -114,6 +114,9 @@ export function HomeContent() {
     setGeoPoints([]);
     setMarkers([]);
     setMeasurements([]);
+    // Reset the fetch dataset form when switching to LAYER tab.
+    if (tab === 'LAYER') {
+      resetFetchDatasetForm();    }
   };
 
   useEffect(() => {

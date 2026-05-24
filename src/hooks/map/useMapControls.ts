@@ -13,9 +13,19 @@ import { t } from '../../i18n';
 export function useMapControls() {
   const { mapRef, drawRef, shouldInitializeFeatures } = useMapContext();
   const { isMobile } = useUIContext();
-  const { currentStyle, setCurrentStyle } = useCatalogContext();
-  const { refreshAllLayersRef, clearAllLayersRef } = useLayerContext();
+  const { currentStyle, setCurrentStyle, isLoading: isCatalogLoading } = useCatalogContext();
+  const { refreshAllLayersRef, clearAllLayersRef, isLoadingDataset } = useLayerContext();
+  const isLoadingDatasetRef = useRef(isLoadingDataset);
+  const isCatalogLoadingRef = useRef(isCatalogLoading);
   const controlsAdded = useRef(false);
+
+  useEffect(() => {
+    isLoadingDatasetRef.current = isLoadingDataset;
+  }, [isLoadingDataset]);
+
+  useEffect(() => {
+    isCatalogLoadingRef.current = isCatalogLoading;
+  }, [isCatalogLoading]);
 
   useEffect(() => {
     if (!shouldInitializeFeatures) return;
@@ -73,6 +83,7 @@ export function useMapControls() {
         controls.layerActions = new LayerActionsControl({
           getRefreshAll: () => refreshAllLayersRef.current,
           getClearAll: () => clearAllLayersRef.current,
+          getIsLoading: () => Boolean(isLoadingDatasetRef.current || isCatalogLoadingRef.current),
           refreshTitle: t('refresh-all-layers'),
           clearTitle: t('clear-all-layers'),
         });

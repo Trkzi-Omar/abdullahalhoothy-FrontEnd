@@ -56,9 +56,9 @@ const LayerDisplaySubCategories = ({
       style={{ borderLeft: `4px solid ${layerColor}` }}
     >
       <div className="flex flex-col w-full">
-        <div className="px-4 py-2 border-b border-gray-300 flex items-center justify-between gap-2">
+        <div className="px-4 py-2 border-b border-gray-300">
           <label
-            className="flex items-center gap-2 text-md font-medium text-black flex-1 min-w-0"
+            className="flex w-full items-center gap-2 text-md font-medium text-black min-w-0"
             htmlFor={`selectedCategories-${layer.id}`}
           >
             <span
@@ -70,10 +70,13 @@ const LayerDisplaySubCategories = ({
             <input
               type="text"
               className="flex-1 min-w-0 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-1"
-              defaultValue={layer.name || `Layer ${layerIndex + 1}`}
+              defaultValue={layer.name || `Layer ${layer.id}`}
               onChange={e => onNameChange(layerIndex, e.target.value)}
             />
           </label>
+        </div>
+
+        <div className="px-4 py-2 border-b border-gray-300 flex items-center gap-2">
           <span
             className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap shrink-0 ${saveStatusConfig.className}`}
             aria-label={`${t('save-status')}: ${saveStatusConfig.label}`}
@@ -81,27 +84,30 @@ const LayerDisplaySubCategories = ({
             <span className={`h-1.5 w-1.5 rounded-full ${saveStatusConfig.dotClassName}`} />
             {saveStatusConfig.label}
           </span>
-          <button
-            type="button"
-            onClick={() => onRefresh(layer.id)}
-            disabled={isFetching || layer.includedTypes.length === 0}
-            className="flex items-center justify-center w-7 h-7 text-gray-700 hover:text-black hover:bg-gray-50 rounded border border-gray-300 bg-white shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-            aria-label={t('refresh-layer')}
-            title={t('refresh-layer')}
-          >
-            <MdRefresh
-              className={`text-base ${isFetching ? 'animate-spin' : ''}`}
-            />
-          </button>
-          <button
-            type="button"
-            onClick={() => onDelete(layer.id)}
-            className="flex items-center justify-center w-7 h-7 text-red-600 hover:text-white hover:bg-red-600 rounded border border-red-300 bg-white shrink-0"
-            aria-label={t('delete-layer')}
-            title={t('delete-layer')}
-          >
-            <MdDelete className="text-base" />
-          </button>
+
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onRefresh(layer.id)}
+              disabled={isFetching || layer.includedTypes.length === 0}
+              className="flex items-center justify-center w-7 h-7 text-gray-700 hover:text-black hover:bg-gray-50 rounded border border-gray-300 bg-white shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label={t('refresh-layer')}
+              title={t('refresh-layer')}
+            >
+              <MdRefresh
+                className={`text-base ${isFetching ? 'animate-spin' : ''}`}
+              />
+            </button>
+            <button
+              type="button"
+              onClick={() => onDelete(layer.id)}
+              className="flex items-center justify-center w-7 h-7 text-red-600 hover:text-white hover:bg-red-600 rounded border border-red-300 bg-white shrink-0"
+              aria-label={t('delete-layer')}
+              title={t('delete-layer')}
+            >
+              <MdDelete className="text-base" />
+            </button>
+          </div>
         </div>
 
         <div

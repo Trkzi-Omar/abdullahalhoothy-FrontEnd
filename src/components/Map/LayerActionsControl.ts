@@ -3,6 +3,7 @@ import type { Map } from 'mapbox-gl';
 type LayerActionsControlProps = {
   getRefreshAll: () => (() => void) | null;
   getClearAll: () => (() => void) | null;
+  getIsLoading?: () => boolean;
   refreshTitle: string;
   clearTitle: string;
 };
@@ -10,6 +11,7 @@ type LayerActionsControlProps = {
 function LayerActionsControl(props: LayerActionsControlProps) {
   const { getRefreshAll, getClearAll, refreshTitle, clearTitle } = props;
   let _container: HTMLDivElement;
+  const buttonIntervals = new WeakMap<HTMLButtonElement, number>();
 
   const refreshSvg = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -29,6 +31,7 @@ function LayerActionsControl(props: LayerActionsControlProps) {
     title: string,
     innerHTML: string,
     getHandler: () => (() => void) | null
+    , getIsLoading?: () => boolean
   ): HTMLButtonElement => {
     const button = document.createElement('button');
     button.className = 'mapboxgl-ctrl-icon !flex !items-center !justify-center';
@@ -47,7 +50,37 @@ function LayerActionsControl(props: LayerActionsControlProps) {
 
     button.addEventListener('click', handler);
     button.addEventListener('touchend', handler);
+
+    // If a loading supplier is provided, start a small polling loop to toggle
+    // a rotating animation class while loading is true. This control isn't
+    // part of React, so we poll the supplier for state changes.
+    if (getIsLoading) {
+      injectSpinStyle();
+      const id = window.setInterval(() => {
+        try {
+          const loading = Boolean(getIsLoading());
+          if (loading) {
+            button.classList.add('map-control-rotating');
+          } else {
+            button.classList.remove('map-control-rotating');
+          }
+        } catch (err) {
+          console.warn('Error in LayerActionsControl loading state polling:', err);
+        }
+      }, 200);
+
+      // Store interval id on the element so we can clear it on removal.
+      buttonIntervals.set(button, id);
+    }
     return button;
+  };
+
+  const injectSpinStyle = () => {
+    if (document.getElementById('layer-actions-spin-style')) return;
+    const style = document.createElement('style');
+    style.id = 'layer-actions-spin-style';
+    style.textContent = `@keyframes layer-actions-spin{from{transform:rotate(0deg)}to{transform:rotate(720deg)}}.map-control-rotating{animation:layer-actions-spin 1s linear infinite}`;
+    document.head.appendChild(style);
   };
 
   return {
@@ -56,7 +89,7 @@ function LayerActionsControl(props: LayerActionsControlProps) {
       _container = document.createElement('div');
       _container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
 
-      const refreshBtn = createButton(refreshTitle, refreshSvg, getRefreshAll);
+      const refreshBtn = createButton(refreshTitle, refreshSvg, getRefreshAll, props.getIsLoading);
       const clearBtn = createButton(clearTitle, trashSvg, getClearAll);
 
       _container.appendChild(refreshBtn);
@@ -66,6 +99,15 @@ function LayerActionsControl(props: LayerActionsControlProps) {
     },
 
     onRemove(): void {
+      // Clear any polling intervals attached to buttons
+      try {
+        Array.from(_container.querySelectorAll('button')).forEach(btn => {
+          const id = buttonIntervals.get(btn as HTMLButtonElement);
+          if (id) window.clearInterval(id);
+        });
+      } catch (err) {
+        console.warn('Error clearing intervals on LayerActionsControl removal:', err);
+      }
       _container?.parentNode?.removeChild(_container);
     },
   };

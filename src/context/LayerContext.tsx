@@ -142,6 +142,19 @@ export function LayerProvider(props: { children: ReactNode }) {
   const [includeRealEstate, setIncludeRealEstate] = useState(false);
 
   const [isLoadingDataset, setIsLoadingDataset] = useState(false);
+  const activeDatasetFetchCountRef = useRef(0);
+
+  const beginDatasetLoading = useCallback(() => {
+    activeDatasetFetchCountRef.current += 1;
+    setIsLoadingDataset(true);
+  }, []);
+
+  const endDatasetLoading = useCallback(() => {
+    activeDatasetFetchCountRef.current = Math.max(0, activeDatasetFetchCountRef.current - 1);
+    if (activeDatasetFetchCountRef.current === 0) {
+      setIsLoadingDataset(false);
+    }
+  }, []);
 
   function incrementFormStage() {
     if (createLayerformStage === 'initial') {
@@ -367,8 +380,9 @@ export function LayerProvider(props: { children: ReactNode }) {
     prevLayerId?: string,
     customBody?: CustomFetchBody
   ) {
+    beginDatasetLoading();
+
     if (!pageToken && !layerId) {
-      setIsLoadingDataset(true);
       setGeoPoints(prev => prev.filter(p => isIntelligentLayer(p)));
       setLayerDataMap({});
     }
@@ -495,7 +509,7 @@ export function LayerProvider(props: { children: ReactNode }) {
                 [layer.id]: res.data.data,
               }));
 
-              updateGeoJSONDataset(res.data.data, layer.id, defaultName, !!pageToken);
+              updateGeoJSONDataset(res.data.data, layer.id, layer.name, !!pageToken);
             }
           } catch (error) {
             console.error(`Error fetching layer ${layer?.id}:`, error);
@@ -515,7 +529,6 @@ export function LayerProvider(props: { children: ReactNode }) {
         // Wait for all layer requests to complete
         try {
           await Promise.all(layerPromises);
-          setIsLoadingDataset(false);
         } catch (error) {
           console.error('Error processing layers:', error);
           throw error;
@@ -692,9 +705,7 @@ export function LayerProvider(props: { children: ReactNode }) {
       setIsError(error instanceof Error ? error : new Error(String(error)));
     } finally {
       setShowLoaderTopup(false);
-      if (!pageToken) {
-        setIsLoadingDataset(false);
-      }
+      endDatasetLoading();
     }
   }
 

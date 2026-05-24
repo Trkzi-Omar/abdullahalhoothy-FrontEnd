@@ -843,6 +843,7 @@
   "reports": "Reports",
   "request-access": "Request Access",
   "request-failed": "Request failed",
+  "layer-name-already-exists": "A layer with this name already exists. Please choose a different name.",
   "request-from-frontend": "Request from frontend",
   "required": "Required",
   "resend-code": "Resend Code",

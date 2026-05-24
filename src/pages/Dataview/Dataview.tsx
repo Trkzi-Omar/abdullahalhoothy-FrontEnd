@@ -40,10 +40,42 @@ type DataviewFilterField =
 
 type DataviewFilterOperator = 'contains' | 'equals' | 'greater' | 'less';
 
+type NameFilterMode = 'includes' | 'excludes';
+
 type DataviewFilterState = {
   field: DataviewFilterField;
   operator: DataviewFilterOperator;
   value: string;
+  nameMode?: NameFilterMode;
+};
+
+const normalizeFilterToken = (value: string) => value.trim().replace(/^['"]+|['"]+$/g, '');
+
+const splitFilterTokens = (value: string) =>
+  value
+    .split(/[\n,]+/)
+    .map(normalizeFilterToken)
+    .filter(Boolean);
+
+const formatNameFilterToken = (value: string, mode: NameFilterMode) => {
+  const normalizedValue = normalizeFilterToken(value);
+
+  if (!normalizedValue) {
+    return '';
+  }
+
+  if (normalizedValue.startsWith('-')) {
+    return normalizedValue;
+  }
+
+  return mode === 'excludes' ? `-${normalizedValue}` : normalizedValue;
+};
+
+const isExcludedNameFilterToken = (value: string) => normalizeFilterToken(value).startsWith('-');
+
+const formatNameFilterChipLabel = (value: string) => {
+  const normalizedValue = normalizeFilterToken(value);
+  return normalizedValue.startsWith('-') ? normalizedValue.slice(1).trimStart() : normalizedValue;
 };
 
 const FeatureColorCell: React.FC<{ value?: string }> = ({ value }) => {
@@ -76,6 +108,84 @@ const MapLinkCell: React.FC<{ data?: DataviewRow }> = ({ data }) => {
     <a href={url} target="_blank" rel="noopener noreferrer" className="text-emerald-300 underline">
       {t('open-in-maps')}
     </a>
+  );
+};
+
+const NameChipFilterInput: React.FC<{
+  value: string;
+  mode: NameFilterMode;
+  onChange: (value: string) => void;
+  placeholder: string;
+}> = ({ value, mode, onChange, placeholder }) => {
+  const [inputValue, setInputValue] = useState('');
+  const tokens = useMemo(() => splitFilterTokens(value), [value]);
+
+  const appendTokens = (nextTokens: string[]) => {
+    const normalizedTokens = nextTokens
+      .map(token => formatNameFilterToken(token, mode))
+      .filter(Boolean);
+
+    if (normalizedTokens.length === 0) {
+      return;
+    }
+
+    const nextValue = [...tokens, ...normalizedTokens].join(', ');
+    onChange(nextValue);
+    setInputValue('');
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === ',' || event.key === 'Enter') {
+      event.preventDefault();
+
+      const token = normalizeFilterToken(inputValue);
+      if (token) {
+        appendTokens([token]);
+      }
+    }
+  };
+
+  const handlePaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
+    const pastedText = event.clipboardData.getData('text');
+    const pastedTokens = splitFilterTokens(pastedText);
+
+    if (pastedTokens.length > 0) {
+      event.preventDefault();
+      appendTokens(pastedTokens);
+    }
+  };
+
+  const removeToken = (index: number) => {
+    onChange(tokens.filter((_, tokenIndex) => tokenIndex !== index).join(', '));
+  };
+
+  return (
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-2 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 shadow-inner shadow-black/20">
+      {tokens.map((token, index) => (
+        <span
+          key={`${token}-${index}`}
+          className={`inline-flex max-w-full items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs leading-none ${isExcludedNameFilterToken(token) ? 'border-red-400/30 bg-red-500/10 text-red-100' : 'border-emerald-400/30 bg-emerald-500/10 text-emerald-100'}`}
+        >
+          <span className="max-w-[12rem] truncate">{formatNameFilterChipLabel(token)}</span>
+          <button
+            type="button"
+            onClick={() => removeToken(index)}
+            className={`inline-flex h-4 w-4 items-center justify-center rounded-full p-0 text-[10px] leading-none transition-colors ${isExcludedNameFilterToken(token) ? 'text-red-100 hover:bg-red-400/20' : 'text-emerald-100 hover:bg-emerald-400/20'}`}
+            aria-label={`${t('remove')} ${formatNameFilterChipLabel(token)}`}
+          >
+            ×
+          </button>
+        </span>
+      ))}
+      <input
+        value={inputValue}
+        onChange={event => setInputValue(event.target.value)}
+        onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
+        placeholder={placeholder}
+        className="min-w-[120px] flex-1 bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-400"
+      />
+    </div>
   );
 };
 
@@ -145,6 +255,25 @@ const matchesFilter = (row: DataviewRow, filter: DataviewFilterState) => {
   }
 
   const rowValue = row[filter.field as keyof DataviewRow];
+
+  if (filter.field === 'name') {
+    const nameTokens = splitFilterTokens(filter.value);
+
+    if (nameTokens.length === 0) {
+      return true;
+    }
+
+    const normalizedRowValue = String(rowValue ?? '').toLowerCase();
+    const includeTokens = nameTokens.filter(token => !token.startsWith('-')).map(token => token.toLowerCase());
+    const excludeTokens = nameTokens
+      .filter(token => token.startsWith('-'))
+      .map(token => token.slice(1).trimStart().toLowerCase());
+
+    const includeMatches = includeTokens.length === 0 || includeTokens.some(token => normalizedRowValue.includes(token));
+    const excludeMatches = excludeTokens.every(token => !normalizedRowValue.includes(token));
+
+    return includeMatches && excludeMatches;
+  }
 
   if (filter.operator === 'greater' || filter.operator === 'less') {
     const numericRowValue = Number(rowValue);
@@ -284,7 +413,13 @@ const Dataview: React.FC = () => {
     return businesses.filter(row => matchesAllFilters(row, filters));
   }, [businesses, filters]);
 
-  const activeFilterCount = filters.filter(filter => filter.value.trim() !== '').length;
+  const activeFilterCount = filters.filter(filter => {
+    if (filter.field === 'name') {
+      return splitFilterTokens(filter.value).length > 0;
+    }
+
+    return filter.value.trim() !== '';
+  }).length;
 
   const updateFilter = (index: number, next: Partial<DataviewFilterState>) => {
     setFilters(prev =>
@@ -293,7 +428,7 @@ const Dataview: React.FC = () => {
   };
 
   const addFilter = () => {
-    setFilters(prev => [...prev, { field: 'all', operator: 'contains', value: '' }]);
+    setFilters(prev => [...prev, { field: 'all', operator: 'contains', value: '', nameMode: 'includes' }]);
   };
 
   const removeFilter = (index: number) => {
@@ -402,6 +537,7 @@ const Dataview: React.FC = () => {
                     operator: e.target.value === 'rating' || e.target.value === 'user_ratings_total' || e.target.value === 'priceLevel'
                       ? 'greater'
                       : 'contains',
+                    nameMode: e.target.value === 'name' ? 'includes' : filter.nameMode,
                   })
                 }
                 className="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 shadow-inner shadow-black/20 outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/25"
@@ -418,26 +554,47 @@ const Dataview: React.FC = () => {
                 <option value="user_ratings_total">{t('total-rating')}</option>
                 <option value="priceLevel">{t('price-level')}</option>
               </select>
-              <select
-                value={filter.operator}
-                onChange={e => updateFilter(index, { operator: e.target.value as DataviewFilterOperator })}
-                className="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 shadow-inner shadow-black/20 outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/25"
-              >
-                <option value="contains">{t('contains')}</option>
-                <option value="equals">{t('equals')}</option>
-                <option value="greater">{t('greater-than')}</option>
-                <option value="less">{t('less-than')}</option>
-              </select>
-              <input
-                value={filter.value}
-                onChange={e => updateFilter(index, { value: e.target.value })}
-                placeholder={t('filter-value')}
-                className="min-w-[220px] rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 shadow-inner shadow-black/20 outline-none transition placeholder:text-slate-400 focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/25"
-              />
+              {filter.field === 'name' ? (
+                <>
+                  <select
+                    value={filter.nameMode || 'includes'}
+                    onChange={e => updateFilter(index, { nameMode: e.target.value as NameFilterMode })}
+                    className="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm font-semibold text-slate-100 shadow-inner shadow-black/20 outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/25"
+                  >
+                    <option value="includes">{t('includes')}</option>
+                    <option value="excludes">{t('excludes')}</option>
+                  </select>
+                  <NameChipFilterInput
+                    value={filter.value}
+                    mode={filter.nameMode || 'includes'}
+                    onChange={value => updateFilter(index, { value })}
+                    placeholder={t('type-and-press-comma')}
+                  />
+                </>
+              ) : (
+                <>
+                  <select
+                    value={filter.operator}
+                    onChange={e => updateFilter(index, { operator: e.target.value as DataviewFilterOperator })}
+                    className="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 shadow-inner shadow-black/20 outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/25"
+                  >
+                    <option value="contains">{t('contains')}</option>
+                    <option value="equals">{t('equals')}</option>
+                    <option value="greater">{t('greater-than')}</option>
+                    <option value="less">{t('less-than')}</option>
+                  </select>
+                  <input
+                    value={filter.value}
+                    onChange={e => updateFilter(index, { value: e.target.value })}
+                    placeholder={t('filter-value')}
+                    className="min-w-[220px] rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 shadow-inner shadow-black/20 outline-none transition placeholder:text-slate-400 focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/25"
+                  />
+                </>
+              )}
               <button
                 type="button"
                 onClick={() => removeFilter(index)}
-                className="rounded-lg border border-red-400/40 px-3 py-2 text-sm font-semibold text-red-300 transition-colors hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-400/30"
+                className="max-w-[100px] rounded-lg border border-red-400/40 px-3 py-2 text-sm font-semibold text-red-300 transition-colors hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-400/30"
               >
                 {t('remove')}
               </button>

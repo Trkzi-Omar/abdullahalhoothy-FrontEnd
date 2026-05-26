@@ -23,6 +23,7 @@ function CatalogMenu() {
     selectedContainerLayerModalOpen,
     resetState,
     setFormStage,
+    handleSaveCatalog,
     setLegendList,
     geoPoints,
     setGeoPoints,
@@ -289,7 +290,16 @@ function CatalogMenu() {
             {t('add-your-own-data')}
           </button>
         </div>
-        <div className="w-full flex-col flex px-2 py-2 select-none border-t lg:mb-0 mb-14">
+        <div className="w-full flex-col flex px-2 py-2 select-none border-t lg:mb-0 mb-14 gap-2">
+          <button
+            onClick={() => {
+              void handleSaveCatalog();
+            }}
+            className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
+              hover:bg-white transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-slate-100 disabled:cursor-not-allowed"
+          >
+            {t('save-catalog')}
+          </button>
           <div className="flex w-full gap-2">
             <button
               disabled={!(safeGeoPoints.length > 0)}
@@ -306,7 +316,7 @@ function CatalogMenu() {
               className="w-full h-10  bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] 
             transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-[#115740] disabled:cursor-not-allowed"
             >
-              {t('save')}
+              {t('save-layers')}
             </button>
           </div>
         </div>

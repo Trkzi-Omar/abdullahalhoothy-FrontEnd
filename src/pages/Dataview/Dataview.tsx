@@ -2,84 +2,28 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AgGridReact } from 'ag-grid-react'; // React Data Grid Component
 import 'ag-grid-community/styles/ag-grid.css'; // Mandatory CSS required by the grid
 import 'ag-grid-community/styles/ag-theme-quartz.css'; // Optional Theme applied to the grid
-import { TabularData, Feature } from '../../types/allTypesAndInterfaces';
+import { Feature } from '../../types/allTypesAndInterfaces';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { isIntelligentLayer } from '../../utils/layerUtils';
 import { t } from '../../i18n';
 
-type DataviewRow = TabularData & {
-  layer_name: string;
-  layer_id: string;
-  city_name: string;
-  business_status: string;
-  phone: string;
-  priceLevel: number | null;
-  heatmap_weight: number | null;
-  points_color: string;
-  feature_color: string;
-  layer_legend: string;
-  latitude: number | null;
-  longitude: number | null;
-  maps_link: string | null;
-};
+type DataviewRow = Record<string, unknown>;
 
 type DataviewFilterField =
   | 'all'
-  | 'layer_name'
-  | 'name'
-  | 'formatted_address'
-  | 'city_name'
-  | 'business_status'
-  | 'phone'
-  | 'website'
-  | 'rating'
-  | 'user_ratings_total'
-  | 'priceLevel'
-  | 'feature_color';
+  | string;
 
 type DataviewFilterOperator = 'contains' | 'equals' | 'greater' | 'less';
-
-type NameFilterMode = 'includes' | 'excludes';
 
 type DataviewFilterState = {
   field: DataviewFilterField;
   operator: DataviewFilterOperator;
   value: string;
-  nameMode?: NameFilterMode;
 };
 
-const normalizeFilterToken = (value: string) => value.trim().replace(/^['"]+|['"]+$/g, '');
-
-const splitFilterTokens = (value: string) =>
-  value
-    .split(/[\n,]+/)
-    .map(normalizeFilterToken)
-    .filter(Boolean);
-
-const formatNameFilterToken = (value: string, mode: NameFilterMode) => {
-  const normalizedValue = normalizeFilterToken(value);
-
-  if (!normalizedValue) {
-    return '';
-  }
-
-  if (normalizedValue.startsWith('-')) {
-    return normalizedValue;
-  }
-
-  return mode === 'excludes' ? `-${normalizedValue}` : normalizedValue;
-};
-
-const isExcludedNameFilterToken = (value: string) => normalizeFilterToken(value).startsWith('-');
-
-const formatNameFilterChipLabel = (value: string) => {
-  const normalizedValue = normalizeFilterToken(value);
-  return normalizedValue.startsWith('-') ? normalizedValue.slice(1).trimStart() : normalizedValue;
-};
-
-const FeatureColorCell: React.FC<{ value?: string }> = ({ value }) => {
-  if (!value) {
+const FeatureColorCell: React.FC<{ value?: unknown }> = ({ value }) => {
+  if (typeof value !== 'string' || !value) {
     return <span className="text-slate-400">-</span>;
   }
 
@@ -100,8 +44,8 @@ const FeatureColorCell: React.FC<{ value?: string }> = ({ value }) => {
   );
 };
 
-const MapLinkCell: React.FC<{ data?: DataviewRow }> = ({ data }) => {
-  const url = data?.maps_link;
+const LinkCell: React.FC<{ value?: unknown }> = ({ value }) => {
+  const url = typeof value === 'string' ? value : '';
   if (!url) return <span className="text-slate-400">-</span>;
 
   return (
@@ -111,85 +55,55 @@ const MapLinkCell: React.FC<{ data?: DataviewRow }> = ({ data }) => {
   );
 };
 
-const NameChipFilterInput: React.FC<{
-  value: string;
-  mode: NameFilterMode;
-  onChange: (value: string) => void;
-  placeholder: string;
-}> = ({ value, mode, onChange, placeholder }) => {
-  const [inputValue, setInputValue] = useState('');
-  const tokens = useMemo(() => splitFilterTokens(value), [value]);
+const normalizeTranslationCandidate = (value: string) =>
+  value
+    .trim()
+    .replace(/([a-z])([A-Z])/g, '$1-$2')
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-')
+    .toLowerCase();
 
-  const appendTokens = (nextTokens: string[]) => {
-    const normalizedTokens = nextTokens
-      .map(token => formatNameFilterToken(token, mode))
-      .filter(Boolean);
+const translateCellValue = (value: unknown): string => {
+  if (value === null || value === undefined || value === '') {
+    return '-';
+  }
 
-    if (normalizedTokens.length === 0) {
-      return;
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(item => translateCellValue(item)).join(', ');
+  }
+
+  const rawValue = String(value);
+  const candidates = [
+    rawValue,
+    normalizeTranslationCandidate(rawValue),
+    normalizeTranslationCandidate(rawValue).replace(/-/g, '_'),
+    `backend.categories.${normalizeTranslationCandidate(rawValue)}`,
+    `backend.categories.${normalizeTranslationCandidate(rawValue).replace(/-/g, '_')}`,
+  ];
+
+  for (const candidate of candidates) {
+    const translated = t(candidate);
+    if (translated && translated !== candidate) {
+      return translated;
     }
+  }
 
-    const nextValue = [...tokens, ...normalizedTokens].join(', ');
-    onChange(nextValue);
-    setInputValue('');
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === ',' || event.key === 'Enter') {
-      event.preventDefault();
-
-      const token = normalizeFilterToken(inputValue);
-      if (token) {
-        appendTokens([token]);
-      }
-    }
-  };
-
-  const handlePaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
-    const pastedText = event.clipboardData.getData('text');
-    const pastedTokens = splitFilterTokens(pastedText);
-
-    if (pastedTokens.length > 0) {
-      event.preventDefault();
-      appendTokens(pastedTokens);
-    }
-  };
-
-  const removeToken = (index: number) => {
-    onChange(tokens.filter((_, tokenIndex) => tokenIndex !== index).join(', '));
-  };
-
-  return (
-    <div className="flex w-full min-w-0 flex-wrap items-center gap-2 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 shadow-inner shadow-black/20">
-      {tokens.map((token, index) => (
-        <span
-          key={`${token}-${index}`}
-          className={`inline-flex max-w-full items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs leading-none ${isExcludedNameFilterToken(token) ? 'border-red-400/30 bg-red-500/10 text-red-100' : 'border-emerald-400/30 bg-emerald-500/10 text-emerald-100'}`}
-        >
-          <span className="max-w-[12rem] truncate">{formatNameFilterChipLabel(token)}</span>
-          <button
-            type="button"
-            onClick={() => removeToken(index)}
-            className={`inline-flex h-4 w-4 items-center justify-center rounded-full p-0 text-[10px] leading-none transition-colors ${isExcludedNameFilterToken(token) ? 'text-red-100 hover:bg-red-400/20' : 'text-emerald-100 hover:bg-emerald-400/20'}`}
-            aria-label={`${t('remove')} ${formatNameFilterChipLabel(token)}`}
-          >
-            ×
-          </button>
-        </span>
-      ))}
-      <input
-        value={inputValue}
-        onChange={event => setInputValue(event.target.value)}
-        onKeyDown={handleKeyDown}
-        onPaste={handlePaste}
-        placeholder={placeholder}
-        className="min-w-[120px] flex-1 bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-400"
-      />
-    </div>
-  );
+  return rawValue;
 };
 
-const hasRenderableValue = (value: unknown) => {
+const GenericCell: React.FC<{ value?: unknown }> = ({ value }) => {
+  return <span>{translateCellValue(value)}</span>;
+};
+
+
+const isRenderablePrimitive = (value: unknown) =>
+  value === null || ['string', 'number', 'boolean'].includes(typeof value);
+
+const isRenderableValue = (value: unknown) => {
   if (value === null || value === undefined || value === '') {
     return false;
   }
@@ -199,53 +113,51 @@ const hasRenderableValue = (value: unknown) => {
   }
 
   if (Array.isArray(value)) {
-    return value.length > 0;
+    return value.every(item => isRenderablePrimitive(item));
   }
 
-  return true;
+  return isRenderablePrimitive(value);
 };
 
-// Function to map a feature to tabular data
-function mapFeatureToTabularData(feature: Feature, layerName: string, layerId: string): DataviewRow {
-  const featureColor =
-    typeof feature.properties.gradient_color === 'string' && feature.properties.gradient_color
-      ? feature.properties.gradient_color
-      : '';
+const getColumnHeader = (field: string) => {
+  const translated = t(field);
+  return translated && translated !== field ? translated : field;
+};
 
-  const propMapsUri =
-    typeof feature.properties?.googleMapsUri === 'string'
-      ? feature.properties.googleMapsUri
-      : typeof feature.properties?.googleMapsURI === 'string'
-      ? feature.properties.googleMapsURI
-      : typeof feature.properties?.google_maps_uri === 'string'
-      ? feature.properties.google_maps_uri
-      : null;
+const isColorValue = (value: unknown) =>
+  typeof value === 'string' && value.trim().startsWith('#');
+
+const isLinkValue = (value: unknown) =>
+  typeof value === 'string' && value.trim().toLowerCase().startsWith('http');
+
+const isNumericValue = (value: unknown) =>
+  typeof value === 'number' && !Number.isNaN(value);
+
+const EXCLUDED_COLUMN_FIELDS = new Set<string>([
+  'bknd_dataset_id',
+  'display',
+  'id',
+  'isTemporary',
+  'business_status',
+  'layer_id',
+  'layer_legend',
+  'layerId',
+  'type',
+]);
+
+// Function to map a feature to tabular data
+function mapFeatureToTabularData(feature: Feature, layerProperties: Record<string, unknown>): DataviewRow {
+  const featureProperties = feature.properties as Record<string, unknown>;
+  const parentProperties = Object.fromEntries(
+    Object.entries(layerProperties).filter(([, value]) => isRenderableValue(value))
+  );
+  const childProperties = Object.fromEntries(
+    Object.entries(featureProperties).filter(([, value]) => isRenderableValue(value))
+  );
 
   return {
-    name: feature.properties.name,
-    formatted_address: feature.properties.address,
-    website: feature.properties.website,
-    rating: Number(feature.properties.rating),
-    user_ratings_total: Number(feature.properties.user_ratings_total),
-    layer_name: layerName,
-    layer_id: layerId,
-    city_name: '',
-    business_status:
-      feature.properties.business_status ?? feature.properties.businessStatus ?? '',
-    phone: feature.properties.phone,
-    priceLevel: typeof feature.properties.priceLevel === 'number' ? feature.properties.priceLevel : null,
-    heatmap_weight:
-      typeof feature.properties.heatmap_weight === 'number' ? feature.properties.heatmap_weight : null,
-    points_color: '',
-    feature_color: featureColor,
-    layer_legend: '',
-    latitude: feature.geometry?.coordinates?.[1] ?? null,
-    longitude: feature.geometry?.coordinates?.[0] ?? null,
-    maps_link:
-      propMapsUri ??
-      (feature.geometry && feature.geometry.coordinates
-        ? `https://www.google.com/maps/search/?api=1&query=${feature.geometry.coordinates[1]},${feature.geometry.coordinates[0]}`
-        : null),
+    ...parentProperties,
+    ...childProperties,
   };
 }
 
@@ -255,25 +167,6 @@ const matchesFilter = (row: DataviewRow, filter: DataviewFilterState) => {
   }
 
   const rowValue = row[filter.field as keyof DataviewRow];
-
-  if (filter.field === 'name') {
-    const nameTokens = splitFilterTokens(filter.value);
-
-    if (nameTokens.length === 0) {
-      return true;
-    }
-
-    const normalizedRowValue = String(rowValue ?? '').toLowerCase();
-    const includeTokens = nameTokens.filter(token => !token.startsWith('-')).map(token => token.toLowerCase());
-    const excludeTokens = nameTokens
-      .filter(token => token.startsWith('-'))
-      .map(token => token.slice(1).trimStart().toLowerCase());
-
-    const includeMatches = includeTokens.length === 0 || includeTokens.some(token => normalizedRowValue.includes(token));
-    const excludeMatches = excludeTokens.every(token => !normalizedRowValue.includes(token));
-
-    return includeMatches && excludeMatches;
-  }
 
   if (filter.operator === 'greater' || filter.operator === 'less') {
     const numericRowValue = Number(rowValue);
@@ -306,104 +199,123 @@ const Dataview: React.FC = () => {
   const [filters, setFilters] = useState<DataviewFilterState[]>([]);
   const { geoPoints } = useCatalogContext();
   const gridApiRef = useRef<GridApi<DataviewRow> | null>(null);
-  const columnDefs: ColDef<DataviewRow>[] = [
-    { headerName: t('layer'), field: 'layer_name', sortable: true, filter: true },
-    {
-      headerName: t('feature-color'),
-      field: 'feature_color',
-      sortable: true,
-      cellRenderer: FeatureColorCell,
-    },
-    {
-      headerName: t('maps-link'),
-      field: 'maps_link',
-      sortable: false,
-      cellRenderer: MapLinkCell,
-    },
-    { headerName: t("table-name"), field: 'name', sortable: true, filter: true },
-    {
-      headerName: t("address"),
-      field: 'formatted_address',
-      sortable: true,
-      filter: true,
-    },
-    {
-      headerName: t('city-name'),
-      field: 'city_name',
-      sortable: true,
-      filter: true,
-    },
-    {
-      headerName: t('business-status'),
-      field: 'business_status',
-      sortable: true,
-      filter: true,
-    },
-    {
-      headerName: t('phone'),
-      field: 'phone',
-      sortable: true,
-      filter: true,
-    },
-    {
-      headerName: t("website"),
-      field: 'website',
-      sortable: true,
-      filter: true,
-    },
-    {
-      headerName: t("rating"),
-      field: 'rating',
-      sortable: true,
-    },
-    {
-      headerName: t("total-rating"),
-      field: 'user_ratings_total',
-      sortable: true,
-    },
-    {
-      headerName: t('price-level'),
-      field: 'priceLevel',
-      sortable: true,
-    },
-  ];
-  const visibleColumnDefs = columnDefs.filter(column => {
-    if (!column.field) {
-      return true;
-    }
+  const isRtl = useMemo(() => {
+    if (typeof document === 'undefined') return false;
+    const docDir = document.documentElement.getAttribute('dir') || document.documentElement.dir || '';
+    const docLang = document.documentElement.lang || (typeof navigator !== 'undefined' ? navigator.language : '') || '';
+    return docDir.toLowerCase() === 'rtl' || /^ar\b/.test(docLang.toLowerCase());
+  }, []);
 
-    return businesses.some(row => hasRenderableValue(row[column.field as keyof DataviewRow]));
-  });
+  const localeText = useMemo(() => ({
+    // Pagination & navigation
+    pageSizeSelectorLabel: t('ag-grid.pageSizeSelectorLabel'),
+    ariaPageSizeSelectorLabel: t('ag-grid.pageSizeSelectorAriaLabel'),
+    page: t('ag-grid.page'),
+    more: t('ag-grid.more'),
+    to: t('ag-grid.to'),
+    of: t('ag-grid.of'),
+    next: t('ag-grid.next'),
+    previous: t('ag-grid.previous'),
+    first: t('ag-grid.first'),
+    last: t('ag-grid.last'),
+
+    // General
+    loadingOoo: t('ag-grid.loading'),
+    noRowsToShow: t('ag-grid.noRows'),
+
+    // Filters
+    filterOoo: t('ag-grid.filterOoo'),
+    equals: t('ag-grid.equals'),
+    notEqual: t('ag-grid.notEqual'),
+    lessThan: t('ag-grid.lessThan'),
+    greaterThan: t('ag-grid.greaterThan'),
+    lessThanOrEqual: t('ag-grid.lessThanOrEqual'),
+    greaterThanOrEqual: t('ag-grid.greaterThanOrEqual'),
+    inRange: t('ag-grid.inRange'),
+    contains: t('ag-grid.contains'),
+    notContains: t('ag-grid.notContains'),
+    startsWith: t('ag-grid.startsWith'),
+    endsWith: t('ag-grid.endsWith'),
+
+    // Tool panel / columns
+    pinColumn: t('ag-grid.pinColumn'),
+    valueAggregation: t('ag-grid.valueAggregation'),
+    autosizeThiscolumn: t('ag-grid.autosizeThiscolumn'),
+  }), []);
+  const fieldMetadata = useMemo(() => {
+    const metadata = new Map<string, { sampleValue: unknown; isNumeric: boolean }>();
+
+    businesses.forEach(row => {
+      Object.keys(row).forEach(field => {
+        if (EXCLUDED_COLUMN_FIELDS.has(field)) {
+          return;
+        }
+
+        const value = row[field];
+        if (!isRenderableValue(value)) {
+          return;
+        }
+
+        const existing = metadata.get(field);
+        if (!existing) {
+          metadata.set(field, { sampleValue: value, isNumeric: isNumericValue(value) });
+          return;
+        }
+
+        if (!existing.isNumeric && isNumericValue(value)) {
+          metadata.set(field, { sampleValue: existing.sampleValue, isNumeric: true });
+        }
+      });
+    });
+
+    return metadata;
+  }, [businesses]);
+
+  const visibleColumnDefs = useMemo(() => {
+    const priorityFields = ['layer_name', 'points_color', 'name', 'city_name', 'neighborhood', 'googleMapsUri', 'primaryType', 'types'];
+    const fields = [
+      ...priorityFields.filter(field => fieldMetadata.has(field)),
+      ...[...fieldMetadata.keys()]
+        .filter(field => !priorityFields.includes(field))
+        .sort((a, b) => a.localeCompare(b)),
+    ];
+
+    return fields.map(field => {
+      const sampleValue = fieldMetadata.get(field)?.sampleValue;
+      const maybeColor = isColorValue(sampleValue);
+      const maybeLink = !maybeColor && isLinkValue(sampleValue);
+
+      return {
+        field,
+        headerName: getColumnHeader(field),
+        sortable: true,
+        filter: true,
+        ...(maybeColor ? { cellRenderer: FeatureColorCell } : {}),
+        ...(maybeLink ? { cellRenderer: LinkCell, sortable: false } : {}),
+        ...(!maybeColor && !maybeLink ? { cellRenderer: GenericCell } : {}),
+      } as ColDef<DataviewRow>;
+    });
+  }, [fieldMetadata]);
+
+  const filterableFields = useMemo(
+    () => visibleColumnDefs.map(column => ({ field: String(column.field), headerName: String(column.headerName || column.field || '') })),
+    [visibleColumnDefs]
+  );
 
   useEffect(() => {
     if (geoPoints.length > 0) {
       const visibleLayers = geoPoints.filter(mapFeature => !isIntelligentLayer(mapFeature));
 
-      // Use flatMap to combine features from all non-intelligent layers
       const tabularData = visibleLayers.flatMap(mapFeature =>
         mapFeature.features.map(feature =>
           mapFeatureToTabularData(
             feature,
-            mapFeature.layer_name || '',
-            String(mapFeature.layer_id || mapFeature.layerId || '')
+            mapFeature as Record<string, unknown>
           )
         )
       );
 
-      const hydratedData = tabularData.map(row => {
-        const sourceLayer = visibleLayers.find(layer => String(layer.layer_id || layer.layerId || '') === row.layer_id);
-        const layerColor = sourceLayer?.points_color || '';
-
-        return {
-          ...row,
-          city_name: sourceLayer?.city_name || '',
-          points_color: layerColor,
-          feature_color: row.feature_color || layerColor,
-          layer_legend: sourceLayer?.layer_legend || '',
-        };
-      });
-
-      setBusinesses(hydratedData);
+      setBusinesses(tabularData);
     } else {
       setBusinesses([]);
     }
@@ -414,10 +326,6 @@ const Dataview: React.FC = () => {
   }, [businesses, filters]);
 
   const activeFilterCount = filters.filter(filter => {
-    if (filter.field === 'name') {
-      return splitFilterTokens(filter.value).length > 0;
-    }
-
     return filter.value.trim() !== '';
   }).length;
 
@@ -428,7 +336,7 @@ const Dataview: React.FC = () => {
   };
 
   const addFilter = () => {
-    setFilters(prev => [...prev, { field: 'all', operator: 'contains', value: '', nameMode: 'includes' }]);
+    setFilters(prev => [...prev, { field: 'all', operator: 'contains', value: '' }]);
   };
 
   const removeFilter = (index: number) => {
@@ -485,7 +393,7 @@ const Dataview: React.FC = () => {
   }, [visibleColumnDefs, filteredBusinesses]);
 
   return (
-    <div className="w-full h-full overflow-y-auto bg-[#0f172a] p-4 text-slate-100">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="w-full h-full overflow-y-auto bg-[#0f172a] p-4 text-slate-100">
       <div className="mb-4 rounded-xl border border-slate-700 bg-[#182230] p-4 shadow-lg shadow-black/20">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-3">
@@ -534,63 +442,36 @@ const Dataview: React.FC = () => {
                 onChange={e =>
                   updateFilter(index, {
                     field: e.target.value as DataviewFilterField,
-                    operator: e.target.value === 'rating' || e.target.value === 'user_ratings_total' || e.target.value === 'priceLevel'
+                    operator: fieldMetadata.get(e.target.value)?.isNumeric
                       ? 'greater'
                       : 'contains',
-                    nameMode: e.target.value === 'name' ? 'includes' : filter.nameMode,
                   })
                 }
                 className="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 shadow-inner shadow-black/20 outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/25"
               >
                 <option value="all">{t('select-field')}</option>
-                <option value="layer_name">{t('layer')}</option>
-                <option value="name">{t('table-name')}</option>
-                <option value="formatted_address">{t('address')}</option>
-                <option value="city_name">{t('city-name')}</option>
-                <option value="business_status">{t('business-status')}</option>
-                <option value="phone">{t('phone')}</option>
-                <option value="website">{t('website')}</option>
-                <option value="rating">{t('rating')}</option>
-                <option value="user_ratings_total">{t('total-rating')}</option>
-                <option value="priceLevel">{t('price-level')}</option>
+                {filterableFields.map(({ field, headerName }) => (
+                  <option key={field} value={field}>
+                    {headerName}
+                  </option>
+                ))}
               </select>
-              {filter.field === 'name' ? (
-                <>
-                  <select
-                    value={filter.nameMode || 'includes'}
-                    onChange={e => updateFilter(index, { nameMode: e.target.value as NameFilterMode })}
-                    className="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm font-semibold text-slate-100 shadow-inner shadow-black/20 outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/25"
-                  >
-                    <option value="includes">{t('includes')}</option>
-                    <option value="excludes">{t('excludes')}</option>
-                  </select>
-                  <NameChipFilterInput
-                    value={filter.value}
-                    mode={filter.nameMode || 'includes'}
-                    onChange={value => updateFilter(index, { value })}
-                    placeholder={t('type-and-press-comma')}
-                  />
-                </>
-              ) : (
-                <>
-                  <select
-                    value={filter.operator}
-                    onChange={e => updateFilter(index, { operator: e.target.value as DataviewFilterOperator })}
-                    className="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 shadow-inner shadow-black/20 outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/25"
-                  >
-                    <option value="contains">{t('contains')}</option>
-                    <option value="equals">{t('equals')}</option>
-                    <option value="greater">{t('greater-than')}</option>
-                    <option value="less">{t('less-than')}</option>
-                  </select>
-                  <input
-                    value={filter.value}
-                    onChange={e => updateFilter(index, { value: e.target.value })}
-                    placeholder={t('filter-value')}
-                    className="min-w-[220px] rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 shadow-inner shadow-black/20 outline-none transition placeholder:text-slate-400 focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/25"
-                  />
-                </>
-              )}
+              <select
+                value={filter.operator}
+                onChange={e => updateFilter(index, { operator: e.target.value as DataviewFilterOperator })}
+                className="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 shadow-inner shadow-black/20 outline-none transition focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/25"
+              >
+                <option value="contains">{t('contains')}</option>
+                <option value="equals">{t('equals')}</option>
+                <option value="greater">{t('greater-than')}</option>
+                <option value="less">{t('less-than')}</option>
+              </select>
+              <input
+                value={filter.value}
+                onChange={e => updateFilter(index, { value: e.target.value })}
+                placeholder={t('filter-value')}
+                className="min-w-[220px] rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm text-slate-100 shadow-inner shadow-black/20 outline-none transition placeholder:text-slate-400 focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/25"
+              />
               <button
                 type="button"
                 onClick={() => removeFilter(index)}
@@ -616,11 +497,13 @@ const Dataview: React.FC = () => {
           <AgGridReact
             columnDefs={visibleColumnDefs}
             rowData={filteredBusinesses}
+            enableRtl={isRtl}
             pagination={true}
-            paginationPageSize={10}
-            defaultColDef={{ resizable: true, flex: 1, minWidth: 100 }}
+            paginationPageSize={20}
+            defaultColDef={{ resizable: true, flex: 1, minWidth: 200 }}
             enableCellTextSelection={true}
             onGridReady={handleGridReady}
+            localeText={localeText}
           />
         </div>
       </div>

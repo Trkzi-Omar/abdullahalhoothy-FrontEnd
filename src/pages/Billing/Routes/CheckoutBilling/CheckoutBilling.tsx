@@ -9,7 +9,12 @@ import { useAuth } from '../../../../context/AuthContext';
 import apiRequest from '../../../../services/apiRequest';
 import { MdAttachMoney, MdCheckCircle, MdClose, MdHome, MdSearch } from 'react-icons/md';
 import { CategoryData } from '../../../../types/allTypesAndInterfaces';
-import { useBillingContext, type ReportTier } from '../../../../context/BillingContext';
+import {
+  useBillingContext,
+  type ReportTier,
+  type ReportCartItem,
+  getReportCartItemKey,
+} from '../../../../context/BillingContext';
 import ItemSelectionView from './ItemSelectionView';
 import CheckoutModal from './CheckoutModal';
 import CategoriesBrowserSubCategories from '../../../../components/CategoriesBrowserSubCategories/CategoriesBrowserSubCategories';
@@ -45,6 +50,19 @@ interface PurchaseItem {
   explanation: string;
   [key: string]: unknown;
 }
+
+type CartCostRequestBody = {
+  user_id: string;
+  country_name: string;
+  city_name: string;
+  datasets: string[];
+  intelligences: string[];
+  displayed_price: number;
+  report?: ReportTier;
+  reports?: ReportCartItem[];
+  report_potential_business_type?: string;
+  promotion_code?: string;
+};
 
 interface PriceData {
   total_cost?: number;
@@ -209,10 +227,53 @@ function CheckoutBilling({ Name }: { Name: string }) {
   const { checkout, dispatch } = useBillingContext();
 
   const hasCountryAndCity = !!(checkout.country_name?.trim() && checkout.city_name?.trim());
-  const addToCartDisabled = !hasCountryAndCity;
-  const addToCartMessage = !hasCountryAndCity
-    ? t("please-select-country-and-city-to-add-items-to-cart.")
-    : '';
+  const hasBusinessType = !!checkout.report_potential_business_type?.trim();
+
+  const buildCurrentReportCartItem = useCallback(
+    (reportKey: ReportTier): ReportCartItem | null => {
+      if (!reportKey || !checkout.country_name || !checkout.city_name) {
+        return null;
+      }
+      const businessType = checkout.report_potential_business_type?.trim() || '';
+      if (!businessType) {
+        return null;
+      }
+      return {
+        report: reportKey as Exclude<ReportTier, ''>,
+        country_name: checkout.country_name,
+        city_name: checkout.city_name,
+        report_potential_business_type: businessType,
+      };
+    },
+    [checkout.country_name, checkout.city_name, checkout.report_potential_business_type]
+  );
+
+  const isReportInCart = useCallback(
+    (reportKey: ReportTier): boolean => {
+      const currentItem = buildCurrentReportCartItem(reportKey);
+      if (!currentItem) {
+        return false;
+      }
+      const key = getReportCartItemKey(currentItem);
+      return checkout.reports.some(item => getReportCartItemKey(item) === key);
+    },
+    [buildCurrentReportCartItem, checkout.reports]
+  );
+
+  // Disable Add to Cart when required parameters are missing.
+  // - datasets and intelligences require country & city
+  // - reports require country, city, and a business type
+  const addToCartDisabled = (() => {
+    if (!hasCountryAndCity) return true;
+    if (selectedItem?.type === 'report' && !hasBusinessType) return true;
+    return false;
+  })();
+
+  const addToCartMessage = (() => {
+    if (!hasCountryAndCity) return t("please-select-country-and-city-to-add-items-to-cart.");
+    if (selectedItem?.type === 'report' && !hasBusinessType) return t("please-select-a-report-potential-business-type-to-see-the-price");
+    return '';
+  })();
 
   // Update active view when Name changes
   useEffect(() => {
@@ -431,13 +492,21 @@ function CheckoutBilling({ Name }: { Name: string }) {
 
   const handleReportToggle = useCallback(
     (reportKey: ReportTier) => {
-      if (checkout.report === reportKey) {
-        dispatch({ type: 'setReport', payload: '' });
-      } else {
-        dispatch({ type: 'setReport', payload: reportKey });
+      dispatch({ type: 'setReport', payload: reportKey });
+
+      const reportItem = buildCurrentReportCartItem(reportKey);
+      if (!reportItem) {
+        if (!checkout.country_name || !checkout.city_name) {
+          toast.error(t("please-select-country-and-city-to-add-items-to-cart."));
+        } else {
+          toast.error(t("please-select-a-report-potential-business-type-to-see-the-price"));
+        }
+        return;
       }
+
+      dispatch({ type: 'toggleReportInCart', payload: reportItem });
     },
-    [checkout.report, dispatch]
+    [dispatch, buildCurrentReportCartItem, checkout.country_name, checkout.city_name]
   );
 
   /**
@@ -617,7 +686,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
    * Fetch price for a specific selected report
    * Only fetches when all required fields are present and a report is selected
    */
-  const fetchSelectedReportPrice = useCallback(async () => {
+  const fetchSelectedReportPrice = useCallback(async (forceRefresh = false) => {
     if (!authResponse?.localId) {
       return;
     }
@@ -634,6 +703,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
 
     // Check if we already fetched with these exact params
     if (
+      !forceRefresh &&
       lastFetchedReportParams &&
       lastFetchedReportParams.country === currentCountry &&
       lastFetchedReportParams.city === currentCity &&
@@ -799,49 +869,24 @@ function CheckoutBilling({ Name }: { Name: string }) {
     if (
       checkout.datasets.length === 0 &&
       checkout.intelligences.length === 0 &&
-      checkout.report === ''
+      checkout.reports.length === 0
     ) {
       setCartCostResponse(null);
-      return;
-    }
-
-    // When a report is in the cart, the API requires report_potential_business_type
-    if (checkout.report && !checkout.report_potential_business_type?.trim()) {
-      toast.error(t("please-select-a-report-potential-business-type-to-see-pricing"));
       return;
     }
 
     setIsCalculatingCost(true);
 
     try {
-      const requestBody: {
-        user_id: string;
-        country_name: string;
-        city_name: string;
-        datasets: string[];
-        intelligences: string[];
-        displayed_price: number;
-        report?: ReportTier;
-        report_potential_business_type?: string;
-        promotion_code?: string;
-      } = {
+      const requestBody: CartCostRequestBody = {
         user_id: authResponse.localId,
         country_name: checkout.country_name || '',
         city_name: checkout.city_name || '',
         datasets: checkout.datasets, // Only checked datasets
         intelligences: checkout.intelligences, // Only checked intelligences
         displayed_price: 0,
+        reports: checkout.reports,
       };
-
-      // Only include report if it's selected
-      if (checkout.report) {
-        requestBody.report = checkout.report;
-      }
-
-      // Include report_potential_business_type if provided
-      if (checkout.report_potential_business_type && checkout.report_potential_business_type.trim()) {
-        requestBody.report_potential_business_type = checkout.report_potential_business_type.trim();
-      }
 
       // Include promotion code if provided (as 'code' for calculate_cart_cost)
       if (promotionCode && promotionCode.trim()) {
@@ -854,9 +899,8 @@ function CheckoutBilling({ Name }: { Name: string }) {
         body: requestBody,
         isAuthRequest: true,
       });
-      console.log('Cart cost:', response.data);
 
-      setCartCostResponse(response.data);
+      setCartCostResponse({ data: response.data.data as PriceData });
     } catch (error) {
       console.error('Failed to calculate cart cost:', error);
       setCartCostResponse(null);
@@ -1192,7 +1236,9 @@ function CheckoutBilling({ Name }: { Name: string }) {
 
     // Only calculate if there are items in cart
     const hasCartItems =
-      checkout.datasets.length > 0 || checkout.intelligences.length > 0 || checkout.report !== '';
+      checkout.datasets.length > 0 ||
+      checkout.intelligences.length > 0 ||
+      checkout.reports.length > 0;
 
     if (hasCartItems) {
       const timeoutId = setTimeout(() => {
@@ -1206,8 +1252,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
   }, [
     checkout.datasets,
     checkout.intelligences,
-    checkout.report,
-    checkout.report_potential_business_type,
+    checkout.reports,
     checkout.country_name,
     checkout.city_name,
     authResponse?.localId,
@@ -1535,10 +1580,11 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 reportTiers.map(tier => {
                 const isSelected =
                   selectedItemKey?.key === tier.reportKey && selectedItemKey?.type ==="report";
-                const isInCart = checkout.report === tier.reportKey;
+                const isInCart = isReportInCart(tier.reportKey);
                 const reportItem = priceData?.report_purchase_items?.find(
                   r => r.report_tier === tier.reportKey
                 );
+                const isOwned = reportItem?.is_currently_owned === true;
                 const isComingSoon = reportItem?.coming_soon === true;
                 const borderClass =
                   isSelected || isInCart ?"border-[#115740]" :"border-gray-300";
@@ -1590,12 +1636,18 @@ function CheckoutBilling({ Name }: { Name: string }) {
                       <div className="w-full flex justify-between items-start mb-2">
                         <span className="text-lg text-gray-900 font-bold">{tier.name}</span>
                         <span className="text-2xl font-bold text-green-700">
-                          {checkout.report_potential_business_type ? (
+                          {isOwned ? (
+                            <span className="text-green-700 font-semibold text-base">{t("already-owned")}</span>
+                          ) : checkout.report_potential_business_type ? (
                             <>
                               {/* Show calculated price only if this report is selected and all required fields are present */}
                               {hasAllRequiredFields && checkout.report === tier.reportKey ? (
                                 isCalculatingPrices ? (
                                   <span className="text-2xl animate-pulse">{t("loading")}</span>
+                                ) : priceData?.report_purchase_items?.find(
+                                    r => r.report_tier === tier.reportKey
+                                  )?.is_currently_owned ? (
+                                  <span className="text-green-700 font-semibold">{t("already-owned")}</span>
                                 ) : priceData?.report_purchase_items?.find(
                                     r => r.report_tier === tier.reportKey
                                   ) ? (
@@ -1808,7 +1860,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
               : selectedItem?.type === 'dataset'
                 ? checkout.datasets.includes(selectedItem.itemKey || '')
                 : selectedItem?.type === 'report'
-                  ? checkout.report === selectedItem.itemKey
+                  ? isReportInCart((selectedItem.itemKey as ReportTier) || '')
                   : false
           }
           addToCartDisabled={addToCartDisabled}
@@ -1849,7 +1901,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
       </div>
 
       {/* View Checkout Button - Fixed at bottom center - Show only if user has selected items */}
-      {(checkout.datasets.length > 0 || checkout.intelligences.length > 0 || checkout.report) && (
+      {(checkout.datasets.length > 0 || checkout.intelligences.length > 0 || checkout.reports.length > 0) && (
         <div className="fixed bottom-6 start-1/2 transform -translate-x-1/2 rtl:translate-x-1/2 z-20">
           <button
             type="button"
@@ -1867,7 +1919,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
               const itemCount =
                 checkout.datasets.length +
                 checkout.intelligences.length +
-                (checkout.report ? 1 : 0);
+                checkout.reports.length;
               return itemCount > 0 ? (
                 <span className="bg-white text-[#115740] rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
                   {itemCount}
@@ -1884,7 +1936,8 @@ function CheckoutBilling({ Name }: { Name: string }) {
           onClose={() => setShowCheckoutModal(false)}
           cartCostResponse={cartCostResponse}
           isCalculatingCost={isCalculatingCost}
-          onPurchaseComplete={() => {
+          onPurchaseComplete={async () => {
+            await fetchSelectedReportPrice(true);
             dispatch({ type: 'reset' });
             setCartCostResponse(null);
           }}

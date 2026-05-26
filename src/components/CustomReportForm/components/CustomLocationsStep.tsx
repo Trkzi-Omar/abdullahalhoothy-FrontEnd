@@ -72,11 +72,11 @@ const CustomLocationsStep = ({
         >
           <FaPlus className="w-4 h-4 me-2 group-hover:scale-110 transition-transform duration-200" />{t("add-another-location")}</button>
       </div>
-      <div className=" flex  gap-4 flex-wrap justify-center">
+      <div className="flex flex-wrap gap-4 justify-center">
         {formData.custom_locations.map((location, index) => (
           <div
             key={index}
-            className="bg-white border-2 border-gray-100 rounded-lg p-4 hover:border-primary/30 transition-all duration-200 w-[47vw]"
+            className="w-full bg-white border-2 border-gray-100 rounded-lg p-4 hover:border-primary/30 transition-all duration-200 sm:w-[calc(50%-0.5rem)]"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">

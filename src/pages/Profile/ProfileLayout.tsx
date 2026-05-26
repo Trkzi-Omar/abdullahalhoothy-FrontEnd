@@ -3,7 +3,7 @@ import { Outlet } from 'react-router';
 
 const ProfileLayout = () => {
   return (
-    <div className="flex-1 lg:h-full lg:w-[80%]">
+    <div className="flex-1 lg:h-full lg:w-[60%]">
       <Outlet />
     </div>
   );

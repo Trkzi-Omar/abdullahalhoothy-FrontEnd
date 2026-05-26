@@ -223,7 +223,7 @@ export const EvaluationMetricsStep = ({
           </div>
 
           {/* Second row - 2 items centered */}
-          <div className="flex justify-center gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 justify-center">
             {Object.entries(formData.evaluation_metrics)
               .slice(3, 5)
               .map(([key, value]) => (
@@ -236,7 +236,7 @@ export const EvaluationMetricsStep = ({
                   businessConfig={businessConfig}
                   disabled={disabled}
                   error={errors[`metrics_${key}`]}
-                  className="w-full max-w-sm"
+                  className="w-full"
                 />
               ))}
           </div>

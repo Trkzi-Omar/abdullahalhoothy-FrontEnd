@@ -14,23 +14,18 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
   const catalogContext = useCatalogContext();
   const { layerStates, updateLayerState, showLoaderTopup } = useLayerContext();
 
-  const { geoPoints, setGeoPoints, openDropdownIndices, updateDropdownIndex, layerColors } =
-    catalogContext;
+  const { geoPoints, openDropdownIndices, updateDropdownIndex, layerColors } = catalogContext;
 
   const layerState = layerStates?.[layerId] || {
     selectedColor: null,
     isLoading: false,
   };
 
-  const dropdownIndex = layerId ?? -1;
-  const currentGeoPoint =
-    geoPoints.length > 1
-      ? geoPoints[0]
-      : geoPoints.find(point => String(point.layerId) === String(layerId));
+  const dropdownIndex = layerId;
+  const currentGeoPoint = geoPoints[layerId];
   const colorHex =
     layerState?.selectedColor?.hex ||
     currentGeoPoint?.points_color ||
-    currentGeoPoint?.color ||
     getDefaultLayerColor(layerId);
   const colorName = colorMap.get(colorHex) || '';
   const selectedColorHex = layerState?.selectedColor?.hex;
@@ -40,12 +35,9 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
   const isOpen = !isGradient && openDropdownIndices[0] === dropdownIndex;
 
   useEffect(() => {
-    const currentGeoPoint = geoPoints.find(point => String(point.layerId) === String(layerId));
-
     const initialColor =
       currentGeoPoint?.points_color ||
-      currentGeoPoint?.color ||
-      layerColors[layerId] ||
+      (typeof layerColors[layerId] === 'string' && layerColors[layerId]) ||
       getDefaultLayerColor(layerId);
 
     if (initialColor && initialColor !== selectedColorHex) {
@@ -56,7 +48,7 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
         },
       });
     }
-  }, [layerId, geoPoints, layerColors, selectedColorHex, updateLayerState]);
+  }, [layerId, currentGeoPoint?.points_color, geoPoints, layerColors, selectedColorHex, updateLayerState]);
 
   function handleOptionClick(optionName: string, hex: string, event: ReactMouseEvent) {
     event.stopPropagation();
@@ -65,12 +57,6 @@ function ColorSelect({ layerId, onColorChange }: ColorSelectProps) {
     updateLayerState(layerId, {
       selectedColor: { name: optionName, hex },
     });
-
-    setGeoPoints((prevPoints: MapFeatures[]) =>
-      prevPoints.map(point =>
-        point.layerId === String(layerId) ? { ...point, points_color: hex, color: hex } : point
-      )
-    );
 
     onColorChange(hex);
   }

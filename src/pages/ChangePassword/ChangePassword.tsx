@@ -24,7 +24,7 @@ const ChangePassword: React.FC = () => {
   const navigate = useNavigate();
 
   const disabledReason = loading
-    ? 'Password change is in progress'
+    ? t("password-change-in-progress")
     : getChangePasswordDisabledReason(currentPassword, newPassword, confirmPassword);
   const isSubmitDisabled =
     loading || !isChangePasswordValid(currentPassword, newPassword, confirmPassword);

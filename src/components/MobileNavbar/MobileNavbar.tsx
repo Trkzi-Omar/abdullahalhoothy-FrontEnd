@@ -19,7 +19,7 @@ export default function MobileNavbar() {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const { checkout } = useBillingContext();
     cartItemCount =
-      checkout.datasets.length + checkout.intelligences.length + (checkout.report ? 1 : 0);
+      checkout.datasets.length + checkout.intelligences.length + checkout.reports.length;
   } catch {
     // Not on billing routes, context not available
   }

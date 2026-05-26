@@ -756,6 +756,10 @@ export function CatalogProvider(props: { children: ReactNode }) {
       setIsLoading(true);
 
       const thumbnailDataUrl = await generateThumbnail();
+      const savedGeoPoints = geoPoints.filter(layer => !layer.isTemporary);
+      const totalRecords = savedGeoPoints
+        .filter(layer => layer.layer_id && !isIntelligentLayer(layer))
+        .reduce((sum, layer) => sum + Number(layer.records_count ?? layer.features?.length ?? 0), 0);
 
       const formData = new FormData();
 
@@ -773,8 +777,8 @@ export function CatalogProvider(props: { children: ReactNode }) {
           catalog_name: name,
           subscription_price: subscriptionPrice,
           catalog_description: description,
-          total_records: 0,
-          layers: geoPoints
+          total_records: totalRecords,
+          layers: savedGeoPoints
             .filter(layer => layer.layer_id && !isIntelligentLayer(layer))
             .map(layer => ({
               layer_id: layer.layer_id,
@@ -796,7 +800,7 @@ export function CatalogProvider(props: { children: ReactNode }) {
           },
           details: [
             // Only include current layers (deleted layers are removed entirely)
-            ...geoPoints
+            ...savedGeoPoints
               .filter(layer => layer.layer_id && !isIntelligentLayer(layer))
               .map(layer => ({
                 layer_id: layer.layer_id,
@@ -812,12 +816,12 @@ export function CatalogProvider(props: { children: ReactNode }) {
           intelligence_viewport: viewport ? {
             ...viewport,
             // Check if population layer exists in current geoPoints
-            population: geoPoints.some(layer => 
+            population: savedGeoPoints.some(layer => 
               isIntelligentLayer(layer) && 
               (String(layer.layer_id) === '1001' || layer.basedon === 'population')
             ),
             // Check if income layer exists in current geoPoints
-            income: geoPoints.some(layer => 
+            income: savedGeoPoints.some(layer => 
               isIntelligentLayer(layer) && 
               (String(layer.layer_id) === '1003' || layer.basedon === 'income')
             ),

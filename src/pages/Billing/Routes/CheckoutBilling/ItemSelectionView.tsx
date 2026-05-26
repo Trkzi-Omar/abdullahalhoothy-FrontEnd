@@ -78,6 +78,7 @@ function ItemSelectionView({
 
   const formatPrice = (value: number) =>
     `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const isOwned = !!selectedItem.isCurrentlyOwned || selectedItem.price === 0;
   const displayDescription =
     selectedItem.type === 'dataset'
       ? formatDatasetDescription(selectedItem.itemKey, selectedItem.description)
@@ -101,9 +102,9 @@ function ItemSelectionView({
             <span className="text-lg font-bold text-gray-400 animate-pulse">{t("loading")}</span>
           ) : selectedItem.price !== undefined ? (
             <span
-              className={`text-lg font-bold ${selectedItem.price === 0 ? 'text-green-600' : 'text-green-700'}`}
+              className={`text-lg font-bold ${isOwned ? 'text-green-600' : 'text-green-700'}`}
             >
-              {selectedItem.price === 0 ?t("already-owned") : formatPrice(selectedItem.price)}
+              {isOwned ? t("already-owned") : formatPrice(selectedItem.price)}
             </span>
           ) : null}
         </div>
@@ -193,7 +194,22 @@ function ItemSelectionView({
       {/* Cart Action Buttons */}
       {(onAddToCart || onRemoveFromCart) && !isLoading && (
         <div className="border-t border-gray-200 px-6 py-4">
-          {isInCart ? (
+          {isOwned ? (
+            <button
+              type="button"
+              disabled
+              className="w-full py-3 px-6 bg-green-50 border-2 border-green-500 text-green-700 font-semibold rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
+              key="already-owned"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>{t("already-owned")}</button>
+          ) : isInCart ? (
             <button
               onClick={onRemoveFromCart}
               className="w-full py-3 px-6 bg-red-50 border-2 border-red-500 text-red-600 font-semibold rounded-lg hover:bg-red-100 transition-all flex items-center justify-center gap-2"

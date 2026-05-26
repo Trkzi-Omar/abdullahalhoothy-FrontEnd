@@ -23,7 +23,9 @@ import { toast } from 'sonner';
 import { t } from '../../../../i18n';
 import i18n from '../../../../i18n';
 import { toTranslationKey } from '../../../../utils/i18nHelpers';
+import { isValidPhone } from '../../../../utils/validation';
 import { ProfileRecord } from '../../../../types';
+import { PhoneInput } from '../../../../components/common/PhoneInput';
 
 const isProfileRecord = (value: unknown): value is ProfileRecord =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -59,6 +61,14 @@ const ProfileMain: React.FC = () => {
   useEffect(() => {
     setPhoneInput(profile.phone || '');
   }, [profile.phone]);
+
+  const canonicalizePhone = (phone: string): string => {
+    const digits = phone.replace(/\D/g, '');
+    return digits ? `+${digits}` : '';
+  };
+
+  const normalizedSavedPhone = canonicalizePhone(profile.phone || '');
+  const normalizedPhoneInput = canonicalizePhone(phoneInput);
 
   const fetchProfile = async () => {
     if (!authResponse || !('idToken' in authResponse)) {
@@ -568,12 +578,12 @@ const ProfileMain: React.FC = () => {
           <div className="flex items-start mb-2.5">
             <span className="font-bold me-1.5 min-w-[100px]">{t('phone-2')}</span>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center flex-1 gap-2 w-full sm:w-auto">
-              <input
-                type="tel"
+              <PhoneInput
                 value={phoneInput}
-                onChange={e => setPhoneInput(e.target.value)}
+                onChange={setPhoneInput}
                 placeholder={t('enter-phone-number')}
-                className="flex-1 min-w-0 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="flex-1 min-w-0"
+                inputClassName="text-sm"
               />
               <button
                 onClick={() => {
@@ -582,14 +592,16 @@ const ProfileMain: React.FC = () => {
                     return;
                   }
 
-                  if (!phoneInput || phoneInput.trim() === '') {
+                  const normalizedPhone = canonicalizePhone(phoneInput);
+
+                  if (!normalizedPhone || normalizedPhone === '+' || !isValidPhone(normalizedPhone)) {
                     toast.error(t('please-enter-a-valid-phone-number'));
                     return;
                   }
 
                   // Trigger OTP verification before saving
                   openOTPModal(
-                    phoneInput,
+                    normalizedPhone,
                     async () => {
                       // On successful OTP verification, save the phone number
                       setIsSavingPhone(true);
@@ -600,13 +612,14 @@ const ProfileMain: React.FC = () => {
                           isAuthRequest: true,
                           body: {
                             user_id: authResponse.localId,
-                            phone: phoneInput,
+                            phone: normalizedPhone,
                             username: profile.username,
                             email: profile.email,
                             show_price_on_purchase: profile.show_price_on_purchase,
                           },
                         });
-                        setProfile(prev => ({ ...prev, phone: phoneInput }));
+                        setPhoneInput(normalizedPhone);
+                        setProfile(prev => ({ ...prev, phone: normalizedPhone }));
                         toast.success(t('phone-number-updated-successfully'));
                       } catch (error) {
                         console.error('Failed to update phone number:', error);
@@ -623,7 +636,7 @@ const ProfileMain: React.FC = () => {
                     }
                   );
                 }}
-                disabled={isSavingPhone || phoneInput === (profile.phone || '')}
+                disabled={isSavingPhone || normalizedPhoneInput === normalizedSavedPhone}
                 className="sm:ms-2 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 {isSavingPhone ? t('saving-2') : t('save')}

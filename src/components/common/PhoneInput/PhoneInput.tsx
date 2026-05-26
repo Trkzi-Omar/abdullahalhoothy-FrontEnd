@@ -48,6 +48,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   onBlur,
   error,
   disabled = false,
+  placeholder,
   className = '',
   inputClassName = '',
 }) => {
@@ -175,6 +176,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   const borderColor = error ? 'border-red-500' : 'border-gray-300';
   const focusBorderColor = error ? 'focus-within:border-red-500' : 'focus-within:border-blue-500';
   const focusRingColor = error ? 'focus-within:ring-red-100' : 'focus-within:ring-blue-100';
+  const inputPlaceholder = placeholder || t('5xxxxxxxx');
 
   return (
     <div className={`relative w-full ${className}`} ref={containerRef}>
@@ -218,7 +220,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           onChange={handlePhoneValueChange}
           onBlur={onBlur}
           disabled={disabled}
-          placeholder={t('5xxxxxxxx')}
+          placeholder={inputPlaceholder}
           className={`
             flex-1 px-3 py-2.5 bg-transparent text-gray-800 placeholder-gray-400
             focus:outline-none text-base rounded-e-lg

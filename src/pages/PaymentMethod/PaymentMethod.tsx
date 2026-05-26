@@ -11,6 +11,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import React, { useState, FormEvent, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../../context/AuthContext';
+import i18next from '../../i18n';
 import apiRequest from '../../services/apiRequest';
 import urls from '../../urls.json';
 import clsx from 'clsx';
@@ -18,6 +19,11 @@ import clsx from 'clsx';
 import { toast } from 'sonner';
 import { UserProfile } from '../../types/allTypesAndInterfaces';
 import { t } from '../../i18n';
+
+const getStripeLocale = (language?: string) => {
+  const baseLanguage = (language || 'en').split('-')[0];
+  return baseLanguage === 'ar' ? 'ar' : 'en';
+};
 
 
 type StripeElementChangeEvent = {
@@ -377,6 +383,7 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 const PaymentMethod: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const stripeLocale = getStripeLocale(i18next.language);
 
   if (!isAuthenticated) {
     navigate('/auth');
@@ -385,7 +392,7 @@ const PaymentMethod: React.FC = () => {
 
   return (
     <>
-      <Elements stripe={stripePromise}>
+      <Elements stripe={stripePromise} options={{ locale: stripeLocale }}>
         <PaymentMethodForm />
       </Elements>
     </>

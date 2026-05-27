@@ -20,7 +20,7 @@ function CatalogMenu() {
 
   const {
     setSelectedContainerType,
-    selectedContainerLayerModalOpen,
+    setSelectedContainerLayerModalOpen,
     resetState,
     setFormStage,
     handleSaveCatalog,
@@ -283,7 +283,7 @@ function CatalogMenu() {
           <button
             className="px-4 py-2 text-orange-700"
             onClick={() => {
-              selectedContainerLayerModalOpen(true);
+              setSelectedContainerLayerModalOpen(true);
               handleAddLayerClick();
             }}
           >

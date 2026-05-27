@@ -146,7 +146,8 @@ export interface CatalogContextType {
   setDescription: React.Dispatch<React.SetStateAction<string>>;
   setName: React.Dispatch<React.SetStateAction<string>>;
   setCaseStudyContent: React.Dispatch<React.SetStateAction<Descendant[]>>;
-  selectedContainerLayerModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  selectedContainerLayerModalOpen: boolean;
+  setSelectedContainerLayerModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedContainerType: React.Dispatch<React.SetStateAction<'Catalogue' | 'Layer' | 'Home'>>;
   handleAddClick: (
     id: string,

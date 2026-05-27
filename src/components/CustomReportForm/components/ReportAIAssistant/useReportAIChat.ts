@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { useAuth } from '../../../../context/AuthContext';
+import apiRequest from '../../../../services/apiRequest';
+import urls from '../../../../urls.json';
 
 export interface ReportAIChatMessage {
   content: string;
@@ -14,6 +15,12 @@ interface ChatApiResponse {
   reason: string;
 }
 
+interface WrappedChatApiResponse {
+  data?: {
+    data?: ChatApiResponse;
+  };
+}
+
 export interface UseReportAIChatReturn {
   messages: ReportAIChatMessage[];
   isLoading: boolean;
@@ -21,13 +28,9 @@ export interface UseReportAIChatReturn {
   clearMessages: () => void;
 }
 
-const CHAT_URL =
-  import.meta.env.VITE_REPORT_AI_CHAT_URL || 'http://localhost:9000/chat';
-
 export function useReportAIChat(): UseReportAIChatReturn {
   const [messages, setMessages] = useState<ReportAIChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { authResponse } = useAuth();
 
   const sendMessage = useCallback(
     async (question: string): Promise<void> => {
@@ -41,35 +44,24 @@ export function useReportAIChat(): UseReportAIChatReturn {
       setIsLoading(true);
 
       try {
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-        };
-
-        if (authResponse && 'idToken' in authResponse) {
-          headers['Authorization'] = `Bearer ${authResponse.idToken}`;
-        }
-
-        const response = await fetch(CHAT_URL, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ question }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
-
-        const data: ChatApiResponse = await response.json();
+        const response = (await apiRequest({
+          url: urls.chat,
+          method: 'post',
+          body: { question },
+          isAuthRequest: true,
+        })) as WrappedChatApiResponse;
+        const data = response.data?.data;
 
         const botMessage: ReportAIChatMessage = {
-          content: data.blocked ? data.reason : data.answer,
+          content: data?.blocked ? data.reason || '' : data?.answer || '',
           isUser: false,
-          isBlocked: data.blocked,
+          isBlocked: data?.blocked,
           timestamp: new Date().toISOString(),
         };
 
         setMessages((prev) => [...prev, botMessage]);
-      } catch {
+      } catch (error) {
+        console.error('Report AI chat error:', error);
         const errorMessage: ReportAIChatMessage = {
           content:
             'Sorry, something went wrong. Please try again later.',
@@ -83,7 +75,7 @@ export function useReportAIChat(): UseReportAIChatReturn {
         setIsLoading(false);
       }
     },
-    [authResponse]
+    []
   );
 
   const clearMessages = useCallback((): void => {

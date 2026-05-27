@@ -44,6 +44,7 @@
   "filter_based_zone": "/filter_based_on",
   "filter_property": "/filter_property",
   "process_llm_query": "/process_llm_query",
+  "chat": "/chat",
   "recolor_based_llm": "recolor_based_llm",
   "fetch_intelligence_by_viewport": "/fetch_intelligence_by_viewport",
   "drive_time_polyline": "/drive_time_polyline",

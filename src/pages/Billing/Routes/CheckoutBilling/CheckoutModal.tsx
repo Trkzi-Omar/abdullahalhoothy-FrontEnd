@@ -7,22 +7,13 @@ import {
   formatPurchaseExplanation,
   formatSubcategoryName,
 } from '../../../../utils/helperFunctions';
-import {
-  useBillingContext,
-  type ReportTier,
-  type ReportCartItem,
-  getReportCartItemKey,
-} from '../../../../context/BillingContext';
+import { useBillingContext, type ReportTier } from '../../../../context/BillingContext';
 import { useUIContext } from '../../../../context/UIContext';
 import { useAuth, isGuestUser } from '../../../../context/AuthContext';
 import apiRequest from '../../../../services/apiRequest';
 import urls from '../../../../urls.json';
 import { t } from '../../../../i18n';
 import { translateError } from '../../../../utils/apiMessages';
-import type {
-  DatasetItem,
-  IntelligenceItem,
-} from '../../../../components/CustomReportForm/services/reportPricingService';
 
 
 const PurchaseSuccessModal = lazy(() => import('./PurchaseSuccessModal'));
@@ -82,49 +73,6 @@ interface ReportTierInfo {
   name: string;
 }
 
-type PurchaseRequestBody = {
-  user_id: string;
-  country_name: string;
-  city_name: string;
-  datasets: string[];
-  intelligences: string[];
-  displayed_price: number;
-  report?: string;
-  reports?: ReportCartItem[];
-  report_potential_business_type?: string;
-  promotion_code?: string;
-};
-
-type PurchaseResponseData = {
-  overall_status: string;
-  report?: {
-    status: string;
-    charged_usd: number;
-    current_credits: number;
-    message: string;
-    message_key?: string;
-  };
-  intelligences?: Array<{
-    intelligence: IntelligenceItem;
-    status: string;
-    message: string;
-    message_key?: string;
-  }>;
-  datasets?: Array<{
-    dataset: DatasetItem;
-    status: string;
-    message: string;
-    message_key?: string;
-  }>;
-  reports?: Array<{
-    report: string;
-    status: string;
-    message: string;
-    message_key?: string;
-    charged_usd?: number;
-  }>;
-};
-
 function CheckoutModal({
   onClose,
   cartCostResponse,
@@ -169,11 +117,15 @@ function CheckoutModal({
     [dispatch]
   );
 
-  const handleRemoveReportByKey = useCallback(
-    (reportKey: string) => {
-      dispatch({ type: 'removeReportFromCart', payload: reportKey });
+  const handleReportToggle = useCallback(
+    (reportKey: ReportTier) => {
+      if (checkout.report === reportKey) {
+        dispatch({ type: 'setReport', payload: '' });
+      } else {
+        dispatch({ type: 'setReport', payload: reportKey });
+      }
     },
-    [dispatch]
+    [checkout.report, dispatch]
   );
 
   const handleApplyPromotion = useCallback(async () => {
@@ -209,7 +161,7 @@ function CheckoutModal({
     if (
       checkout.datasets.length === 0 &&
       checkout.intelligences.length === 0 &&
-      checkout.reports.length === 0
+      checkout.report === ''
     ) {
       return;
     }
@@ -217,14 +169,25 @@ function CheckoutModal({
     setIsPurchasing(true);
 
     try {
-      const requestBody: PurchaseRequestBody = {
+      const requestBody: {
+        user_id: string;
+        country_name: string;
+        city_name: string;
+        datasets: string[];
+        intelligences: string[];
+        displayed_price: number;
+        report: string;
+        report_potential_business_type: string;
+        promotion_code?: string;
+      } = {
         user_id: authResponse.localId,
         country_name: checkout.country_name || '',
         city_name: checkout.city_name || '',
         datasets: checkout.datasets,
         intelligences: checkout.intelligences,
         displayed_price: cartCostResponse?.data?.total_cost || 0,
-        reports: checkout.reports,
+        report: checkout.report || '',
+        report_potential_business_type: checkout.report_potential_business_type || '',
       };
 
       if (promotionCode.trim()) {
@@ -238,10 +201,7 @@ function CheckoutModal({
         isAuthRequest: true,
       });
 
-      const responseData = response as { data?: { data?: PurchaseResponseData } };
-      const purchaseData: PurchaseResponseData = responseData.data?.data || {
-        overall_status: 'failed',
-      };
+      const purchaseData = response?.data?.data;
 
       openModal(
         <Suspense
@@ -293,7 +253,7 @@ function CheckoutModal({
       (cartCostResponse.data.report_purchase_items?.length ?? 0) > 0);
 
   const hasCheckoutItems =
-    checkout.datasets.length > 0 || checkout.intelligences.length > 0 || checkout.reports.length > 0;
+    checkout.datasets.length > 0 || checkout.intelligences.length > 0 || checkout.report !== '';
 
   const isEmpty = !hasApiItems && !hasCheckoutItems;
 
@@ -306,9 +266,9 @@ function CheckoutModal({
   const purchaseDisabledReason = isEmpty
     ? null
     : isGuest
-      ? 'Please sign in to complete your purchase.'
+      ? `${t("please")} ${t("sign-in-2")} ${t("to-complete-your-purchase")}`
       : !hasCountryAndCity
-        ? 'Please select country and city to continue with your purchase.'
+        ? t("please-select-country-and-city-to-continue-with-your-purchase")
         : null;
 
   const apiItemCount =
@@ -316,7 +276,7 @@ function CheckoutModal({
     (cartCostResponse?.data?.dataset_purchase_items?.length ?? 0) +
     (cartCostResponse?.data?.report_purchase_items?.length ?? 0);
   const checkoutItemCount =
-    checkout.datasets.length + checkout.intelligences.length + checkout.reports.length;
+    checkout.datasets.length + checkout.intelligences.length + (checkout.report ? 1 : 0);
   const totalItems = apiItemCount > 0 ? apiItemCount : checkoutItemCount;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
@@ -483,18 +443,6 @@ function CheckoutModal({
                           </div>
                           <h3 className="text-lg font-semibold text-gray-900 mb-1">
                             {tierName}{' '}{t("report-2")}</h3>
-                          <div className="text-xs text-gray-600 mb-1 space-y-0.5">
-                            <p>
-                              <span className="font-semibold text-gray-700">{t("business-type")}:</span>{' '}
-                              {item.report_potential_business_type
-                                ? formatSubcategoryName(item.report_potential_business_type)
-                                : t("not-specified")}
-                            </p>
-                            <p>
-                              <span className="font-semibold text-gray-700">{t("location")}:</span>{' '}
-                              {item.city_name}, {item.country_name}
-                            </p>
-                          </div>
                           <p className="text-sm text-gray-500">{item.explanation}</p>
                         </div>
                         <div className="flex flex-col items-end gap-2">
@@ -505,16 +453,7 @@ function CheckoutModal({
                             <button
                               type="button"
                               className="text-xs text-red-500 hover:text-red-700"
-                              onClick={() => {
-                                const reportCartItem: ReportCartItem = {
-                                  report: item.report_tier as Exclude<ReportTier, ''>,
-                                  country_name: item.country_name,
-                                  city_name: item.city_name,
-                                  report_potential_business_type:
-                                    item.report_potential_business_type || '',
-                                };
-                                handleRemoveReportByKey(getReportCartItemKey(reportCartItem));
-                              }}
+                              onClick={() => handleReportToggle(item.report_tier as ReportTier)}
                             >{t("remove")}</button>
                           )}
                         </div>
@@ -582,52 +521,49 @@ function CheckoutModal({
                       </div>
                     </div>
                   ))}
-                  {checkout.reports.map(reportItem => {
-                    const tierName =
-                      reportTiers.find(t => t.reportKey === reportItem.report)?.name ||
-                      `${reportItem.report.charAt(0).toUpperCase() + reportItem.report.slice(1)} Tier`;
-                    const reportKey = getReportCartItemKey(reportItem);
-
-                    return (
-                      <div
-                        key={reportKey}
-                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border border-gray-100 rounded-lg p-4"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("report-3")}</span>
-                            <span className="text-sm text-gray-300">•</span>
-                            <span className="text-sm text-gray-500 capitalize">{reportItem.report}</span>
-                          </div>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                            {tierName}{' '}{t("report-2")}
-                          </h3>
-                          <div className="text-xs text-gray-600 mb-1 space-y-0.5">
-                            <p>
-                              <span className="font-semibold text-gray-700">{t("business-type")}:</span>{' '}
-                              {formatSubcategoryName(reportItem.report_potential_business_type)}
+                  {checkout.report &&
+                    (() => {
+                      const tierName =
+                        reportTiers.find(t => t.reportKey === checkout.report)?.name ||
+                        `${checkout.report.charAt(0).toUpperCase() + checkout.report.slice(1)} Tier`;
+                      const needsBusinessType = !checkout.report_potential_business_type?.trim();
+                      const needsLocation = !checkout.country_name || !checkout.city_name;
+                      let statusMessage = '';
+                      if (isCalculatingCost) {
+                        statusMessage = t("calculating-price");
+                      } else if (needsBusinessType || needsLocation) {
+                        statusMessage = needsBusinessType
+                          ? t("please-select-a-report-potential-business-type-to-see-pricing")
+                          : t("please-select-country-and-city-to-continue-with-your-purchase");
+                      } else {
+                        statusMessage = t("unable-to-calculate-price-please-try-again");
+                      }
+                      return (
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border border-gray-100 rounded-lg p-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">{t("report-3")}</span>
+                              <span className="text-sm text-gray-300">•</span>
+                              <span className="text-sm text-gray-500 capitalize">
+                                {checkout.report}
+                              </span>
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                              {tierName}{' '}{t("report-2")}</h3>
+                            <p className="text-sm text-gray-500">
+                              {statusMessage}
                             </p>
-                            <p>
-                              <span className="font-semibold text-gray-700">{t("location")}:</span>{' '}
-                              {reportItem.city_name}, {reportItem.country_name}
-                            </p>
                           </div>
-                          <p className="text-sm text-gray-500">
-                            {isCalculatingCost ? t("calculating-price") : t("unable-to-calculate-price-please-try-again")}
-                          </p>
+                          <div className="flex flex-col items-end gap-2">
+                            <button
+                              type="button"
+                              className="text-xs text-red-500 hover:text-red-700"
+                              onClick={() => handleReportToggle(checkout.report)}
+                            >{t("remove")}</button>
+                          </div>
                         </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <button
-                            type="button"
-                            className="text-xs text-red-500 hover:text-red-700"
-                            onClick={() => handleRemoveReportByKey(reportKey)}
-                          >
-                            {t("remove")}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })()}
                 </>
               )}
             </div>

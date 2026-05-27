@@ -9,12 +9,7 @@ import { useAuth } from '../../../../context/AuthContext';
 import apiRequest from '../../../../services/apiRequest';
 import { MdAttachMoney, MdCheckCircle, MdClose, MdHome, MdSearch } from 'react-icons/md';
 import { CategoryData } from '../../../../types/allTypesAndInterfaces';
-import {
-  useBillingContext,
-  type ReportTier,
-  type ReportCartItem,
-  getReportCartItemKey,
-} from '../../../../context/BillingContext';
+import { useBillingContext, type ReportTier } from '../../../../context/BillingContext';
 import ItemSelectionView from './ItemSelectionView';
 import CheckoutModal from './CheckoutModal';
 import CategoriesBrowserSubCategories from '../../../../components/CategoriesBrowserSubCategories/CategoriesBrowserSubCategories';
@@ -50,19 +45,6 @@ interface PurchaseItem {
   explanation: string;
   [key: string]: unknown;
 }
-
-type CartCostRequestBody = {
-  user_id: string;
-  country_name: string;
-  city_name: string;
-  datasets: string[];
-  intelligences: string[];
-  displayed_price: number;
-  report?: ReportTier;
-  reports?: ReportCartItem[];
-  report_potential_business_type?: string;
-  promotion_code?: string;
-};
 
 interface PriceData {
   total_cost?: number;
@@ -229,40 +211,6 @@ function CheckoutBilling({ Name }: { Name: string }) {
   const hasCountryAndCity = !!(checkout.country_name?.trim() && checkout.city_name?.trim());
   const hasBusinessType = !!checkout.report_potential_business_type?.trim();
 
-  const buildCurrentReportCartItem = useCallback(
-    (reportKey: ReportTier): ReportCartItem | null => {
-      if (!reportKey || !checkout.country_name || !checkout.city_name) {
-        return null;
-      }
-      const businessType = checkout.report_potential_business_type?.trim() || '';
-      if (!businessType) {
-        return null;
-      }
-      return {
-        report: reportKey as Exclude<ReportTier, ''>,
-        country_name: checkout.country_name,
-        city_name: checkout.city_name,
-        report_potential_business_type: businessType,
-      };
-    },
-    [checkout.country_name, checkout.city_name, checkout.report_potential_business_type]
-  );
-
-  const isReportInCart = useCallback(
-    (reportKey: ReportTier): boolean => {
-      const currentItem = buildCurrentReportCartItem(reportKey);
-      if (!currentItem) {
-        return false;
-      }
-      const key = getReportCartItemKey(currentItem);
-      return checkout.reports.some(item => getReportCartItemKey(item) === key);
-    },
-    [buildCurrentReportCartItem, checkout.reports]
-  );
-
-  // Disable Add to Cart when required parameters are missing.
-  // - datasets and intelligences require country & city
-  // - reports require country, city, and a business type
   const addToCartDisabled = (() => {
     if (!hasCountryAndCity) return true;
     if (selectedItem?.type === 'report' && !hasBusinessType) return true;
@@ -271,7 +219,8 @@ function CheckoutBilling({ Name }: { Name: string }) {
 
   const addToCartMessage = (() => {
     if (!hasCountryAndCity) return t("please-select-country-and-city-to-add-items-to-cart.");
-    if (selectedItem?.type === 'report' && !hasBusinessType) return t("please-select-a-report-potential-business-type-to-see-the-price");
+    if (selectedItem?.type === 'report' && !hasBusinessType)
+      return t("please-select-a-report-potential-business-type-to-see-the-price");
     return '';
   })();
 
@@ -492,21 +441,26 @@ function CheckoutBilling({ Name }: { Name: string }) {
 
   const handleReportToggle = useCallback(
     (reportKey: ReportTier) => {
-      dispatch({ type: 'setReport', payload: reportKey });
-
-      const reportItem = buildCurrentReportCartItem(reportKey);
-      if (!reportItem) {
-        if (!checkout.country_name || !checkout.city_name) {
-          toast.error(t("please-select-country-and-city-to-add-items-to-cart."));
-        } else {
-          toast.error(t("please-select-a-report-potential-business-type-to-see-the-price"));
-        }
+      if (checkout.report === reportKey) {
+        dispatch({ type: 'setReport', payload: '' });
         return;
       }
 
-      dispatch({ type: 'toggleReportInCart', payload: reportItem });
+      // Require country & city for reports
+      if (!checkout.country_name || !checkout.city_name) {
+        toast.error(t("please-select-country-and-city-to-add-items-to-cart."));
+        return;
+      }
+
+      // Require business type for reports
+      if (!checkout.report_potential_business_type?.trim()) {
+        toast.error(t("please-select-a-report-potential-business-type-to-see-the-price"));
+        return;
+      }
+
+      dispatch({ type: 'setReport', payload: reportKey });
     },
-    [dispatch, buildCurrentReportCartItem, checkout.country_name, checkout.city_name]
+    [checkout.report, dispatch, checkout.country_name, checkout.city_name, checkout.report_potential_business_type]
   );
 
   /**
@@ -869,24 +823,49 @@ function CheckoutBilling({ Name }: { Name: string }) {
     if (
       checkout.datasets.length === 0 &&
       checkout.intelligences.length === 0 &&
-      checkout.reports.length === 0
+      checkout.report === ''
     ) {
       setCartCostResponse(null);
+      return;
+    }
+
+    // When a report is in the cart, the API requires report_potential_business_type
+    if (checkout.report && !checkout.report_potential_business_type?.trim()) {
+      toast.error(t("please-select-a-report-potential-business-type-to-see-pricing"));
       return;
     }
 
     setIsCalculatingCost(true);
 
     try {
-      const requestBody: CartCostRequestBody = {
+      const requestBody: {
+        user_id: string;
+        country_name: string;
+        city_name: string;
+        datasets: string[];
+        intelligences: string[];
+        displayed_price: number;
+        report?: ReportTier;
+        report_potential_business_type?: string;
+        promotion_code?: string;
+      } = {
         user_id: authResponse.localId,
         country_name: checkout.country_name || '',
         city_name: checkout.city_name || '',
         datasets: checkout.datasets, // Only checked datasets
         intelligences: checkout.intelligences, // Only checked intelligences
         displayed_price: 0,
-        reports: checkout.reports,
       };
+
+      // Only include report if it's selected
+      if (checkout.report) {
+        requestBody.report = checkout.report;
+      }
+
+      // Include report_potential_business_type if provided
+      if (checkout.report_potential_business_type && checkout.report_potential_business_type.trim()) {
+        requestBody.report_potential_business_type = checkout.report_potential_business_type.trim();
+      }
 
       // Include promotion code if provided (as 'code' for calculate_cart_cost)
       if (promotionCode && promotionCode.trim()) {
@@ -899,8 +878,9 @@ function CheckoutBilling({ Name }: { Name: string }) {
         body: requestBody,
         isAuthRequest: true,
       });
+      console.log('Cart cost:', response.data);
 
-      setCartCostResponse({ data: response.data.data as PriceData });
+      setCartCostResponse(response.data);
     } catch (error) {
       console.error('Failed to calculate cart cost:', error);
       setCartCostResponse(null);
@@ -1236,9 +1216,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
 
     // Only calculate if there are items in cart
     const hasCartItems =
-      checkout.datasets.length > 0 ||
-      checkout.intelligences.length > 0 ||
-      checkout.reports.length > 0;
+      checkout.datasets.length > 0 || checkout.intelligences.length > 0 || checkout.report !== '';
 
     if (hasCartItems) {
       const timeoutId = setTimeout(() => {
@@ -1252,7 +1230,8 @@ function CheckoutBilling({ Name }: { Name: string }) {
   }, [
     checkout.datasets,
     checkout.intelligences,
-    checkout.reports,
+    checkout.report,
+    checkout.report_potential_business_type,
     checkout.country_name,
     checkout.city_name,
     authResponse?.localId,
@@ -1580,7 +1559,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
                 reportTiers.map(tier => {
                 const isSelected =
                   selectedItemKey?.key === tier.reportKey && selectedItemKey?.type ==="report";
-                const isInCart = isReportInCart(tier.reportKey);
+                const isInCart = checkout.report === tier.reportKey;
                 const reportItem = priceData?.report_purchase_items?.find(
                   r => r.report_tier === tier.reportKey
                 );
@@ -1860,7 +1839,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
               : selectedItem?.type === 'dataset'
                 ? checkout.datasets.includes(selectedItem.itemKey || '')
                 : selectedItem?.type === 'report'
-                  ? isReportInCart((selectedItem.itemKey as ReportTier) || '')
+                  ? checkout.report === selectedItem.itemKey
                   : false
           }
           addToCartDisabled={addToCartDisabled}
@@ -1901,7 +1880,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
       </div>
 
       {/* View Checkout Button - Fixed at bottom center - Show only if user has selected items */}
-      {(checkout.datasets.length > 0 || checkout.intelligences.length > 0 || checkout.reports.length > 0) && (
+      {(checkout.datasets.length > 0 || checkout.intelligences.length > 0 || checkout.report) && (
         <div className="fixed bottom-6 start-1/2 transform -translate-x-1/2 rtl:translate-x-1/2 z-20">
           <button
             type="button"
@@ -1919,7 +1898,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
               const itemCount =
                 checkout.datasets.length +
                 checkout.intelligences.length +
-                checkout.reports.length;
+                (checkout.report ? 1 : 0);
               return itemCount > 0 ? (
                 <span className="bg-white text-[#115740] rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
                   {itemCount}

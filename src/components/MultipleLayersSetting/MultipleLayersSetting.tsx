@@ -3,7 +3,7 @@ import { FaTrash } from 'react-icons/fa';
 import ColorSelect from '../ColorSelect/ColorSelect';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useLayerContext } from '../../context/LayerContext';
-import { MultipleLayersSettingProps, DisplayType } from '../../types/allTypesAndInterfaces';
+import { DisplayType, LayerCustomization, MultipleLayersSettingProps } from '../../types/allTypesAndInterfaces';
 import { IoIosArrowDropdown } from 'react-icons/io';
 import { RiCloseCircleLine } from 'react-icons/ri';
 import urls from '../../urls.json';
@@ -15,6 +15,7 @@ import { t } from '../../i18n';
 import { v4 as uuidv4 } from 'uuid';
 import { AppliedFilter, AppliedRecolor, Feature } from '../../types';
 import { ReqFilterProperty, ReqGradientColorBasedOnZone } from '../../types/allTypesAndInterfaces';
+import { translateError } from '../../utils/apiMessages';
 
 
 const initialBasedon = 'radius';
@@ -222,7 +223,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     comparisonType,
   } = useCatalogContext();
 
-  const { setIncludePopulation, setIncludeIncome, setLayerDataMap } = useLayerContext();
+  const { setIncludePopulation, setIncludeIncome, setLayerDataMap, handleSaveLayer } = useLayerContext();
   const layer = geoPoints[layerIndex];
 
   const { layer_name, layer_legend, is_zone_layer, display, is_heatmap, is_grid } =
@@ -235,6 +236,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const buttonRef = useRef<HTMLDivElement>(null);
   const { authResponse } = useAuth();
   const [, setIsError] = useState<Error | null>(null);
+  const [isSavingLayer, setIsSavingLayer] = useState(false);
   // Add state for the recolor color selection
   const [recolorSelectedColor, setRecolorSelectedColor] = useState<string>('#ff0000');
   const [isPropertyOnly, setIsPropertyOnly] = useState(false);
@@ -307,7 +309,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
             try {
               const req = filter.save_request;
               let filterResponse;
-              if (req.based_on_layer_id) {
+              if ('based_on_layer_id' in req) {
                 filterResponse = await handleFilteredZone(req);
               } else {
                 filterResponse = await handleFilteredProperty(req);
@@ -343,7 +345,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
             try {
               const req = recolor.save_request;
               let gradientData;
-              if (req.based_on_layer_id) {
+              if ('based_on_layer_id' in req) {
                 gradientData = await handleNameBasedColorZone(req);
               } else {
                 gradientData = await handleRecolorProperty(req);
@@ -572,6 +574,52 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
         }
         return layer;
       })
+    );
+  };
+
+  const hasCustomizations = Boolean(layer.applied_filters?.length || layer.applied_recolors?.length);
+
+  const handleSaveCurrentLayer = async () => {
+    const originalName = layer.layer_name || layer.layer_legend || 'Layer';
+    const hasPrefix = originalName.startsWith('customised') || originalName.startsWith('customized');
+    const name = hasCustomizations && !hasPrefix ? `customised ${originalName}` : originalName;
+
+    const layerData: LayerCustomization = {
+      name,
+      legend: layer.layer_legend || layer.layer_name || 'Layer',
+      description: layer.layer_description || '',
+      color: layer.points_color || '#000000',
+      layerId: Number(layer.layerId) || 0,
+      bknd_dataset_id: layer.bknd_dataset_id,
+      createNewLayer: true,
+      applied_filters: layer.applied_filters || [],
+      applied_recolors: layer.applied_recolors || [],
+    };
+
+    try {
+      setIsSavingLayer(true);
+      await handleSaveLayer({ layers: [layerData] });
+    } catch (error) {
+      console.error('Error saving layer', error);
+      toast.error(translateError(error, 'failed-to-save-layer-please-try-again'));
+    } finally {
+      setIsSavingLayer(false);
+    }
+  };
+
+  const renderSaveButton = () => {
+    if (!hasCustomizations) return null;
+
+    return (
+      <button
+        onClick={handleSaveCurrentLayer}
+        disabled={isSavingLayer}
+        className={
+            'h-7 px-3 text-xs bg-[#115740] text-white font-semibold rounded-md hover:bg-[#123f30] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed'
+        }
+      >
+        {isSavingLayer ? t('saving') : t('save-layer')}
+      </button>
     );
   };
 
@@ -1011,7 +1059,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
       {!isOpen && (
         <div
           className={
-            'flex justify-between items-center gap-2.5 py-6 px-3.5 border border-[#ddd] rounded-lg mt-5 bg-white shadow relative transition-all duration-300 h-20 w-full'
+            'flex flex-col gap-4 py-4 px-3.5 border border-[#ddd] rounded-lg mt-5 bg-white shadow relative transition-all duration-300 w-full'
           }
         >
           <button
@@ -1021,51 +1069,69 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
             <FaTrash />
           </button>
 
-          <div className="font-bold text-[#333] w-[105px] overflow-hidden">
-            <span className="text-sm text-[#333] block truncate" title={layer_name}>
-              {layer_name || layer_legend}
-            </span>
-          </div>
-          <div className="flex">
-            <ColorSelect layerId={layerIndex} onColorChange={handleColorChange} />
-            <div className="flex items-center gap-1">
-              <input
-                type="checkbox"
-                checked={isDisplay}
-                onChange={handleDisplayChange}
-                className="w-[11px] h-[11px] cursor-pointer accent-[#28a745]"
-              />
-              <p className="text-[11px] my-[2px] text-[#555] whitespace-nowrap">{t("visible")}</p>
+          <div className="grid grid-cols-1 gap-3 w-full pe-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+            <div className="min-w-0">
+              <span
+                className="block text-base sm:text-lg font-semibold leading-snug text-[#333] break-words"
+                title={layer_name || layer_legend}
+              >
+                {layer_name || layer_legend}
+              </span>
             </div>
-          </div>
 
-          <div
-            onClick={e => {
-              setIsAdvanced(!isAdvanced);
-              if (layerIndex != undefined) {
-                setIsAdvancedMode(prev => ({
-                  ...prev,
-                  [`circle-layer-${layerIndex}`]: true,
-                }));
-              }
-              toggleDropdown(e);
-            }}
-            ref={buttonRef}
-            className="text-xl cursor-pointer"
-          >
-            <IoIosArrowDropdown />
+            <div className="flex items-center justify-start sm:justify-end flex-wrap gap-2 sm:self-center">
+              {renderSaveButton()}
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-[auto_auto_auto] sm:items-center sm:justify-end">
+              <div className="flex justify-start sm:justify-start">
+                <ColorSelect layerId={layerIndex} onColorChange={handleColorChange} />
+              </div>
+
+              <div className="flex items-center gap-1 shrink-0">
+                <input
+                  type="checkbox"
+                  checked={isDisplay}
+                  onChange={handleDisplayChange}
+                  className="w-[11px] h-[11px] cursor-pointer accent-[#28a745]"
+                />
+                <p className="text-[11px] my-[2px] text-[#555] whitespace-nowrap">{t("visible")}</p>
+              </div>
+
+              <div
+                onClick={e => {
+                  setIsAdvanced(!isAdvanced);
+                  if (layerIndex != undefined) {
+                    setIsAdvancedMode(prev => ({
+                      ...prev,
+                      [`circle-layer-${layerIndex}`]: true,
+                    }));
+                  }
+                  toggleDropdown(e);
+                }}
+                ref={buttonRef}
+                className="text-xl cursor-pointer shrink-0"
+              >
+                <IoIosArrowDropdown />
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {isOpen && (
         <div className=" w-full">
-          <div className="flex flex-col gap-2 mt-4   py-3 px-4 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-50">
-            <div className="flex justify-between items-center">
-              <p className="text-base mb-0 capitalize font-medium">
-                {layer_name || layer_legend}
-              </p>
-              <div className="flex items-center  gap-2">
+          <div className="flex flex-col gap-4 mt-4 py-3 px-4 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-50">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+              <div className="flex flex-col gap-2 min-w-0">
+                <p className="text-base mb-0 capitalize font-medium break-words sm:truncate sm:whitespace-nowrap">
+                  {layer_name || layer_legend}
+                </p>
+                <div className="flex items-center flex-wrap gap-2">
+                  {renderSaveButton()}
+                </div>
+              </div>
+              <div className="flex items-center justify-start sm:justify-end gap-2 shrink-0">
                 <p className="text-xs mb-0 font-medium">{t("advanced")}</p>
                 <div
                   onClick={e => {
@@ -1080,98 +1146,96 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
               </div>
             </div>
 
-            <p className="text-sm mb-0 font-medium">{t("change-display-type")}</p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
+              <p className="text-sm mb-0 font-medium">{t("change-display-type")}</p>
 
-            <div
-              className={`flex gap-2 ms-2.5 text-sm ${layer.is_gradient ? 'cursor-not-allowed' : ''}`}
-            >
-              <div className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  id="regular-display"
-                  name="display-type"
-                  value={DisplayType.REGULAR}
-                  checked={layer.is_gradient || displayType === DisplayType.REGULAR}
-                  onChange={e =>
-                    handleDisplayTypeChange(
-                      e.target.value as (typeof DisplayType)[keyof typeof DisplayType]
-                    )
-                  }
-                  className="w-[11px] h-[11px] cursor-pointer accent-[#28a745]"
-                  disabled={layer.is_gradient}
-                />
-                <label
-                  htmlFor="regular-display"
-                  className={`my-[2px] whitespace-nowrap cursor-pointer ${layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
-                    }`}
-                >{t("points-2")}</label>
-              </div>
+              <div
+                className={`flex flex-wrap gap-2 text-sm ${layer.is_gradient ? 'cursor-not-allowed' : ''}`}
+              >
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id="regular-display"
+                    name="display-type"
+                    value={DisplayType.REGULAR}
+                    checked={layer.is_gradient || displayType === DisplayType.REGULAR}
+                    onChange={e =>
+                      handleDisplayTypeChange(
+                        e.target.value as (typeof DisplayType)[keyof typeof DisplayType]
+                      )
+                    }
+                    className="w-[11px] h-[11px] cursor-pointer accent-[#28a745]"
+                    disabled={layer.is_gradient}
+                  />
+                  <label
+                    htmlFor="regular-display"
+                    className={`my-[2px] whitespace-nowrap cursor-pointer ${layer.is_gradient ? 'text-gray-400' : 'text-[#555]'}`}
+                  >{t("points-2")}</label>
+                </div>
 
-              <div className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  id="heatmap-display"
-                  name="display-type"
-                  value={DisplayType.HEATMAP}
-                  checked={!layer.is_gradient && displayType === DisplayType.HEATMAP}
-                  onChange={e =>
-                    handleDisplayTypeChange(
-                      e.target.value as (typeof DisplayType)[keyof typeof DisplayType]
-                    )
-                  }
-                  className="w-[11px] h-[11px] cursor-pointer accent-[#28a745]"
-                  disabled={layer.is_gradient}
-                />
-                <label
-                  htmlFor="heatmap-display"
-                  className={`my-[2px] whitespace-nowrap cursor-pointer ${layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
-                    }`}
-                >{t("heatmap")}</label>
-              </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id="heatmap-display"
+                    name="display-type"
+                    value={DisplayType.HEATMAP}
+                    checked={!layer.is_gradient && displayType === DisplayType.HEATMAP}
+                    onChange={e =>
+                      handleDisplayTypeChange(
+                        e.target.value as (typeof DisplayType)[keyof typeof DisplayType]
+                      )
+                    }
+                    className="w-[11px] h-[11px] cursor-pointer accent-[#28a745]"
+                    disabled={layer.is_gradient}
+                  />
+                  <label
+                    htmlFor="heatmap-display"
+                    className={`my-[2px] whitespace-nowrap cursor-pointer ${layer.is_gradient ? 'text-gray-400' : 'text-[#555]'}`}
+                  >{t("heatmap")}</label>
+                </div>
 
-              <div className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  id="grid-display"
-                  name="display-type"
-                  value={DisplayType.GRID}
-                  checked={!layer.is_gradient && displayType === DisplayType.GRID}
-                  onChange={e =>
-                    handleDisplayTypeChange(
-                      e.target.value as (typeof DisplayType)[keyof typeof DisplayType]
-                    )
-                  }
-                  className="w-[11px] h-[11px] cursor-pointer accent-[#28a745]"
-                  disabled={layer.is_gradient}
-                />
-                <label
-                  htmlFor="grid-display"
-                  className={`my-[2px] whitespace-nowrap cursor-pointer ${layer.is_gradient ? 'text-gray-400' : 'text-[#555]'
-                    }`}
-                >{t("grid")}</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id="grid-display"
+                    name="display-type"
+                    value={DisplayType.GRID}
+                    checked={!layer.is_gradient && displayType === DisplayType.GRID}
+                    onChange={e =>
+                      handleDisplayTypeChange(
+                        e.target.value as (typeof DisplayType)[keyof typeof DisplayType]
+                      )
+                    }
+                    className="w-[11px] h-[11px] cursor-pointer accent-[#28a745]"
+                    disabled={layer.is_gradient}
+                  />
+                  <label
+                    htmlFor="grid-display"
+                    className={`my-[2px] whitespace-nowrap cursor-pointer ${layer.is_gradient ? 'text-gray-400' : 'text-[#555]'}`}
+                  >{t("grid")}</label>
+                </div>
               </div>
             </div>
-            <div className="flex  justify-between items-center">
-              <p className="font-semibold"></p>
-              <div className="flex border-b">
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
+              <p className="font-semibold mb-0">{t('mode')}</p>
+              <div className="flex flex-wrap border-b w-full sm:w-auto">
                 <button
                   onClick={() => setSelectedOption('recolor')}
-                  className={`px-4 py-2 text-sm font-medium flex text-center items-center gap-2 border-b-2 ${selectedOption === 'recolor'
-                    ? 'border-primary text-primary font-bold' // Active tab styling
+                  className={`flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-center items-center gap-2 border-b-2 ${selectedOption === 'recolor'
+                    ? 'border-[#115740] text-[#115740] font-bold'
                     : 'border-transparent text-gray-500 hover:text-black'
                     }`}
                 >{t("recolor")}</button>
                 <button
                   onClick={() => setSelectedOption('filter')}
-                  className={`px-4 py-2 text-sm font-medium flex items-center text-center gap-2 border-b-2 ${selectedOption === 'filter'
-                    ? 'border-primary text-primary font-bold' // Active tab styling
+                  className={`flex-1 sm:flex-none px-4 py-2 text-sm font-medium items-center text-center gap-2 border-b-2 ${selectedOption === 'filter'
+                    ? 'border-[#115740] text-[#115740] font-bold'
                     : 'border-transparent text-gray-500 hover:text-black'
                     }`}
                 >{t("filter")}</button>
               </div>
             </div>
-
-            <p className="text-sm mt-2 mb-0 font-medium"></p>
 
             <BasedOnLayerDropdown
               layerIndex={layerIndex}

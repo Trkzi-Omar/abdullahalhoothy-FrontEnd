@@ -1,4 +1,4 @@
-import { useState, MouseEvent, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FaWandMagicSparkles } from 'react-icons/fa6';
 import DataContainer from '../DataContainer/DataContainer';
 import { useCatalogContext } from '../../context/CatalogContext';
@@ -22,9 +22,7 @@ function CatalogMenu() {
     setSelectedContainerType,
     setSelectedContainerLayerModalOpen,
     resetState,
-    setFormStage,
     handleSaveCatalog,
-    setLegendList,
     geoPoints,
     setGeoPoints,
     resetFormStage,
@@ -35,7 +33,7 @@ function CatalogMenu() {
     setBenchmarks,
     setIsBenchmarkControlOpen,
   } = useCatalogContext();
-  const { setSelectedCity, setSelectedCountry, handleSaveLayer } = useLayerContext();
+  const { setSelectedCity, setSelectedCountry } = useLayerContext();
 
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
 
@@ -147,66 +145,9 @@ function CatalogMenu() {
     openCatalogModal('Layer');
   }
 
-  function handleDiscardClick(event: MouseEvent) {
-    event.preventDefault();
-    event.stopPropagation();
-    localStorage.removeItem('unsavedCatalogDraft');
-    setShowRestorePrompt(false);
-    resetState();
-  }
-
   const safeGeoPoints = Array.isArray(geoPoints)
     ? geoPoints.filter(point => !point.isTemporary)
     : [];
-
-  async function handleSaveClick() {
-    const existingNames = new Set(safeGeoPoints.map(p => p.layer_name || p.layer_legend || ''));
-    const layersToSave = safeGeoPoints.map(point => {
-      const hasCustomizations = (point.applied_filters && point.applied_filters.length > 0) || (point.applied_recolors && point.applied_recolors.length > 0);
-      const originalName = point.layer_name || point.layer_legend || 'Layer';
-      const baseName = hasCustomizations && !originalName.startsWith('customised') && !originalName.startsWith('customized')
-        ? `customised ${originalName}`
-        : originalName;
-      // Resolve duplicate names
-      let name = baseName;
-      if (existingNames.has(name)) {
-        const suffix = point.applied_filters?.[0]?.name || point.applied_recolors?.[0]?.name || 'custom';
-        name = `${baseName} (${suffix})`;
-      }
-      existingNames.add(name);
-      return {
-        name,
-        legend: point.layer_legend || point.layer_name || 'Layer',
-        description: point.layer_description || '',
-        color: point.points_color || '#000000',
-        layerId: Number(point.layerId ?? point.layer_id ?? 0),
-        bknd_dataset_id: point.bknd_dataset_id || point.layer_id || '',
-        createNewLayer: true,
-        applied_filters: point.applied_filters || [],
-        applied_recolors: point.applied_recolors || [],
-      };
-    });
-
-    try {
-      if (layersToSave.length > 0) {
-        await handleSaveLayer({ layers: layersToSave });
-      }
-    } catch (error) {
-      console.error('Error saving catalog layers', error);
-    }
-
-    const legends = safeGeoPoints
-      .map(function (featureCollection) {
-        return featureCollection.layer_legend;
-      })
-      .filter(function (legend): legend is string {
-        return !!legend;
-      });
-
-    setLegendList(legends);
-    setFormStage('catalogDetails');
-    setSidebarMode('catalogDetails');
-  }
 
   return (
     <div className="flex-1 flex flex-col justify-between overflow-y-auto relative w-full pt-3 lg:pe-1.5 min-h-0">
@@ -300,25 +241,6 @@ function CatalogMenu() {
           >
             {t('save-catalog')}
           </button>
-          <div className="flex w-full gap-2">
-            <button
-              disabled={!(safeGeoPoints.length > 0)}
-              onClick={handleDiscardClick}
-              className="w-full h-10  bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
-                 hover:bg-white transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-slate-100 disabled:cursor-not-allowed"
-            >
-              {t('discard')}
-            </button>
-
-            <button
-              onClick={handleSaveClick}
-              disabled={!(safeGeoPoints.length > 0)}
-              className="w-full h-10  bg-[#115740] text-white flex justify-center items-center font-semibold rounded-lg hover:bg-[#123f30] 
-            transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-[#115740] disabled:cursor-not-allowed"
-            >
-              {t('save-layers')}
-            </button>
-          </div>
         </div>
       </div>
     </div>

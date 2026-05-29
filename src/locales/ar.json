@@ -868,6 +868,7 @@
   "save-and-exit": "حفظ وخروج",
   "save-catalog-request": "طلب حفظ الفهرس",
   "save-catalog": "حفظ الفهرس",
+  "save-layer": "حفظ الطبقة",
   "save-full-on-s-loc-we-create-storage-account-for-you-you-still-own-the-data": "حفظ النسخة الكاملة على S-Locator. سننشئ لك حساب تخزين، مع بقاء ملكية البيانات لك.",
   "save-full-on-your-db": "حفظ النسخة الكاملة في قاعدة بياناتك",
   "save-sample-on-s-loc": "حفظ العينة على S-Locator",

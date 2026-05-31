@@ -42,16 +42,14 @@ export interface VrpReportData {
 
   // Territory clustering
   num_groups: number;
-  group_size: number;
   outlier_cut_km: number;
-  centroid_lat: number | null;
-  centroid_lng: number | null;
+  warehouse_lat: number | null;
+  warehouse_lng: number | null;
   group_size_prune_max: number;
   max_solving_time: number;
 
   // Uploaded layer (optional)
   uploaded_layer_id?: string | null;
-  use_uploaded_data_only?: boolean;
   mandatory_layer_id?: string | null;
 
   // VRP scheduling

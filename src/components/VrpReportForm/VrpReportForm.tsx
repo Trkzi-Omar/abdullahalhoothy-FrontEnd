@@ -196,8 +196,8 @@ const VrpMapDraw = ({formData, source, handleInputChange}: VrpMapDrawProps) => {
           })] as unknown as FormInputValue);
         } else if (name === 'warehouse') {
           const coords = toLonLat((geom.getCoordinates() as unknown) as number[]);
-          handleInputChange("centroid_lat", coords[1]);
-          handleInputChange("centroid_lng", coords[0]);
+          handleInputChange("warehouse_lat", coords[1]);
+          handleInputChange("warehouse_lng", coords[0]);
         }
       });
     });
@@ -225,8 +225,8 @@ const VrpMapDraw = ({formData, source, handleInputChange}: VrpMapDrawProps) => {
         } else if (name === "warehouse") {
           const geom = ev.feature.getGeometry() as unknown as { getCoordinates: () => number[] };
           const tmpCoords = toLonLat(geom.getCoordinates());
-          handleInputChange("centroid_lat", tmpCoords[1]);
-          handleInputChange("centroid_lng", tmpCoords[0]);
+          handleInputChange("warehouse_lat", tmpCoords[1]);
+          handleInputChange("warehouse_lng", tmpCoords[0]);
         }
       });
       v.on("drawstart", () => {
@@ -370,7 +370,7 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
   );
 };
 
-const formDataKeys = ["centroid_lat", "centroid_lng", "manager_phone", "group_size", "num_groups", "polygons", "country_name", "city_name", "user_id", "groups_info"];
+const formDataKeys = ["warehouse_lat", "warehouse_lng", "manager_phone", "num_groups", "polygons", "country_name", "city_name", "user_id", "groups_info"];
 
 const INITIAL_VRP_FORM_DATA: Omit<VrpReportData, 'user_id'> & { user_id?: string } = {
   "city_name": "Riyadh",
@@ -383,10 +383,9 @@ const INITIAL_VRP_FORM_DATA: Omit<VrpReportData, 'user_id'> & { user_id?: string
   "boolean_query": "",
   "excluded_names": [],
   "num_groups": 1,
-  "group_size": 400,
   "outlier_cut_km": 0.5,
-  "centroid_lat": null,
-  "centroid_lng": null,
+  "warehouse_lat": null,
+  "warehouse_lng": null,
   "group_size_prune_max": 0.05,
   "max_solving_time": 30,
   "num_work_days": 12,
@@ -417,7 +416,6 @@ const INITIAL_VRP_FORM_DATA: Omit<VrpReportData, 'user_id'> & { user_id?: string
 const ADVANCED_FORM_FIELDS = [
   { key: 'num_work_days', labelKey: 'number-of-work-days', step: 1 },
   { key: 'departure_hour', labelKey: 'departure-hour-0-23', step: 1, min: 0, max: 23 },
-  { key: 'max_route_working_minutes', labelKey: 'max-route-working-minutes', step: 1 },
   { key: 'osrm_multiplier', labelKey: 'traffic-multiplier', step: 0.1 },
   { key: 'current_daily_km_per_van', labelKey: 'current-daily-km-per-van', step: 1 },
   { key: 'weekly_refill_sar', labelKey: 'weekly-refill-sar', step: 1 },
@@ -827,6 +825,16 @@ const CustomReportForm = () => {
 						          const obj = Object.assign({}, formData);
 						          obj.boolean_query = obj.complementary_categories.join(" OR ")
 						          delete obj.complementary_categories
+						          // Map frontend field names to backend contract
+						          const polygon = obj.polygons;
+						          (obj as Record<string, unknown>).polygon = polygon;
+						          delete (obj as Record<string, unknown>).polygons;
+						          obj.groups_info = (obj.groups_info ?? []).map((g: {lat: number|null; lng: number|null; phone: string}) => ({
+						            driver_lat: g.lat,
+						            driver_lng: g.lng,
+						            driver_phone: g.phone,
+						            driver_polygon: polygon,
+						          }));
 						          const newResp = await apiRequest({
 							          url: urls.territory_design_vrp,
 							          method: "POST",

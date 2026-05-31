@@ -161,6 +161,13 @@ const FetchDatasetForm = () => {
       if (draft) {
         if (draft.selectedCountry) setSelectedCountry(draft.selectedCountry);
         if (draft.selectedCity) setSelectedCity(draft.selectedCity);
+        if (draft.selectedCountry || draft.selectedCity) {
+          setReqFetchDataset(prev => ({
+            ...prev,
+            selectedCountry: draft.selectedCountry || prev.selectedCountry,
+            selectedCity: draft.selectedCity || prev.selectedCity,
+          }));
+        }
         if (draft.searchType) setSearchType(draft.searchType);
         if (draft.textSearchInput) setTextSearchInput(draft.textSearchInput);
         if (draft.layers?.length) {
@@ -982,7 +989,6 @@ const FetchDatasetForm = () => {
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               value={selectedCountry || ''}
               onChange={e => {
-                setSelectedCountry(e.target.value);
                 handleCountryCitySelection(e);
               }}
             >
@@ -1003,7 +1009,6 @@ const FetchDatasetForm = () => {
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               value={selectedCity || ''}
               onChange={e => {
-                setSelectedCity(e.target.value);
                 handleCountryCitySelection(e);
               }}
               disabled={!selectedCountry}

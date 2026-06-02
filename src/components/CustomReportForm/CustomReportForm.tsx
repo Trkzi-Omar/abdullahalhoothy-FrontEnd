@@ -39,6 +39,7 @@ import { formatBusinessTypeForApi } from './utils/businessTypeApi';
 import ReportAIAssistant from './components/ReportAIAssistant/ReportAIAssistant';
 import { t } from '../../i18n';
 import { translateError } from '../../utils/apiMessages';
+import { formatBusinessTypeName } from '../../utils/helperFunctions';
 
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
@@ -88,6 +89,10 @@ const CustomReportForm = () => {
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
   const [businessMetrics, setBusinessMetrics] = useState<BusinessCategoryMetrics | null>(null);
   const businessType = formData?.Type || 'pharmacy';
+  const localizedBusinessType = useMemo(
+    () => formatBusinessTypeName(businessType, lang === 'en'),
+    [businessType, lang]
+  );
 
   // Fetch business type configuration from API
   const {
@@ -722,6 +727,13 @@ const CustomReportForm = () => {
     try {
       // Prepare form data with default values for optional locations
       const hasCurrentLocation = hasValidLocation(formData.current_location);
+      const metricWeights = {
+        demographics: formData.evaluation_metrics.demographics ?? 0.2,
+        competition: formData.evaluation_metrics.competition ?? 0.2,
+        complementary: formData.evaluation_metrics.complementary ?? 0.2,
+        cross_shopping: formData.evaluation_metrics.cross_shopping ?? 0.2,
+        traffic: formData.evaluation_metrics.traffic ?? 0.2,
+      };
       const submissionData: ReportSubmissionRequestBody = {
         user_id: formData.user_id,
         city_name: formData.city_name,
@@ -734,6 +746,16 @@ const CustomReportForm = () => {
         competition_categories: formData.competition_categories,
         delivery_weight: formData.delivery_weight,
         dine_in_weight: formData.dine_in_weight,
+        delivery_demographics_weight: metricWeights.demographics,
+        delivery_competition_weight: metricWeights.competition,
+        delivery_complementary_weight: metricWeights.complementary,
+        delivery_cross_shopping_weight: metricWeights.cross_shopping,
+        delivery_traffic_weight: metricWeights.traffic,
+        dine_in_demographics_weight: metricWeights.demographics,
+        dine_in_competition_weight: metricWeights.competition,
+        dine_in_complementary_weight: metricWeights.complementary,
+        dine_in_cross_shopping_weight: metricWeights.cross_shopping,
+        dine_in_traffic_weight: metricWeights.traffic,
         custom_locations: formData.custom_locations.map(loc => ({
           lat: loc.lat || 0,
           lng: loc.lng || 0,
@@ -1307,7 +1329,9 @@ const CustomReportForm = () => {
             </div>
 
             <h2 className="text-xl font-semibold text-gray-900 mb-2">{t("almost-ready")}</h2>
-            <p className="text-gray-600 mb-4">{t("finalizing-your")}{' '}{businessType}{' '}{t("report-setup")}</p>
+            <p className="text-gray-600 mb-4">
+              {t("finalizing-your-business-report-setup", { business: localizedBusinessType })}
+            </p>
 
             {/* Loading dots animation */}
             <div className="flex justify-center gap-1">
@@ -1423,7 +1447,9 @@ const CustomReportForm = () => {
                   </div>
                   <div className="ms-3 flex-1">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-gray-900">{t("generating-your")}{' '}{businessType}{' '}{t("report")}</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {t("generating-your-business-report", { business: localizedBusinessType })}
+                      </p>
                       <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full">{t("3-15-min")}</span>
                     </div>
                     <p className="text-xs text-gray-600 mt-1">{t("report-generation-in-progress-you-can-always-find-the-report-link-in-your-profil")}</p>

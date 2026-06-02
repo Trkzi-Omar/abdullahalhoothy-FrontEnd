@@ -57,6 +57,15 @@ export function formatSubcategoryName(name: string | undefined | null): string {
     .join(' ');
 }
 
+export function formatBusinessTypeName(name: string | undefined | null, lowercaseEnglish = false): string {
+  if (!name) return '';
+
+  const normalized = name.trim().replace(/\s+/g, '_').toLowerCase();
+  const translated = formatSubcategoryName(normalized);
+
+  return lowercaseEnglish ? translated.toLowerCase() : translated;
+}
+
 export function formatIntelligenceName(name: string | undefined | null): string {
   if (!name) return t("unknown");
 

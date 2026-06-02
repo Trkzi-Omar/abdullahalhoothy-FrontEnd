@@ -35,7 +35,7 @@ const LandingFeatures = ({ t: copy }: LandingFeaturesProps) => {
               <p className="text-slate-400 leading-relaxed mb-6">{copy.features.visualDesc}</p>
               <div className="flex gap-4">
                 <a
-                  href="/static/reports/cafe_sales_report.html"
+                  href="/static/cafe_sales_report.html?v=20260601155439"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-brand-surface border border-white/10 px-4 py-2 rounded text-xs text-slate-300 hover:bg-brand-surface/80 hover:border-white/20 transition-all cursor-pointer"
@@ -43,7 +43,7 @@ const LandingFeatures = ({ t: copy }: LandingFeaturesProps) => {
                   {copy.features.cafeReport}
                 </a>
                 <a
-                  href="/static/reports/pharmacy_sales_report.html"
+                  href="/static/pharmacy_sales_report.html?v=20260601163028"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-brand-surface border border-white/10 px-4 py-2 rounded text-xs text-slate-300 hover:bg-brand-surface/80 hover:border-white/20 transition-all cursor-pointer"
@@ -74,7 +74,7 @@ const LandingFeatures = ({ t: copy }: LandingFeaturesProps) => {
 
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
                   <a
-                    href="/static/reports/cafe_sales_report.html"
+                    href="/static/cafe_sales_report.html?v=20260601155439"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-white text-black px-6 py-2 rounded-full font-bold text-sm shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 hover:bg-gray-100 cursor-pointer"

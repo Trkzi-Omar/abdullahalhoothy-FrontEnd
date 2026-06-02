@@ -45,7 +45,13 @@ const DRAW_CONTROL_STYLE = `
 .draw-control-D { top: 95px; inset-inline-start: .5em; }
 .draw-control-W { top: 125px; inset-inline-start: .5em; }
 .draw-control-active > button { outline: 1px solid black; }
-.draw-control button { min-width: 5.5rem; font-size: 0.75rem; padding: 2px 6px; }
+.ol-control.draw-control button { 
+  min-width: 5.5rem; 
+  font-size: 0.75rem !important; 
+  padding: 2px 6px; 
+  line-height: 1.2;
+  font-family: inherit;
+}
 `;
 
 type FormInputValue = CustomReportData[keyof CustomReportData];

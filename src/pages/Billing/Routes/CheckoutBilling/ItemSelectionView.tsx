@@ -193,7 +193,7 @@ function ItemSelectionView({
 
       {/* Cart Action Buttons */}
       {(onAddToCart || onRemoveFromCart) && !isLoading && (
-        <div className="border-t border-gray-200 px-6 py-4">
+        <div className="border-t border-gray-200 px-6 pt-4 pb-14">
           {isOwned ? (
             <button
               type="button"

@@ -12,6 +12,7 @@ const Profile = () => {
   const { isAuthenticated } = useAuth();
   const nav = useNavigate();
   const location = useLocation();
+  const [isBillingExpanded, setIsBillingExpanded] = useState(false);
 
   if (!isAuthenticated) {
     nav('/auth');
@@ -48,7 +49,10 @@ const Profile = () => {
       ) : (
         <div className="h-full w-96 bg-[#115740] px-1 py-1">
           <div className="w-full h-full bg-white rounded">
-            <ProfileContent />
+              <ProfileContent
+                isBillingExpanded={isBillingExpanded}
+                onToggleBilling={() => setIsBillingExpanded(prev => !prev)}
+              />
           </div>
         </div>
       )}
@@ -56,15 +60,13 @@ const Profile = () => {
   );
 };
 
-function ProfileContent() {
-  const [isExpanded, setIsExpanded] = useState({
-    billing: false,
-  });
-
-  const toggleExpand = (section: keyof typeof isExpanded) => {
-    setIsExpanded(prev => ({ ...prev, [section]: !prev[section] }));
-  };
-
+function ProfileContent({
+  isBillingExpanded,
+  onToggleBilling,
+}: {
+  isBillingExpanded: boolean;
+  onToggleBilling: () => void;
+}) {
   return (
     <>
       <div className="text-2xl ps-6 pt-4 font-semibold mb-4">{t("account")}</div>
@@ -74,8 +76,8 @@ function ProfileContent() {
         <MenuItem label={t("change-email")} to="/profile/change-email" />
         <ExpandableMenuItem
           label={t("billing-2")}
-          isExpanded={isExpanded.billing}
-          onClick={() => toggleExpand('billing')}
+          isExpanded={isBillingExpanded}
+          onClick={onToggleBilling}
         >
           <SubMenuItem label={t("payment-methods")} to="/profile/payment-methods" />
           <SubMenuItem label={t("wallet")} to="/profile/wallet" />
@@ -86,8 +88,10 @@ function ProfileContent() {
 }
 
 function ProfileDrawer() {
+  const [isBillingExpanded, setIsBillingExpanded] = useState(false);
   const contentRef = React.useRef<HTMLDivElement>(null);
   const { isDrawerOpen, setIsDrawerOpen } = useUIContext();
+  const drawerSnap = isBillingExpanded ? 0.75 : 0.375;
 
   useEffect(() => {
     const drawerContent = contentRef.current;
@@ -100,17 +104,22 @@ function ProfileDrawer() {
 
   return (
     <>
-      <BottomDrawer
-        open={isDrawerOpen}
-        onOpenChange={setIsDrawerOpen}
-        modal={false}
-        defaultSnap={0.375}
-        snapPoints={[0, 0.375, 1]}
-      >
-        <div className="flex flex-col h-full overflow-hidden">
-          <ProfileContent />
+    <BottomDrawer
+      open={isDrawerOpen}
+      onOpenChange={setIsDrawerOpen}
+      modal={false}
+      defaultSnap={drawerSnap}
+      snapPoints={[0, drawerSnap, 1]}
+    >
+      <div ref={contentRef} className="flex flex-col h-full overflow-hidden">
+        <div className="flex-1 overflow-y-auto">
+          <ProfileContent
+            isBillingExpanded={isBillingExpanded}
+            onToggleBilling={() => setIsBillingExpanded(prev => !prev)}
+          />
         </div>
-      </BottomDrawer>
+      </div>
+    </BottomDrawer>
     </>
   );
 }

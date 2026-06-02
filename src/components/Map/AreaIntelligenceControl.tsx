@@ -36,6 +36,7 @@ export const AreaIntelligeneControl: React.FC = () => {
     includePopulation,
     includeIncome,
     includeRealEstate,
+    showLoaderTopup,
   } = useLayerContext();
   const {
     populationSample,
@@ -59,6 +60,10 @@ export const AreaIntelligeneControl: React.FC = () => {
   const [paywallData, setPaywallData] = useState<CartCostData | null>(null);
   const [paywallIntelligences, setPaywallIntelligences] = useState<string[]>([]);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+
+  const isPopulationLoading = showLoaderTopup && includePopulation;
+  const isIncomeLoading = showLoaderTopup && includeIncome;
+  const isRealEstateLoading = showLoaderTopup && includeRealEstate;
 
   const close = () => setIsOpen(false);
 
@@ -110,7 +115,7 @@ export const AreaIntelligeneControl: React.FC = () => {
           isAuthRequest: true,
         });
 
-        const data: CartCostData = response.data?.data;
+        const data = (response as { data?: { data?: CartCostData } }).data?.data;
 
         if (!data || data.total_cost === 0) {
           // Already purchased or free → proceed directly
@@ -324,6 +329,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                   bg-white/95 p-2 sm:p-3 rounded-md cursor-pointer
                   gap-1.5 sm:gap-1
                 `}
+                aria-busy={isPopulationLoading}
               >
                 <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
                   <div className="text-gem flex-shrink-0">
@@ -387,6 +393,23 @@ export const AreaIntelligeneControl: React.FC = () => {
                     <p className="text-[10px] text-gray-500 mt-0.5">{t("updated-on")}{' '}
                       <span className="text-[#115740] font-medium">{getYesterdayDate()}</span>
                     </p>
+                    {isPopulationLoading && (
+                      <div className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-gem-green shadow-sm">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          width="12"
+                          height="12"
+                          className="animate-spin"
+                          aria-hidden="true"
+                        >
+                          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.2" strokeWidth="2" />
+                          <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        </svg>
+                        <span>{t("loading")}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -395,7 +418,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                     onClick={handlePopulationRefetch}
                     className="text-gem-green hover:text-gem-green/80 p-1"
                     title={t("refresh-population-data")}
-                    disabled={isPopulationRefetching}
+                    disabled={isPopulationRefetching || isPopulationLoading}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -407,7 +430,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className={isPopulationRefetching ? 'animate-spin' : ''}
+                      className={isPopulationRefetching || isPopulationLoading ? 'animate-spin' : ''}
                     >
                       <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
                     </svg>
@@ -421,6 +444,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                         e.stopPropagation();
                         setPopulationSample(true);
                       }}
+                      disabled={isPopulationLoading}
                       className={`
                         px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs rounded transition-all duration-200
                         ${
@@ -432,6 +456,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                     >{t("sample")}</button>
                     <button
                       onClick={handlePopulationFull}
+                      disabled={isPopulationLoading}
                       className={`
                         px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs rounded transition-all duration-200
                         ${
@@ -448,7 +473,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                       type="checkbox"
                       checked={includePopulation}
                       onChange={handlePopulationToggle}
-                      disabled={isCheckingCost}
+                      disabled={isCheckingCost || isPopulationLoading}
                       className="sr-only peer"
                     />
                     <div
@@ -491,6 +516,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                   bg-white/95 p-2 sm:p-3 rounded-md cursor-pointer
                   gap-1.5 sm:gap-0
                 `}
+                aria-busy={isIncomeLoading}
               >
                 <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
                   <div className="text-gem flex-shrink-0">
@@ -502,6 +528,23 @@ export const AreaIntelligeneControl: React.FC = () => {
                     <p className="text-[10px] text-gray-500 mt-0.5">{t("updated-on")}{' '}
                       <span className="text-[#115740] font-medium">{getYesterdayDate()}</span>
                     </p>
+                    {isIncomeLoading && (
+                      <div className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-gem-green shadow-sm">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          width="12"
+                          height="12"
+                          className="animate-spin"
+                          aria-hidden="true"
+                        >
+                          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.2" strokeWidth="2" />
+                          <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        </svg>
+                        <span>{t("loading")}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -510,7 +553,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                     onClick={handleIncomeRefetch}
                     className="text-gem-green hover:text-gem-green/80 p-1"
                     title={t("refresh-income-data")}
-                    disabled={isIncomeRefetching}
+                    disabled={isIncomeRefetching || isIncomeLoading}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -522,7 +565,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className={isIncomeRefetching ? 'animate-spin' : ''}
+                      className={isIncomeRefetching || isIncomeLoading ? 'animate-spin' : ''}
                     >
                       <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
                     </svg>
@@ -536,6 +579,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                         e.stopPropagation();
                         setIncomeSample(true);
                       }}
+                      disabled={isIncomeLoading}
                       className={`
                         px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs rounded transition-all duration-200
                         ${
@@ -547,6 +591,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                     >{t("sample")}</button>
                     <button
                       onClick={handleIncomeFull}
+                      disabled={isIncomeLoading}
                       className={`
                         px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs rounded transition-all duration-200
                         ${
@@ -563,7 +608,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                       type="checkbox"
                       checked={includeIncome}
                       onChange={handleIncomeToggle}
-                      disabled={isCheckingCost}
+                      disabled={isCheckingCost || isIncomeLoading}
                       className="sr-only peer"
                     />
                     <div
@@ -606,6 +651,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                   bg-white/95 p-2 sm:p-3 rounded-md cursor-pointer
                   gap-1.5 sm:gap-0
                 `}
+                aria-busy={isRealEstateLoading}
               >
                 <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
                   <div className="text-gem flex-shrink-0">
@@ -617,6 +663,23 @@ export const AreaIntelligeneControl: React.FC = () => {
                     <p className="text-[10px] text-gray-500 mt-0.5">{t("updated-on")}{' '}
                       <span className="text-[#115740] font-medium">{getYesterdayDate()}</span>
                     </p>
+                    {isRealEstateLoading && (
+                      <div className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-gem-green shadow-sm">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          width="12"
+                          height="12"
+                          className="animate-spin"
+                          aria-hidden="true"
+                        >
+                          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.2" strokeWidth="2" />
+                          <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        </svg>
+                        <span>{t("loading")}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -625,7 +688,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                     onClick={handleRealEstateRefetch}
                     className="text-gem-green hover:text-gem-green/80 p-1"
                     title={t("refresh-real-estate-data")}
-                    disabled={isRealEstateRefetching}
+                    disabled={isRealEstateRefetching || isRealEstateLoading}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -637,7 +700,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className={isRealEstateRefetching ? 'animate-spin' : ''}
+                      className={isRealEstateRefetching || isRealEstateLoading ? 'animate-spin' : ''}
                     >
                       <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
                     </svg>
@@ -651,6 +714,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                         e.stopPropagation();
                         setRealEstateSample(true);
                       }}
+                      disabled={isRealEstateLoading}
                       className={`
                         px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs rounded transition-all duration-200
                         ${
@@ -662,6 +726,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                     >{t("sample")}</button>
                     <button
                       onClick={handleRealEstateFull}
+                      disabled={isRealEstateLoading}
                       className={`
                         px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs rounded transition-all duration-200
                         ${
@@ -678,7 +743,7 @@ export const AreaIntelligeneControl: React.FC = () => {
                       type="checkbox"
                       checked={includeRealEstate}
                       onChange={handleRealEstateToggle}
-                      disabled={isCheckingCost}
+                      disabled={isCheckingCost || isRealEstateLoading}
                       className="sr-only peer"
                     />
                     <div

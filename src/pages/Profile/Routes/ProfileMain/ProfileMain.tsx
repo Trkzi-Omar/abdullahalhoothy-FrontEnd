@@ -570,19 +570,19 @@ const ProfileMain: React.FC = () => {
             <span className="font-bold me-1.5 min-w-[100px]">{t('username')}</span>
             {profile.username}
           </div>
-          <div className="flex items-start mb-2.5">
+          <div className="flex items-start mb-2.5 min-w-0">
             <FaEnvelope className="me-2.5 text-[#006400]" />
             <span className="font-bold me-1.5 min-w-[100px]">{t('email-2')}</span>
-            {profile.email}
+            <span className="flex-1 min-w-0 break-words whitespace-normal">{profile.email}</span>
           </div>
-          <div className="flex items-start mb-2.5">
-            <span className="font-bold me-1.5 min-w-[100px]">{t('phone-2')}</span>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center flex-1 gap-2 w-full sm:w-auto">
+          <div className="flex flex-col gap-2 mb-2.5 sm:flex-row sm:items-start">
+            <span className="font-bold sm:me-1.5 sm:min-w-[100px]">{t('phone-2')}</span>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center flex-1 gap-2 w-full min-w-0">
               <PhoneInput
                 value={phoneInput}
                 onChange={setPhoneInput}
                 placeholder={t('enter-phone-number')}
-                className="flex-1 min-w-0"
+                className="w-full flex-1 min-w-0"
                 inputClassName="text-sm"
               />
               <button
@@ -637,7 +637,7 @@ const ProfileMain: React.FC = () => {
                   );
                 }}
                 disabled={isSavingPhone || normalizedPhoneInput === normalizedSavedPhone}
-                className="sm:ms-2 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
+                className="w-full sm:w-auto sm:ms-2 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 {isSavingPhone ? t('saving-2') : t('save')}
               </button>

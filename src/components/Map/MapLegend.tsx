@@ -94,6 +94,8 @@ function MapLegend(legendElement: HTMLDivElement, geoPoints: MapFeatures[]) {
   });
 
   geoPoints.forEach(point => {
+    if (point.isHydrating) return;
+
     if (!point.display) return;
 
     const totalFeatureCount = getFeatureCount(point);

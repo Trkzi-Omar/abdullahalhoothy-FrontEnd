@@ -13,18 +13,20 @@ import {
 } from '../../types/allTypesAndInterfaces';
 
 import { VrpReportData, UserLayer } from '../../types/vrp';
+import type { GeoJsonPolygon, GeoJsonFeature, GeoJsonFeatureCollection } from '../../types/geojson';
 
 // Import step components
 import BasicInformationStep from './components/BasicInformationStep';
 import SetAttributeStep from './components/AttributesStep';
 
 import {toLonLat, fromLonLat} from 'ol/proj';
-import { OSM } from 'ol/source';
+import XYZ from 'ol/source/XYZ';
 import VectorSource from 'ol/source/Vector';
 import Control from 'ol/control/Control';
 import Draw from 'ol/interaction/Draw';
 import Modify from 'ol/interaction/Modify';
 import GeoJSON from 'ol/format/GeoJSON';
+import { isEmpty as isEmptyExtent } from 'ol/extent';
 import {Stroke, Circle, Fill, Icon, Style} from 'ol/style';
 import {defaults as defaultControls } from 'ol/control/defaults';
 import { useMap, Map, View, TileLayer, VectorLayer } from 'react-openlayers';
@@ -54,7 +56,10 @@ const DRAW_CONTROL_STYLE = `
 }
 `;
 
+const MAPBOX_STREETS_TILE_URL = `https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/512/{z}/{x}/{y}?access_token=${import.meta.env.VITE_MAPBOX_KEY}`;
+
 type FormInputValue = CustomReportData[keyof CustomReportData];
+
 
 class DrawControl extends Control {
   /**
@@ -278,23 +283,42 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
 
   const applyGeoJson = () => {
     setGeoJsonError('');
-    let parsed: Record<string, unknown>;
+    let parsed: unknown;
     try {
       parsed = JSON.parse(geoJsonText);
     } catch {
       setGeoJsonError(t("invalid-json"));
       return;
     }
-    const type = parsed.type as string;
+    if (!parsed || typeof parsed !== 'object' || !('type' in parsed)) {
+      setGeoJsonError(t("must-be-a-geojson-featurecollection-feature-or-polygon"));
+      return;
+    }
+    const type = (parsed as { type?: unknown }).type;
     if (type !== 'FeatureCollection' && type !== 'Feature' && type !== 'Polygon') {
       setGeoJsonError(t("must-be-a-geojson-featurecollection-feature-or-polygon"));
       return;
     }
     try {
       const fmt = new GeoJSON();
-      const features = fmt.readFeatures(parsed, { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' });
+      const readerOptions = { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' };
+      const normalizedGeoJson: GeoJsonFeatureCollection = type === 'FeatureCollection'
+        ? (parsed as GeoJsonFeatureCollection)
+        : {
+            type: 'FeatureCollection',
+            features: [
+              type === 'Feature'
+                ? (parsed as GeoJsonFeature)
+                : ({ type: 'Feature', properties: {}, geometry: parsed as GeoJsonPolygon }),
+            ],
+          };
+      const features = fmt.readFeatures(normalizedGeoJson, readerOptions);
       if (!features.length) { setGeoJsonError(t("no-features-found")); return; }
-      features.forEach(f => f.setGeometryName('draw'));
+      features.forEach(f => {
+        const geometry = f.getGeometry();
+        f.setGeometryName('draw');
+        if (geometry) f.setGeometry(geometry);
+      });
       drawSource.getFeatures().filter(f => f.getGeometryName() === 'draw').forEach(f => drawSource.removeFeature(f));
       drawSource.addFeatures(features);
       // Normalise to FeatureCollection for formData
@@ -305,7 +329,7 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
       handleInputChange('polygons', fc as unknown as FormInputValue);
       // Fly map to polygon extent
       const extent = drawSource.getExtent();
-      if (extent && mapRef.current) {
+      if (extent && !isEmptyExtent(extent) && mapRef.current) {
         mapRef.current.getView().fit(extent, { padding: [50, 50, 50, 50], maxZoom: 16 });
       }
       setPanelOpen(false);
@@ -318,7 +342,13 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
     <div className="relative w-full h-full">
       <style>{DRAW_CONTROL_STYLE}</style>
       <Map ref={mapRef} controls={defaultControls().extend(["P", "D", "W"].map(v => new DrawControl({ letter: v })))}>
-        <TileLayer source={new OSM()} />
+        <TileLayer
+          source={new XYZ({
+            url: MAPBOX_STREETS_TILE_URL,
+            tileSize: 512,
+            attributions: '© Mapbox © OpenStreetMap',
+          })}
+        />
         <VectorLayer
           source={drawSource}
           style={(feature) => {
@@ -354,6 +384,7 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
           </div>
           <textarea
             className="flex-1 p-2 text-xs font-mono text-gray-800 resize-none border-none outline-none min-h-[180px]"
+            dir="ltr"
             placeholder={'{\n  "type": "FeatureCollection",\n  "features": [...]\n}'}
             value={geoJsonText}
             onChange={e => { setGeoJsonText(e.target.value); setGeoJsonError(''); }}

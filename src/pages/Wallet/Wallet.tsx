@@ -37,21 +37,23 @@ export default function Wallet() {
     );
 
   return (
-    <div className="2xl:mx-32 p-6 font-sans">
+    <div className="mx-auto w-full max-w-4xl px-4 py-5 sm:px-6 lg:px-8 font-sans">
       <h2 className="text-xl font-semibold mb-6">{t("credits")}</h2>
-      <div className="rounded-md shadow-sm border p-4">
+      <div className="rounded-md shadow-sm border p-4 sm:p-5">
         <h3 className="font-semibold mb-2">{t("summary")}</h3>
-        <div className="flex items-center gap-4">
-          <div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="min-w-0">
             <p className="text-sm font-bold text-gray-600">{t("total-amount-remaining")}</p>
             <p className="text-sm text-gray-600">${balance}</p>
           </div>
-          <div className="w-px h-10 bg-gray-300"></div>
+          <div className="hidden sm:block w-px h-10 bg-gray-300" />
           <Link
             to="/profile/wallet/add"
-            className="flex items-center text-blue-600 me-4 text-sm font-medium"
+            className="flex w-full sm:w-auto"
           >
-            <button className="h-10 px-6 py-2 bg-[#115740] text-white font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer m-2">{t("add-funds")}</button>
+            <button className="h-11 w-full sm:w-auto px-6 py-2 bg-[#115740] text-white font-semibold rounded-lg hover:bg-[#123f30] transition-all cursor-pointer">
+              {t("add-funds")}
+            </button>
           </Link>
         </div>
       </div>

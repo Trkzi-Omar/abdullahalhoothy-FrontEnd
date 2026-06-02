@@ -65,6 +65,7 @@ const Billing = () => {
 function BillingContent() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { setIsDrawerOpen } = useUIContext();
   const { checkout, dispatch } = useBillingContext();
   const [countries, setCountries] = useState<string[]>([]);
   const [cities, setCities] = useState<City[]>([]);
@@ -86,8 +87,13 @@ function BillingContent() {
 
   const activeTab = getActiveTab();
 
+  const closeDrawer = useCallback(() => {
+    setIsDrawerOpen(false);
+  }, [setIsDrawerOpen]);
+
   const handleTabClick = (path: string) => {
     navigate(path);
+    closeDrawer();
   };
 
   // Fetch countries and cities on mount
@@ -118,15 +124,17 @@ function BillingContent() {
   const handleCountryChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       dispatch({ type: 'setCountry', payload: e.target.value });
+      closeDrawer();
     },
-    [dispatch]
+    [closeDrawer, dispatch]
   );
 
   const handleCityChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       dispatch({ type: 'setCity', payload: e.target.value });
+      closeDrawer();
     },
-    [dispatch]
+    [closeDrawer, dispatch]
   );
 
   return (
@@ -258,12 +266,16 @@ function BillingDrawer() {
     }
   }, []);
 
+  if (!isDrawerOpen) {
+    return null;
+  }
+
   return (
     <>
       <BottomDrawer
         open={isDrawerOpen}
         onOpenChange={setIsDrawerOpen}
-        modal={false}
+        modal={true}
         defaultSnap={0.375}
         snapPoints={[0, 0.375, 1]}
       >

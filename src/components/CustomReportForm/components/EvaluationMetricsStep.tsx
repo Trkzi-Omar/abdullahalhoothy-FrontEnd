@@ -36,6 +36,13 @@ const metricTooltip = (metricKey: string, fallback?: string) => {
   return i18n.exists(key) ? t(key) : fallback;
 };
 
+const getSliderBackground = (value: number, isRtl: boolean) => {
+  const percentage = value * 100;
+  const direction = isRtl ? 'left' : 'right';
+
+  return `linear-gradient(to ${direction}, #115740 0%, #115740 ${percentage}%, #e5e7eb ${percentage}%, #e5e7eb 100%)`;
+};
+
 const MetricItem = ({
   metricKey,
   value,
@@ -47,6 +54,7 @@ const MetricItem = ({
   className = '',
 }: MetricItemProps) => {
   const tooltip = metricTooltip(metricKey, businessConfig?.metrics?.[metricKey]?.description);
+  const isRtl = i18n.dir() === 'rtl';
 
   return (
     <div
@@ -84,11 +92,12 @@ const MetricItem = ({
           max="1"
           step="0.01"
           disabled={disabled}
+          dir={isRtl ? 'rtl' : 'ltr'}
           className={`w-full h-2 bg-gray-200 rounded-lg appearance-none slider-thumb-primary transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
           }`}
           style={{
-            background: `linear-gradient(to right, #115740 0%, #115740 ${value * 100}%, #e5e7eb ${value * 100}%, #e5e7eb 100%)`,
+            background: getSliderBackground(value, isRtl),
           }}
         />
 

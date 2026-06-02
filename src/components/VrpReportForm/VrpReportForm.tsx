@@ -13,18 +13,20 @@ import {
 } from '../../types/allTypesAndInterfaces';
 
 import { VrpReportData, UserLayer } from '../../types/vrp';
+import type { GeoJsonPolygon, GeoJsonFeature, GeoJsonFeatureCollection } from '../../types/geojson';
 
 // Import step components
 import BasicInformationStep from './components/BasicInformationStep';
 import SetAttributeStep from './components/AttributesStep';
 
 import {toLonLat, fromLonLat} from 'ol/proj';
-import { OSM } from 'ol/source';
+import XYZ from 'ol/source/XYZ';
 import VectorSource from 'ol/source/Vector';
 import Control from 'ol/control/Control';
 import Draw from 'ol/interaction/Draw';
 import Modify from 'ol/interaction/Modify';
 import GeoJSON from 'ol/format/GeoJSON';
+import { isEmpty as isEmptyExtent } from 'ol/extent';
 import {Stroke, Circle, Fill, Icon, Style} from 'ol/style';
 import {defaults as defaultControls } from 'ol/control/defaults';
 import { useMap, Map, View, TileLayer, VectorLayer } from 'react-openlayers';
@@ -45,10 +47,19 @@ const DRAW_CONTROL_STYLE = `
 .draw-control-D { top: 95px; inset-inline-start: .5em; }
 .draw-control-W { top: 125px; inset-inline-start: .5em; }
 .draw-control-active > button { outline: 1px solid black; }
-.draw-control button { min-width: 5.5rem; font-size: 0.75rem; padding: 2px 6px; }
+.ol-control.draw-control button { 
+  min-width: 5.5rem; 
+  font-size: 0.75rem !important; 
+  padding: 2px 6px; 
+  line-height: 1.2;
+  font-family: inherit;
+}
 `;
 
+const MAPBOX_STREETS_TILE_URL = `https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/512/{z}/{x}/{y}?access_token=${import.meta.env.VITE_MAPBOX_KEY}`;
+
 type FormInputValue = CustomReportData[keyof CustomReportData];
+
 
 class DrawControl extends Control {
   /**
@@ -196,8 +207,8 @@ const VrpMapDraw = ({formData, source, handleInputChange}: VrpMapDrawProps) => {
           })] as unknown as FormInputValue);
         } else if (name === 'warehouse') {
           const coords = toLonLat((geom.getCoordinates() as unknown) as number[]);
-          handleInputChange("centroid_lat", coords[1]);
-          handleInputChange("centroid_lng", coords[0]);
+          handleInputChange("warehouse_lat", coords[1]);
+          handleInputChange("warehouse_lng", coords[0]);
         }
       });
     });
@@ -225,8 +236,8 @@ const VrpMapDraw = ({formData, source, handleInputChange}: VrpMapDrawProps) => {
         } else if (name === "warehouse") {
           const geom = ev.feature.getGeometry() as unknown as { getCoordinates: () => number[] };
           const tmpCoords = toLonLat(geom.getCoordinates());
-          handleInputChange("centroid_lat", tmpCoords[1]);
-          handleInputChange("centroid_lng", tmpCoords[0]);
+          handleInputChange("warehouse_lat", tmpCoords[1]);
+          handleInputChange("warehouse_lng", tmpCoords[0]);
         }
       });
       v.on("drawstart", () => {
@@ -272,23 +283,42 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
 
   const applyGeoJson = () => {
     setGeoJsonError('');
-    let parsed: Record<string, unknown>;
+    let parsed: unknown;
     try {
       parsed = JSON.parse(geoJsonText);
     } catch {
       setGeoJsonError(t("invalid-json"));
       return;
     }
-    const type = parsed.type as string;
+    if (!parsed || typeof parsed !== 'object' || !('type' in parsed)) {
+      setGeoJsonError(t("must-be-a-geojson-featurecollection-feature-or-polygon"));
+      return;
+    }
+    const type = (parsed as { type?: unknown }).type;
     if (type !== 'FeatureCollection' && type !== 'Feature' && type !== 'Polygon') {
       setGeoJsonError(t("must-be-a-geojson-featurecollection-feature-or-polygon"));
       return;
     }
     try {
       const fmt = new GeoJSON();
-      const features = fmt.readFeatures(parsed, { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' });
+      const readerOptions = { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' };
+      const normalizedGeoJson: GeoJsonFeatureCollection = type === 'FeatureCollection'
+        ? (parsed as GeoJsonFeatureCollection)
+        : {
+            type: 'FeatureCollection',
+            features: [
+              type === 'Feature'
+                ? (parsed as GeoJsonFeature)
+                : ({ type: 'Feature', properties: {}, geometry: parsed as GeoJsonPolygon }),
+            ],
+          };
+      const features = fmt.readFeatures(normalizedGeoJson, readerOptions);
       if (!features.length) { setGeoJsonError(t("no-features-found")); return; }
-      features.forEach(f => f.setGeometryName('draw'));
+      features.forEach(f => {
+        const geometry = f.getGeometry();
+        f.setGeometryName('draw');
+        if (geometry) f.setGeometry(geometry);
+      });
       drawSource.getFeatures().filter(f => f.getGeometryName() === 'draw').forEach(f => drawSource.removeFeature(f));
       drawSource.addFeatures(features);
       // Normalise to FeatureCollection for formData
@@ -299,7 +329,7 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
       handleInputChange('polygons', fc as unknown as FormInputValue);
       // Fly map to polygon extent
       const extent = drawSource.getExtent();
-      if (extent && mapRef.current) {
+      if (extent && !isEmptyExtent(extent) && mapRef.current) {
         mapRef.current.getView().fit(extent, { padding: [50, 50, 50, 50], maxZoom: 16 });
       }
       setPanelOpen(false);
@@ -312,7 +342,13 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
     <div className="relative w-full h-full">
       <style>{DRAW_CONTROL_STYLE}</style>
       <Map ref={mapRef} controls={defaultControls().extend(["P", "D", "W"].map(v => new DrawControl({ letter: v })))}>
-        <TileLayer source={new OSM()} />
+        <TileLayer
+          source={new XYZ({
+            url: MAPBOX_STREETS_TILE_URL,
+            tileSize: 512,
+            attributions: '© Mapbox © OpenStreetMap',
+          })}
+        />
         <VectorLayer
           source={drawSource}
           style={(feature) => {
@@ -348,6 +384,7 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
           </div>
           <textarea
             className="flex-1 p-2 text-xs font-mono text-gray-800 resize-none border-none outline-none min-h-[180px]"
+            dir="ltr"
             placeholder={'{\n  "type": "FeatureCollection",\n  "features": [...]\n}'}
             value={geoJsonText}
             onChange={e => { setGeoJsonText(e.target.value); setGeoJsonError(''); }}
@@ -370,7 +407,7 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
   );
 };
 
-const formDataKeys = ["centroid_lat", "centroid_lng", "manager_phone", "group_size", "num_groups", "polygons", "country_name", "city_name", "user_id", "groups_info"];
+const formDataKeys = ["warehouse_lat", "warehouse_lng", "manager_phone", "num_groups", "polygons", "country_name", "city_name", "user_id", "groups_info"];
 
 const INITIAL_VRP_FORM_DATA: Omit<VrpReportData, 'user_id'> & { user_id?: string } = {
   "city_name": "Riyadh",
@@ -383,10 +420,9 @@ const INITIAL_VRP_FORM_DATA: Omit<VrpReportData, 'user_id'> & { user_id?: string
   "boolean_query": "",
   "excluded_names": [],
   "num_groups": 1,
-  "group_size": 400,
   "outlier_cut_km": 0.5,
-  "centroid_lat": null,
-  "centroid_lng": null,
+  "warehouse_lat": null,
+  "warehouse_lng": null,
   "group_size_prune_max": 0.05,
   "max_solving_time": 30,
   "num_work_days": 12,
@@ -417,7 +453,6 @@ const INITIAL_VRP_FORM_DATA: Omit<VrpReportData, 'user_id'> & { user_id?: string
 const ADVANCED_FORM_FIELDS = [
   { key: 'num_work_days', labelKey: 'number-of-work-days', step: 1 },
   { key: 'departure_hour', labelKey: 'departure-hour-0-23', step: 1, min: 0, max: 23 },
-  { key: 'max_route_working_minutes', labelKey: 'max-route-working-minutes', step: 1 },
   { key: 'osrm_multiplier', labelKey: 'traffic-multiplier', step: 0.1 },
   { key: 'current_daily_km_per_van', labelKey: 'current-daily-km-per-van', step: 1 },
   { key: 'weekly_refill_sar', labelKey: 'weekly-refill-sar', step: 1 },
@@ -827,6 +862,16 @@ const CustomReportForm = () => {
 						          const obj = Object.assign({}, formData);
 						          obj.boolean_query = obj.complementary_categories.join(" OR ")
 						          delete obj.complementary_categories
+						          // Map frontend field names to backend contract
+						          const polygon = obj.polygons;
+						          (obj as Record<string, unknown>).polygon = polygon;
+						          delete (obj as Record<string, unknown>).polygons;
+						          obj.groups_info = (obj.groups_info ?? []).map((g: {lat: number|null; lng: number|null; phone: string}) => ({
+						            driver_lat: g.lat,
+						            driver_lng: g.lng,
+						            driver_phone: g.phone,
+						            driver_polygon: polygon,
+						          }));
 						          const newResp = await apiRequest({
 							          url: urls.territory_design_vrp,
 							          method: "POST",

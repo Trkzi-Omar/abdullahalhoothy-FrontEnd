@@ -128,7 +128,7 @@ export function HomeContent() {
   return (
     <div className="flex-1 h-full flex flex-col relative overflow-hidden ">
       {/* Tabs */}
-      <div className="flex  pt-1 select-none gap-1 font-semibold border-b">
+      <div className="flex px-4 pt-1 select-none gap-1 font-semibold border-b">
         <div
           className={
             'flex justify-center items-center rounded-t-lg w-full h-10 border border-slate-300 transition-all ' +

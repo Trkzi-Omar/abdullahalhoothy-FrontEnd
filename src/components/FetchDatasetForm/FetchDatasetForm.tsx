@@ -884,6 +884,8 @@ const FetchDatasetForm = () => {
   useEffect(() => {
     setReqFetchDataset(prev => ({
       ...prev,
+      selectedCountry,
+      selectedCity,
       layers: layers.map(layer => ({
         id: layer.id,
         name: layer.name || `Layer ${layer.id}`,
@@ -899,7 +901,7 @@ const FetchDatasetForm = () => {
       includedTypes: layers.flatMap(layer => layer.includedTypes),
       excludedTypes: layers.flatMap(layer => layer.excludedTypes),
     }));
-  }, [layers, setReqFetchDataset]);
+  }, [layers, selectedCountry, selectedCity, setReqFetchDataset]);
 
   useEffect(() => {
     if (isError) {

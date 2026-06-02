@@ -2,13 +2,15 @@ import React, { useEffect, useMemo, useCallback } from 'react';
 import {
   formatSubcategoryName,
   fuzzyMatchCategoryType,
+  processCityData,
   translateWithBackendCategoryFallback,
 } from '../../../../utils/helperFunctions';
 import urls from '../../../../urls.json';
 import { useAuth } from '../../../../context/AuthContext';
+import { useUIContext } from '../../../../context/UIContext';
 import apiRequest from '../../../../services/apiRequest';
 import { MdAttachMoney, MdCheckCircle, MdClose, MdHome, MdSearch } from 'react-icons/md';
-import { CategoryData } from '../../../../types/allTypesAndInterfaces';
+import { CategoryData, type City } from '../../../../types/allTypesAndInterfaces';
 import { useBillingContext, type ReportTier } from '../../../../context/BillingContext';
 import ItemSelectionView from './ItemSelectionView';
 import CheckoutModal from './CheckoutModal';
@@ -177,6 +179,10 @@ function CheckoutBilling({ Name }: { Name: string }) {
   // priceData: ONLY for displaying prices (fetches ALL items)
   const [priceData, setPriceData] = React.useState<PriceData | null>(null);
 
+  const [countries, setCountries] = React.useState<string[]>([]);
+  const [citiesData, setCitiesData] = React.useState<Record<string, City[]>>({});
+  const [locationError, setLocationError] = React.useState<string | null>(null);
+
   // Track last location used for price fetching
   const [lastPriceLocation, setLastPriceLocation] = React.useState<{
     country_name: string;
@@ -206,6 +212,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
   } | null>(null);
 
   const { authResponse } = useAuth();
+  const { isMobile } = useUIContext();
   const { checkout, dispatch } = useBillingContext();
 
   const hasCountryAndCity = !!(checkout.country_name?.trim() && checkout.city_name?.trim());
@@ -224,6 +231,61 @@ function CheckoutBilling({ Name }: { Name: string }) {
     return '';
   })();
 
+  const currentCities = checkout.country_name ? citiesData[checkout.country_name] ?? [] : [];
+
+  const locationSelectors = (
+    <div className="mb-3 flex-shrink-0 rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+      {locationError && (
+        <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {locationError}
+        </div>
+      )}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label htmlFor="country-select" className="mb-2 block text-sm font-medium text-gray-700">
+            {t("country-2")}
+          </label>
+          <select
+            id="country-select"
+            value={checkout.country_name}
+            onChange={e => dispatch({ type: 'setCountry', payload: e.target.value })}
+            className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+          >
+            <option value="" disabled>
+              {t("select-a-country")}
+            </option>
+            {countries.map(country => (
+              <option key={country} value={country}>
+                {country}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="city-select" className="mb-2 block text-sm font-medium text-gray-700">
+            {t("city-2")}
+          </label>
+          <select
+            id="city-select"
+            value={checkout.city_name}
+            onChange={e => dispatch({ type: 'setCity', payload: e.target.value })}
+            disabled={!checkout.country_name}
+            className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100"
+          >
+            <option value="" disabled>
+              {t("select-a-city")}
+            </option>
+            {currentCities.map(city => (
+              <option key={city.name} value={city.name}>
+                {city.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+
   // Update active view when Name changes
   useEffect(() => {
     if (Name === 'area') {
@@ -234,6 +296,28 @@ function CheckoutBilling({ Name }: { Name: string }) {
       setActiveView('datasets');
     }
   }, [Name]);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    const fetchInitialData = async () => {
+      try {
+        const res = (await apiRequest({ url: urls.country_city, method: 'get' })) as {
+          data: { data: Record<string, unknown> };
+        };
+        const handleCityData = (value: Record<string, unknown>) => {
+          setCitiesData(value as Record<string, City[]>);
+        };
+        setCountries(processCityData(res.data.data, handleCityData));
+        setLocationError(null);
+      } catch (error) {
+        setLocationError(
+          `Error fetching countries and cities: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    };
+
+    fetchInitialData();
+  }, [isMobile]);
 
   // Fetch report packages from API
   const fetchReportPackages = useCallback(async () => {
@@ -1258,6 +1342,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
         {Name ==="area" ? (
           <div className="w-full h-full flex flex-col px-4 sm:px-6 lg:px-8 overflow-y-auto">
             <div className="text-2xl pt-4 font-semibold mb-2 flex-shrink-0">{t("area-intelligence")}</div>
+            {isMobile && locationSelectors}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mb-4 flex-shrink-0">
               <p className="text-sm text-yellow-800">
                 <span className="font-semibold">{t("note")}</span>{' '}{t("you-must-choose-country-city-and-area-intelligence-type-to-see-the-price")}</p>
@@ -1459,6 +1544,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
         ) : Name ==="reports" ? (
           <div className="w-full h-full flex flex-col px-2 sm:px-3 lg:px-4 overflow-y-auto">
             <div className="text-2xl pt-2 font-semibold mb-2 flex-shrink-0">{t("report-2")}</div>
+            {isMobile && locationSelectors}
             
             {/* Note about required fields */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mb-2 flex-shrink-0">
@@ -1758,6 +1844,7 @@ function CheckoutBilling({ Name }: { Name: string }) {
           <div className="w-full h-full flex flex-col overflow-hidden">
             <div className="w-full flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col my-5 w-full">
+                {isMobile && locationSelectors}
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mb-4">
                   <p className="text-sm text-yellow-800">
                     <span className="font-semibold">{t("note")}</span>{' '}{t("you-must-choose-country-city-and-dataset-type-to-see-the-price")}</p>

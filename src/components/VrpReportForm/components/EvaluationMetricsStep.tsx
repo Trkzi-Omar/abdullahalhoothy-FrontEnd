@@ -3,7 +3,7 @@ import './EvaluationMetricsStep.css';
 import { CustomReportData, FormErrors, MetricKey } from '../../../types/allTypesAndInterfaces';
 import { getMetricIcon } from '../utils/metricIcons';
 import { BusinessTypeConfig } from '../services/businessMetricsService';
-import { t } from '../../../i18n';
+import i18n, { t } from '../../../i18n';
 
 
 interface EvaluationMetricsStepProps {
@@ -26,6 +26,13 @@ interface MetricItemProps {
   className?: string;
 }
 
+const getSliderBackground = (value: number, isRtl: boolean) => {
+  const percentage = value * 100;
+  const direction = isRtl ? 'left' : 'right';
+
+  return `linear-gradient(to ${direction}, #115740 0%, #115740 ${percentage}%, #e5e7eb ${percentage}%, #e5e7eb 100%)`;
+};
+
 const MetricItem = ({
   metricKey,
   value,
@@ -36,6 +43,8 @@ const MetricItem = ({
   error,
   className = '',
 }: MetricItemProps) => {
+  const isRtl = i18n.dir() === 'rtl';
+
   return (
     <div
       className={`bg-white border-2 border-gray-100 rounded-lg p-4 hover:border-primary/30 transition-all duration-200 ${className}`}
@@ -72,11 +81,12 @@ const MetricItem = ({
           max="1"
           step="0.01"
           disabled={disabled}
+          dir={isRtl ? 'rtl' : 'ltr'}
           className={`w-full h-2 bg-gray-200 rounded-lg appearance-none slider-thumb-primary transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
           }`}
           style={{
-            background: `linear-gradient(to right, #115740 0%, #115740 ${value * 100}%, #e5e7eb ${value * 100}%, #e5e7eb 100%)`,
+            background: getSliderBackground(value, isRtl),
           }}
         />
 

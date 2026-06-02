@@ -189,7 +189,7 @@ export default function PaymentMethods() {
     );
 
   return (
-    <div className="2xl:mx-32 p-6 font-sans">
+    <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-6 2xl:mx-32 font-sans">
       <div className="flex items-center mb-6">
         <Link
           to="/profile/payment-methods/add"
@@ -223,7 +223,7 @@ export default function PaymentMethods() {
         </div>
       )}
 
-      <h2 className="text-xl font-semibold mb-6">{t("payment-methods")}</h2>
+      <h2 className="text-lg sm:text-xl font-semibold mb-6">{t("payment-methods")}</h2>
 
       {/* Default Payment Method Component */}
       <DefaultPaymentMethod
@@ -236,8 +236,33 @@ export default function PaymentMethods() {
 
       <h3 className="font-semibold mb-2">{t("your-credit-and-debit-cards")}</h3>
       <p className="text-sm text-gray-600 mb-4">{t("here-s-a-list-of-your-personal-credit-and-debit-cards-select-the-ellipsis-to-del")}</p>
-      <div className="rounded-md shadow-sm border">
-        <table className="w-full">
+      <div className="space-y-3 md:hidden">
+        {paymentMethods.map(method => (
+          <PaymentMethodCard
+            key={method.id}
+            method={method}
+            isOpen={dropdownOpen === method.id}
+            onToggleDropdown={() =>
+              setDropdownOpen(dropdownOpen === method.id ? null : method.id)
+            }
+            submitting={submitting}
+            defaultPaymentMethodId={defaultPaymentMethodId}
+            onRemove={() => {
+              setMethodToRemove(method.id);
+              setDialogOpen(true);
+            }}
+            onSetDefault={() => handleSetDefault(method.id)}
+          />
+        ))}
+        {paymentMethods.length === 0 && (
+          <div className="rounded-md border p-4 text-center text-sm font-semibold">
+            {t("no-payment-methods-available")}
+          </div>
+        )}
+      </div>
+
+      <div className="hidden rounded-md shadow-sm border md:block overflow-x-auto">
+        <table className="w-full min-w-[640px]">
           <thead>
             <tr className="text-start text-sm text-gray-600 border-b">
               <th className="p-2">{t("no-2")}</th>
@@ -297,6 +322,58 @@ export default function PaymentMethods() {
         onConfirm={handleRemove}
         onCancel={() => setDialogOpen(false)}
       />
+    </div>
+  );
+}
+
+function PaymentMethodCard({
+  method,
+  isOpen,
+  onToggleDropdown,
+  submitting,
+  defaultPaymentMethodId,
+  onRemove,
+  onSetDefault,
+}: {
+  method: PaymentMethod;
+  isOpen: boolean;
+  onToggleDropdown: () => void;
+  submitting: boolean;
+  defaultPaymentMethodId: string | null;
+  onRemove: () => void;
+  onSetDefault: () => void;
+}) {
+  return (
+    <div className="rounded-md border bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <img
+            src={paymentBrandIcons[method.card.brand] || paymentBrandIcons.unknown}
+            alt={`${method.card.brand} logo`}
+            className="h-10 w-10 shrink-0"
+          />
+          <div className="min-w-0">
+            <p className="truncate font-semibold uppercase">
+              {method.card.brand} ****{method.card.last4}
+            </p>
+            <p className="truncate text-sm text-gray-600">
+              {method.billing_details.name || t("unknown")}
+            </p>
+            <p className="text-sm text-gray-600">
+              {t("expires-on")} {method.card.exp_month}/{method.card.exp_year}
+            </p>
+          </div>
+        </div>
+        <ActionDropdown
+          isOpen={isOpen}
+          setDropdownOpen={onToggleDropdown}
+          onRemove={onRemove}
+          onSetDefault={onSetDefault}
+          submitting={submitting}
+          defaultPaymentMethodId={defaultPaymentMethodId}
+          paymentMethodId={method.id}
+        />
+      </div>
     </div>
   );
 }
@@ -371,6 +448,8 @@ function ActionDropdown({
   onRemove: () => void;
   onSetDefault: () => void;
   submitting: boolean;
+  defaultPaymentMethodId: string | null;
+  paymentMethodId: string;
 }) {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -411,23 +490,23 @@ function ActionDropdown({
           <path
             d="M11.9959 12H12.0049"
             stroke="#141B34"
-            stroke-width="2.5"
-            stroke-linecap="square"
-            stroke-linejoin="round"
+            strokeWidth="2.5"
+            strokeLinecap="square"
+            strokeLinejoin="round"
           ></path>
           <path
             d="M17.9998 12H18.0088"
             stroke="#141B34"
-            stroke-width="2.5"
-            stroke-linecap="square"
-            stroke-linejoin="round"
+            strokeWidth="2.5"
+            strokeLinecap="square"
+            strokeLinejoin="round"
           ></path>
           <path
             d="M5.99981 12H6.00879"
             stroke="#141B34"
-            stroke-width="2.5"
-            stroke-linecap="square"
-            stroke-linejoin="round"
+            strokeWidth="2.5"
+            strokeLinecap="square"
+            strokeLinejoin="round"
           ></path>
         </svg>
       </button>

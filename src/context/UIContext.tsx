@@ -1,10 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, {
+import {
   createContext,
   useContext,
   useState,
   useCallback,
-  ReactNode,
+  type ReactNode,
   useRef,
   useEffect,
 } from 'react';
@@ -107,15 +107,23 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
   const [isMobile, setIsMobile] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const previousIsMobile = useRef(false);
 
   useEffect(() => {
     const updateState = () => {
       const isMobileView = window.innerWidth <= 1024;
+      const wasMobile = previousIsMobile.current;
+
       setIsMobile(isMobileView);
-      if (isMobileView && location.pathname !== '/profile') {
-        setIsDrawerOpen(true);
-      } else {
+      previousIsMobile.current = isMobileView;
+
+      if (!isMobileView) {
         setIsDrawerOpen(false);
+        return;
+      }
+
+      if (!wasMobile && location.pathname !== '/profile') {
+        setIsDrawerOpen(true);
       }
     };
 

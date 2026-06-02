@@ -60,6 +60,10 @@ export function useMapBounds() {
     const currentLayerIds = new Set<string>();
 
     geoPoints.forEach(point => {
+      if (point.isHydrating) {
+        return;
+      }
+
       if (isIntelligentLayer(point)) {
         noFly = true;
         return;

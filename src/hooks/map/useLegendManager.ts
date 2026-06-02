@@ -32,7 +32,10 @@ export function useLegendManager() {
     }
 
     const hasAtLeastOneValidName = geoPoints.some(
-      point => point.display && (point.layer_legend || (point.is_gradient && point.gradient_groups))
+      point =>
+        !point.isHydrating &&
+        point.display &&
+        (point.layer_legend || (point.is_gradient && point.gradient_groups))
     );
 
     if (!hasAtLeastOneValidName) {

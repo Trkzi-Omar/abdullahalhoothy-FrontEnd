@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { FiCheckCircle, FiFileText, FiUploadCloud } from 'react-icons/fi';
+import { FiCheckCircle, FiFileText, FiSearch, FiUploadCloud } from 'react-icons/fi';
 import CatalogueCard from '../CatalogueCard/CatalogueCard';
 import urls from '../../urls.json';
 import { Catalog, UserLayer, CardItem } from '../../types/allTypesAndInterfaces';
@@ -155,6 +155,27 @@ const extractFileHeaders = async (file: File) => {
 const getLayerTitleFromFilename = (filename: string) =>
   filename.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ').trim();
 
+type LoadFileLayerItem = {
+  layer_id?: string | number;
+  title?: string;
+  description?: string;
+  layer_name?: string;
+  layer_description?: string;
+  layer_legend?: string;
+  points_color?: string;
+  records_count?: number;
+};
+
+const normalizeSearchText = (value: string) => value.toLowerCase().trim();
+
+const matchesSearchQuery = (value: unknown, query: string) => {
+  if (!query) return true;
+  return typeof value === 'string' && normalizeSearchText(value).includes(query);
+};
+
+const matchesAnySearchField = (values: unknown[], query: string) =>
+  values.some(value => matchesSearchQuery(value, query));
+
 function LayerColumnSelect({
   label,
   value,
@@ -308,7 +329,7 @@ function LayerUploadModal({
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-3">
               <span className="rounded-full bg-[#315d9e] px-3 py-1 text-xs font-semibold text-[#cfe0ff]">
-                CSV أو JSON
+                {t("csv-or-json")}
               </span>
               <span className="text-sm font-semibold text-gray-700">{t("file")}</span>
             </div>
@@ -506,15 +527,17 @@ function DataContainer() {
   const [, setResId] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [, setWsResMessage] = useState<string>('');
   const [, setWsResId] = useState<string>('');
   const [, setWsResLoading] = useState<boolean>(false);
   const [, setWsResError] = useState<Error | null>(null);
   const [loadFiles, setLoadFiles] = [selectedContainerLayerModalOpen, setSelectedContainerLayerModalOpen];
-  const [loadFilesLayers, setLoadFilesLayers] = useState([]);
+  const [loadFilesLayers, setLoadFilesLayers] = useState<LoadFileLayerItem[]>([]);
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const normalizedSearchQuery = normalizeSearchText(searchQuery);
   
   useEffect(() => {
 	  if(selectedContainerLayerModalOpen)
@@ -623,6 +646,39 @@ function DataContainer() {
     [userLayersData, userCatalogsData, selectedContainerType, resData]
   );
 
+  const filteredResData = useMemo(() => {
+    if (!Array.isArray(resData) || !normalizedSearchQuery) {
+      return resData;
+    }
+
+    return resData.filter(item => {
+      if ('layer_id' in item) {
+        return matchesAnySearchField(
+          [item.layer_name, item.layer_description, item.layer_legend],
+          normalizedSearchQuery
+        );
+      }
+
+      return matchesAnySearchField(
+        [item.name, item.description, item.catalog_name, item.catalog_description],
+        normalizedSearchQuery
+      );
+    });
+  }, [resData, normalizedSearchQuery]);
+
+  const filteredLoadFilesLayers = useMemo(() => {
+    if (!normalizedSearchQuery) {
+      return loadFilesLayers;
+    }
+
+    return loadFilesLayers.filter((item: LoadFileLayerItem) =>
+      matchesAnySearchField(
+        [item.title, item.description, item.layer_name, item.layer_description, item.layer_legend],
+        normalizedSearchQuery
+      )
+    );
+  }, [loadFilesLayers, normalizedSearchQuery]);
+
   // Handle click event on catalog card
   async function handleCatalogCardClick(selectedItem: CardItem) {
     if (selectedContainerType === 'Home') {
@@ -718,8 +774,8 @@ function DataContainer() {
       return <div>{resData}</div>;
     }
 
-    if (Array.isArray(resData)) {
-      return resData.map(function (item, index) {
+    if (Array.isArray(filteredResData)) {
+      return filteredResData.map(function (item, index) {
         return makeCard(item, index);
       });
     }
@@ -819,6 +875,19 @@ function DataContainer() {
               }}
             >{t("connect-your-data")}</button>
           </div>
+          {(activeTab === 'Data Catalogue' || activeTab === 'Data Layer' || activeTab === 'Load Files') && (
+            <div className="mb-4 flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+              <FiSearch className="h-5 w-5 text-gray-400" />
+              <input
+                className="w-full bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400"
+                type="search"
+                value={searchQuery}
+                onChange={event => setSearchQuery(event.target.value)}
+                placeholder={t("search")}
+                aria-label={t("search")}
+              />
+            </div>
+          )}
           {activeTab ==="Data Catalogue" || activeTab ==="Data Layer" ? (
             <div className="w-full pb-10">
               {selectedContainerType ==="Catalogue" && activeTab ==="Data Catalogue" && (
@@ -835,9 +904,13 @@ function DataContainer() {
               </div>
               {selectedContainerType ==="Catalogue" &&
                 activeTab ==="Data Catalogue" &&
-                Array.isArray(resData) &&
-                resData.length === 0 && (
-                  <div className="mt-6 rounded-xl border border-dashed border-[#c5d9f1] bg-[#f8fbff] p-6 text-center text-[#1a365d]">{t("no-saved-catalogues-yet-build-one-by-adding-layers-to-the-map-and-saving-them-as")}</div>
+                Array.isArray(filteredResData) &&
+                filteredResData.length === 0 && (
+                  <div className="mt-6 rounded-xl border border-dashed border-[#c5d9f1] bg-[#f8fbff] p-6 text-center text-[#1a365d]">
+                    {normalizedSearchQuery
+                      ? t("no-matching-catalogues-found")
+                      : t("no-saved-catalogues-yet-build-one-by-adding-layers-to-the-map-and-saving-them-as")}
+                  </div>
                 )}
             </div>
           ) : activeTab === 'Load Files' ? (
@@ -845,7 +918,7 @@ function DataContainer() {
               <div
                 className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 md:gap-x-2 gap-y-10 w-full"
               >
-		            {loadFilesLayers.map((item, index) => 
+		            {filteredLoadFilesLayers.map((item, index) => 
                  <UserLayerCard
 					          key={item.layer_id + '-' + index} // Use a combination of id and index
 					          id={item.layer_id}
@@ -903,6 +976,11 @@ function DataContainer() {
  					          setLoadFiles(true);
 				          }}
 			            />
+                  {normalizedSearchQuery && filteredLoadFilesLayers.length === 0 && (
+                    <div className="col-span-full rounded-xl border border-dashed border-gray-200 bg-white p-6 text-center text-sm font-semibold text-gray-500">
+                      {t("no-matching-files-found")}
+                    </div>
+                  )}
 	            </div>
 	            <LayerUploadModal
                 open={loadFiles}

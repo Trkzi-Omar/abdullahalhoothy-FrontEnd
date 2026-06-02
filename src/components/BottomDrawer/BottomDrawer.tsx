@@ -1,4 +1,15 @@
-import { useEffect, useState, useRef } from 'react';
+
+import { useEffect, useState, useRef, type ReactNode, type TouchEvent } from 'react';
+
+type BottomDrawerProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  currentSnap?: number;
+  defaultSnap?: number;
+  modal?: boolean;
+  snapPoints?: number[];
+  children: ReactNode;
+};
 
 const BottomDrawer = ({
   open,
@@ -8,8 +19,8 @@ const BottomDrawer = ({
   modal = true,
   snapPoints = [0, 0.25, 0.5, 1],
   children,
-}) => {
-  const [startY, setStartY] = useState(null);
+}: BottomDrawerProps) => {
+  const [startY, setStartY] = useState<number | null>(null);
   const [drawerHeight, setDrawerHeight] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState(open ? defaultSnap : 0);
@@ -41,7 +52,7 @@ const BottomDrawer = ({
     }
   }, [currentSnap]);
 
-  const handleTouchStart = e => {
+  const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
     setStartY(e.touches[0].clientY);
     lastY.current = e.touches[0].clientY;
     lastTime.current = Date.now();
@@ -50,7 +61,7 @@ const BottomDrawer = ({
     velocity.current = 0;
   };
 
-  const handleTouchMove = e => {
+  const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
     if (isDragging) {
       const currentY = e.touches[0].clientY;
       const currentTime = Date.now();
@@ -61,7 +72,7 @@ const BottomDrawer = ({
         velocity.current = deltaY / deltaTime;
       }
 
-      if (drawerHeight) {
+      if (drawerHeight && startY !== null) {
         const newPosition = Math.max(
           0,
           Math.min(1, initialPosition + (startY - currentY) / drawerHeight)
@@ -116,7 +127,7 @@ const BottomDrawer = ({
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
+            backgroundColor: 'transparent',
             zIndex: 20,
           }}
           onClick={() => onOpenChange(false)}

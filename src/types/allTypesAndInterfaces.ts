@@ -599,6 +599,7 @@ export interface MapFeatures extends FetchDatasetResponse {
   original_features?: Feature[];
   applied_filters?: AppliedFilter[];
   applied_recolors?: AppliedRecolor[];
+  isHydrating?: boolean;
   [key: string]: unknown;
 }
 

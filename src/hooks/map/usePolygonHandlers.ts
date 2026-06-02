@@ -1,13 +1,56 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import * as turf from '@turf/turf';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useMapContext } from '../../context/MapContext';
-import type { DrawEvent } from '../../types';
 
 export function usePolygonHandlers() {
   const { mapRef, shouldInitializeFeatures, drawRef } = useMapContext();
   const map = mapRef.current;
   const { polygons, setPolygons } = useCatalogContext();
+
+  const syncPolygonsFromDraw = useCallback(() => {
+    const mapInstance = mapRef.current;
+    if (!mapInstance || !drawRef.current) return;
+
+    const existingById = new Map(polygons.map(polygon => [String(polygon.id), polygon]));
+    const isPolygonFeature = (
+      feature: GeoJSON.Feature,
+    ): feature is GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon> =>
+      feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon';
+
+    const nextPolygons = drawRef.current
+      .getAll()
+      .features.filter(isPolygonFeature)
+      .map(feature => {
+        if (!feature.properties) feature.properties = {};
+        feature.properties.shape = feature.properties.shape ? feature.properties.shape : 'polygon';
+
+        const existingPolygon = existingById.get(String(feature.id));
+
+        const getCenter = (geojson: GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon>) => {
+          if (geojson.geometry.type === 'Polygon') {
+            return turf.centerOfMass(geojson).geometry.coordinates as [number, number];
+          }
+
+          if (geojson.geometry.type === 'MultiPolygon') {
+            return turf.centerOfMass(turf.multiPolygon(geojson.geometry.coordinates)).geometry
+              .coordinates as [number, number];
+          }
+
+          return null;
+        };
+
+        const center = getCenter(feature);
+        return {
+          ...feature,
+          id: String(feature.id),
+          isStatisticsPopupOpen: existingPolygon?.isStatisticsPopupOpen ?? true,
+          pixelPosition: center ? mapInstance.project(center) : existingPolygon?.pixelPosition ?? { x: 0, y: 0 },
+        };
+      });
+
+    setPolygons(nextPolygons);
+  }, [drawRef, mapRef, polygons, setPolygons]);
 
   // Sync polygons state with draw control when polygons are loaded
   useEffect(() => {
@@ -24,7 +67,7 @@ export function usePolygonHandlers() {
             geometry: polygon.geometry,
             properties: polygon.properties || {},
             id: polygon.id,
-          };
+          } as GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon>;
           draw.add(feature);
         } catch (error) {
           console.error('Error adding polygon to draw control:', error);
@@ -85,77 +128,22 @@ export function usePolygonHandlers() {
     /**
      * Draw handler for polygons, creates a new polygon
      */
-    const handleDrawCreate = (e: DrawEvent) => {
-      if (!e.features || !e.features[0]) return;
-
-      const geojson = e.features[0];
-      // Get center point of polygon
-      let center;
-      if (geojson.geometry.type === 'Polygon') {
-        center = turf.centerOfMass(geojson).geometry.coordinates;
-      } else if (geojson.geometry.type === 'MultiPolygon') {
-        center = turf.centerOfMass(turf.multiPolygon(geojson.geometry.coordinates)).geometry
-          .coordinates;
-      }
-
-      // Convert center to pixel coordinates
-      const pixelPosition = center ? map.project(center as [number, number]) : null;
-
-      // Set the shape property for regular polygons
-      if (!geojson.properties) geojson.properties = {};
-      geojson.properties.shape = geojson.properties.shape ? geojson.properties.shape : 'polygon';
-
-      // Create PolygonFeature with required properties
-      const polygonFeature = {
-        ...geojson,
-        isStatisticsPopupOpen: true,
-        pixelPosition: pixelPosition,
-      };
-
-      setPolygons(prev => [...prev, polygonFeature]);
+    const handleDrawCreate = () => {
+      syncPolygonsFromDraw();
     };
 
     /**
      * Update handler for polygons
      */
-    const handleDrawUpdate = (e: DrawEvent) => {
-      if (!e.features || !e.features[0]) return;
-
-      const geojson = e.features[0];
-      const updatedPolygonsId = e.features[0].id;
-
-      // Get center point of updated polygon
-      let center;
-      if (geojson.geometry.type === 'Polygon') {
-        center = turf.centerOfMass(geojson).geometry.coordinates;
-      } else if (geojson.geometry.type === 'MultiPolygon') {
-        center = turf.centerOfMass(turf.multiPolygon(geojson.geometry.coordinates)).geometry
-          .coordinates;
-      }
-
-      // Convert center to pixel coordinates
-      const pixelPosition = center ? map.project(center as [number, number]) : null;
-
-      // Create updated PolygonFeature with required properties
-      const updatedPolygonFeature = {
-        ...geojson,
-        isStatisticsPopupOpen: true,
-        pixelPosition: pixelPosition,
-      };
-
-      setPolygons(prev =>
-        prev.map(polygon => (polygon.id === updatedPolygonsId ? updatedPolygonFeature : polygon))
-      );
+    const handleDrawUpdate = () => {
+      syncPolygonsFromDraw();
     };
 
     /**
      * Delete handler for polygons, deletes a polygon
      */
-    const handleDrawDelete = (e: DrawEvent) => {
-      if (!e.features || !e.features[0]) return;
-
-      const deletedPolygonsId = e.features[0].id;
-      setPolygons(prev => prev.filter(polygon => polygon.id !== deletedPolygonsId));
+    const handleDrawDelete = () => {
+      syncPolygonsFromDraw();
     };
 
     /**
@@ -177,5 +165,5 @@ export function usePolygonHandlers() {
         map.off('draw.delete', handleDrawDelete);
       }
     };
-  }, [map, shouldInitializeFeatures, polygons, setPolygons]);
+  }, [map, shouldInitializeFeatures, polygons, setPolygons, syncPolygonsFromDraw]);
 }

@@ -15,7 +15,6 @@ interface BasicInformationStepProps {
     city_name: string;
     Type: string;
     num_groups: number;
-    group_size: number;
     revenue_period_days: number;
     manager_phone: string;
     groups_info: Array<{ phone: string; lat: number | null; lng: number | null }>;
@@ -171,12 +170,6 @@ const BasicInformationStep = (obj: BasicInformationStepProps) => {
 	      <MotorcycleInputNumber {...Object.assign({
 		      text: t("revisit-frequency-days"),
 		      objKey: "revenue_period_days",
-		    },obj)} />
-      </div>
-      <div className="flex flex-col lg:flex-row gap-2">
-	      <MotorcycleInputNumber {...Object.assign({
-		      text: t("how-many-stores-in-x-days", { days: formData.revenue_period_days ?? 14 }),
-		      objKey: "group_size",
 		    },obj)} />
       </div>
       

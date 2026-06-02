@@ -30,6 +30,10 @@ export function useMapInitialization() {
     let pointCount = 0;
 
     geoPoints.forEach(point => {
+      if (point.isHydrating) {
+        return;
+      }
+
       if (point.display && point.features) {
         point.features.forEach(feature => {
           const coords = feature.geometry.coordinates as [number, number];

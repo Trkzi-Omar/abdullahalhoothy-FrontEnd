@@ -49,9 +49,15 @@ const debouncedStreetViewCheck = _.debounce(
   300
 );
 
+const GRID_MAX_OPACITY = 0.75;
+
 const getGridPaint = (pointsColor: string) => ({
   'fill-color': pointsColor || defaultMapConfig.defaultColor,
-  'fill-opacity': ['coalesce', ['/', ['get', 'backend_opacity'], 100], 0],
+  'fill-opacity': [
+    'min',
+    ['coalesce', ['/', ['get', 'backend_opacity'], 100], 0],
+    GRID_MAX_OPACITY,
+  ],
   'fill-outline-color': [
     'case',
     ['==', ['coalesce', ['get', 'backend_opacity'], 0], 0],
@@ -225,7 +231,7 @@ export function useMapLayers() {
   useEffect(() => {
     if (!shouldInitializeFeatures || !map) return;
 
-    const addLayers = () => {
+    const addLayers = async () => {
       if (!map.isStyleLoaded()) {
         console.warn('Style not loaded, deferring layer update...');
         const styleLoadHandler = () => {
@@ -246,8 +252,10 @@ export function useMapLayers() {
         // Reset layer state
         layerStatesRef.current = {};
 
-        if (geoPoints.length > 0) {
-          [...geoPoints]
+        const visibleGeoPoints = geoPoints.filter(point => !point.isHydrating);
+
+        if (visibleGeoPoints.length > 0) {
+          const sortedGeoPoints = [...visibleGeoPoints]
             .reverse()
             .sort((a, b) => {
               // Intelligent layers should be added first (bottom)
@@ -264,8 +272,9 @@ export function useMapLayers() {
 
               // Regular point/circle layers last (top)
               return 0;
-            })
-            .forEach(async (featureCollection, index) => {
+            });
+
+          for (const [index, featureCollection] of sortedGeoPoints.entries()) {
               if (featureCollection.basedon === 'income') {
                 console.log(
                   'INCOME Layer featureCollection:',
@@ -352,7 +361,11 @@ export function useMapLayers() {
                       paint: {
                         'fill-color':
                           featureCollection.points_color || defaultMapConfig.defaultColor,
-                        'fill-opacity': ['coalesce', ['/', ['get', 'backend_opacity'], 100], 0],
+                        'fill-opacity': [
+                          'min',
+                          ['coalesce', ['/', ['get', 'backend_opacity'], 100], 0],
+                          GRID_MAX_OPACITY,
+                        ],
                         'fill-outline-color': '#000',
                       },
                     });
@@ -663,7 +676,7 @@ export function useMapLayers() {
               } catch (error) {
                 console.error('Error adding layer:', error);
               }
-            });
+          }
 
           console.log(`geoPoints ${geoPoints.length}`, geoPoints);
         }

@@ -3,6 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import { StylesControl } from '../../components/Map/StylesControl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import { CircleControl } from '../../components/Map/CircleControl';
+import { GeoJsonEditorControl } from '../../components/Map/GeoJsonEditorControl';
 import { LayerActionsControl } from '../../components/Map/LayerActionsControl';
 import { useUIContext } from '../../context/UIContext';
 import { useCatalogContext } from '../../context/CatalogContext';
@@ -38,6 +39,7 @@ export function useMapControls() {
       navigation?: mapboxgl.NavigationControl;
       circle?: mapboxgl.IControl;
       draw?: MapboxDraw;
+      geoJsonEditor?: mapboxgl.IControl;
       scale?: mapboxgl.ScaleControl;
       layerActions?: mapboxgl.IControl;
     } = {};
@@ -79,6 +81,16 @@ export function useMapControls() {
 
         // Add draw control
         map.addControl(drawRef.current, nativeControlsPosition);
+
+        controls.geoJsonEditor = GeoJsonEditorControl({
+          getDraw: () => drawRef.current,
+          title: 'Edit GeoJSON',
+          applyTitle: 'Apply changes to map',
+          refreshTitle: 'Refresh from map',
+          closeTitle: 'Close GeoJSON editor',
+          emptyTitle: 'No polygon or circle features are currently on the map.',
+        });
+        map.addControl(controls.geoJsonEditor, nativeControlsPosition);
 
         controls.layerActions = new LayerActionsControl({
           getRefreshAll: () => refreshAllLayersRef.current,
@@ -124,11 +136,13 @@ export function useMapControls() {
     return () => {
       if (controlsAdded.current && map) {
         try {
+          const mapWithHasControl = map as unknown as { hasControl?: (control: unknown) => boolean };
+
           // Remove draw control first
           if (drawRef.current) {
             try {
               // Force cleanup of draw control
-              if (map.hasControl(drawRef.current)) {
+              if (typeof mapWithHasControl.hasControl !== 'function' || mapWithHasControl.hasControl(drawRef.current)) {
                 map.removeControl(drawRef.current);
               }
             } catch (err) {
@@ -140,8 +154,8 @@ export function useMapControls() {
           }
 
           // Remove other controls
-          ['layerActions', 'circle', 'navigation', 'styles'].forEach(key => {
-            if (controls[key] && map.hasControl(controls[key])) {
+          ['layerActions', 'geoJsonEditor', 'circle', 'navigation', 'styles', 'scale'].forEach(key => {
+            if (controls[key] && (typeof mapWithHasControl.hasControl !== 'function' || mapWithHasControl.hasControl(controls[key]))) {
               try {
                 map.removeControl(controls[key]);
               } catch (err) {

@@ -57,6 +57,15 @@ export function formatSubcategoryName(name: string | undefined | null): string {
     .join(' ');
 }
 
+export function formatBusinessTypeName(name: string | undefined | null, lowercaseEnglish = false): string {
+  if (!name) return '';
+
+  const normalized = name.trim().replace(/\s+/g, '_').toLowerCase();
+  const translated = formatSubcategoryName(normalized);
+
+  return lowercaseEnglish ? translated.toLowerCase() : translated;
+}
+
 export function formatIntelligenceName(name: string | undefined | null): string {
   if (!name) return t("unknown");
 
@@ -165,12 +174,17 @@ function isSubsequence(needle: string, haystack: string): boolean {
  * - Fuzzy: each token can match as subsequence (e.g. "cr rntl" matches "Car Rental").
  */
 export function fuzzyMatchCategoryType(type: string, searchQuery: string): boolean {
-  const normalized = normalizeTypeForSearch(type);
+  const normalizedType = normalizeTypeForSearch(type);
+  const normalizedLabel = normalizeTypeForSearch(formatSubcategoryName(type));
   const query = normalizeSearchQuery(searchQuery);
   if (!query) return true;
   const tokens = query.split(' ').filter(Boolean);
   return tokens.every(
-    token => normalized.includes(token) || isSubsequence(token, normalized)
+    token =>
+      normalizedType.includes(token) ||
+      isSubsequence(token, normalizedType) ||
+      normalizedLabel.includes(token) ||
+      isSubsequence(token, normalizedLabel)
   );
 }
 

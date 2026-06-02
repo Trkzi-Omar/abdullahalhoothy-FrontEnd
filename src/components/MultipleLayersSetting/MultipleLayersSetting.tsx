@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect, useRef } from 'react';
+import React, { useCallback, useLayoutEffect, useState, useEffect, useRef } from 'react';
 import { FaTrash } from 'react-icons/fa';
 import ColorSelect from '../ColorSelect/ColorSelect';
 import { useCatalogContext } from '../../context/CatalogContext';
@@ -278,7 +278,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   }, [handleGetGradientColors, layer.basedon, layer.radius_meters, setCoverageValue, setSelectedBasedon]);
 
   // Dynamic re-application of filters/recolors on load
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!layer) return;
 
     const layerMatchKey = getLayerMatchKey(layer);
@@ -294,6 +294,31 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
     }
 
     hydratedLayerSignatureRef.current = hydrationSignature;
+
+    const hasUnresolvedFilterFeatures = (layer.applied_filters || []).some(
+      filter =>
+        ((!Array.isArray(filter.features) || filter.features.length === 0) && Boolean(filter.save_request))
+    );
+
+    const hasUnresolvedRecolorFeatures = (layer.applied_recolors || []).some(
+      recolor =>
+        Boolean(recolor.save_request) &&
+        (
+          !recolor.groups ||
+          recolor.groups.length === 0 ||
+          recolor.groups.some(group => !Array.isArray(group.features) || group.features.length === 0)
+        )
+    );
+
+    const shouldHydrateLayer = hasUnresolvedFilterFeatures || hasUnresolvedRecolorFeatures;
+
+    if (shouldHydrateLayer) {
+      setGeoPoints(prev =>
+        prev.map((point, idx) =>
+          idx === layerIndex ? { ...point, isHydrating: true } : point
+        )
+      );
+    }
 
     const resolveFilters = async () => {
       setIsLoading(true);
@@ -383,11 +408,18 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 original_features, // Make sure to preserve original_features
                 applied_filters: newFilters,
                 applied_recolors: newRecolors,
+                isHydrating: false,
                 ...recomputed
               };
             }
             return p;
           }));
+        } else if (shouldHydrateLayer) {
+          setGeoPoints(prev =>
+            prev.map((point, idx) =>
+              idx === layerIndex ? { ...point, isHydrating: false } : point
+            )
+          );
         }
       } finally {
         setIsLoading(false);

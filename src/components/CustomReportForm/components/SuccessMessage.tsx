@@ -1,7 +1,8 @@
 import { FaCheck } from 'react-icons/fa';
 import { getBusinessTypeConfig } from '../constants';
 import { BusinessTypeConfig } from '../services/businessMetricsService';
-import { t } from '../../../i18n';
+import i18n, { t } from '../../../i18n';
+import { formatBusinessTypeName } from '../../../utils/helperFunctions';
 
 
 interface SuccessMessageProps {
@@ -18,6 +19,8 @@ const SuccessMessage = ({ show, businessConfig }: SuccessMessageProps) => {
     return null;
   }
 
+  const businessName = formatBusinessTypeName(config.displayName, i18n.language?.startsWith('en'));
+
   return (
     <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg shadow-lg animate-fade-in-up">
       <div className="flex items-center">
@@ -26,7 +29,7 @@ const SuccessMessage = ({ show, businessConfig }: SuccessMessageProps) => {
         </div>
         <div className="ms-3">
           <h3 className="text-base font-semibold text-green-800">{t("report-generated-successfully")}</h3>
-          <p className="text-sm text-green-700">{t("your")}{' '}{config.displayName.toLowerCase()}{' '}{t("location-report-has-been-created-and-is-ready-for-review")}</p>
+          <p className="text-sm text-green-700">{t("your")}{' '}{businessName}{' '}{t("location-report-has-been-created-and-is-ready-for-review")}</p>
           <p className="text-xs text-green-600 mt-1">{t("redirecting-to-your-report")}</p>
         </div>
       </div>

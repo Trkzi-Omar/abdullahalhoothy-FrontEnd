@@ -403,26 +403,6 @@ export function LayerProvider(props: { children: ReactNode }) {
         idToken = '';
       }
 
-      // For keyword search, set up the layer first, as text search can have max 1 layer
-      if (searchType === 'keyword_search' && textSearchInput?.trim()) {
-        const keywordLayer = {
-          id: 1,
-          name: textSearchInput.trim(),
-          points_color: '',
-          excludedTypes: [],
-          includedTypes: [textSearchInput.trim()],
-        };
-
-        // Update reqFetchDataset with the keyword layer
-        setReqFetchDataset(prev => ({
-          ...prev,
-          layers: [keywordLayer],
-        }));
-
-        // Use this layer for the request
-        layerId = 1;
-      }
-
       const layers = layerId
         ? [reqFetchDataset.layers.find(l => l.id === layerId)]
         : reqFetchDataset.layers;
@@ -534,11 +514,31 @@ export function LayerProvider(props: { children: ReactNode }) {
           throw error;
         }
       } else {
-        const defaultName = `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${textSearchInput?.trim()}`;
+        const layer = layers.find(Boolean);
+        const inputKeyword = textSearchInput.trim();
+        const includedTypes = layer?.includedTypes || [];
+        const layerKeyword =
+          includedTypes.find(type => type === inputKeyword) ||
+          includedTypes[includedTypes.length - 1] ||
+          '';
+        const keyword = layerKeyword.trim();
+        if (!layer) {
+          setIsError(new Error(t('every-layer-needs-at-least-one-dataset-and-a-name')));
+          return;
+        }
+        if (!keyword) {
+          setIsError(new Error(t('please-enter-a-keyword')));
+          return;
+        }
+
+        const targetLayerId = layer.id;
+        const layerAction = layer.action || action;
+        const defaultName =
+          layer.name || `${reqFetchDataset.selectedCountry} ${reqFetchDataset.selectedCity} ${keyword}`;
 
         // Get viewport bounds for sample action
         let viewportBounds = null;
-        if (action === 'sample' && mapRef.current) {
+        if (layerAction === 'sample' && mapRef.current) {
           const bounds = mapRef.current.getBounds();
           viewportBounds = {
             bottom_lng: bounds.getWest(),
@@ -551,12 +551,12 @@ export function LayerProvider(props: { children: ReactNode }) {
         const requestBody: Record<string, unknown> = {
           country_name: reqFetchDataset.selectedCountry,
           city_name: reqFetchDataset.selectedCity,
-          boolean_query: `@${textSearchInput?.trim()}@`, // Use the search term as the boolean query
+          boolean_query: `@${keyword}@`,
           layerId: pageToken ? prevLayerId || '' : '',
           layer_name: defaultName,
-          action: action,
+          action: layerAction,
           search_type: searchType,
-          text_search: textSearchInput?.trim(),
+          text_search: keyword,
           page_token: pageToken || '',
           user_id: user_id,
           zoom_level: currentZoomLevel,
@@ -580,22 +580,9 @@ export function LayerProvider(props: { children: ReactNode }) {
           await assignPopularityCategory(res?.data?.data); //To be removed after fixed on backend
           setLayerDataMap(prev => ({
             ...prev,
-            [1]: res.data.data,
+            [targetLayerId]: res.data.data,
           }));
-          const layers = [
-            {
-              id: 1,
-              name: textSearchInput?.trim(),
-              points_color: '',
-              excludedTypes: [],
-              includedTypes: [textSearchInput?.trim()],
-            },
-          ];
-          updateGeoJSONDataset(res.data.data, 1, defaultName, !!pageToken);
-          setReqFetchDataset(prev => ({
-            ...prev,
-            layers: layers,
-          }));
+          updateGeoJSONDataset(res.data.data, targetLayerId, defaultName, !!pageToken);
         }
       }
 

@@ -260,7 +260,7 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
         ) : (
           <div className="space-y-6">
              <div className="text-center">
-              <p className="text-sm text-gray-600 mb-4">{t("enter-the-6-digit-code-sent-to")}{' '}<span className="font-semibold">{phoneNumber}</span>
+              <p className="text-sm text-gray-600 mb-4">{t("enter-the-6-digit-code-sent-to")}{' '}<span dir="ltr" className="font-semibold inline-block">{phoneNumber}</span>
               </p>
               <button
                 onClick={() => setStep('phone')}
@@ -269,12 +269,15 @@ const PhoneVerificationStep: React.FC<PhoneVerificationStepProps> = ({
               >{t("change-phone-number")}</button>
             </div>
 
-            <div className="flex justify-center gap-2 sm:gap-4 my-6">
+            <div dir="ltr" className="flex justify-center gap-2 sm:gap-4 my-6">
               {otpCode.map((digit, index) => (
                 <input
                   key={index}
                   ref={(el) => (inputRefs.current[index] = el)}
                   type="text"
+                  dir="ltr"
+                  inputMode="numeric"
+                  autoComplete={index === 0 ? 'one-time-code' : 'off'}
                   maxLength={1}
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}

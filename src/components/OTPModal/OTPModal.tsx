@@ -165,7 +165,7 @@ const OTPModal: React.FC = () => {
             }
           </p>
           {!isSuccess && (
-            <p className="font-mono text-lg mt-1 tracking-wider">{state.maskedPhone}</p>
+            <p dir="ltr" className="font-mono text-lg mt-1 tracking-wider">{state.maskedPhone}</p>
           )}
         </div>
 
@@ -183,13 +183,15 @@ const OTPModal: React.FC = () => {
             {state.status ==="sent" || state.status ==="error" || isVerifying ? (
               <>
                 {/* OTP Input */}
-                <div className="flex justify-center gap-3 mb-6" onPaste={handlePaste}>
+                <div dir="ltr" className="flex justify-center gap-3 mb-6" onPaste={handlePaste}>
                   {Array.from({ length: state.codeLength }).map((_, index) => (
                     <input
                       key={index}
                       ref={(el) => (inputRefs.current[index] = el)}
                       type="text"
+                      dir="ltr"
                       inputMode="numeric"
+                      autoComplete={index === 0 ? 'one-time-code' : 'off'}
                       maxLength={1}
                       value={otp[index]}
                       onChange={(e) => handleChange(index, e.target.value)}
@@ -316,5 +318,4 @@ const Spinner: React.FC = () => (
 );
 
 export default OTPModal;
-
 

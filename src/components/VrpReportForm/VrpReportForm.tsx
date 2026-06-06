@@ -641,7 +641,7 @@ const VrpMap = ({formData, handleInputChange, onDrawPolygon, onPolygonModified, 
       <Map ref={mapRef}controls={defaultControls().extend([
         ...["P", "D", "W"].map(v => new DrawControl({ letter: v })),
         ...(onResetAllPolygons
-          ? [new ResetControl({ onClick: stableReset, label: t("reset") })]  // ← stableReset
+          ? [new ResetControl({ onClick: stableReset, label: t("clear-all") })]  // ← stableReset
           : []),
       ])}>
         <TileLayer

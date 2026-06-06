@@ -10,7 +10,6 @@ import { useCatalogContext } from '../../context/CatalogContext';
 import BottomDrawer from '../../components/BottomDrawer/BottomDrawer';
 import { useLayerContext } from '../../context/LayerContext';
 import { useMeasurement } from '../../hooks/useMeasurement';
-import { Spinner } from '../../components/common';
 import { t } from '../../i18n';
 
 
@@ -97,7 +96,7 @@ export function HomeContent() {
     handleStoreUnsavedGeoPoint,
     setPolygons,
   } = useCatalogContext();
-  const { isLoadingDataset, resetFetchDatasetForm } = useLayerContext();
+  const { resetFetchDatasetForm } = useLayerContext();
   const { exitMeasureMode, clearMeasurementLayers } = useMeasurement();
 
   const handleTabSwitch = (tab: 'LAYER' | 'CATALOG') => {
@@ -165,13 +164,6 @@ export function HomeContent() {
         {selectedHomeTab ==="LAYER" && (
           <>
             <LayerFormLoader />
-            {isLoadingDataset && (
-              <div className="absolute top-0 start-0 w-full h-full bg-black bg-opacity-30 z-50">
-                <div className="flex justify-center items-center h-full">
-                  <Spinner className="border-white border-4 size-32" />
-                </div>
-              </div>
-            )}
           </>
         )}
         {selectedHomeTab ==="CATALOG" && <CatalogFormLoader />}

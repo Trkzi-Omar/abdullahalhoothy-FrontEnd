@@ -67,11 +67,11 @@ const DRIVER_COLORS = [
   '#FF6600', // orange
   '#2563EB', // blue
   '#059669', // green
-  '#C026D3', // purple
+  '#7a028a', // purple
   '#DC2626', // red
-  '#0891B2', // teal
-  '#D97706', // amber
-  '#4F46E5', // indigo
+  '#00ccff', // teal
+  '#d9b206', // amber
+  '#f718d2', // indigo
 ];
 
 const emptyFeatureCollection = (): GeoJsonFeatureCollection => ({
@@ -691,12 +691,17 @@ const CustomReportForm = () => {
 
   // Add a new driver
   const addDriver = useCallback(() => {
-    setFormData(prev => {
-      if (!prev) return null;
-      return { ...prev, drivers: [...prev.drivers, makeDefaultDriver(`d${Date.now()}`, DRIVER_COLORS[prev.drivers.length % DRIVER_COLORS.length])] };
-    });
-    setActiveDriverIndex(prev => prev + 1);
-  }, []);
+  setFormData(prev => {
+    if (!prev) return null;
+    const usedColors = new Set(prev.drivers.map(d => d.color));
+    const nextColor = DRIVER_COLORS.find(c => !usedColors.has(c)) ?? DRIVER_COLORS[0];
+    return {
+      ...prev,
+      drivers: [...prev.drivers, makeDefaultDriver(`d${Date.now()}`, nextColor)],
+    };
+  });
+  setActiveDriverIndex(prev => prev + 1);
+}, []);
 
   // Remove a driver (min 1)
   const removeDriver = useCallback((idx: number) => {
@@ -1250,85 +1255,88 @@ const CustomReportForm = () => {
 		              </div>
 		            )}
 		          </div>
-		          {/* ── Driver Management ──────────────────────────────────── */}
-		          <div className="border border-gray-200 rounded-xl p-4 space-y-3">
-		            <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-		              <FaTruck className="w-4 h-4 text-primary" />
-		              {t("drivers")} ({formData?.drivers?.length ?? 0})
-		            </h4>
-		            {/* Driver tabs */}
-		            <div className="flex flex-wrap items-center gap-2">
-		              {formData?.drivers?.map((driver, idx) => (
-		                <div key={driver.id} className="flex items-center">
-		                  <button
-		                    type="button"
-		                    onClick={() => setActiveDriverIndex(idx)}
-		                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border-2 transition-all ${
-		                      idx === activeDriverIndex
-		                        ? 'border-gray-800 bg-gray-100 shadow-sm'
-		                        : 'border-gray-200 bg-white hover:border-gray-300'
-		                    }`}
-		                  >
-		                    <span
-		                      className="w-3 h-3 rounded-full flex-shrink-0"
-		                      style={{ backgroundColor: driver.color }}
-		                    />
-		                    <span>{t("driver")} {idx + 1}</span>
-		                    {driver.polygon?.features?.length > 0 && (
-		                      <span className="text-green-600">●</span>
-		                    )}
-		                  </button>
-		                  {formData.drivers.length > 1 && (
+		          {/* ── Two-column layout: Driver + Zone on left, Map on right */}
+		          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+		            {/* Left column — Driver Management + Zone Definition as one unified step */}
+		            <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+		              <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+		                <FaTruck className="w-4 h-4 text-primary" />
+		                {t("drivers")} ({formData?.drivers?.length ?? 0})
+		              </h4>
+		              {/* Driver tabs */}
+		              <div className="flex flex-wrap items-center gap-2">
+		                {formData?.drivers?.map((driver, idx) => (
+		                  <div key={driver.id} className="flex items-center">
 		                    <button
 		                      type="button"
-		                      onClick={() => removeDriver(idx)}
-		                      className="ms-1 p-1 text-gray-400 hover:text-red-500 rounded"
-		                      title={t("remove-driver")}
+		                      onClick={() => setActiveDriverIndex(idx)}
+		                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border-2 transition-all ${
+		                        idx === activeDriverIndex
+		                          ? 'border-gray-800 bg-gray-100 shadow-sm'
+		                          : 'border-gray-200 bg-white hover:border-gray-300'
+		                      }`}
 		                    >
-		                      <FaTimes className="w-3 h-3" />
+		                      <span
+		                        className="w-3 h-3 rounded-full flex-shrink-0"
+		                        style={{ backgroundColor: driver.color }}
+		                      />
+		                      <span>{t("driver")} {idx + 1}</span>
+		                      {driver.polygon?.features?.length > 0 && (
+		                        <span className="text-green-600">●</span>
+		                      )}
 		                    </button>
-		                  )}
-		                </div>
-		              ))}
-		              <button
-		                type="button"
-		                onClick={addDriver}
-		                disabled={(formData?.drivers?.length ?? 0) >= DRIVER_COLORS.length}
-		                className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium border-2 border-dashed border-gray-300 bg-white text-gray-500 hover:border-primary hover:text-primary transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-		              >
-		                + {t("add-driver")}
-		              </button>
-		            </div>
-		            {/* Active driver phone */}
-		            <div className="flex items-center gap-2">
-		              <label className="text-xs font-medium text-gray-600 whitespace-nowrap">
-		                {t("phone")}
-		              </label>
-		              <input
-		                type="tel"
-		                value={formData?.drivers?.[activeDriverIndex]?.phone ?? ''}
-		                onChange={e => updateDriver(activeDriverIndex, 'phone', e.target.value)}
-		                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-		                placeholder={t("phone-number")}
+		                    {formData.drivers.length > 1 && (
+		                      <button
+		                        type="button"
+		                        onClick={() => removeDriver(idx)}
+		                        className="ms-1 p-1 text-gray-400 hover:text-red-500 rounded"
+		                        title={t("remove-driver")}
+		                      >
+		                        <FaTimes className="w-3 h-3" />
+		                      </button>
+		                    )}
+		                  </div>
+		                ))}
+		                <button
+		                  type="button"
+		                  onClick={addDriver}
+		                  disabled={(formData?.drivers?.length ?? 0) >= DRIVER_COLORS.length}
+		                  className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium border-2 border-dashed border-gray-300 bg-white text-gray-500 hover:border-primary hover:text-primary transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+		                >
+		                  + {t("add-driver")}
+		                </button>
+		              </div>
+		              {/* Active driver phone */}
+		              <div className="flex items-center gap-2">
+		                <label className="text-xs font-medium text-gray-600 whitespace-nowrap">
+		                  {t("phone")}
+		                </label>
+		                <input
+		                  type="tel"
+		                  value={formData?.drivers?.[activeDriverIndex]?.phone ?? ''}
+		                  onChange={e => updateDriver(activeDriverIndex, 'phone', e.target.value)}
+		                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+		                  placeholder={t("phone-number")}
+		                />
+		              </div>
+		              {/* Hint */}
+		              <p className="text-xs text-gray-400 italic">
+		                {t("draw-polygon-hint")} {t("each-driver-needs-own-polygon")}
+		              </p>
+
+		              {/* Zone Definition — add/remove districts with +/- buttons */}
+		              <ZoneDefinitionStep
+		                cityName={formData?.city_name ?? ''}
+		                countryName={formData?.country_name ?? 'Saudi Arabia'}
+		                disabled={isSubmitting}
+		                selectedDistrictIds={formData?.drivers?.[activeDriverIndex]?.selectedDistrictIds}
+		                onAddDistrict={handleAddDistrict}
+		                onSubtractDistrict={handleSubtractDistrict}
+		                isPolygonOpInProgress={polygonOpInProgress}
 		              />
 		            </div>
-		            {/* Hint */}
-		            <p className="text-xs text-gray-400 italic">
-		              {t("draw-polygon-hint")} {t("each-driver-needs-own-polygon")}
-		            </p>
-		          </div>
-
-		          {/* Zone Definition — add/remove districts with +/- buttons */}
-		          <ZoneDefinitionStep
-		            cityName={formData?.city_name ?? ''}
-		            countryName={formData?.country_name ?? 'Saudi Arabia'}
-		            disabled={isSubmitting}
-		            selectedDistrictIds={formData?.drivers?.[activeDriverIndex]?.selectedDistrictIds}
-		            onAddDistrict={handleAddDistrict}
-		            onSubtractDistrict={handleSubtractDistrict}
-		            isPolygonOpInProgress={polygonOpInProgress}
-		          />
-				      <div className="flex-1 relative w-full h-full min-h-[800px]" id="map-container">
+		            {/* Right column: Map */}
+		            <div className="relative w-full h-full min-h-[500px] col-span-2" id="map-container">
 				        {formData?.drivers?.some(d => d.polygon?.features?.length > 0) && (
 				          <button
 				            type="button"
@@ -1342,6 +1350,7 @@ const CustomReportForm = () => {
 				        	<VrpMap formData={formData} handleInputChange={handleInputChange} onDrawPolygon={handleDrawPolygon} onPolygonModified={handlePolygonModified} onPolygonModifiedForDriver={handlePolygonModifiedForDriver} activeDriverId={activeDriverId} activeDriverColor={activeDriverColor} />
 							  </div>
 				      </div>
+            </div>
             </div>
             <div className="flex items-center text-sm justify-center pb-4">
 	            <button className="border-green-700 px-4 py-2 rounded border hover:enabled:text-white hover:enabled:bg-green-700 disabled:cursor-not-allowed disabled:border-gray-500 disabled:text-gray-500"

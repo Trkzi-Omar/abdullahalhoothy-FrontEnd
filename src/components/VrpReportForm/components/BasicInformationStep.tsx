@@ -17,7 +17,6 @@ interface BasicInformationStepProps {
     num_groups: number;
     revenue_period_days: number;
     manager_phone: string;
-    groups_info: Array<{ phone: string; lat: number | null; lng: number | null }>;
   };
   errors: {
     city_name?: string;
@@ -163,11 +162,6 @@ const BasicInformationStep = (obj: BasicInformationStepProps) => {
       </div>
       <div className="flex flex-col lg:flex-row gap-2">	      
 	      <MotorcycleInputNumber {...Object.assign({
-		      text: t("how-many-vans"),
-		      objKey: "num_groups",
-		      warning: formData.num_groups > 1 ? t("currently-limited-to-1-van") : undefined,
-		    },obj)} />
-	      <MotorcycleInputNumber {...Object.assign({
 		      text: t("revisit-frequency-days"),
 		      objKey: "revenue_period_days",
 		    },obj)} />
@@ -196,30 +190,6 @@ const BasicInformationStep = (obj: BasicInformationStepProps) => {
                   ? 'border-red-300 bg-red-50'
                   : 'border-gray-300 bg-white'
             }`} placeholder={t("966-5x-xxx-xxxx")} onChange={e => onInputChange("manager_phone", e.target.value)} />
-	      	</div>
-	      </div>
-	      <div className="flex-1">
-		      <div className="space-y-3 flex-1">
-		        <label htmlFor="Type" className="block text-sm font-semibold text-gray-700">
-		          <span className="flex items-center gap-2">
-		            <FaMotorcycle className="w-4 h-4 mr-2 text-primary" />
-		            {t("driver-phone-number")}
-		            &nbsp;
-			          <div className="text-red-500">*</div>
-		          </span>
-		        </label>
-		      	<input type="text" 
-		      		required
-		      		value={formData["groups_info"][0]["phone"]}
-              className={`w-full pl-2 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
-              disabled
-                ? 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-60'
-                : errors.Type
-                  ? 'border-red-300 bg-red-50'
-                  : 'border-gray-300 bg-white'
-            }`} placeholder={t("966-5x-xxx-xxxx")} onChange={e => onInputChange("groups_info", [Object.assign(formData["groups_info"][0], {
-	            "phone": e.target.value
-            })])} />
 	      	</div>
 	      </div>
       </div>

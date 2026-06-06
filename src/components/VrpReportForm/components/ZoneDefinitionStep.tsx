@@ -111,7 +111,7 @@ export default function ZoneDefinitionStep({
   };
 
   return (
-    <div className="border border-gray-200 rounded-xl p-4 space-y-4">
+    <div className="space-y-4">
       {/* ── Header ──────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
@@ -119,11 +119,6 @@ export default function ZoneDefinitionStep({
           {t('zone-definition')}
         </h4>
       </div>
-
-      {/* ── Instruction ─────────────────────────────────────────────── */}
-      <p className="text-xs text-gray-400 italic">
-        {t('draw-polygon-hint')}
-      </p>
 
       {/* ── District panel (always visible when districts are loaded) ─── */}
       <div className="space-y-3">

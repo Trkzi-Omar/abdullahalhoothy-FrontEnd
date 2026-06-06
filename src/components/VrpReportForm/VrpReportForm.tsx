@@ -6,18 +6,19 @@ import urls from '../../urls.json';
 import Modal from '../common/Modal';
 
 import { toast } from 'sonner';
-import { FaArrowLeft, FaExclamationTriangle, FaChevronDown, FaDatabase, FaTimes } from 'react-icons/fa';
+import { FaArrowLeft, FaExclamationTriangle, FaChevronDown, FaDatabase, FaTimes, FaTruck } from 'react-icons/fa';
 import {
   CustomReportData,
   FormErrors,
 } from '../../types/allTypesAndInterfaces';
 
-import { VrpReportData, UserLayer } from '../../types/vrp';
-import type { GeoJsonPolygon, GeoJsonFeature, GeoJsonFeatureCollection } from '../../types/geojson';
+import { VrpReportData, UserLayer, DriverInfo, PolygonOpResponse } from '../../types/vrp';
+import type { GeoJsonPolygon, GeoJsonFeature, GeoJsonFeatureCollection, GeoJsonGeometry } from '../../types/geojson';
 
 // Import step components
 import BasicInformationStep from './components/BasicInformationStep';
 import SetAttributeStep from './components/AttributesStep';
+import ZoneDefinitionStep from './components/ZoneDefinitionStep';
 
 import {toLonLat, fromLonLat} from 'ol/proj';
 import XYZ from 'ol/source/XYZ';
@@ -26,7 +27,6 @@ import Control from 'ol/control/Control';
 import Draw from 'ol/interaction/Draw';
 import Modify from 'ol/interaction/Modify';
 import GeoJSON from 'ol/format/GeoJSON';
-import { isEmpty as isEmptyExtent } from 'ol/extent';
 import {Stroke, Circle, Fill, Icon, Style} from 'ol/style';
 import {defaults as defaultControls } from 'ol/control/defaults';
 import { useMap, Map, View, TileLayer, VectorLayer } from 'react-openlayers';
@@ -46,7 +46,7 @@ const DRAW_CONTROL_STYLE = `
 .draw-control { top: 65px; inset-inline-start: .5em; }
 .draw-control-D { top: 95px; inset-inline-start: .5em; }
 .draw-control-W { top: 125px; inset-inline-start: .5em; }
-.draw-control-active > button { outline: 1px solid black; }
+.draw-control-active > button { outline: 2px solid black; }
 .ol-control.draw-control button { 
   min-width: 5.5rem; 
   font-size: 0.75rem !important; 
@@ -55,6 +55,52 @@ const DRAW_CONTROL_STYLE = `
   font-family: inherit;
 }
 `;
+
+/* ── Dynamic CSS for draw-control active color ──────────────────────── */
+const drawControlStyleTag = (color: string) => `
+.draw-control-active > button { outline: 2px solid ${color}; }
+`;
+
+/* ── Multi-driver palette & helpers ──────────────────────────────────── */
+
+const DRIVER_COLORS = [
+  '#FF6600', // orange
+  '#2563EB', // blue
+  '#059669', // green
+  '#C026D3', // purple
+  '#DC2626', // red
+  '#0891B2', // teal
+  '#D97706', // amber
+  '#4F46E5', // indigo
+];
+
+const emptyFeatureCollection = (): GeoJsonFeatureCollection => ({
+  type: 'FeatureCollection' as const,
+  features: [],
+});
+
+const makeDefaultDriver = (id: string, color: string): DriverInfo => ({
+  id,
+  lat: null,
+  lng: null,
+  phone: '',
+  polygon: emptyFeatureCollection(),
+  color,
+  selectedDistrictIds: [],
+});
+
+/** Compute the centroid [lat, lng] of the first polygon in a FeatureCollection. */
+const polygonCentroid = (fc: unknown): [number, number] | null => {
+  const f = fc as { features?: Array<{ geometry?: { coordinates?: unknown } }> };
+  const coords = f?.features?.[0]?.geometry?.coordinates;
+  if (!coords || !Array.isArray(coords)) return null;
+  // coords is [ring[...]] for Polygon, ring is [lng, lat][]
+  const ring = (coords as number[][][])[0];
+  if (!ring?.length) return null;
+  let latSum = 0, lngSum = 0;
+  for (const [lng, lat] of ring) { latSum += lat; lngSum += lng; }
+  return [latSum / ring.length, lngSum / ring.length];
+};
 
 const MAPBOX_STREETS_TILE_URL = `https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/512/{z}/{x}/{y}?access_token=${import.meta.env.VITE_MAPBOX_KEY}`;
 
@@ -95,22 +141,22 @@ class DrawControl extends Control {
   }
 }
 
-const drawStyle = new Style({
-	stroke: new Stroke({color: "#FF6600"}),
+const makeDrawStyle = (color: string) => new Style({
+	stroke: new Stroke({color}),
 	fill: new Fill({color: "#FFFFFF7F"}),
 	image: new Circle({
-		stroke: new Stroke({color: "#FF6600"}),
+		stroke: new Stroke({color}),
 		fill: new Fill({color: "#FFFFFF7F"}),
 		radius: 5,
 	}),
-})
-const driverStyle = new Style({
-	stroke: new Stroke({color: "cyan"}),
-	fill: new Fill({color: "#FFFFFF7F"}),
+});
+
+const makeDriverStyle = (color: string) => new Style({
 	image: new Icon({
 		src: MapMarkerDriver,
+		color: color,
 	}),
-})
+});
 
 const warehouseStyle = new Style({
 	stroke: new Stroke({color: "magenta"}),
@@ -118,11 +164,18 @@ const warehouseStyle = new Style({
 	image: new Icon({
 		src: MapMarkerWarehouse,
 	}),
-})
+});
+
 type VrpMapDrawProps = {
   source: VectorSource;
   handleInputChange: (field: string, value: FormInputValue) => void;
   formData: VrpReportData | null;
+  activeDriverId: string;
+  activeDriverColor: string;
+  onDrawPolygon: (fc: GeoJsonFeatureCollection) => void;
+  onPolygonModified: (fc: GeoJsonFeatureCollection) => void;
+  /** Called when a polygon is modified — routes to the feature's own driver */
+  onPolygonModifiedForDriver: (driverId: string, fc: GeoJsonFeatureCollection) => void;
 };
 
 const cityCoords = {
@@ -130,29 +183,85 @@ const cityCoords = {
 	"Riyadh": [24.6333333, 46.716667],
 	"Mecca": [21.422510, 39.826168],
 }
-const VrpMapDraw = ({formData, source, handleInputChange}: VrpMapDrawProps) => {
+const VrpMapDraw = ({formData, source, handleInputChange, onDrawPolygon, onPolygonModified, onPolygonModifiedForDriver, activeDriverId, activeDriverColor}: VrpMapDrawProps) => {
+  // Refs to avoid stale closures in event listeners — refs are always fresh
+  const formDataRef = useRef(formData);
+  formDataRef.current = formData;
+  const onDrawPolygonRef = useRef(onDrawPolygon);
+  onDrawPolygonRef.current = onDrawPolygon;
+  const onPolygonModifiedRef = useRef(onPolygonModified);
+  onPolygonModifiedRef.current = onPolygonModified;
+  const onPolygonModifiedForDriverRef = useRef(onPolygonModifiedForDriver);
+  onPolygonModifiedForDriverRef.current = onPolygonModifiedForDriver;
+  const handleInputChangeRef = useRef(handleInputChange);
+  handleInputChangeRef.current = handleInputChange;
+  const activeDriverIdRef = useRef(activeDriverId);
+  activeDriverIdRef.current = activeDriverId;
+  const activeDriverColorRef = useRef(activeDriverColor);
+  activeDriverColorRef.current = activeDriverColor;
   const map = useMap();
-  const [drawers] = useState(() => [
-    new Draw({
-      source: source,
-      type: "Polygon",
-      // No freehand — click-vertex mode like geojson.io
-      geometryName: "draw",
-      style: drawStyle,
-    }),
-    new Draw({
-      source: source,
-      type: "Point",
-      geometryName: "driver",
-      style: driverStyle,
-    }),
-    new Draw({
-      source: source,
-      type: "Point",
-      geometryName: "warehouse",
-      style: warehouseStyle,
-    }),
-  ]);
+  // Drawers recreated when activeDriverColor changes so the sketch style updates
+  const [drawVersion, setDrawVersion] = useState(0);
+  const [drawers] = useState(() => {
+    const make = (color: string) => [
+      new Draw({
+        source: source,
+        type: "Polygon",
+        geometryName: "draw",
+        style: makeDrawStyle(color),
+      }),
+      new Draw({
+        source: source,
+        type: "Point",
+        geometryName: "driver",
+        style: makeDriverStyle(color),
+      }),
+      new Draw({
+        source: source,
+        type: "Point",
+        geometryName: "warehouse",
+        style: warehouseStyle,
+      }),
+    ];
+    return make(activeDriverColor);
+  });
+
+  // Recreate drawers when activeDriverColor changes — OpenLayers Draw
+  // does not re-read the style option after construction.
+  useEffect(() => {
+    if (!map) return;
+    // Remove old drawers from map
+    drawers.forEach(d => map.removeInteraction(d));
+    // Replace them with new ones in the same array slots
+    const newDrawers = [
+      new Draw({
+        source,
+        type: "Polygon",
+        geometryName: "draw",
+        style: makeDrawStyle(activeDriverColor),
+      }),
+      new Draw({
+        source,
+        type: "Point",
+        geometryName: "driver",
+        style: makeDriverStyle(activeDriverColor),
+      }),
+      new Draw({
+        source,
+        type: "Point",
+        geometryName: "warehouse",
+        style: warehouseStyle,
+      }),
+    ];
+    // Swap in-place so the array reference is stable for event handlers
+    drawers.length = 0;
+    drawers.push(...newDrawers);
+    // Re-add the currently active drawer if any
+    if (draw > 0) map.addInteraction(drawers[draw - 1]);
+    setDrawVersion(v => v + 1);
+    return () => { drawers.forEach(d => map.removeInteraction(d)); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeDriverColor, source]);
   const [oldCity, setOldCity] = useState("");
   const [draw, setDraw] = useState(0);
   if(map && formData && oldCity != formData.city_name) {
@@ -161,92 +270,162 @@ const VrpMapDraw = ({formData, source, handleInputChange}: VrpMapDrawProps) => {
     map.getView().setCenter(fromLonLat(([...(cityCoords as Record<string, number[]>)[city]] as number[]).reverse()));
   }
 
-  // Restore saved polygon from formData on first map load
+  // Restore saved polygon for the active driver, and keep other drivers' polygons visible.
   useEffect(() => {
     if (!map) return;
-    const fc = formData?.polygons ?? null;
-    if (!fc?.features?.length) return;
-    try {
-      const features = new GeoJSON().readFeatures(fc, {
-        dataProjection: 'EPSG:4326',
-        featureProjection: 'EPSG:3857',
-      });
-      features.forEach(f => {
-        const g = f.getGeometry();
-        f.setGeometryName('draw');
-        if (g) f.setGeometry(g);
-      });
-      source.getFeatures()
-        .filter(f => f.getGeometryName() === 'draw')
-        .forEach(f => source.removeFeature(f));
-      source.addFeatures(features);
-    } catch { /* ignore malformed saved polygon */ }
+    const drivers = formData?.drivers ?? [];
+
+    // Remove ALL draw/driver/warehouse features — we'll re-add from formData
+    source.getFeatures()
+      .filter(f => f.getGeometryName() === 'draw' || f.getGeometryName() === 'driver' || f.getGeometryName() === 'warehouse')
+      .forEach(f => source.removeFeature(f));
+
+    // Re-add all drivers' polygons (non-editable) and active driver's polygon (editable)
+    drivers.forEach(d => {
+      const fc = d.polygon;
+      if (!fc?.features?.length) return;
+      try {
+        const features = new GeoJSON().readFeatures(fc, {
+          dataProjection: 'EPSG:4326',
+          featureProjection: 'EPSG:3857',
+        });
+        features.forEach(f => {
+          const g = f.getGeometry();
+          f.setGeometryName('draw');
+          f.set('driverId', d.id);
+          f.set('driverColor', d.color);
+          if (g) f.setGeometry(g);
+        });
+        source.addFeatures(features);
+      } catch { /* ignore malformed saved polygon */ }
+    });
+
+    // Re-add all drivers' points
+    drivers.forEach(d => {
+      if (d.lat == null || d.lng == null) return;
+      try {
+        const ptFeature = new GeoJSON().readFeature({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [d.lng, d.lat] },
+          properties: {},
+        }, { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' }) as import('ol/Feature').default;
+        const g = ptFeature.getGeometry();
+        ptFeature.setGeometryName('driver');
+        ptFeature.set('driverId', d.id);
+        ptFeature.set('driverColor', d.color);
+        if (g) ptFeature.setGeometry(g);
+        source.addFeature(ptFeature);
+      } catch { /* ignore */ }
+    });
+
+    // Re-add warehouse point from formData
+    if (formData?.warehouse_lat != null && formData?.warehouse_lng != null) {
+      try {
+        const whFeature = new GeoJSON().readFeature({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [formData.warehouse_lng, formData.warehouse_lat] },
+          properties: {},
+        }, { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' }) as import('ol/Feature').default;
+        const whG = whFeature.getGeometry();
+        whFeature.setGeometryName('warehouse');
+        if (whG) whFeature.setGeometry(whG);
+        source.addFeature(whFeature);
+      } catch { /* ignore */ }
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map]);
+  }, [map, formData?.drivers, activeDriverId, formData?.warehouse_lat, formData?.warehouse_lng]);
 
   // Modify interaction — allows dragging vertices/edges after drawing
+  // Routes modifications to the driver that owns the feature (via driverId), not the active driver.
   useEffect(() => {
     if (!map) return;
     const modify = new Modify({ source });
     map.addInteraction(modify);
     modify.on('modifyend', (e) => {
+      const fmt = new GeoJSON();
       e.features.forEach(feature => {
-        const name = (feature as unknown as { getGeometryName: () => string }).getGeometryName();
-        const geom = (feature as unknown as { getGeometry: () => unknown }).getGeometry() as
-          { getCoordinates: () => unknown };
+        const feat = feature as unknown as { set: (k: string, v: string) => void; getGeometryName: () => string; getGeometry: () => unknown; get: (k: string) => string | undefined };
+        const driverId = feat.get('driverId');
+        const name = feat.getGeometryName();
+
         if (name === 'draw') {
-          const coords = ((geom.getCoordinates() as unknown) as number[][][])[0].map(v => toLonLat(v));
-          handleInputChange("polygons", {
-            type: 'FeatureCollection' as const,
-            features: [{ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [coords] } }]
-          } as unknown as FormInputValue);
+          // Write back through GeoJSON to preserve geometry type (Polygon vs MultiPolygon)
+          // and transform from the map's EPSG:3857 back to EPSG:4326 for formData.
+          const geoJsonFeature = fmt.writeFeatureObject(feature as never, {
+            dataProjection: 'EPSG:4326',
+            featureProjection: 'EPSG:3857',
+          }) as { geometry: { type: string; coordinates: unknown } };
+          const fc: GeoJsonFeatureCollection = {
+            type: 'FeatureCollection',
+            features: [{ type: 'Feature' as const, properties: {}, geometry: geoJsonFeature.geometry as unknown as GeoJsonGeometry }],
+          };
+          if (driverId && driverId !== activeDriverIdRef.current) {
+            onPolygonModifiedForDriverRef.current(driverId, fc);
+          } else {
+            onPolygonModifiedRef.current(fc);
+          }
         } else if (name === 'driver') {
-          const coords = toLonLat((geom.getCoordinates() as unknown) as number[]);
-          handleInputChange("groups_info", [Object.assign({}, formData?.groups_info?.[0] ?? {}, {
-            lng: coords[0], lat: coords[1],
-          })] as unknown as FormInputValue);
+          const g = feat.getGeometry() as { getCoordinates: () => unknown };
+          const coords = toLonLat((g.getCoordinates() as unknown) as number[]);
+          // Use the feature's driverId to update the right driver's position
+          const targetDriverId = driverId || activeDriverIdRef.current;
+          handleInputChangeRef.current('updateDriverPosition', [
+            targetDriverId, coords[1], coords[0],
+          ] as unknown as FormInputValue);
         } else if (name === 'warehouse') {
-          const coords = toLonLat((geom.getCoordinates() as unknown) as number[]);
-          handleInputChange("warehouse_lat", coords[1]);
-          handleInputChange("warehouse_lng", coords[0]);
+          const g = feat.getGeometry() as { getCoordinates: () => unknown };
+          const coords = toLonLat((g.getCoordinates() as unknown) as number[]);
+          handleInputChangeRef.current('warehouse_lat', coords[1]);
+          handleInputChangeRef.current('warehouse_lng', coords[0]);
         }
       });
     });
     return () => { map.removeInteraction(modify); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, source]);
 
   useEffect(() => {
-    drawers.forEach(v => {
-      v.on("drawend", (ev) => {
-        const name = (ev.feature as unknown as { getGeometryName: () => string }).getGeometryName();
-        if (name === "draw") {
-          const geom = ev.feature.getGeometry() as unknown as { getCoordinates: () => number[][][] };
-          const tmpCoords = geom.getCoordinates()[0].map(v => toLonLat(v));
-          handleInputChange("polygons", {
-            type: 'FeatureCollection' as const,
-            features: [{ type: 'Feature', properties: {}, geometry: { coordinates: [tmpCoords], type: 'Polygon' } }]
-          } as unknown as FormInputValue);
-        } else if (name === "driver") {
-          const geom = ev.feature.getGeometry() as unknown as { getCoordinates: () => number[] };
-          const tmpCoords = toLonLat(geom.getCoordinates());
-          handleInputChange("groups_info", [Object.assign({}, formData?.groups_info?.[0] ?? {}, {
-            lng: tmpCoords[0], lat: tmpCoords[1],
-          })] as unknown as FormInputValue);
-        } else if (name === "warehouse") {
-          const geom = ev.feature.getGeometry() as unknown as { getCoordinates: () => number[] };
-          const tmpCoords = toLonLat(geom.getCoordinates());
-          handleInputChange("warehouse_lat", tmpCoords[1]);
-          handleInputChange("warehouse_lng", tmpCoords[0]);
-        }
-      });
-      v.on("drawstart", () => {
-        source.getFeatures()
-          .filter(f => f.getGeometryName() === (v as unknown as { geometryName_: string }).geometryName_)
-          .forEach(f => source.removeFeature(f));
-      });
+    const handleDrawEnd = (ev: { feature: unknown }) => {
+      const feature = ev.feature as unknown as { set: (k: string, v: string) => void; getGeometryName: () => string; getGeometry: () => unknown; get: (k: string) => string };
+      feature.set('driverId', activeDriverIdRef.current);
+      feature.set('driverColor', activeDriverColorRef.current);
+      const name = feature.getGeometryName();
+      if (name === "draw") {
+        const geom = feature.getGeometry() as unknown as { getCoordinates: () => number[][][] };
+        const tmpCoords = geom.getCoordinates()[0].map(v => toLonLat(v));
+        const newFC: GeoJsonFeatureCollection = {
+          type: 'FeatureCollection' as const,
+          features: [{ type: 'Feature' as const, properties: {}, geometry: { coordinates: [tmpCoords], type: 'Polygon' as const } }],
+        };
+        onDrawPolygonRef.current(newFC);
+      } else if (name === "driver") {
+        const geom = feature.getGeometry() as unknown as { getCoordinates: () => number[] };
+        const tmpCoords = toLonLat(geom.getCoordinates());
+        handleInputChangeRef.current('updateDriverPosition', [
+          activeDriverIdRef.current, tmpCoords[1], tmpCoords[0],
+        ] as unknown as FormInputValue);
+      } else if (name === "warehouse") {
+        const geom = feature.getGeometry() as unknown as { getCoordinates: () => number[] };
+        const tmpCoords = toLonLat(geom.getCoordinates());
+        handleInputChangeRef.current("warehouse_lat", tmpCoords[1]);
+        handleInputChangeRef.current("warehouse_lng", tmpCoords[0]);
+      }
+    };
+    const drawStartHandlers: Array<(ev: unknown) => void> = [];
+    drawers.forEach((v) => {
+      v.on("drawend", handleDrawEnd);
+      const startHandler = () => {
+        // No-op: new polygons are unioned with the canonical FC, not replacing it
+      };
+      v.on("drawstart", startHandler);
+      drawStartHandlers.push(startHandler);
     });
-  }, [drawers, formData, handleInputChange, source]);
+    return () => {
+      drawers.forEach((v, i) => {
+        v.un("drawend", handleDrawEnd);
+        v.un("drawstart", drawStartHandlers[i]);
+      });
+    };
+  }, [drawers, source, drawVersion]);
 
   useEffect(() => {
     if (!map) return;
@@ -261,12 +440,12 @@ const VrpMapDraw = ({formData, source, handleInputChange}: VrpMapDrawProps) => {
     };
     el.addEventListener("toggleDraw", handler);
     return () => el.removeEventListener("toggleDraw", handler);
-  }, [draw, drawers, map]);
+  }, [draw, drawers, map, drawVersion]);
 
   return null;
 };
 
-const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null; handleInputChange: VrpMapDrawProps['handleInputChange'] }) => {
+const VrpMap = ({formData, handleInputChange, onDrawPolygon, onPolygonModified, onPolygonModifiedForDriver, activeDriverId, activeDriverColor}: { formData: VrpReportData | null; handleInputChange: VrpMapDrawProps['handleInputChange']; onDrawPolygon: VrpMapDrawProps['onDrawPolygon']; onPolygonModified: VrpMapDrawProps['onPolygonModified']; onPolygonModifiedForDriver: VrpMapDrawProps['onPolygonModifiedForDriver']; activeDriverId: string; activeDriverColor: string }) => {
   const mapRef = useRef<import('ol/Map').default | null>(null);
   // Stable source — must not be recreated on every render
   const [drawSource] = useState(() => new VectorSource({ wrapX: false }));
@@ -275,7 +454,7 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
   const [geoJsonError, setGeoJsonError] = useState('');
 
   const openPanel = () => {
-    const current = formData?.polygons;
+    const current = formData?.drivers?.find(d => d.id === activeDriverId)?.polygon;
     setGeoJsonText(current?.features?.length ? JSON.stringify(current, null, 2) : '');
     setGeoJsonError('');
     setPanelOpen(true);
@@ -317,21 +496,20 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
       features.forEach(f => {
         const geometry = f.getGeometry();
         f.setGeometryName('draw');
+        f.set('driverId', activeDriverId);
+        f.set('driverColor', activeDriverColor);
         if (geometry) f.setGeometry(geometry);
       });
-      drawSource.getFeatures().filter(f => f.getGeometryName() === 'draw').forEach(f => drawSource.removeFeature(f));
+      // Remove only the active driver's draw features, keep others
+      drawSource.getFeatures().filter(f => f.getGeometryName() === 'draw' && f.get('driverId') === activeDriverId).forEach(f => drawSource.removeFeature(f));
       drawSource.addFeatures(features);
-      // Normalise to FeatureCollection for formData
-      const fc = type === 'FeatureCollection' ? parsed : {
+      // Normalise to FeatureCollection for formData and trigger backend normalize
+      const fc: GeoJsonFeatureCollection = type === 'FeatureCollection' ? parsed as GeoJsonFeatureCollection : {
         type: 'FeatureCollection',
-        features: type === 'Feature' ? [parsed] : [{ type: 'Feature', properties: {}, geometry: parsed }],
+        features: type === 'Feature' ? [parsed as GeoJsonFeature] : [{ type: 'Feature', properties: {}, geometry: parsed as GeoJsonPolygon }],
       };
-      handleInputChange('polygons', fc as unknown as FormInputValue);
-      // Fly map to polygon extent
-      const extent = drawSource.getExtent();
-      if (extent && !isEmptyExtent(extent) && mapRef.current) {
-        mapRef.current.getView().fit(extent, { padding: [50, 50, 50, 50], maxZoom: 16 });
-      }
+      // Use onDrawPolygon (not handleInputChange) so the normalize endpoint is called
+      onDrawPolygon(fc);
       setPanelOpen(false);
     } catch (err) {
       setGeoJsonError(`${t("could-not-parse-geometry")}: ${err instanceof Error ? err.message : String(err)}`);
@@ -341,6 +519,7 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
   return (
     <div className="relative w-full h-full">
       <style>{DRAW_CONTROL_STYLE}</style>
+      <style>{drawControlStyleTag(activeDriverColor)}</style>
       <Map ref={mapRef} controls={defaultControls().extend(["P", "D", "W"].map(v => new DrawControl({ letter: v })))}>
         <TileLayer
           source={new XYZ({
@@ -352,13 +531,16 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
         <VectorLayer
           source={drawSource}
           style={(feature) => {
-            const name = (feature as unknown as { getGeometryName: () => string }).getGeometryName();
-            if (name === "draw") return drawStyle;
-            if (name === "driver") return driverStyle;
+            const feat = feature as unknown as { getGeometryName: () => string; get: (k: string) => string | undefined };
+            const name = feat.getGeometryName();
+            const color = feat.get('driverColor');
+            if (name === "draw") return makeDrawStyle(color ?? '#666');
+            if (name === "driver") return makeDriverStyle(color ?? '#666');
             if (name === "warehouse") return warehouseStyle;
+            return undefined;
           }}
         />
-        <VrpMapDraw formData={formData} source={drawSource} handleInputChange={handleInputChange} />
+        <VrpMapDraw formData={formData} source={drawSource} handleInputChange={handleInputChange} onDrawPolygon={onDrawPolygon} onPolygonModified={onPolygonModified} onPolygonModifiedForDriver={onPolygonModifiedForDriver} activeDriverId={activeDriverId} activeDriverColor={activeDriverColor} />
         <View center={fromLonLat(([...(cityCoords as Record<string, number[]>)[formData?.city_name ?? 'Riyadh']] as number[]).reverse())} zoom={13} />
       </Map>
 
@@ -407,16 +589,13 @@ const VrpMap = ({formData, handleInputChange}: { formData: VrpReportData | null;
   );
 };
 
-const formDataKeys = ["warehouse_lat", "warehouse_lng", "manager_phone", "num_groups", "polygons", "country_name", "city_name", "user_id", "groups_info"];
+const formDataKeys = ["warehouse_lat", "warehouse_lng", "manager_phone", "num_groups", "country_name", "city_name", "user_id"];
 
 const INITIAL_VRP_FORM_DATA: Omit<VrpReportData, 'user_id'> & { user_id?: string } = {
   "city_name": "Riyadh",
   "country_name": "Saudi Arabia",
   "user_id": undefined,
-  "polygons": {
-    "type": "FeatureCollection",
-    "features": []
-  },
+  "drivers": [makeDefaultDriver('d0', DRIVER_COLORS[0])],
   "boolean_query": "",
   "excluded_names": [],
   "num_groups": 1,
@@ -441,13 +620,6 @@ const INITIAL_VRP_FORM_DATA: Omit<VrpReportData, 'user_id'> & { user_id?: string
   "uploaded_layer_id": null,
   "use_uploaded_data_only": false,
   "mandatory_layer_id": null,
-  "groups_info": [
-    {
-      "lat": null,
-      "lng": null,
-      "phone": ""
-    }
-  ]
 };
 
 const ADVANCED_FORM_FIELDS = [
@@ -504,18 +676,167 @@ const CustomReportForm = () => {
   });
   // useEffect(() => console.log(formData), [formData]);
  
+  // Multi-driver: track which driver is currently being edited
+  const [activeDriverIndex, setActiveDriverIndex] = useState(0);
+  const activeDriverId = formData?.drivers?.[activeDriverIndex]?.id ?? 'd0';
+  const activeDriverColor = formData?.drivers?.[activeDriverIndex]?.color ?? DRIVER_COLORS[0];
+
+  // Clamp activeDriverIndex when drivers list shrinks
+  useEffect(() => {
+    const len = formData?.drivers?.length ?? 0;
+    if (len > 0 && activeDriverIndex >= len) {
+      setActiveDriverIndex(len - 1);
+    }
+  }, [formData?.drivers?.length, activeDriverIndex]);
+
+  // Add a new driver
+  const addDriver = useCallback(() => {
+    setFormData(prev => {
+      if (!prev) return null;
+      return { ...prev, drivers: [...prev.drivers, makeDefaultDriver(`d${Date.now()}`, DRIVER_COLORS[prev.drivers.length % DRIVER_COLORS.length])] };
+    });
+    setActiveDriverIndex(prev => prev + 1);
+  }, []);
+
+  // Remove a driver (min 1)
+  const removeDriver = useCallback((idx: number) => {
+    setFormData(prev => {
+      if (!prev || prev.drivers.length <= 1) return prev;
+      return { ...prev, drivers: prev.drivers.filter((_, i) => i !== idx) };
+    });
+    setActiveDriverIndex(prev => {
+      if (idx <= prev) return Math.max(0, prev - 1);
+      return prev;
+    });
+  }, []);
+
+  // Reset all polygons across all drivers
+  const resetAllPolygons = useCallback(() => {
+    setFormData(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        drivers: prev.drivers.map(d => ({ ...d, polygon: emptyFeatureCollection() })),
+      };
+    });
+  }, []);
+
+  // Update a specific driver's field
+  const updateDriver = useCallback((driverIdx: number, field: keyof DriverInfo, value: DriverInfo[keyof DriverInfo]) => {
+    setFormData(prev => {
+      if (!prev) return null;
+      const newDrivers = prev.drivers.map((d, i) => i === driverIdx ? { ...d, [field]: value } : d);
+      return { ...prev, drivers: newDrivers };
+    });
+  }, []);
+
   const [errors, setErrors] = useState<FormErrors>({});
   const [resp, setResp] = useState<Record<string, string> | null>(null);
+  const [allDriverResults, setAllDriverResults] = useState<Array<{ driverLabel: string; color: string; resp: Record<string, string> }> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [excludeInput, setExcludeInput] = useState('');
-  const businessType = formData?.Type || 'pharmacy';
-
-  // New state for report type selection
+  const [polygonOpInProgress, setPolygonOpInProgress] = useState(false);
 
   // Payment method state
   const [showPaymentMethodForm, ] = useState(false);
+
+  // ── Polygon operation API helpers ─────────────────────────────────────
+  const callNormalize = useCallback(async (fc: GeoJsonFeatureCollection): Promise<GeoJsonFeatureCollection> => {
+    setPolygonOpInProgress(true);
+    try {
+      const res = await apiRequest({
+        url: urls.polygon_normalize,
+        method: 'POST',
+        body: { polygons: fc },
+      }) as { data?: { data?: PolygonOpResponse } };
+      const result = res?.data?.data;
+      if (result?.features) {
+        return {
+          type: 'FeatureCollection',
+          features: result.features.map(f => ({
+            type: 'Feature' as const,
+            properties: (f.properties ?? {}) as Record<string, unknown>,
+            geometry: f.geometry as GeoJsonGeometry,
+          })),
+        };
+      }
+      return fc;
+    } catch {
+      return fc;
+    } finally {
+      setPolygonOpInProgress(false);
+    }
+  }, []);
+
+  const callAddDistrict = useCallback(async (districtId: number): Promise<GeoJsonFeatureCollection | null> => {
+    const driver = formData?.drivers?.[activeDriverIndex];
+    if (!driver) return null;
+    setPolygonOpInProgress(true);
+    try {
+      const res = await apiRequest({
+        url: urls.polygon_add_district,
+        method: 'POST',
+        body: {
+          polygons: driver.polygon,
+          country_name: formData?.country_name ?? 'Saudi Arabia',
+          city_name: formData?.city_name ?? 'Riyadh',
+          district_id: districtId,
+        },
+      }) as { data?: { data?: PolygonOpResponse } };
+      const result = res?.data?.data;
+      if (result?.features) {
+        return {
+          type: 'FeatureCollection',
+          features: result.features.map(f => ({
+            type: 'Feature' as const,
+            properties: (f.properties ?? {}) as Record<string, unknown>,
+            geometry: f.geometry as GeoJsonGeometry,
+          })),
+        };
+      }
+      return null;
+    } catch {
+      return null;
+    } finally {
+      setPolygonOpInProgress(false);
+    }
+  }, [formData, activeDriverIndex]);
+
+  const callSubtractDistrict = useCallback(async (districtId: number): Promise<GeoJsonFeatureCollection | null> => {
+    const driver = formData?.drivers?.[activeDriverIndex];
+    if (!driver) return null;
+    setPolygonOpInProgress(true);
+    try {
+      const res = await apiRequest({
+        url: urls.polygon_subtract_district,
+        method: 'POST',
+        body: {
+          polygons: driver.polygon,
+          country_name: formData?.country_name ?? 'Saudi Arabia',
+          city_name: formData?.city_name ?? 'Riyadh',
+          district_id: districtId,
+        },
+      }) as { data?: { data?: PolygonOpResponse } };
+      const result = res?.data?.data;
+      if (result?.features) {
+        return {
+          type: 'FeatureCollection',
+          features: result.features.map(f => ({
+            type: 'Feature' as const,
+            properties: (f.properties ?? {}) as Record<string, unknown>,
+            geometry: f.geometry as GeoJsonGeometry,
+          })),
+        };
+      }
+      return null;
+    } catch {
+      return null;
+    } finally {
+      setPolygonOpInProgress(false);
+    }
+  }, [formData, activeDriverIndex]);
   
   // Set user_id when component mounts
   useEffect(() => {
@@ -540,6 +861,17 @@ const CustomReportForm = () => {
       localStorage.setItem(VRP_STORAGE_KEY, JSON.stringify(rest));
     } catch { /* quota exceeded etc. */ }
   }, [formData]);
+
+  // Keep num_groups in sync with the number of drivers
+  useEffect(() => {
+    if (!formData) return;
+    const driverCount = formData.drivers?.length ?? 0;
+    if (formData.num_groups !== driverCount && driverCount > 0) {
+      setFormData(prev => prev ? { ...prev, num_groups: driverCount } : null);
+    }
+  }, [formData?.drivers?.length, formData]);
+
+
 
   const handleCategoryLoad = useCallback(async () => {
     try {
@@ -584,19 +916,23 @@ const CustomReportForm = () => {
 
   // Separate validation function that doesn't update state (for use during render)
   const handleInputChange = (field: string, value: FormInputValue) => {
-    setFormData(prev =>
-      prev
-        ? {
-            ...prev,
-            [field]: value,
-            ...(field === 'Type'
-              ? {
-                  potential_business_type: value,
-                }
-              : {}),
-          }
-        : null
-    );
+    setFormData(prev => {
+      if (!prev) return null;
+      // Route driver position changes by driverId (from modify on non-active driver)
+      if (field === 'updateDriverPosition') {
+        const [driverId, lat, lng] = value as unknown as [string, number, number];
+        return {
+          ...prev,
+          drivers: prev.drivers.map(d =>
+            d.id === driverId ? { ...d, lat, lng } : d
+          ),
+        };
+      }
+      return {
+        ...prev,
+        [field]: value,
+      };
+    });
 
     // Clear error when user starts typing
     if (errors[field]) {
@@ -617,6 +953,83 @@ const CustomReportForm = () => {
         : null
     );
   };
+
+  // ── Normalize helper: call backend then update driver's polygon ────────
+  const normalizeAndUpdate = useCallback(async (driverIdx: number, rawFC: GeoJsonFeatureCollection) => {
+    const cleaned = await callNormalize(rawFC);
+    setFormData(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        drivers: prev.drivers.map((d, i) =>
+          i === driverIdx ? { ...d, polygon: cleaned } : d
+        ),
+      };
+    });
+  }, [callNormalize]);
+
+  // ── Called when user draws a polygon on the map ────────────────────────
+  const handleDrawPolygon = useCallback((drawnFC: GeoJsonFeatureCollection) => {
+    // Union the new geometry with the driver's existing canonical FC
+    const existingFC = formData?.drivers?.[activeDriverIndex]?.polygon ?? emptyFeatureCollection();
+    const combined: GeoJsonFeatureCollection = {
+      type: 'FeatureCollection',
+      features: [...(existingFC.features ?? []), ...(drawnFC.features ?? [])],
+    };
+    normalizeAndUpdate(activeDriverIndex, combined);
+  }, [activeDriverIndex, normalizeAndUpdate, formData?.drivers]);
+
+  // ── Called when user modifies a polygon on the map ─────────────────────
+  const handlePolygonModified = useCallback((modifiedFC: GeoJsonFeatureCollection) => {
+    normalizeAndUpdate(activeDriverIndex, modifiedFC);
+  }, [activeDriverIndex, normalizeAndUpdate]);
+
+  // ── Called when a NON-ACTIVE driver's polygon is modified ─────────────
+  const handlePolygonModifiedForDriver = useCallback((driverId: string, modifiedFC: GeoJsonFeatureCollection) => {
+    setFormData(prev => {
+      if (!prev) return null;
+      const driverIdx = prev.drivers.findIndex(d => d.id === driverId);
+      if (driverIdx === -1) return prev;
+      normalizeAndUpdate(driverIdx, modifiedFC);
+      return prev;
+    });
+  }, [normalizeAndUpdate]);
+
+  // ── Called when user clicks + on a district ────────────────────────────
+  const handleAddDistrict = useCallback(async (districtId: number) => {
+    const result = await callAddDistrict(districtId);
+    if (result) {
+      setFormData(prev => {
+        if (!prev) return null;
+        const driver = prev.drivers[activeDriverIndex];
+        const newSelected = [...(driver.selectedDistrictIds ?? []), districtId];
+        return {
+          ...prev,
+          drivers: prev.drivers.map((d, i) =>
+            i === activeDriverIndex ? { ...d, polygon: result, selectedDistrictIds: newSelected } : d
+          ),
+        };
+      });
+    }
+  }, [callAddDistrict, activeDriverIndex]);
+
+  // ── Called when user clicks - on a district ────────────────────────────
+  const handleSubtractDistrict = useCallback(async (districtId: number) => {
+    const result = await callSubtractDistrict(districtId);
+    if (result) {
+      setFormData(prev => {
+        if (!prev) return null;
+        const driver = prev.drivers[activeDriverIndex];
+        const newSelected = (driver.selectedDistrictIds ?? []).filter(id => id !== districtId);
+        return {
+          ...prev,
+          drivers: prev.drivers.map((d, i) =>
+            i === activeDriverIndex ? { ...d, polygon: result, selectedDistrictIds: newSelected } : d
+          ),
+        };
+      });
+    }
+  }, [callSubtractDistrict, activeDriverIndex]);
 
   
   return (
@@ -712,9 +1125,9 @@ const CustomReportForm = () => {
 		                  <label className="block text-xs font-medium text-gray-600">{t("mandatory-layer")}</label>
 		                  <select
 		                    value={formData?.mandatory_layer_id ?? ''}
-		                    disabled={formData?.num_groups > 1}
+		                    disabled={false}
 		                    onChange={e => handleInputChange('mandatory_layer_id', e.target.value || null)}
-		                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+		                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white"
 		                  >
 		                    <option value="">{t("no-layer-selected")}</option>
 		                    {userLayers.map(l => (
@@ -723,12 +1136,6 @@ const CustomReportForm = () => {
 		                      </option>
 		                    ))}
 		                  </select>
-		                  {formData?.num_groups > 1 && (
-		                    <p className="text-xs text-amber-600 flex items-center gap-1">
-		                      <FaExclamationTriangle className="w-3 h-3 flex-shrink-0" />
-		                      {t("mandatory-layer-requires-1-van")}
-		                    </p>
-		                  )}
 		                </div>
 		              </div>
 		            )}
@@ -843,50 +1250,191 @@ const CustomReportForm = () => {
 		              </div>
 		            )}
 		          </div>
+		          {/* ── Driver Management ──────────────────────────────────── */}
+		          <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+		            <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+		              <FaTruck className="w-4 h-4 text-primary" />
+		              {t("drivers")} ({formData?.drivers?.length ?? 0})
+		            </h4>
+		            {/* Driver tabs */}
+		            <div className="flex flex-wrap items-center gap-2">
+		              {formData?.drivers?.map((driver, idx) => (
+		                <div key={driver.id} className="flex items-center">
+		                  <button
+		                    type="button"
+		                    onClick={() => setActiveDriverIndex(idx)}
+		                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border-2 transition-all ${
+		                      idx === activeDriverIndex
+		                        ? 'border-gray-800 bg-gray-100 shadow-sm'
+		                        : 'border-gray-200 bg-white hover:border-gray-300'
+		                    }`}
+		                  >
+		                    <span
+		                      className="w-3 h-3 rounded-full flex-shrink-0"
+		                      style={{ backgroundColor: driver.color }}
+		                    />
+		                    <span>{t("driver")} {idx + 1}</span>
+		                    {driver.polygon?.features?.length > 0 && (
+		                      <span className="text-green-600">●</span>
+		                    )}
+		                  </button>
+		                  {formData.drivers.length > 1 && (
+		                    <button
+		                      type="button"
+		                      onClick={() => removeDriver(idx)}
+		                      className="ms-1 p-1 text-gray-400 hover:text-red-500 rounded"
+		                      title={t("remove-driver")}
+		                    >
+		                      <FaTimes className="w-3 h-3" />
+		                    </button>
+		                  )}
+		                </div>
+		              ))}
+		              <button
+		                type="button"
+		                onClick={addDriver}
+		                disabled={(formData?.drivers?.length ?? 0) >= DRIVER_COLORS.length}
+		                className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium border-2 border-dashed border-gray-300 bg-white text-gray-500 hover:border-primary hover:text-primary transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+		              >
+		                + {t("add-driver")}
+		              </button>
+		            </div>
+		            {/* Active driver phone */}
+		            <div className="flex items-center gap-2">
+		              <label className="text-xs font-medium text-gray-600 whitespace-nowrap">
+		                {t("phone")}
+		              </label>
+		              <input
+		                type="tel"
+		                value={formData?.drivers?.[activeDriverIndex]?.phone ?? ''}
+		                onChange={e => updateDriver(activeDriverIndex, 'phone', e.target.value)}
+		                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+		                placeholder={t("phone-number")}
+		              />
+		            </div>
+		            {/* Hint */}
+		            <p className="text-xs text-gray-400 italic">
+		              {t("draw-polygon-hint")} {t("each-driver-needs-own-polygon")}
+		            </p>
+		          </div>
+
+		          {/* Zone Definition — add/remove districts with +/- buttons */}
+		          <ZoneDefinitionStep
+		            cityName={formData?.city_name ?? ''}
+		            countryName={formData?.country_name ?? 'Saudi Arabia'}
+		            disabled={isSubmitting}
+		            selectedDistrictIds={formData?.drivers?.[activeDriverIndex]?.selectedDistrictIds}
+		            onAddDistrict={handleAddDistrict}
+		            onSubtractDistrict={handleSubtractDistrict}
+		            isPolygonOpInProgress={polygonOpInProgress}
+		          />
 				      <div className="flex-1 relative w-full h-full min-h-[800px]" id="map-container">
+				        {formData?.drivers?.some(d => d.polygon?.features?.length > 0) && (
+				          <button
+				            type="button"
+				            onClick={resetAllPolygons}
+				            className="absolute top-3 start-3 z-10 bg-white border border-gray-300 rounded-lg shadow px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-gray-50 flex items-center gap-1.5"
+				          >
+				            {t("reset-all-polygons")}
+				          </button>
+				        )}
 				        <div className="w-full h-full overflow-hidden [&_.ol-map]:size-full">
-				        	<VrpMap formData={formData} handleInputChange={handleInputChange} />
+				        	<VrpMap formData={formData} handleInputChange={handleInputChange} onDrawPolygon={handleDrawPolygon} onPolygonModified={handlePolygonModified} onPolygonModifiedForDriver={handlePolygonModifiedForDriver} activeDriverId={activeDriverId} activeDriverColor={activeDriverColor} />
 							  </div>
 				      </div>
             </div>
             <div className="flex items-center text-sm justify-center pb-4">
 	            <button className="border-green-700 px-4 py-2 rounded border hover:enabled:text-white hover:enabled:bg-green-700 disabled:cursor-not-allowed disabled:border-gray-500 disabled:text-gray-500"
-		            disabled={!formDataKeys.every(v => formData[v]) || !formData?.complementary_categories?.length || formData?.num_groups > 1}
+		            disabled={
+                  !formDataKeys.every(v => (formData as unknown as Record<string, unknown>)[v]) ||
+                  !formData?.drivers?.every(d => d.polygon?.features?.length > 0) ||
+                  !formData?.complementary_categories?.length ||
+                  isSubmitting
+                }
 		            onClick={async e => {
-					          if(!e.target.parentElement.parentElement.reportValidity()) {
-					          	return
-					          }
-					          setIsSubmitting(true)
-					          try {
-						          // console.log(123, formData);
-						          const obj = Object.assign({}, formData);
-						          obj.boolean_query = obj.complementary_categories.join(" OR ")
-						          delete obj.complementary_categories
-						          // Map frontend field names to backend contract
-						          const polygon = obj.polygons;
-						          (obj as Record<string, unknown>).polygon = polygon;
-						          delete (obj as Record<string, unknown>).polygons;
-						          obj.groups_info = (obj.groups_info ?? []).map((g: {lat: number|null; lng: number|null; phone: string}) => ({
-						            driver_lat: g.lat,
-						            driver_lng: g.lng,
-						            driver_phone: g.phone,
-						            driver_polygon: polygon,
-						          }));
-						          const newResp = await apiRequest({
-							          url: urls.territory_design_vrp,
-							          method: "POST",
-							          body: obj,
-					          }) as {status: number; data: {data: Record<string, string>}};
-					          setResp(newResp.data.data);
-						          if(newResp.status === 202) {
-						          	setModalOpen(true);
-						          }
-					          } catch(e) {
-				          	const msg = translateError(e, 'submission-failed');
-				          	setSubmitError(msg);
-				          	toast.error(msg);
-					          }
-					          setIsSubmitting(false)
+                  const btn = e.target as HTMLButtonElement;
+                  const form = btn.closest('form');
+                  if (form && !form.reportValidity()) return;
+
+					        setIsSubmitting(true);
+                    setSubmitError(null);
+                    // Clear previous reports — only from prior submissions, not current
+                    setAllDriverResults(null);
+                    setResp(null);
+                    const allResults: Array<{ driverLabel: string; color: string; resp: Record<string, string> }> = [];
+
+                    try {
+                      const drivers = formData?.drivers ?? [];
+
+                      for (let di = 0; di < drivers.length; di++) {
+                        const driver = drivers[di];
+
+                        // Fall back to polygon centroid for any null driver position
+                        const centroid = polygonCentroid(driver.polygon);
+                        const fallbackLat = driver.lat ?? centroid?.[0] ?? 24.6333333;
+                        const fallbackLng = driver.lng ?? centroid?.[1] ?? 46.716667;
+
+                        // Build an explicit per-driver payload — never spread formData so no
+                        // other drivers' polygons, legacy fields, or client-only fields leak in.
+                        const obj = {
+                          city_name:                  formData!.city_name,
+                          country_name:               formData!.country_name,
+                          user_id:                    formData!.user_id,
+                          boolean_query:              (formData!.complementary_categories as unknown as string[]).join(" OR "),
+                          excluded_names:             formData!.excluded_names,
+                          num_groups:                 1,
+                          num_work_days:              formData!.num_work_days,
+                          departure_hour:             (formData as unknown as Record<string, unknown>).departure_hour,
+                          osrm_multiplier:            (formData as unknown as Record<string, unknown>).osrm_multiplier,
+                          work_hours_per_day:         (formData as unknown as Record<string, unknown>).work_hours_per_day,
+                          store_visit_minutes:        (formData as unknown as Record<string, unknown>).store_visit_minutes,
+                          current_daily_km_per_van:   formData!.current_daily_km_per_van,
+                          weekly_refill_sar:          formData!.weekly_refill_sar,
+                          current_stores_per_day:     formData!.current_stores_per_day,
+                          driver_monthly_salary_sar:  formData!.driver_monthly_salary_sar,
+                          planner_monthly_salary_sar: formData!.planner_monthly_salary_sar,
+                          work_days_per_week:         formData!.work_days_per_week,
+                          work_days_per_month:        formData!.work_days_per_month,
+                          avg_revenue_per_store_sar:  formData!.avg_revenue_per_store_sar,
+                          revenue_period_days:        formData!.revenue_period_days,
+                          manager_phone:              formData!.manager_phone,
+                          mandatory_layer_id:         formData!.mandatory_layer_id,
+                          uploaded_layer_id:          formData!.uploaded_layer_id,
+                          use_uploaded_data_only:     formData!.use_uploaded_data_only,
+                          // Per-driver fields — only this driver's polygon and position
+                          polygon:                    driver.polygon,
+                          warehouse_lat:              formData!.warehouse_lat ?? fallbackLat,
+                          warehouse_lng:              formData!.warehouse_lng ?? fallbackLng,
+                          groups_info: [{
+                            driver_lat:     fallbackLat,
+                            driver_lng:     fallbackLng,
+                            driver_phone:   driver.phone ?? '',
+                            driver_polygon: driver.polygon,
+                          }],
+                        };
+
+                        const newResp = await apiRequest({
+                          url: urls.territory_design_vrp,
+                          method: "POST",
+                          body: obj,
+                        }) as { status: number; data: { data: Record<string, string> } };
+
+                        allResults.push({
+                          driverLabel: `${t("driver")} ${di + 1}`,
+                          color: driver.color,
+                          resp: newResp.data.data,
+                        });
+                      }
+
+                      // Store all results
+                      setAllDriverResults(allResults);
+                      setModalOpen(true);
+                    } catch (e) {
+                      const msg = translateError(e, 'submission-failed');
+                      setSubmitError(msg);
+                      toast.error(msg);
+                    }
+                    setIsSubmitting(false);
 				       }}>
 		            {isSubmitting ? (
 	              <span className="flex items-center gap-2">
@@ -928,7 +1476,7 @@ const CustomReportForm = () => {
                   </div>
                   <div className="ms-3 flex-1">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-gray-900">{t("generating-your")}{' '}{businessType}{' '}{t("report")}</p>
+                      <p className="text-sm font-medium text-gray-900">{t("generating-routes")}</p>
                       <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full">{t("3-15-min")}</span>
                     </div>
                     <p className="text-xs text-gray-600 mt-1">{t("report-generation-in-progress-you-can-always-find-the-report-link-in-your-profil")}</p>
@@ -960,31 +1508,50 @@ const CustomReportForm = () => {
                 </div>
               </div>
             )}
-            {resp && resp.html_url &&
+            {allDriverResults && allDriverResults.length > 0 &&
             (<div className="max-w-[900px] mx-auto w-full mb-4 bg-slate-100 p-8 rounded-xl">
             	<p className="text-2xl pb-8">{t("the-files-were-generated")}</p>
-            	<div className="flex flex-col gap-4">
-            	{REPORT_FILE_TYPES
-            	.filter(({urlKey}) => resp[urlKey])
-            	.map(({id, urlKey, icon}) => 
-                (<p className="me-auto" key={id}>
-	                <a className="flex items-center hover:underline text-lg cursor-pointer gap-2" href={resp[urlKey]} target="_blank" rel="noreferrer">
-		                <img className="size-8" src={icon} />
-		                <span>{t(id.replace("_", "-"))}</span>
-	                </a>
-                </p>))}
+              {/* Per-driver result tabs */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {allDriverResults.map((dr, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setResp(dr.resp)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                      resp === dr.resp ? 'border-gray-800 bg-white shadow-sm' : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                    }`}
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: dr.color }} />
+                    {dr.driverLabel}
+                  </button>
+                ))}
               </div>
+              {/* Active driver's report files */}
+              {resp && (
+                <div className="flex flex-col gap-4">
+                  {REPORT_FILE_TYPES
+                    .filter(({urlKey}) => resp[urlKey])
+                    .map(({id, urlKey, icon}) =>
+                      (<p className="me-auto" key={id}>
+                        <a className="flex items-center hover:underline text-lg cursor-pointer gap-2" href={resp[urlKey]} target="_blank" rel="noreferrer">
+                          <img className="size-8" src={icon} />
+                          <span>{t(id.replace("_", "-"))}</span>
+                        </a>
+                      </p>))}
+                </div>
+              )}
             </div>)}
           </form>
         </div>
       </div>
-      {resp &&
+      {allDriverResults &&
     	<Modal
         open={modalOpen}
         onOpenChange={setModalOpen}
         contentClassName="max-w-4xl"
       	>
-      	<span>Come back in { resp.detail && resp.detail.split(" ").slice(-2).join(" ") }, your data is being loaded.</span>
+      	<span>{t("your-reports-are-ready")}</span>
       </Modal>}
     </main>
   );

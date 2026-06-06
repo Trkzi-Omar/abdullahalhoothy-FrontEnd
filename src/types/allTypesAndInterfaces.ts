@@ -1071,6 +1071,9 @@ export interface FormErrors {
   [key: string]: string;
 }
 
+/** Convenience alias for any individual value inside CustomReportData. */
+export type FormInputValue = CustomReportData[keyof CustomReportData];
+
 export type MetricKey = string;
 
 // Business type definitions

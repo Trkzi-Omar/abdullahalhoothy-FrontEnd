@@ -77,13 +77,22 @@ export default function ZoneDefinitionStep({
   /* ── Determine current UI language for name display ordering ────── */
   const isArabic = i18next.language?.startsWith('ar');
 
-  /* ── Filter districts by search query ─────────────────────────────── */
+  /* ── Simple fuzzy matcher ─────────────────────────────────────────── */
+  function fuzzyMatch(text: string, query: string): boolean {
+    let qi = 0;
+    for (let ti = 0; ti < text.length && qi < query.length; ti++) {
+      if (text[ti] === query[qi]) qi++;
+    }
+    return qi === query.length;
+  }
+
+  /* ── Filter districts by search query (fuzzy) ─────────────────────── */
   const query = searchQuery.trim().toLowerCase();
   const filteredDistricts = query
     ? districts.filter(
         (d) =>
-          d.name_en.toLowerCase().includes(query) ||
-          d.name_ar.includes(query),
+          fuzzyMatch(d.name_en.toLowerCase(), query) ||
+          fuzzyMatch(d.name_ar.toLowerCase(), query),
       )
     : districts;
 
@@ -163,7 +172,7 @@ export default function ZoneDefinitionStep({
             <FaSpinner className="w-5 h-5 animate-spin text-primary" />
           </div>
         ) : sortedDistricts.length > 0 ? (
-          <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-100">
+          <div className="max-h-[350px] overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-100">
             {sortedDistricts.map((district) => {
               const isSelected = selectedSet.has(district.district_id);
               const isOperating = operatingDistrictId === district.district_id;

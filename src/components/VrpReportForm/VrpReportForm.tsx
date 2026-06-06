@@ -866,6 +866,7 @@ const CustomReportForm = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [excludeInput, setExcludeInput] = useState('');
   const [polygonOpInProgress, setPolygonOpInProgress] = useState(false);
+  const [currentProcessingDriver, setCurrentProcessingDriver] = useState(0);
 
   // Payment method state
   const [showPaymentMethodForm, ] = useState(false);
@@ -1459,7 +1460,7 @@ const CustomReportForm = () => {
 		              />
 		            </div>
 		            {/* Right column: Map */}
-		            <div className="relative w-full h-full min-h-[500px] col-span-2" id="map-container">
+		            <div className="relative w-full h-full min-h-[750px] col-span-2" id="map-container">
 				        <div className="w-full h-full overflow-hidden [&_.ol-map]:size-full">
 				        	<VrpMap formData={formData} handleInputChange={handleInputChange} onDrawPolygon={handleDrawPolygon} onPolygonModified={handlePolygonModified} onPolygonModifiedForDriver={handlePolygonModifiedForDriver} activeDriverId={activeDriverId} activeDriverColor={activeDriverColor} onResetAllPolygons={resetAllPolygons} />
 							  </div>
@@ -1490,6 +1491,7 @@ const CustomReportForm = () => {
                       const drivers = formData?.drivers ?? [];
 
                       for (let di = 0; di < drivers.length; di++) {
+                        setCurrentProcessingDriver(di + 1);
                         const driver = drivers[di];
 
                         // Fall back to polygon centroid for any null driver position
@@ -1547,10 +1549,12 @@ const CustomReportForm = () => {
                           color: driver.color,
                           resp: newResp.data.data,
                         });
+
+                        // Show results incrementally as each driver completes
+                        setAllDriverResults([...allResults]);
+                        setResp(newResp.data.data);
                       }
 
-                      // Store all results
-                      setAllDriverResults(allResults);
                       setModalOpen(true);
                     } catch (e) {
                       const msg = translateError(e, 'submission-failed');
@@ -1558,6 +1562,7 @@ const CustomReportForm = () => {
                       toast.error(msg);
                     }
                     setIsSubmitting(false);
+                    setCurrentProcessingDriver(0);
 				       }}>
 		            {isSubmitting ? (
 	              <span className="flex items-center gap-2">
@@ -1599,7 +1604,10 @@ const CustomReportForm = () => {
                   </div>
                   <div className="ms-3 flex-1">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-gray-900">{t("generating-routes")}</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {t("generating-routes")}
+                        {currentProcessingDriver > 0 && formData?.drivers?.length ? ` ${t("driver")} ${currentProcessingDriver} / ${formData.drivers.length}` : ''}
+                      </p>
                       <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full">{t("3-15-min")}</span>
                     </div>
                     <p className="text-xs text-gray-600 mt-1">{t("report-generation-in-progress-you-can-always-find-the-report-link-in-your-profil")}</p>

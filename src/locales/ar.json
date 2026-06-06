@@ -1454,6 +1454,7 @@
   "no-matching-districts": "لا توجد أحياء مطابقة",
   "no-districts-available": "لا توجد أحياء متاحة لهذه المدينة",
   "draw-polygon-hint": "انقر على الخريطة لرسم منطقة، أو الصق GeoJSON أعلاه",
+  "reset": "مسح",
   "backend": {
     "categories": {
       "accounting": "محاسبة",

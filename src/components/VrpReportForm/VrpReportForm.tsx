@@ -44,21 +44,77 @@ import MapMarkerWarehouse from '../../assets/images/map-marker-warehouse.svg';
 
 const DRAW_CONTROL_STYLE = `
 .draw-control { top: 65px; inset-inline-start: .5em; }
-.draw-control-D { top: 95px; inset-inline-start: .5em; }
-.draw-control-W { top: 125px; inset-inline-start: .5em; }
-.draw-control-active > button { outline: 2px solid black; }
-.ol-control.draw-control button { 
-  min-width: 5.5rem; 
-  font-size: 0.75rem !important; 
-  padding: 2px 6px; 
-  line-height: 1.2;
+.draw-control-D { top: 100px; inset-inline-start: .5em; }
+.draw-control-W { top: 135px; inset-inline-start: .5em; }
+.draw-control-R { top: 175px; inset-inline-start: .5em; }
+
+.ol-control.draw-control,
+.ol-control.draw-control-D,
+.ol-control.draw-control-W,
+.ol-control.draw-control-R {
+  background: none;
+  padding: 0;
+}
+
+.ol-control.draw-control button {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 0.7rem !important;
+  font-weight: 600;
+  padding: 6px 10px;
   font-family: inherit;
+  background: white;
+  color: #374151 !important;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  width: auto;
+  height: auto;
+  line-height: normal;
+  text-indent: 0;
+  letter-spacing: normal;
+  margin: 0;
+  min-width: 7rem;
+}
+
+.ol-control.draw-control button:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.ol-control.draw-control.draw-control-active button {
+  color: white !important;
+  border-color: transparent !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25) !important;
+}
+
+/* Per-tool active colors — polygon uses driver color via dynamic style */
+.draw-control-D.draw-control-active button {
+  background: #f59e0b;
+}
+.draw-control-W.draw-control-active button {
+  background: #ec4899;
+}
+
+/* Reset button */
+.draw-control-R > button {
+  color: #ef4444 !important;
+}
+.draw-control-R.draw-control-active > button {
+  background: #ef4444 !important;
+  color: white !important;
+  border-color: transparent !important;
 }
 `;
 
-/* ── Dynamic CSS for draw-control active color ──────────────────────── */
+/* ── Dynamic CSS for polygon draw-control active color ──────────────── */
 const drawControlStyleTag = (color: string) => `
-.draw-control-active > button { outline: 2px solid ${color}; }
+.draw-control-P.draw-control-active button { background: ${color} !important; }
 `;
 
 /* ── Multi-driver palette & helpers ──────────────────────────────────── */
@@ -107,6 +163,15 @@ const MAPBOX_STREETS_TILE_URL = `https://api.mapbox.com/styles/v1/mapbox/streets
 type FormInputValue = CustomReportData[keyof CustomReportData];
 
 
+/* ── SVG icons for draw tools ─────────────────────────────────── */
+const DRAW_ICONS: Record<string, string> = {
+  P: `<svg width="14" height="14" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="11,2 19,7 17,17 5,17 3,7"/></svg>`,
+  D: `<svg width="14" height="14" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="7" r="3.5"/><path d="M4 19c0-5 3.5-8.5 7-8.5s7 3.5 7 8.5"/></svg>`,
+  W: `<svg width="14" height="14" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 19V10l8-6 8 6v9"/><rect x="5" y="12" width="12" height="7" rx="1"/></svg>`,
+};
+
+const DRAW_LABELS: Record<string, string> = { P: 'Polygon', D: 'Driver', W: 'Warehouse' };
+
 class DrawControl extends Control {
   /**
    * @param {Object} [opt_options] Control options.
@@ -114,17 +179,17 @@ class DrawControl extends Control {
   constructor(opt_options?: { letter?: string; target?: HTMLElement }) {
     const options = opt_options || {};
 
-    const letter = options.letter;
-    const labels: Record<string, string> = { P: 'Polygon', D: 'Driver', W: 'Warehouse' };
-    const label = labels[letter ?? ''] ?? letter;
+    const letter = options.letter ?? '';
+    const icon = DRAW_ICONS[letter] ?? '';
+    const label = DRAW_LABELS[letter] ?? letter;
 
     const button = document.createElement('button');
-    button.innerHTML = label;
+    button.innerHTML = icon + '<span>' + label + '</span>';
     button.title = label;
     button.dataset.letter = letter;
 
     const element = document.createElement('div');
-    element.className = 'draw-control ol-unselectable ol-control draw-control-'+options.letter;
+    element.className = 'draw-control ol-unselectable ol-control draw-control-' + letter;
     element.appendChild(button);
 
     super({
@@ -133,11 +198,31 @@ class DrawControl extends Control {
     });
 
     button.addEventListener('click', function() {
-    	Array.from(document.querySelectorAll(".draw-control-active"))
-	    	.forEach(v => element !== v && v.classList.toggle("draw-control-active"));
-    	element.classList.toggle("draw-control-active");
-    	button.dispatchEvent(new CustomEvent("toggleDraw", {bubbles: true}))
+      Array.from(document.querySelectorAll(".draw-control-active"))
+        .forEach(v => element !== v && v.classList.remove("draw-control-active"));
+      element.classList.toggle("draw-control-active");
+      button.dispatchEvent(new CustomEvent("toggleDraw", {bubbles: true}))
     }, false);
+  }
+}
+
+class ResetControl extends Control {
+  constructor(opt_options?: { onClick: () => void; label: string; target?: HTMLElement }) {
+    const options = opt_options || { onClick: () => {}, label: 'Reset' };
+
+    const resetIcon = `<svg width="14" height="14" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a7 7 0 0 1 13.2-3.5M18 11a7 7 0 0 1-13.2 3.5"/><path d="M17 3v4.5h-4.5M5 19v-4.5h4.5"/></svg>`;
+
+    const button = document.createElement('button');
+    button.innerHTML = resetIcon + '<span>' + options.label + '</span>';
+    button.title = options.label;
+
+    const element = document.createElement('div');
+    element.className = 'draw-control ol-unselectable ol-control draw-control-R';
+    element.appendChild(button);
+
+    super({ element, target: options.target });
+
+    button.addEventListener('click', options.onClick, false);
   }
 }
 
@@ -343,28 +428,46 @@ const VrpMapDraw = ({formData, source, handleInputChange, onDrawPolygon, onPolyg
     map.addInteraction(modify);
     modify.on('modifyend', (e) => {
       const fmt = new GeoJSON();
-      e.features.forEach(feature => {
-        const feat = feature as unknown as { set: (k: string, v: string) => void; getGeometryName: () => string; getGeometry: () => unknown; get: (k: string) => string | undefined };
-        const driverId = feat.get('driverId');
-        const name = feat.getGeometryName();
 
-        if (name === 'draw') {
-          // Write back through GeoJSON to preserve geometry type (Polygon vs MultiPolygon)
-          // and transform from the map's EPSG:3857 back to EPSG:4326 for formData.
-          const geoJsonFeature = fmt.writeFeatureObject(feature as never, {
-            dataProjection: 'EPSG:4326',
-            featureProjection: 'EPSG:3857',
-          }) as { geometry: { type: string; coordinates: unknown } };
-          const fc: GeoJsonFeatureCollection = {
-            type: 'FeatureCollection',
-            features: [{ type: 'Feature' as const, properties: {}, geometry: geoJsonFeature.geometry as unknown as GeoJsonGeometry }],
-          };
-          if (driverId && driverId !== activeDriverIdRef.current) {
-            onPolygonModifiedForDriverRef.current(driverId, fc);
-          } else {
-            onPolygonModifiedRef.current(fc);
-          }
-        } else if (name === 'driver') {
+      // Collect all modified feature's driverIds that were touched
+      const affectedDriverIds = new Set<string>();
+      e.features.forEach(feature => {
+        const feat = feature as unknown as { get: (k: string) => string | undefined; getGeometryName: () => string };
+        if (feat.getGeometryName() === 'draw') {
+          affectedDriverIds.add(feat.get('driverId') ?? activeDriverIdRef.current);
+        }
+      });
+
+      // For each affected driver, rebuild their full FC from all their source features
+      affectedDriverIds.forEach(driverId => {
+        const driverFeatures = source.getFeatures().filter(f => {
+          const feat = f as unknown as { getGeometryName: () => string; get: (k: string) => string | undefined };
+          return feat.getGeometryName() === 'draw' && feat.get('driverId') === driverId;
+        });
+
+        const fc: GeoJsonFeatureCollection = {
+          type: 'FeatureCollection',
+          features: driverFeatures.map(f => {
+            const geoJsonFeature = fmt.writeFeatureObject(f as never, {
+              dataProjection: 'EPSG:4326',
+              featureProjection: 'EPSG:3857',
+            }) as { geometry: { type: string; coordinates: unknown } };
+            return { type: 'Feature' as const, properties: {}, geometry: geoJsonFeature.geometry as unknown as GeoJsonGeometry };
+          }),
+        };
+
+        if (driverId !== activeDriverIdRef.current) {
+          onPolygonModifiedForDriverRef.current(driverId, fc);
+        } else {
+          onPolygonModifiedRef.current(fc);
+        }
+      });
+
+      // Handle driver/warehouse point modifications
+      e.features.forEach(feature => {
+        const feat = feature as unknown as { get: (k: string) => string | undefined; getGeometryName: () => string; getGeometry: () => unknown };
+        const name = feat.getGeometryName();
+        if (name === 'driver') {
           const g = feat.getGeometry() as { getCoordinates: () => unknown };
           const coords = toLonLat((g.getCoordinates() as unknown) as number[]);
           // Use the feature's driverId to update the right driver's position
@@ -372,12 +475,12 @@ const VrpMapDraw = ({formData, source, handleInputChange, onDrawPolygon, onPolyg
           handleInputChangeRef.current('updateDriverPosition', [
             targetDriverId, coords[1], coords[0],
           ] as unknown as FormInputValue);
-        } else if (name === 'warehouse') {
+        }
+        else if (name === 'warehouse') { 
           const g = feat.getGeometry() as { getCoordinates: () => unknown };
           const coords = toLonLat((g.getCoordinates() as unknown) as number[]);
           handleInputChangeRef.current('warehouse_lat', coords[1]);
-          handleInputChangeRef.current('warehouse_lng', coords[0]);
-        }
+          handleInputChangeRef.current('warehouse_lng', coords[0]); }
       });
     });
     return () => { map.removeInteraction(modify); };
@@ -445,13 +548,22 @@ const VrpMapDraw = ({formData, source, handleInputChange, onDrawPolygon, onPolyg
   return null;
 };
 
-const VrpMap = ({formData, handleInputChange, onDrawPolygon, onPolygonModified, onPolygonModifiedForDriver, activeDriverId, activeDriverColor}: { formData: VrpReportData | null; handleInputChange: VrpMapDrawProps['handleInputChange']; onDrawPolygon: VrpMapDrawProps['onDrawPolygon']; onPolygonModified: VrpMapDrawProps['onPolygonModified']; onPolygonModifiedForDriver: VrpMapDrawProps['onPolygonModifiedForDriver']; activeDriverId: string; activeDriverColor: string }) => {
+const VrpMap = ({formData, handleInputChange, onDrawPolygon, onPolygonModified, onPolygonModifiedForDriver, activeDriverId, activeDriverColor, onResetAllPolygons}: { formData: VrpReportData | null; handleInputChange: VrpMapDrawProps['handleInputChange']; onDrawPolygon: VrpMapDrawProps['onDrawPolygon']; onPolygonModified: VrpMapDrawProps['onPolygonModified']; onPolygonModifiedForDriver: VrpMapDrawProps['onPolygonModifiedForDriver']; activeDriverId: string; activeDriverColor: string; onResetAllPolygons?: () => void }) => {
   const mapRef = useRef<import('ol/Map').default | null>(null);
+  // Focus the map target on hover so scroll/pan work without clicking first
+  const handleMapHover = useCallback(() => {
+    mapRef.current?.getTargetElement()?.focus();
+  }, []);
   // Stable source — must not be recreated on every render
   const [drawSource] = useState(() => new VectorSource({ wrapX: false }));
   const [panelOpen, setPanelOpen] = useState(false);
   const [geoJsonText, setGeoJsonText] = useState('');
   const [geoJsonError, setGeoJsonError] = useState('');
+  const onResetAllPolygonsRef = useRef(onResetAllPolygons);
+  onResetAllPolygonsRef.current = onResetAllPolygons;
+
+  // Stable wrapper — never changes identity, always delegates to the ref
+  const [stableReset] = useState(() => () => onResetAllPolygonsRef.current?.());
 
   const openPanel = () => {
     const current = formData?.drivers?.find(d => d.id === activeDriverId)?.polygon;
@@ -517,10 +629,21 @@ const VrpMap = ({formData, handleInputChange, onDrawPolygon, onPolygonModified, 
   };
 
   return (
-    <div className="relative w-full h-full">
+    <div
+      className="relative w-full h-full"
+      tabIndex={-1}
+      onMouseEnter={handleMapHover}
+      style={{ outline: 'none' }}
+    >
       <style>{DRAW_CONTROL_STYLE}</style>
       <style>{drawControlStyleTag(activeDriverColor)}</style>
-      <Map ref={mapRef} controls={defaultControls().extend(["P", "D", "W"].map(v => new DrawControl({ letter: v })))}>
+      <style>{`[class*="ol-map"]:focus, .ol-viewport:focus { outline: none; }`}</style>
+      <Map ref={mapRef}controls={defaultControls().extend([
+        ...["P", "D", "W"].map(v => new DrawControl({ letter: v })),
+        ...(onResetAllPolygons
+          ? [new ResetControl({ onClick: stableReset, label: t("reset") })]  // ← stableReset
+          : []),
+      ])}>
         <TileLayer
           source={new XYZ({
             url: MAPBOX_STREETS_TILE_URL,
@@ -549,7 +672,7 @@ const VrpMap = ({formData, handleInputChange, onDrawPolygon, onPolygonModified, 
         type="button"
         onClick={panelOpen ? () => setPanelOpen(false) : openPanel}
         title={t("paste-geojson-polygon")}
-        className="absolute top-3 end-3 z-10 bg-white border border-gray-300 rounded-lg shadow px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-1.5"
+        className="absolute top-3 right-3 z-10 bg-white border border-gray-300 rounded-lg shadow px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-1.5"
       >
         <span className="font-mono text-primary">&#123;&#125;</span>
         {panelOpen ? t("close") : 'GeoJSON'}
@@ -557,7 +680,7 @@ const VrpMap = ({formData, handleInputChange, onDrawPolygon, onPolygonModified, 
 
       {/* GeoJSON paste panel — drops down from top-right */}
       {panelOpen && (
-        <div className="absolute top-11 end-3 z-10 w-72 bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col overflow-hidden">
+        <div className="absolute top-11 right-3 z-10 w-72 bg-white border border-gray-200 rounded-xl shadow-lg flex flex-col overflow-hidden">
           <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
             <span className="text-xs font-semibold text-gray-700">{t("paste-geojson-polygon")}</span>
             <button type="button" onClick={() => setPanelOpen(false)} className="text-gray-400 hover:text-gray-600">
@@ -715,13 +838,13 @@ const CustomReportForm = () => {
     });
   }, []);
 
-  // Reset all polygons across all drivers
+  // Reset all polygons and selected districts across all drivers
   const resetAllPolygons = useCallback(() => {
     setFormData(prev => {
       if (!prev) return null;
       return {
         ...prev,
-        drivers: prev.drivers.map(d => ({ ...d, polygon: emptyFeatureCollection() })),
+        drivers: prev.drivers.map(d => ({ ...d, polygon: emptyFeatureCollection(), selectedDistrictIds: [] })),
       };
     });
   }, []);
@@ -1337,17 +1460,8 @@ const CustomReportForm = () => {
 		            </div>
 		            {/* Right column: Map */}
 		            <div className="relative w-full h-full min-h-[500px] col-span-2" id="map-container">
-				        {formData?.drivers?.some(d => d.polygon?.features?.length > 0) && (
-				          <button
-				            type="button"
-				            onClick={resetAllPolygons}
-				            className="absolute top-3 start-3 z-10 bg-white border border-gray-300 rounded-lg shadow px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-gray-50 flex items-center gap-1.5"
-				          >
-				            {t("reset-all-polygons")}
-				          </button>
-				        )}
 				        <div className="w-full h-full overflow-hidden [&_.ol-map]:size-full">
-				        	<VrpMap formData={formData} handleInputChange={handleInputChange} onDrawPolygon={handleDrawPolygon} onPolygonModified={handlePolygonModified} onPolygonModifiedForDriver={handlePolygonModifiedForDriver} activeDriverId={activeDriverId} activeDriverColor={activeDriverColor} />
+				        	<VrpMap formData={formData} handleInputChange={handleInputChange} onDrawPolygon={handleDrawPolygon} onPolygonModified={handlePolygonModified} onPolygonModifiedForDriver={handlePolygonModifiedForDriver} activeDriverId={activeDriverId} activeDriverColor={activeDriverColor} onResetAllPolygons={resetAllPolygons} />
 							  </div>
 				      </div>
             </div>

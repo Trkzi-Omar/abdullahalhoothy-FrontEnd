@@ -1454,6 +1454,7 @@
   "no-matching-districts": "No matching districts",
   "no-districts-available": "No districts available for this city",
   "draw-polygon-hint": "Click on the map to draw your zone polygon, or paste GeoJSON above",
+  "reset": "Reset",
   "backend": {
     "categories": {
       "accounting": "Accounting",

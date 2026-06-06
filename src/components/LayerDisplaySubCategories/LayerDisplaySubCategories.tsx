@@ -84,6 +84,15 @@ const LayerDisplaySubCategories = ({
             <span className={`h-1.5 w-1.5 rounded-full ${saveStatusConfig.dotClassName}`} />
             {saveStatusConfig.label}
           </span>
+          {isFetching && (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2 py-1 text-[11px] font-semibold leading-none text-blue-700 whitespace-nowrap shrink-0"
+              aria-live="polite"
+            >
+              <MdRefresh className="text-sm animate-spin" />
+              {t('loading')}
+            </span>
+          )}
 
           <div className="ml-auto flex items-center gap-2">
             <button
@@ -253,7 +262,7 @@ const LayerDisplaySubCategories = ({
                 className="rounded-full p-0.5 hover:bg-black/15 transition-colors"
                 onClick={e => {
                   e.preventDefault();
-                  onRemoveType(type, layer.id, false);
+                  onRemoveType(type);
                 }}
               >
                 <IoClose className="w-3.5 h-3.5" />

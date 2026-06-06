@@ -1494,8 +1494,11 @@ const CustomReportForm = () => {
                         setCurrentProcessingDriver(di + 1);
                         const driver = drivers[di];
 
+                        // Normalize the driver's polygon before submission
+                        const normalizedPolygon = await callNormalize(driver.polygon);
+
                         // Fall back to polygon centroid for any null driver position
-                        const centroid = polygonCentroid(driver.polygon);
+                        const centroid = polygonCentroid(normalizedPolygon);
                         const fallbackLat = driver.lat ?? centroid?.[0] ?? 24.6333333;
                         const fallbackLng = driver.lng ?? centroid?.[1] ?? 46.716667;
 
@@ -1527,14 +1530,14 @@ const CustomReportForm = () => {
                           uploaded_layer_id:          formData!.uploaded_layer_id,
                           use_uploaded_data_only:     formData!.use_uploaded_data_only,
                           // Per-driver fields — only this driver's polygon and position
-                          polygon:                    driver.polygon,
+                          polygon:                    normalizedPolygon,
                           warehouse_lat:              formData!.warehouse_lat ?? fallbackLat,
                           warehouse_lng:              formData!.warehouse_lng ?? fallbackLng,
                           groups_info: [{
                             driver_lat:     fallbackLat,
                             driver_lng:     fallbackLng,
                             driver_phone:   driver.phone ?? '',
-                            driver_polygon: driver.polygon,
+                            driver_polygon: normalizedPolygon,
                           }],
                         };
 

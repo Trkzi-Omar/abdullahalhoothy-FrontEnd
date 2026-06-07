@@ -46,6 +46,8 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Callbacks refs to avoid stale closures
   const onSuccessRef = useRef<(() => void) | null>(null);
   const onCancelRef = useRef<(() => void) | null>(null);
+  const hasVerifiedRef = useRef(false);
+  const isVerifyingRef = useRef(false);
   
   // Cooldown timer ref
   const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -91,6 +93,8 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setState(initialState);
     onSuccessRef.current = null;
     onCancelRef.current = null;
+    hasVerifiedRef.current = false;
+    isVerifyingRef.current = false;
   }, []);
 
   // Close OTP Modal
@@ -98,7 +102,7 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsModalOpen(false);
 
     // Call cancel callback if not successful
-    if (state.status !== 'success' && onCancelRef.current) {
+    if (!hasVerifiedRef.current && state.status !== 'success' && onCancelRef.current) {
       onCancelRef.current();
     }
 
@@ -158,6 +162,10 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Verify OTP
   const verifyOTP = useCallback(async (code: string): Promise<boolean> => {
+    if (isVerifyingRef.current || hasVerifiedRef.current) {
+      return false;
+    }
+
     if (code.length !== state.codeLength) {
       setState(prev => ({
         ...prev,
@@ -171,6 +179,7 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'verifying' as OTPStatus,
       errorMessage: null,
     }));
+    isVerifyingRef.current = true;
 
     try {
       await apiRequest({
@@ -182,25 +191,28 @@ export const OTPProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         },
       });
 
+      hasVerifiedRef.current = true;
       setState(prev => ({
         ...prev,
         status: 'success' as OTPStatus,
       }));
 
-      toast.success(t("phone-number-verified-successfully"));
-      
       // Call success callback
-      if (onSuccessRef.current) {
-        onSuccessRef.current();
+      const onSuccess = onSuccessRef.current;
+      onSuccessRef.current = null;
+      onCancelRef.current = null;
+      if (onSuccess) {
+        onSuccess();
       }
 
       // Close modal after a brief delay
       setTimeout(() => {
         closeOTPModal();
       }, 1000);
-
+      
       return true;
     } catch (error: unknown) {
+      isVerifyingRef.current = false;
       const apiError = error as { response?: { status?: number }; message?: string };
       // Check for 404 (invalid code)
       const errorMessage = apiError.response?.status === 404

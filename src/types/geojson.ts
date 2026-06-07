@@ -1,3 +1,8 @@
+export type GeoJsonGeometry = {
+  type: 'Polygon' | 'MultiPolygon';
+  coordinates: number[][][] | number[][][][];
+};
+
 export type GeoJsonPolygon = {
   type: 'Polygon';
   coordinates: number[][][];
@@ -6,7 +11,7 @@ export type GeoJsonPolygon = {
 export type GeoJsonFeature = {
   type: 'Feature';
   properties: Record<string, unknown>;
-  geometry: GeoJsonPolygon;
+  geometry: GeoJsonGeometry;
 };
 
 export type GeoJsonFeatureCollection = {

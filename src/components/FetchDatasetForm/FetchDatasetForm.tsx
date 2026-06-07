@@ -14,7 +14,9 @@ import { useAuth, isGuestUser } from '../../context/AuthContext';
 import { useNavigate } from 'react-router';
 import apiRequest from '../../services/apiRequest';
 import LayerDisplaySubCategories from '../LayerDisplaySubCategories/LayerDisplaySubCategories';
-import CategoriesBrowserSubCategories from '../CategoriesBrowserSubCategories/CategoriesBrowserSubCategories';
+import CategoriesBrowserSubCategories, {
+  LayerAffectSelect,
+} from '../CategoriesBrowserSubCategories/CategoriesBrowserSubCategories';
 import {
   IntelligencePaywallModal,
   type DatasetPurchaseItem,
@@ -142,6 +144,7 @@ const FetchDatasetForm = () => {
   const [openedCategories, setOpenedCategories] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const shouldShowLayersBox = layers.length > 0;
+  const keywordSearchTerm = textSearchInput.trim();
 
   const categoriesRef = useRef<HTMLDivElement>(null);
   const chatAnchorRef = useRef<HTMLDivElement>(null);
@@ -1074,7 +1077,7 @@ const FetchDatasetForm = () => {
           </div>
 
           {searchType =="keyword_search" && (
-            <div className="pt-4">
+            <div className="pt-4 space-y-3">
               <label
                 className="block mb-2 text-md font-medium text-black"
                 htmlFor="textSearchInput"
@@ -1090,6 +1093,27 @@ const FetchDatasetForm = () => {
                 disabled={!selectedCountry || !selectedCity}
               />
 
+              {keywordSearchTerm && (
+                <div className="rounded-lg border border-gray-300 bg-[#f8fbf9] p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-[#115740]">
+                        {t('keyword-search')}
+                      </p>
+                      <p className="truncate text-sm font-semibold text-gray-900">
+                        {keywordSearchTerm}
+                      </p>
+                    </div>
+                    <LayerAffectSelect
+                      type={keywordSearchTerm}
+                      selectedLayerIds={getTypeCounts(keywordSearchTerm).includedCount}
+                      layers={layers.map(l => ({ id: l.id, name: l.name }))}
+                      onToggleTypeInLayer={toggleTypeForLayer}
+                      onCreateLayerWithType={createLayerWithType}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

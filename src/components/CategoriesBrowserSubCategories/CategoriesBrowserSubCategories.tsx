@@ -18,7 +18,7 @@ interface LayerAffectSelectProps {
   onCreateLayerWithType?: (type: string) => void;
 }
 
-function LayerAffectSelect({
+export function LayerAffectSelect({
   type,
   selectedLayerIds,
   layers,

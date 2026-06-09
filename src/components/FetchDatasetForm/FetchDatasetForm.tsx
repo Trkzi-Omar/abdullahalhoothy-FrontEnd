@@ -164,6 +164,13 @@ const FetchDatasetForm = () => {
       if (draft) {
         if (draft.selectedCountry) setSelectedCountry(draft.selectedCountry);
         if (draft.selectedCity) setSelectedCity(draft.selectedCity);
+        if (draft.selectedCountry || draft.selectedCity) {
+          setReqFetchDataset(prev => ({
+            ...prev,
+            selectedCountry: draft.selectedCountry || prev.selectedCountry,
+            selectedCity: draft.selectedCity || prev.selectedCity,
+          }));
+        }
         if (draft.searchType) setSearchType(draft.searchType);
         if (draft.textSearchInput) setTextSearchInput(draft.textSearchInput);
         if (draft.layers?.length) {

@@ -1716,5 +1716,9 @@
       "wholesaler": "تاجر جملة",
       "zoo": "حديقة حيوانات"
     }
-  }
+  },
+  "rental-property-category": "فئة العقار للإيجار",
+  "shop_for_rent": "محل للإيجار",
+  "warehouse_for_rent": "مستودع للإيجار",
+  "land_for_rent": "أرض للإيجار"
 }

@@ -24,6 +24,7 @@ export interface ReportSubmissionRequestBody {
   city_name: string;
   country_name: string;
   potential_business_type: string;
+  rental_property_type?: 'shop_for_rent' | 'warehouse_for_rent' | 'land_for_rent';
   target_income_level?: string;
   target_age?: number;
   avg_order_value?: number;

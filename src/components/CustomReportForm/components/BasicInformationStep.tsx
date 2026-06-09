@@ -18,17 +18,24 @@ const formatCategoryName = (category: string): string =>
 
 const normalizeValue = (value: string): string => value.trim().replace(/\s+/g, ' ');
 
+const RENTAL_PROPERTY_TYPES = [
+  { value: 'shop_for_rent' },
+  { value: 'warehouse_for_rent' },
+  { value: 'land_for_rent' },
+] as const;
+
 interface BasicInformationStepProps {
   formData: {
     country_name: string;
     city_name: string;
     Type: string;
+    rental_property_type?: 'shop_for_rent' | 'warehouse_for_rent' | 'land_for_rent';
   };
   errors: {
     city_name?: string;
     Type?: string;
   };
-  onInputChange: (field: 'city_name' | 'Type', value: string) => void;
+  onInputChange: (field: 'city_name' | 'Type' | 'rental_property_type', value: string) => void;
   isAdvancedMode: boolean;
   onToggleAdvancedMode: (enabled: boolean) => void;
   disabled?: boolean;
@@ -198,6 +205,31 @@ const BasicInformationStep = ({
             </p>
           )}
         </div>
+      </div>
+
+      <div className="space-y-3">
+        <label htmlFor="rental_property_type" className="block text-sm font-semibold text-gray-700">
+          <span className="flex items-center">
+            <FaBuilding className="w-4 h-4 me-2 text-primary" />{t("rental-property-category")}
+          </span>
+        </label>
+        <select
+          id="rental_property_type"
+          value={formData.rental_property_type || 'shop_for_rent'}
+          onChange={e => onInputChange('rental_property_type', e.target.value)}
+          disabled={disabled}
+          className={`w-full px-4 py-3 border-2 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${
+            disabled
+              ? 'bg-gray-100 cursor-not-allowed opacity-60'
+              : 'border-gray-300 hover:border-primary/50 bg-white'
+          }`}
+        >
+          {RENTAL_PROPERTY_TYPES.map(propertyType => (
+            <option key={propertyType.value} value={propertyType.value}>
+              {t(propertyType.value)}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Type Selection */}

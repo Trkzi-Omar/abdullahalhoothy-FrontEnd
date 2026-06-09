@@ -123,6 +123,7 @@ const CustomReportForm = () => {
 
   // Ref to track previous mode/reportType to prevent race conditions
   const prevModeRef = useRef({ isAdvancedMode, reportType });
+  const loadedBusinessMetricsTypeRef = useRef<string | null>(null);
 
   // Set user_id when component mounts
   useEffect(() => {
@@ -195,14 +196,24 @@ const CustomReportForm = () => {
     if (businessConfig) {
       const initialData = getInitialFormData(businessType, businessConfig);
 
-      setFormData(initialData);
+      setFormData(prev =>
+        prev
+          ? {
+              ...prev,
+              Type: businessType,
+              potential_business_type: businessType,
+              evaluation_metrics: initialData.evaluation_metrics,
+            }
+          : initialData
+      );
 
       // prevent fetching same type multiple times
-      if (businessType != businessMetrics?.business_type) {
+      if (loadedBusinessMetricsTypeRef.current !== businessType) {
+        loadedBusinessMetricsTypeRef.current = businessType;
         loadBusinessMetrics(businessType);
       }
     }
-  }, [businessConfig, businessType, businessMetrics?.business_type, loadBusinessMetrics]);
+  }, [businessConfig, businessType, loadBusinessMetrics]);
 
   useEffect(() => {
     if (selectedSegment) {
@@ -739,6 +750,7 @@ const CustomReportForm = () => {
         city_name: formData.city_name,
         country_name: formData.country_name,
         potential_business_type: apiBusinessType || businessType,
+        rental_property_type: formData.rental_property_type || 'shop_for_rent',
         target_income_level: formData.target_income_level,
         target_age: formData.target_age,
         complementary_categories: formData.complementary_categories,

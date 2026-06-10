@@ -1716,5 +1716,9 @@
       "wholesaler": "Wholesaler",
       "zoo": "Zoo"
     }
-  }
+  },
+  "rental-property-category": "Rental property category",
+  "shop_for_rent": "Shop for rent",
+  "warehouse_for_rent": "Warehouse for rent",
+  "land_for_rent": "Land for rent"
 }

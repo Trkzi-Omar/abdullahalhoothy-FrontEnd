@@ -1020,6 +1020,7 @@ export interface CustomReportData {
   country_name: string;
   Type: string;
   potential_business_type?: string;
+  rental_property_type?: 'shop_for_rent' | 'warehouse_for_rent' | 'land_for_rent';
   ecosystem_string_name?: string;
   report_tier?: string;
   report_type?: 'full' | 'location';

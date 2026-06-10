@@ -181,6 +181,7 @@ export const getInitialFormData = (
     country_name: mapConfig.fallBackCountry,
     Type: businessType,
     potential_business_type: businessType,
+    rental_property_type: 'shop_for_rent',
     ecosystem_string_name: '',
     evaluation_metrics: defaultMetrics,
     custom_locations: [{ lat: 0, lng: 0, properties: { price: 0 } }],

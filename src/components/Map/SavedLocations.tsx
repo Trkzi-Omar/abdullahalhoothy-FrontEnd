@@ -10,6 +10,7 @@ import { useMeasurement } from '../../hooks/useMeasurement';
 import { MeasurementData } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
 import { t } from '../../i18n';
+import { SaveMarkerForm } from '../SaveMarkerForm/SaveMarkerForm';
 
 
 const defaultMarkerColor = '#7D00B8';
@@ -79,69 +80,16 @@ const SavedLocations: React.FC = () => {
       initialDescription?: string,
       initialColor?: string
     ) => (
-      <div className="p-0 w-44">
-        <h2 className="text-xl font-bold mb-2">{t("marker")}</h2>
-
-        <form
-          onSubmit={event => {
-            event.preventDefault();
-            const formData = new FormData(event.currentTarget);
-            const name = formData.get('name') as string;
-            const description = formData.get('description') as string;
-            const color = formData.get('color') as string;
-
-            if (name) {
-              onSave(name, description, color);
-              handleCloseModal();
-            }
-          }}
-        >
-          <div className="mb-2">
-            <label htmlFor="name" className="block mb-2 font-medium">{t("name-2")}{' '}<span className="text-red-500">*</span>
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
-              aria-required="true"
-              placeholder={t("enter-a-name")}
-              defaultValue={initialName}
-            />
-          </div>
-
-          <div className="mb-2">
-            <label htmlFor="color" className="block mb-2 font-medium">{t("color")}</label>
-            <input
-              id="color"
-              name="color"
-              type="color"
-              className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              defaultValue={initialColor || defaultMarkerColor}
-            />
-          </div>
-
-          <div className="mb-2">
-            <label htmlFor="description" className="block mb-2 font-medium">{t("description")}</label>
-            <textarea
-              id="description"
-              name="description"
-              rows={2}
-              placeholder={t("enter-a-description")}
-              className="w-full p-2 border rounded-md resize-none"
-              defaultValue={initialDescription}
-            />
-          </div>
-
-          <div className="flex justify-between gap-2">
-            <button
-              type="submit"
-              className="w-full px-4 py-2 shadow-sm bg-gem-gradient text-white rounded-md"
-            >{t("save")}</button>
-          </div>
-        </form>
-      </div>
+      <SaveMarkerForm
+        onSubmit={(name, description, color) => {
+          onSave(name, description, color);
+          handleCloseModal();
+        }}
+        onCancel={handleCloseModal}
+        initialName={initialName}
+        initialDescription={initialDescription}
+        initialColor={initialColor || defaultMarkerColor}
+      />
     ),
     [handleCloseModal]
   );
@@ -841,7 +789,7 @@ const SavedLocations: React.FC = () => {
       )}
 
       {isMeasuring && (
-        <div className="absolute bottom-4 end-4 p-2 rounded z-10">
+        <div className="absolute top-4 end-12 z-10">
           <button
             className="shadow px-3 py-1 bg-rose-700 text-white rounded hover:bg-rose-600 text-sm"
             onClick={exitMeasureMode}

@@ -856,7 +856,6 @@ export function LayerProvider(props: { children: ReactNode }) {
     setTextSearchInput('');
     setSearchType('category_search');
     setPassword('');
-    setGeoPoints([]);
   }
 
   useEffect(() => {

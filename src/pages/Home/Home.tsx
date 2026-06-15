@@ -87,32 +87,18 @@ export function HomeContent() {
 
   const {
     setSelectedContainerType,
-    setMarkers,
-    setMeasurements,
     selectedHomeTab,
     setSelectedHomeTab,
-    setGeoPoints,
-    geoPoints,
-    handleStoreUnsavedGeoPoint,
-    setPolygons,
   } = useCatalogContext();
   const { resetFetchDatasetForm } = useLayerContext();
   const { exitMeasureMode, clearMeasurementLayers } = useMeasurement();
 
   const handleTabSwitch = (tab: 'LAYER' | 'CATALOG') => {
-    if (selectedHomeTab === 'CATALOG' && tab === 'LAYER' && geoPoints.length > 0) {
-      handleStoreUnsavedGeoPoint(geoPoints);
-    }
-
-    setPolygons([]);
     exitMeasureMode();
     clearMeasurementLayers();
     setSelectedHomeTab(tab);
     console.log('handleTabSwitch received:', tab);
     setSelectedContainerType(tab === 'CATALOG' ? 'Catalogue' : 'Layer');
-    setGeoPoints([]);
-    setMarkers([]);
-    setMeasurements([]);
     // Reset the fetch dataset form when switching to LAYER tab.
     if (tab === 'LAYER') {
       resetFetchDatasetForm();    }

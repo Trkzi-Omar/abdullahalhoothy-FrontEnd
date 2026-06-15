@@ -69,6 +69,19 @@ StylesControl.prototype.onAdd = function (map) {
     if (target && target.tagName === 'BUTTON') {
       const selectedStyle = target.getAttribute('data-style');
       if (selectedStyle && selectedStyle !== this.currentStyle) {
+        // Preserve current viewport before changing style
+        const center = this._map.getCenter();
+        const zoom = this._map.getZoom();
+        const pitch = this._map.getPitch();
+        const bearing = this._map.getBearing();
+
+        this._map.once('style.load', () => {
+          this._map.setCenter(center);
+          this._map.setZoom(zoom);
+          this._map.setPitch(pitch);
+          this._map.setBearing(bearing);
+        });
+
         this._map.setStyle(selectedStyle);
         this._updateButtons(selectedStyle);
         this.setCurrentStyle(selectedStyle);

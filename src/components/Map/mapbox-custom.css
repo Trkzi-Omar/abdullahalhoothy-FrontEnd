@@ -4,3 +4,14 @@
   font-size: 1rem !important;
   padding: 0.5rem !important;
 }
+
+.marker-popup-content {
+  position: relative;
+  padding-right: 2.5rem;
+}
+
+.marker-popup-content h3 {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  padding-right: 0.25rem;
+}

@@ -83,16 +83,9 @@ StylesControl.prototype.onAdd = function (map) {
     if (target && target.tagName === 'BUTTON') {
       const selectedStyle = target.getAttribute('data-style');
       if (selectedStyle && selectedStyle !== this.currentStyle) {
-        // Temporarily store the current controls
-        const currentControls = [...this._map._controls];
-
-        // Update the map style
+        // Mapbox GL automatically persists and re-adds controls during setStyle(),
+        // so we only call setStyle() and let mapbox-gl handle the rest.
         this._map.setStyle(selectedStyle);
-
-        // Re-add controls after the style loads
-        this._map.once('styledata', () => {
-          currentControls.forEach(control => this._map.addControl(control));
-        });
 
         // Update the UI
         this._updateButtons(selectedStyle);

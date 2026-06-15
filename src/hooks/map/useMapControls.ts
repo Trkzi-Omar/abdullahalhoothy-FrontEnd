@@ -18,6 +18,7 @@ export function useMapControls() {
   const { refreshAllLayersRef, clearAllLayersRef, isLoadingDataset } = useLayerContext();
   const isLoadingDatasetRef = useRef(isLoadingDataset);
   const isCatalogLoadingRef = useRef(isCatalogLoading);
+  const currentStyleRef = useRef(currentStyle);
   const controlsAdded = useRef(false);
 
   useEffect(() => {
@@ -27,6 +28,10 @@ export function useMapControls() {
   useEffect(() => {
     isCatalogLoadingRef.current = isCatalogLoading;
   }, [isCatalogLoading]);
+
+  useEffect(() => {
+    currentStyleRef.current = currentStyle;
+  }, [currentStyle]);
 
   useEffect(() => {
     if (!shouldInitializeFeatures) return;
@@ -54,7 +59,7 @@ export function useMapControls() {
 
       try {
         // Add styles control
-        controls.styles = new StylesControl(currentStyle, setCurrentStyle);
+        controls.styles = new StylesControl(currentStyleRef.current, setCurrentStyle);
         map.addControl(controls.styles, nativeControlsPosition);
 
         // Add navigation control
@@ -174,7 +179,6 @@ export function useMapControls() {
   }, [
     mapRef,
     drawRef,
-    currentStyle,
     setCurrentStyle,
     isMobile,
     shouldInitializeFeatures,

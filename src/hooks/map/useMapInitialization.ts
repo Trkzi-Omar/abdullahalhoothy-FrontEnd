@@ -85,7 +85,7 @@ export function useMapInitialization() {
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStyle, mapContainerRef]);
+  }, [mapContainerRef]);
 
   return isStyleLoaded;
 }

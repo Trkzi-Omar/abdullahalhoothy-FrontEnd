@@ -675,7 +675,7 @@ const FetchDatasetForm = () => {
     }));
     setCostEstimate(0.0);
     setLayerDataMap({});
-    setGeoPoints(prev => prev.filter(p => isIntelligentLayer(p)));
+    setGeoPoints([]);
     layerSignaturesRef.current = {};
     clearDraft(draftUserId);
     try {
@@ -847,9 +847,20 @@ const FetchDatasetForm = () => {
   };
 
   const handleLayerNameChange = (index: number, newName: string) => {
+    const targetLayer = layers[index];
     setLayers(prev =>
-      prev.map((layer, i) => (i === index ? { ...layer, name: newName } : layer))
+      prev.map((layer, i) => (i === index ? { ...layer, name: newName, layer_name: newName } : layer))
     );
+    // Also update geoPoints so StatisticsPopup and other consumers reflect the new name
+    if (targetLayer) {
+      setGeoPoints(prevPoints =>
+        prevPoints.map(point =>
+          String(point.layerId) === String(targetLayer.id)
+            ? { ...point, layer_name: newName }
+            : point
+        )
+      );
+    }
   };
 
   const handleLayerColorChange = (index: number, color: string) => {

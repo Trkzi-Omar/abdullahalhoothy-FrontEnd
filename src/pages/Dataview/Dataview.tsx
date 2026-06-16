@@ -5,7 +5,9 @@ import 'ag-grid-community/styles/ag-theme-quartz.css'; // Optional Theme applied
 import { Feature } from '../../types/allTypesAndInterfaces';
 import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
 import { useCatalogContext } from '../../context/CatalogContext';
+import { useMapContext } from '../../context/MapContext';
 import { isIntelligentLayer } from '../../utils/layerUtils';
+import { useNavigate } from 'react-router-dom';
 import { t } from '../../i18n';
 
 type DataviewRow = Record<string, unknown>;
@@ -158,6 +160,7 @@ function mapFeatureToTabularData(feature: Feature, layerProperties: Record<strin
   return {
     ...parentProperties,
     ...childProperties,
+    geometry: feature.geometry,
   };
 }
 
@@ -195,9 +198,30 @@ const matchesAllFilters = (row: DataviewRow, filters: DataviewFilterState[]) =>
   filters.every(filter => matchesFilter(row, filter));
 
 const Dataview: React.FC = () => {
+  const { setTargetLocation } = useMapContext();
+  const navigate = useNavigate();
   const [businesses, setBusinesses] = useState<DataviewRow[]>([]);
   const [filters, setFilters] = useState<DataviewFilterState[]>([]);
   const { geoPoints } = useCatalogContext();
+
+  const handleShowOnMap = useCallback((rowData: DataviewRow) => {
+    console.log('handleShowOnMap called with rowData:', rowData);
+    if (rowData && rowData.geometry) {
+      const geometry = rowData.geometry as { type: 'Point'; coordinates: [number, number] };
+      const properties = { ...rowData };
+      delete properties.geometry;
+      console.log('Setting targetLocation with coordinates:', geometry.coordinates);
+      setTargetLocation({
+        coordinates: geometry.coordinates,
+        properties,
+      });
+      console.log('Navigating to home');
+      navigate('/');
+    } else {
+      console.warn('No geometry found on rowData');
+    }
+  }, [setTargetLocation, navigate]);
+
   const gridApiRef = useRef<GridApi<DataviewRow> | null>(null);
   const isRtl = useMemo(() => {
     if (typeof document === 'undefined') return false;
@@ -280,7 +304,7 @@ const Dataview: React.FC = () => {
         .sort((a, b) => a.localeCompare(b)),
     ];
 
-    return fields.map(field => {
+    const dynamicCols = fields.map(field => {
       const sampleValue = fieldMetadata.get(field)?.sampleValue;
       const maybeColor = isColorValue(sampleValue);
       const maybeLink = !maybeColor && isLinkValue(sampleValue);
@@ -295,7 +319,30 @@ const Dataview: React.FC = () => {
         ...(!maybeColor && !maybeLink ? { cellRenderer: GenericCell } : {}),
       } as ColDef<DataviewRow>;
     });
-  }, [fieldMetadata]);
+
+    const actionCol: ColDef<DataviewRow> = {
+      headerName: t('show-on-map'),
+      field: 'show_on_map',
+      sortable: false,
+      filter: false,
+      pinned: isRtl ? 'right' : 'left',
+      width: 130,
+      minWidth: 100,
+      suppressSizeToFit: true,
+      cellRenderer: (params: { data: DataviewRow }) => {
+        return (
+          <button
+            onClick={() => handleShowOnMap(params.data)}
+            className="text-emerald-300 underline font-semibold hover:text-emerald-400 transition"
+          >
+            {t('show')}
+          </button>
+        );
+      },
+    };
+
+    return [actionCol, ...dynamicCols];
+  }, [fieldMetadata, isRtl, handleShowOnMap]);
 
   const filterableFields = useMemo(
     () => visibleColumnDefs.map(column => ({ field: String(column.field), headerName: String(column.headerName || column.field || '') })),
@@ -384,7 +431,7 @@ const Dataview: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    const when = new Date().toISOString().slice(0,19).replace(/:/g,'-');
+    const when = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
     a.download = `dataview_export_${when}.csv`;
     document.body.appendChild(a);
     a.click();

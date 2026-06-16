@@ -10,7 +10,7 @@ import {
 } from 'react';
 import mapboxgl from 'mapbox-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
-import { MapContextType } from '../types/allTypesAndInterfaces';
+import { MapContextType, TargetLocation } from '../types/allTypesAndInterfaces';
 import { zoomToGridSize, mapToBackendZoom } from '../utils/mapZoomUtils';
 import { defaultMapConfig } from '../hooks/map/useMapInitialization';
 import debounce from 'lodash/debounce';
@@ -77,6 +77,8 @@ export function MapProvider({ children }: { children: ReactNode }) {
     };
   }, [mapState.isStyleLoaded, handleZoomChange]);
 
+  const [targetLocation, setTargetLocation] = useState<TargetLocation | null>(null);
+
   const contextValue = useMemo(
     () => ({
       mapRef,
@@ -89,8 +91,10 @@ export function MapProvider({ children }: { children: ReactNode }) {
       backendZoom: mapState.backendZoom,
       gridSize: mapState.gridSize,
       shouldInitializeFeatures: mapState.isStyleLoaded && mapRef.current !== null,
+      targetLocation,
+      setTargetLocation,
     }),
-    [mapState]
+    [mapState, targetLocation]
   );
 
   return <MapContext.Provider value={contextValue}>{children}</MapContext.Provider>;

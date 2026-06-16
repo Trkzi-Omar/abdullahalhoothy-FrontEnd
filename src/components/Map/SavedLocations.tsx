@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
+import * as turf from '@turf/turf';
 import { useMapContext } from '../../context/MapContext';
 import { useUIContext } from '../../context/UIContext';
 import { useCatalogContext } from '../../context/CatalogContext';
@@ -16,7 +17,7 @@ import { SaveMarkerForm } from '../SaveMarkerForm/SaveMarkerForm';
 const defaultMarkerColor = '#7D00B8';
 
 const SavedLocations: React.FC = () => {
-  const { mapRef, shouldInitializeFeatures } = useMapContext();
+  const { mapRef, shouldInitializeFeatures, drawRef } = useMapContext();
   const { openModal, closeModal, isModalOpen } = useUIContext();
   const [tempMarker, setTempMarker] = useState<mapboxgl.Marker | null>(null);
   const {
@@ -27,6 +28,8 @@ const SavedLocations: React.FC = () => {
     isMarkersEnabled,
     measurements,
     deleteMeasurement,
+    polygons,
+    setPolygons,
   } = useCatalogContext();
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [menuLngLat, setMenuLngLat] = useState<mapboxgl.LngLat | null>(null);
@@ -774,6 +777,39 @@ const SavedLocations: React.FC = () => {
     };
   }, [measurements]);
 
+  const clickedPolygon = menuLngLat
+    ? polygons.find(polygon => {
+        const point = [menuLngLat.lng, menuLngLat.lat];
+        try {
+          if (polygon.geometry.type === 'Polygon') {
+            const turfPolygon = turf.polygon(polygon.geometry.coordinates as number[][][]);
+            return turf.booleanPointInPolygon(point, turfPolygon);
+          } else if (polygon.geometry.type === 'MultiPolygon') {
+            const turfMultiPolygon = turf.multiPolygon(
+              polygon.geometry.coordinates as number[][][][]
+            );
+            return turf.booleanPointInPolygon(point, turfMultiPolygon);
+          }
+          return false;
+        } catch (error) {
+          console.error('Error checking click inside polygon:', error);
+          return false;
+        }
+      })
+    : null;
+
+  const handleDeletePolygon = useCallback((polygonId: string) => {
+    if (drawRef.current) {
+      try {
+        drawRef.current.delete(polygonId);
+      } catch (err) {
+        console.error('Error deleting polygon from Mapbox Draw:', err);
+      }
+    }
+    setPolygons(polygons.filter(p => p.id !== polygonId));
+    closeMenu();
+  }, [drawRef, polygons, setPolygons, closeMenu]);
+
   return (
     <>
       {menuPosition && menuLngLat && (
@@ -785,6 +821,12 @@ const SavedLocations: React.FC = () => {
           onSave={() => createNewMarker(menuLngLat)}
           onMeasureDistance={() => startMeasureDistance(menuLngLat)}
           onAction={action => console.log('Action:', action)}
+          hasPolygonUnderClick={!!clickedPolygon}
+          onDeletePolygon={() => {
+            if (clickedPolygon) {
+              handleDeletePolygon(clickedPolygon.id);
+            }
+          }}
         />
       )}
 

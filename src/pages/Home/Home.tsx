@@ -101,7 +101,8 @@ export function HomeContent() {
     setSelectedContainerType(tab === 'CATALOG' ? 'Catalogue' : 'Layer');
     // Reset the fetch dataset form when switching to LAYER tab.
     if (tab === 'LAYER') {
-      resetFetchDatasetForm();    }
+      resetFetchDatasetForm();
+    }
   };
 
   useEffect(() => {
@@ -147,12 +148,12 @@ export function HomeContent() {
 
       {/* Container */}
       <div className="flex-1 flex flex-col  border-slate-300 lg:border border-t-0 bg-white overflow-hidden">
-        {selectedHomeTab ==="LAYER" && (
+        {selectedHomeTab === "LAYER" && (
           <>
             <LayerFormLoader />
           </>
         )}
-        {selectedHomeTab ==="CATALOG" && <CatalogFormLoader />}
+        {selectedHomeTab === "CATALOG" && <CatalogFormLoader />}
       </div>
     </div>
   );

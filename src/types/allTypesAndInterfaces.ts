@@ -759,6 +759,9 @@ export interface PolygonFeature {
     x: number;
     y: number;
   };
+  name?: string;
+  color?: string;
+  isLocked?: boolean;
 }
 
 export interface MapLegendProps {
@@ -790,6 +793,7 @@ export type Section = {
       count: number;
       percentage: number;
       avg: number | string;
+      sum: number;
       area: string;
     }[];
   }[];
@@ -939,6 +943,11 @@ export interface LayerDisplaySubCategoriesProps {
   isPriceVisible: boolean;
 }
 
+export type TargetLocation = {
+  coordinates: [number, number];
+  properties: Record<string, unknown>;
+};
+
 export type MapContextType = {
   mapRef: React.MutableRefObject<mapboxgl.Map | null>;
   mapContainerRef: React.MutableRefObject<HTMLDivElement | null>;
@@ -949,6 +958,8 @@ export type MapContextType = {
   gridSize: number;
   currentZoom: number | null;
   backendZoom: number | null;
+  targetLocation: TargetLocation | null;
+  setTargetLocation: (location: TargetLocation | null) => void;
 };
 
 export interface PropertyStats {

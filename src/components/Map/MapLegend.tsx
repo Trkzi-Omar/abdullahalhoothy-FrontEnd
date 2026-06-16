@@ -73,7 +73,7 @@ function MapLegend(legendElement: HTMLDivElement, geoPoints: MapFeatures[]) {
   header.setAttribute('aria-expanded', String(!isCollapsed));
   header.innerHTML = `
     <span>${t('legend')}</span>
-    <span class="inline-flex size-7 items-center justify-center rounded-full bg-[#f3f4f6] text-[#115740] ring-1 ring-black/5 shadow-sm transition-transform ${isCollapsed ? '' : 'rotate-180'}">
+    <span class="inline-flex size-7 items-center justify-center rounded-full bg-[#f3f4f6] text-[#115740] ring-1 ring-black/5 shadow-sm transition-transform ${isCollapsed ? 'rotate-180' : ''}">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
@@ -90,7 +90,7 @@ function MapLegend(legendElement: HTMLDivElement, geoPoints: MapFeatures[]) {
     content.classList.toggle('hidden', nextCollapsed);
     header.setAttribute('aria-expanded', String(!nextCollapsed));
     const icon = header.querySelector('span:last-child');
-    icon?.classList.toggle('rotate-180', !nextCollapsed);
+    icon?.classList.toggle('rotate-180', nextCollapsed);
   });
 
   geoPoints.forEach(point => {

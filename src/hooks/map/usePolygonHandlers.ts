@@ -1,12 +1,25 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import * as turf from '@turf/turf';
 import { useCatalogContext } from '../../context/CatalogContext';
 import { useMapContext } from '../../context/MapContext';
+import { t } from '../../i18n';
+
+const POLYGON_COLORS = [
+  '#3B82F6', // Blue
+  '#10B981', // Green
+  '#F59E0B', // Orange
+  '#8B5CF6', // Purple
+  '#EF4444', // Red
+  '#06B6D4', // Cyan
+  '#EC4899', // Pink
+  '#14B8A6', // Teal
+];
 
 export function usePolygonHandlers() {
   const { mapRef, shouldInitializeFeatures, drawRef } = useMapContext();
   const map = mapRef.current;
   const { polygons, setPolygons } = useCatalogContext();
+  const [drawReadyTick, setDrawReadyTick] = useState(0);
 
   const syncPolygonsFromDraw = useCallback(() => {
     const mapInstance = mapRef.current;
@@ -27,6 +40,41 @@ export function usePolygonHandlers() {
 
         const existingPolygon = existingById.get(String(feature.id));
 
+        let color = existingPolygon?.color || (feature.properties.user_color as string);
+        let name = existingPolygon?.name || (feature.properties.user_name as string);
+        const isLocked = existingPolygon?.isLocked ?? false;
+
+        if (!color) {
+          const usedColors = new Set(polygons.map(p => p.color).filter(Boolean));
+          color = POLYGON_COLORS.find(c => !usedColors.has(c)) || POLYGON_COLORS[polygons.length % POLYGON_COLORS.length];
+          feature.properties.user_color = color;
+          try {
+            drawRef.current.setFeatureProperty(String(feature.id), 'user_color', color);
+          } catch (e) {
+            console.error('Error setting user_color on draw feature:', e);
+          }
+        } else {
+          feature.properties.user_color = color;
+        }
+
+        if (!name) {
+          const prefix = t('area');
+          const usedNames = new Set(polygons.map(p => p.name).filter(Boolean));
+          let num = 1;
+          while (usedNames.has(`${prefix} ${num}`)) {
+            num++;
+          }
+          name = `${prefix} ${num}`;
+          feature.properties.user_name = name;
+          try {
+            drawRef.current.setFeatureProperty(String(feature.id), 'user_name', name);
+          } catch (e) {
+            console.error('Error setting user_name on draw feature:', e);
+          }
+        } else {
+          feature.properties.user_name = name;
+        }
+
         const getCenter = (geojson: GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon>) => {
           if (geojson.geometry.type === 'Polygon') {
             return turf.centerOfMass(geojson).geometry.coordinates as [number, number];
@@ -46,6 +94,9 @@ export function usePolygonHandlers() {
           id: String(feature.id),
           isStatisticsPopupOpen: existingPolygon?.isStatisticsPopupOpen ?? true,
           pixelPosition: center ? mapInstance.project(center) : existingPolygon?.pixelPosition ?? { x: 0, y: 0 },
+          color,
+          name,
+          isLocked,
         };
       });
 
@@ -54,7 +105,11 @@ export function usePolygonHandlers() {
 
   // Sync polygons state with draw control when polygons are loaded
   useEffect(() => {
-    if (!shouldInitializeFeatures || !map || !drawRef.current) return;
+    if (!shouldInitializeFeatures || !map) return;
+    if (!drawRef.current) {
+      const id = window.setTimeout(() => setDrawReadyTick(tick => tick + 1), 100);
+      return () => window.clearTimeout(id);
+    }
 
     const draw = drawRef.current;
     const currentDrawFeatures = draw.getAll().features;
@@ -65,7 +120,11 @@ export function usePolygonHandlers() {
           const feature = {
             type: 'Feature' as const,
             geometry: polygon.geometry,
-            properties: polygon.properties || {},
+            properties: {
+              ...(polygon.properties || {}),
+              user_color: polygon.color,
+              user_name: polygon.name,
+            },
             id: polygon.id,
           } as GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon>;
           draw.add(feature);
@@ -76,10 +135,14 @@ export function usePolygonHandlers() {
     } else if (polygons.length === 0 && currentDrawFeatures.length > 0) {
       draw.deleteAll();
     }
-  }, [polygons, shouldInitializeFeatures, map, drawRef]);
+  }, [polygons, shouldInitializeFeatures, map, drawRef, drawReadyTick]);
 
   useEffect(() => {
     if (!shouldInitializeFeatures || !map) return;
+    if (!drawRef.current) {
+      const id = window.setTimeout(() => setDrawReadyTick(tick => tick + 1), 100);
+      return () => window.clearTimeout(id);
+    }
 
     /**
      * Click handler for polygons, opens and closes the statistics popup
@@ -133,10 +196,55 @@ export function usePolygonHandlers() {
     };
 
     /**
+     * Selection change handler to deselect locked polygons
+     */
+    const handleSelectionChange = (e: { features: GeoJSON.Feature[] }) => {
+      const selectedLockedFeatures = e.features.filter(f => {
+        const poly = polygons.find(p => p.id === String(f.id));
+        return poly?.isLocked;
+      });
+
+      if (selectedLockedFeatures.length > 0 && drawRef.current) {
+        try {
+          drawRef.current.changeMode('simple_select', { featureIds: [] });
+        } catch (err) {
+          console.error('Error deselecting locked feature:', err);
+        }
+      }
+    };
+
+    /**
      * Update handler for polygons
      */
-    const handleDrawUpdate = () => {
-      syncPolygonsFromDraw();
+    const handleDrawUpdate = (e: { features: GeoJSON.Feature[]; action: string }) => {
+      let hasLockedUpdate = false;
+      e.features.forEach(feature => {
+        const existingPolygon = polygons.find(p => p.id === String(feature.id));
+        if (existingPolygon?.isLocked) {
+          hasLockedUpdate = true;
+          if (drawRef.current) {
+            try {
+              const oldFeature = {
+                type: 'Feature' as const,
+                geometry: existingPolygon.geometry,
+                properties: {
+                  ...(existingPolygon.properties || {}),
+                  user_color: existingPolygon.color,
+                  user_name: existingPolygon.name,
+                },
+                id: existingPolygon.id,
+              } as GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon>;
+              drawRef.current.add(oldFeature);
+            } catch (err) {
+              console.error('Error reverting locked feature in Mapbox Draw:', err);
+            }
+          }
+        }
+      });
+
+      if (!hasLockedUpdate) {
+        syncPolygonsFromDraw();
+      }
     };
 
     /**
@@ -151,6 +259,7 @@ export function usePolygonHandlers() {
      */
     map.on('click', handleMapClick);
     map.on('draw.create', handleDrawCreate);
+    map.on('draw.selectionchange', handleSelectionChange);
     map.on('draw.update', handleDrawUpdate);
     map.on('draw.delete', handleDrawDelete);
 
@@ -161,9 +270,10 @@ export function usePolygonHandlers() {
       if (map) {
         map.off('click', handleMapClick);
         map.off('draw.create', handleDrawCreate);
+        map.off('draw.selectionchange', handleSelectionChange);
         map.off('draw.update', handleDrawUpdate);
         map.off('draw.delete', handleDrawDelete);
       }
     };
-  }, [map, shouldInitializeFeatures, polygons, setPolygons, syncPolygonsFromDraw]);
+  }, [map, shouldInitializeFeatures, polygons, setPolygons, syncPolygonsFromDraw, drawRef, drawReadyTick]);
 }

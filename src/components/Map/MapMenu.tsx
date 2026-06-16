@@ -9,6 +9,7 @@ import {
   FaFlag,
   FaRuler,
   FaBookmark,
+  FaTrash,
 } from 'react-icons/fa';
 import { IoNavigate } from 'react-icons/io5';
 import { BiSearch } from 'react-icons/bi';
@@ -31,6 +32,8 @@ interface MapMenuProps {
   onSave: (lngLat: mapboxgl.LngLat) => void;
   onMeasureDistance: () => void;
   onAction?: (actionId: string) => void;
+  hasPolygonUnderClick?: boolean;
+  onDeletePolygon?: () => void;
 }
 
 const menuItems = [
@@ -60,6 +63,8 @@ const MapMenu: React.FC<MapMenuProps> = ({
   onSave,
   onMeasureDistance,
   onAction = actionId => console.log(actionId),
+  hasPolygonUnderClick = false,
+  onDeletePolygon,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [style, setStyle] = useState<React.CSSProperties>({
@@ -231,11 +236,27 @@ const MapMenu: React.FC<MapMenuProps> = ({
       onSave(lngLat);
     } else if (id === 'measure_distance') {
       onMeasureDistance(lngLat);
+    } else if (id === 'delete_polygon') {
+      onDeletePolygon?.();
     } else {
       onAction(id);
     }
     onClose();
   };
+
+  const visibleItems = [
+    ...menuItems,
+    ...(hasPolygonUnderClick
+      ? [
+          {
+            id: 'delete_polygon',
+            icon: <FaTrash size={18} />,
+            text: t("delete-polygon") || "Delete Polygon",
+            enabled: true,
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div
@@ -256,7 +277,7 @@ const MapMenu: React.FC<MapMenuProps> = ({
       onWheel={e => e.stopPropagation()}
     >
       <div className="py-1">
-        {menuItems.map(item => {
+        {visibleItems.map(item => {
           if (item.isHeader) {
             return (
               <div
@@ -276,7 +297,9 @@ const MapMenu: React.FC<MapMenuProps> = ({
               className={clsx(
                 'flex items-center px-4 py-2 text-sm',
                 isEnabled
-                  ? 'text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer'
+                  ? item.id === 'delete_polygon'
+                    ? 'text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer font-semibold'
+                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer'
                   : 'text-gray-400 cursor-not-allowed'
               )}
               onClick={() => isEnabled && handleItemClick(item.id)}
@@ -285,7 +308,11 @@ const MapMenu: React.FC<MapMenuProps> = ({
                 <span
                   className={clsx(
                     'me-3 w-4 h-4 flex items-center justify-center',
-                    isEnabled ? 'text-gray-500' : 'text-gray-400'
+                    isEnabled
+                      ? item.id === 'delete_polygon'
+                        ? 'text-red-500'
+                        : 'text-gray-500'
+                      : 'text-gray-400'
                   )}
                 >
                   {item.icon}

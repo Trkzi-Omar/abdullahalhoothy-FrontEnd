@@ -20,7 +20,7 @@ const BenchmarkControl = () => {
     }
   });
 
-  if (polygons.length === 0) return null;
+  if (polygons.length === 0 || benchmarks.length === 0) return null;
 
   const handleBenchmarkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -47,21 +47,25 @@ const BenchmarkControl = () => {
         <div className={`
           absolute start-0 top-full mt-2
           ${isMobile ? 'w-[calc(100vw-2rem)] max-w-[16rem]' : 'w-[430px] '} 
-          flex flex-col rounded-md shadow-lg bg-white z-[200]
-          ${isMobile ? 'p-3 gap-2  ' : 'p-4 gap-4'}
-          max-h-[62vh] overflow-y-auto
+          flex flex-col rounded-xl border border-slate-100 shadow-2xl bg-white z-[200]
+          ${isMobile ? 'p-3 gap-2' : 'p-4 gap-3'}
+          max-h-[62vh] overflow-y-auto statistics-popup-scroll
         `}>
           {benchmarks
             .filter(benchmark => !!benchmark?.title)
             .map(benchmark => {
               return (
-                <div className={`flex justify-between items-center ${isMobile ? 'gap-2' : 'gap-6'} ${!isMobile ? 'sm:gap-8' : ''}`} key={benchmark?.title}>
-                  <label className={`${isMobile ? 'text-xs' : 'text-sm sm:text-base'} font-medium text-gray-700 capitalize flex-shrink-0 ${isMobile ? 'min-w-0 flex-1' : ''}`}>
+                <div 
+                  className="grid grid-cols-[1fr_auto] gap-4 items-center py-1.5 border-b border-slate-50 last:border-0" 
+                  key={benchmark?.title}
+                >
+                  <label className="text-sm font-semibold text-slate-700 capitalize leading-tight">
                     {benchmark?.title?.split('_')?.join(' ')}
                   </label>
                   <input
                     type="number"
-                    className={`${isMobile ? 'w-20 text-xs' : 'w-32 sm:w-40 md:w-48'} p-1 sm:p-2 border border-gray-300 rounded-md flex-shrink-0 text-sm sm:text-base`}
+                    className="w-28 sm:w-32 p-2 border border-slate-200 rounded-lg outline-none text-sm font-mono text-center transition-all focus:border-[#115740] focus:ring-2 focus:ring-[#115740]/10 bg-slate-50/50 hover:bg-white focus:bg-white"
+                    placeholder="—"
                     value={benchmark?.value}
                     name={benchmark?.title}
                     onChange={handleBenchmarkChange}

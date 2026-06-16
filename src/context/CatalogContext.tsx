@@ -445,8 +445,10 @@ export function CatalogProvider(props: { children: ReactNode }) {
                 percentage: parseFloat(
                   (
                     (areaData.count /
-                      (geoPoints.find((gp: MapFeatures) => gp.layer_name === layer_name)
-                        ?.features?.length || 1)) *
+                      (geoPoints.find(
+                        (gp: MapFeatures) =>
+                          (gp.layer_name || gp.layer_legend || 'Unknown Layer') === layer_name
+                      )?.features?.length || 1)) *
                     100
                   ).toFixed(1)
                 ),
@@ -467,10 +469,12 @@ export function CatalogProvider(props: { children: ReactNode }) {
   }, [polygons, geoPoints]);
 
   useEffect(() => {
+    const excludedProperties = new Set(excludedPropertiesJson?.excludedProperties || []);
     const properties = new Set<string>();
     geoPoints.forEach(layer => {
       layer.features?.forEach(feature => {
         Object.entries(feature.properties).forEach(([key, val]) => {
+          if (excludedProperties.has(key)) return;
           if (typeof val === 'number' || !isNaN(Number(val))) {
             properties.add(key);
           }

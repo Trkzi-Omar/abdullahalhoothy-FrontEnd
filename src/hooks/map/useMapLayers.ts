@@ -7,7 +7,7 @@ import { getDefaultLayerColor } from '../../utils/helperFunctions';
 import * as turf from '@turf/turf';
 import { useMapContext } from '../../context/MapContext';
 import { generatePopupContent } from '../../pages/MapContainer/generatePopupContent';
-import { CustomProperties } from '../../types/allTypesAndInterfaces';
+import { CustomProperties, TargetLocation } from '../../types/allTypesAndInterfaces';
 import { useUIContext } from '../../context/UIContext';
 import apiRequest from '../../services/apiRequest';
 import urls from '../../urls.json';
@@ -54,15 +54,24 @@ const GRID_MAX_OPACITY = 0.75;
 const getGridPaint = (pointsColor: string) => ({
   'fill-color': pointsColor || defaultMapConfig.defaultColor,
   'fill-opacity': [
-    'min',
-    ['coalesce', ['/', ['get', 'backend_opacity'], 100], 0],
-    GRID_MAX_OPACITY,
+    'case',
+    // No points in cell → fully transparent
+    ['==', ['coalesce', ['get', 'pointCount'], 0], 0],
+    0,
+    // If backend_opacity is available (backend grid data), use it
+    ['has', 'backend_opacity'],
+    ['min', ['/', ['get', 'backend_opacity'], 100], GRID_MAX_OPACITY],
+    // Fallback for regular grids: density-based opacity using log scale
+    ['min',
+      ['/', ['ln', ['+', ['coalesce', ['get', 'pointCount'], 0], 1]], 5],
+      GRID_MAX_OPACITY,
+    ],
   ],
   'fill-outline-color': [
     'case',
-    ['==', ['coalesce', ['get', 'backend_opacity'], 0], 0],
+    ['==', ['coalesce', ['get', 'pointCount'], 0], 0],
     'rgba(0,0,0,0)',
-    'rgba(0,0,0,128)',
+    'rgba(0,0,0,0.3)',
   ],
 });
 
@@ -108,7 +117,7 @@ const getGradientCirclePaint = (defaultColor: string | undefined) => ({
 });
 
 export function useMapLayers() {
-  const { mapRef, shouldInitializeFeatures, gridSize } = useMapContext();
+  const { mapRef, shouldInitializeFeatures, gridSize, targetLocation, setTargetLocation } = useMapContext();
   const { isMobile } = useUIContext();
   const map = mapRef.current;
   const { geoPoints } = useCatalogContext();
@@ -117,6 +126,10 @@ export function useMapLayers() {
 
   // Add this ref
   const gridLayerIdRef = useRef<string | null>(null);
+  const activePopupRef = useRef<mapboxgl.Popup | null>(null);
+
+  // Ref to hold a pending targetLocation so we can process it after layers are ready
+  const pendingTargetRef = useRef<TargetLocation | null>(null);
 
   // Replace the single layerStateRef with layerStatesRef
   const layerStatesRef = useRef<{
@@ -138,6 +151,61 @@ export function useMapLayers() {
     cleanupGridPopup
   );
 
+  // Helper to show the target location popup on the map
+  const showTargetPopup = useCallback((
+    mapInstance: mapboxgl.Map,
+    coordinates: [number, number],
+    properties: Record<string, unknown>
+  ) => {
+    mapInstance.flyTo({
+      center: coordinates,
+      zoom: 15,
+      essential: true,
+    });
+
+    if (activePopupRef.current) {
+      activePopupRef.current.remove();
+    }
+
+    const loadingContent = generatePopupContent(
+      properties,
+      coordinates,
+      true,
+      false
+    );
+
+    const newPopup = new mapboxgl.Popup({
+      closeButton: isMobile,
+    })
+      .setLngLat(coordinates)
+      .setHTML(loadingContent)
+      .addTo(mapInstance);
+
+    activePopupRef.current = newPopup;
+
+    const [lng, lat] = coordinates;
+
+    const isIntelligent = typeof properties.bknd_dataset_id === 'string' &&
+      properties.bknd_dataset_id.split('_').some((part: string) =>
+        ['population', 'income', 'real_estate'].includes(part)
+      );
+
+    if (isIntelligent) {
+      newPopup.setHTML(generatePopupContent(properties, coordinates, false, false));
+    } else {
+      debouncedStreetViewCheck(lat, lng, hasStreetView => {
+        if (activePopupRef.current === newPopup) {
+          newPopup.setHTML(
+            generatePopupContent(properties, coordinates, false, hasStreetView)
+          );
+        }
+      });
+    }
+
+    const popupElement = newPopup.getElement();
+    popupElement.addEventListener('click', e => e.stopPropagation());
+  }, [isMobile]);
+
   // Update cleanup function to handle multiple layers
   const cleanupLayers = useCallback(() => {
     if (!map || !map.isStyleLoaded()) return;
@@ -145,6 +213,10 @@ export function useMapLayers() {
     try {
       // Clean up popups first
       cleanupGridPopup();
+      if (activePopupRef.current) {
+        activePopupRef.current.remove();
+        activePopupRef.current = null;
+      }
 
       // Clean up each layer
       Object.values(layerStatesRef.current).forEach(layerState => {
@@ -227,6 +299,25 @@ export function useMapLayers() {
     fetchCityBounds();
   }, []);
 
+  // When targetLocation changes in context, either show the popup immediately (if
+  // layers are already set up) or stash it in a ref for the layers effect to handle.
+  useEffect(() => {
+    if (!targetLocation) return;
+
+    // If the map and layers are already initialised (user is already on the map page),
+    // we can show the popup immediately — no need to wait for layers.
+    const mapInstance = mapRef.current;
+    if (shouldInitializeFeatures && mapInstance && Object.keys(layerStatesRef.current).length > 0) {
+      showTargetPopup(mapInstance, targetLocation.coordinates, targetLocation.properties);
+      setTargetLocation(null);
+      return;
+    }
+
+    // Otherwise, stash it for the layers effect to handle after layer setup.
+    pendingTargetRef.current = targetLocation;
+    setTargetLocation(null);
+  }, [targetLocation, shouldInitializeFeatures, mapRef, setTargetLocation, showTargetPopup]);
+
   // Effect to add layers
   useEffect(() => {
     if (!shouldInitializeFeatures || !map) return;
@@ -275,213 +366,82 @@ export function useMapLayers() {
             });
 
           for (const [index, featureCollection] of sortedGeoPoints.entries()) {
-              if (featureCollection.basedon === 'income') {
-                console.log(
-                  'INCOME Layer featureCollection:',
-                  JSON.stringify(featureCollection, null, 2)
-                );
-              }
-              if (!featureCollection.type || !Array.isArray(featureCollection.features)) {
-                console.error('🗺️ [Map] Invalid GeoJSON structure:', featureCollection);
-                return;
-              }
+            if (featureCollection.basedon === 'income') {
+              console.log(
+                'INCOME Layer featureCollection:',
+                JSON.stringify(featureCollection, null, 2)
+              );
+            }
+            if (!featureCollection.type || !Array.isArray(featureCollection.features)) {
+              console.error('🗺️ [Map] Invalid GeoJSON structure:', featureCollection);
+              return;
+            }
 
-              const sourceId = `circle-source-${index}`;
-              const layerId = `circle-layer-${index}`;
-              const gridSourceId = `${sourceId}-grid`;
-              const gridLayerId = `${layerId}-grid`;
+            const sourceId = `circle-source-${index}`;
+            const layerId = `circle-layer-${index}`;
+            const gridSourceId = `${sourceId}-grid`;
+            const gridLayerId = `${layerId}-grid`;
 
-              // Store IDs for this specific layer
-              layerStatesRef.current[index] = {
-                sourceId,
-                layerId,
-                gridSourceId,
-                gridLayerId,
-              };
+            // Store IDs for this specific layer
+            layerStatesRef.current[index] = {
+              sourceId,
+              layerId,
+              gridSourceId,
+              gridLayerId,
+            };
 
-              try {
-                // Add source
-                map.addSource(sourceId, {
-                  type: 'geojson',
-                  data: featureCollection,
-                  generateId: true,
-                });
+            try {
+              // Add source
+              map.addSource(sourceId, {
+                type: 'geojson',
+                data: featureCollection,
+                generateId: true,
+              });
 
-                if (featureCollection.is_backend_grid) {
-                  console.time('Polygon processing');
+              if (featureCollection.is_backend_grid) {
+                console.time('Polygon processing');
 
-                  try {
-                    const worker = new Worker(
-                      new URL('../../workers/polygonGridGeneration.worker.ts', import.meta.url),
-                      {
-                        type: 'module',
-                      }
-                    );
-
-                    console.log(
-                      'featureCollection - polygonGridGeneration.worker.ts',
-                      JSON.stringify(featureCollection, null, 2)
-                    );
-
-                    worker.postMessage({ featureCollection });
-
-                    const processedData = await new Promise<WorkerFeatureResponse>(
-                      (resolve, reject) => {
-                        worker.onmessage = event => {
-                          if (event.data.error) {
-                            reject(new Error(event.data.error));
-                          } else {
-                            resolve(event.data);
-                          }
-                        };
-                        worker.onerror = err => reject(err);
-                      }
-                    );
-
-                    worker.terminate();
-
-                    // Add source with processed polygons
-                    map.addSource(gridSourceId, {
-                      type: 'geojson',
-                      data: {
-                        type: 'FeatureCollection',
-                        features: processedData.features,
-                      },
-                      generateId: true,
-                    });
-
-                    // Add fill layer for polygons
-                    map.addLayer({
-                      id: gridLayerId,
-                      type: 'fill',
-                      source: gridSourceId,
-                      layout: {
-                        visibility: featureCollection.display ? 'visible' : 'none',
-                      },
-                      paint: {
-                        'fill-color':
-                          featureCollection.points_color || defaultMapConfig.defaultColor,
-                        'fill-opacity': [
-                          'min',
-                          ['coalesce', ['/', ['get', 'backend_opacity'], 100], 0],
-                          GRID_MAX_OPACITY,
-                        ],
-                        'fill-outline-color': '#000',
-                      },
-                    });
-
-                    // Add outline layer for polygons
-                    map.addLayer({
-                      id: `${gridLayerId}-outline`,
-                      type: 'line',
-                      source: gridSourceId,
-                      layout: {
-                        visibility: featureCollection.display ? 'visible' : 'none',
-                      },
-                      paint: {
-                        'line-color': '#000',
-                        'line-width': 1,
-                      },
-                    });
-
-                    console.timeEnd('Polygon processing');
-
-                    // Store IDs
-                    gridLayerIdRef.current = gridLayerId;
-                    layerStatesRef.current[index].gridSourceId = gridSourceId;
-
-                    const handleGridInteraction = (
-                      e:
-                        | (mapboxgl.MapMouseEvent & mapboxgl.EventData)
-                        | (mapboxgl.MapTouchEvent & mapboxgl.EventData)
-                    ) => {
-                      e.preventDefault();
-                      handleGridCellClick(e);
-                    };
-
-                    // Add interaction handlers directly to grid cells
-                    map.on('click', gridLayerId, handleGridInteraction);
-                    if (isMobile) {
-                      map.on('touchstart', gridLayerId, handleGridInteraction);
+                try {
+                  const worker = new Worker(
+                    new URL('../../workers/polygonGridGeneration.worker.ts', import.meta.url),
+                    {
+                      type: 'module',
                     }
+                  );
 
-                    // Add hover effects for the grid cells
-                    map.on('mouseenter', gridLayerId, () => {
-                      map.getCanvas().style.cursor = 'pointer';
-                    });
+                  console.log(
+                    'featureCollection - polygonGridGeneration.worker.ts',
+                    JSON.stringify(featureCollection, null, 2)
+                  );
 
-                    map.on('mouseleave', gridLayerId, () => {
-                      map.getCanvas().style.cursor = '';
-                    });
-                  } catch (error) {
-                    console.error('Error processing polygons:', error);
-                  }
-                } else if (featureCollection.is_grid) {
-                  let bounds;
-                  if (
-                    featureCollection.city_name &&
-                    cityBounds[featureCollection.city_name.toLowerCase()]
-                  ) {
-                    const cityBound = cityBounds[featureCollection.city_name.toLowerCase()].bounds;
-                    bounds = [
-                      cityBound[0] - 0.1,
-                      cityBound[1] - 0.1,
-                      cityBound[2] + 0.1,
-                      cityBound[3] + 0.1,
-                    ];
-                  } else {
-                    // Fallback to calculating bounds from features
-                    const bbox = turf.bbox(featureCollection);
-                    const bboxPolygon = turf.bboxPolygon(bbox);
-                    // Increase buffer for fallback bounds
-                    const bufferedBbox = turf.buffer(bboxPolygon, 1, { units: 'kilometers' });
-                    bounds = turf.bbox(bufferedBbox);
-                  }
+                  worker.postMessage({ featureCollection });
 
-                  // Create grid
-                  const cellSide = gridSize / 1000;
-                  const options = { units: 'kilometers' as const };
-                  const grid = turf.squareGrid(bounds, cellSide, options);
-
-                  // Calculate density for each cell
-                  console.time('Grid generation');
-
-                  const cacheKey = JSON.stringify([cellSide, bounds]);
-
-                  if (cache.has(cacheKey)) {
-                    grid.features = cache.get(cacheKey);
-                  } else {
-                    const worker = new Worker(
-                      new URL('../../workers/gridGeneration.worker.ts', import.meta.url),
-                      {
-                        type: 'module',
-                      }
-                    );
-
-                    worker.postMessage({ grid, featureCollection });
-
-                    grid.features = await new Promise<GeoJSON.Feature[]>((resolve, reject) => {
+                  const processedData = await new Promise<WorkerFeatureResponse>(
+                    (resolve, reject) => {
                       worker.onmessage = event => {
-                        resolve(event.data.features);
+                        if (event.data.error) {
+                          reject(new Error(event.data.error));
+                        } else {
+                          resolve(event.data);
+                        }
                       };
                       worker.onerror = err => reject(err);
-                    });
+                    }
+                  );
 
-                    worker.terminate();
+                  worker.terminate();
 
-                    cache.set(cacheKey, grid.features);
-                  }
-
-                  console.timeEnd('Grid generation');
-
-                  // Add grid source
+                  // Add source with processed polygons
                   map.addSource(gridSourceId, {
                     type: 'geojson',
-                    data: grid,
+                    data: {
+                      type: 'FeatureCollection',
+                      features: processedData.features,
+                    },
                     generateId: true,
                   });
 
-                  // Add grid layer with interactive settings
+                  // Add fill layer for polygons
                   map.addLayer({
                     id: gridLayerId,
                     type: 'fill',
@@ -489,10 +449,33 @@ export function useMapLayers() {
                     layout: {
                       visibility: featureCollection.display ? 'visible' : 'none',
                     },
-                    paint: getGridPaint(
-                      featureCollection.points_color || defaultMapConfig.defaultColor
-                    ),
+                    paint: {
+                      'fill-color':
+                        featureCollection.points_color || defaultMapConfig.defaultColor,
+                      'fill-opacity': [
+                        'min',
+                        ['coalesce', ['/', ['get', 'backend_opacity'], 100], 0],
+                        GRID_MAX_OPACITY,
+                      ],
+                      'fill-outline-color': '#000',
+                    },
                   });
+
+                  // Add outline layer for polygons
+                  map.addLayer({
+                    id: `${gridLayerId}-outline`,
+                    type: 'line',
+                    source: gridSourceId,
+                    layout: {
+                      visibility: featureCollection.display ? 'visible' : 'none',
+                    },
+                    paint: {
+                      'line-color': '#000',
+                      'line-width': 1,
+                    },
+                  });
+
+                  console.timeEnd('Polygon processing');
 
                   // Store IDs
                   gridLayerIdRef.current = gridLayerId;
@@ -521,164 +504,278 @@ export function useMapLayers() {
                   map.on('mouseleave', gridLayerId, () => {
                     map.getCanvas().style.cursor = '';
                   });
-                } else if (featureCollection.is_heatmap) {
+                } catch (error) {
+                  console.error('Error processing polygons:', error);
+                }
+              } else if (featureCollection.is_grid) {
+                let bounds;
+                if (
+                  featureCollection.city_name &&
+                  cityBounds[featureCollection.city_name.toLowerCase()]
+                ) {
+                  const cityBound = cityBounds[featureCollection.city_name.toLowerCase()].bounds;
+                  bounds = [
+                    cityBound[0] - 0.1,
+                    cityBound[1] - 0.1,
+                    cityBound[2] + 0.1,
+                    cityBound[3] + 0.1,
+                  ];
+                } else {
+                  // Fallback to calculating bounds from features
+                  const bbox = turf.bbox(featureCollection);
+                  const bboxPolygon = turf.bboxPolygon(bbox);
+                  // Increase buffer for fallback bounds
+                  const bufferedBbox = turf.buffer(bboxPolygon, 1, { units: 'kilometers' });
+                  bounds = turf.bbox(bufferedBbox);
+                }
+
+                // Create grid
+                const cellSide = gridSize / 1000;
+                const options = { units: 'kilometers' as const };
+                const grid = turf.squareGrid(bounds, cellSide, options);
+
+                // Calculate density for each cell
+                console.time('Grid generation');
+
+                const cacheKey = JSON.stringify([cellSide, bounds]);
+
+                if (cache.has(cacheKey)) {
+                  grid.features = cache.get(cacheKey);
+                } else {
                   const worker = new Worker(
-                    new URL('../../workers/heatmapGeneration.worker.ts', import.meta.url),
+                    new URL('../../workers/gridGeneration.worker.ts', import.meta.url),
                     {
                       type: 'module',
                     }
                   );
 
-                  try {
-                    worker.postMessage({
-                      featureCollection,
-                      basedon: featureCollection.basedon,
-                    });
+                  worker.postMessage({ grid, featureCollection });
 
-                    const processedData = await new Promise<WorkerFeatureResponse>(
-                      (resolve, reject) => {
-                        worker.onmessage = event => {
-                          if (event.data.error) {
-                            reject(new Error(event.data.error));
-                          } else {
-                            resolve(event.data);
-                          }
-                        };
-                        worker.onerror = err => reject(err);
-                      }
-                    );
-
-                    worker.terminate();
-
-                    map.getSource(sourceId).setData({
-                      type: 'FeatureCollection',
-                      features: processedData.features,
-                    });
-
-                    map.addLayer({
-                      id: layerId,
-                      type: 'heatmap',
-                      source: sourceId,
-                      layout: {
-                        visibility: featureCollection.display ? 'visible' : 'none',
-                      },
-                      paint: getHeatmapPaint(
-                        featureCollection.basedon,
-                        featureCollection.points_color
-                      ),
-                    });
-                  } catch (error) {
-                    console.error('Error processing heatmap:', error);
-                  }
-                } else {
-                  // Circle layer / points (default)
-                  map.addLayer({
-                    id: layerId,
-                    type: 'circle',
-                    source: sourceId,
-                    layout: {
-                      visibility: featureCollection.display ? 'visible' : 'none',
-                    },
-                    paint: featureCollection.is_gradient
-                      ? getGradientCirclePaint(featureCollection.points_color)
-                      : getCirclePaint(featureCollection.points_color, index),
+                  grid.features = await new Promise<GeoJSON.Feature[]>((resolve, reject) => {
+                    worker.onmessage = event => {
+                      resolve(event.data.features);
+                    };
+                    worker.onerror = err => reject(err);
                   });
+
+                  worker.terminate();
+
+                  cache.set(cacheKey, grid.features);
                 }
 
-                // Add hover interaction variables
-                let hoveredStateId: number | null = null;
-                let popup: mapboxgl.Popup | null = null;
-                const isOverPopup = false;
-                let isOverPoint = false;
+                console.timeEnd('Grid generation');
 
-                const handleMouseOverOrTouchStart = async (
+                // Add grid source
+                map.addSource(gridSourceId, {
+                  type: 'geojson',
+                  data: grid,
+                  generateId: true,
+                });
+
+                // Add grid layer with interactive settings
+                map.addLayer({
+                  id: gridLayerId,
+                  type: 'fill',
+                  source: gridSourceId,
+                  layout: {
+                    visibility: featureCollection.display ? 'visible' : 'none',
+                  },
+                  paint: getGridPaint(
+                    featureCollection.points_color || defaultMapConfig.defaultColor
+                  ),
+                });
+
+                // Store IDs
+                gridLayerIdRef.current = gridLayerId;
+                layerStatesRef.current[index].gridSourceId = gridSourceId;
+
+                const handleGridInteraction = (
                   e:
                     | (mapboxgl.MapMouseEvent & mapboxgl.EventData)
                     | (mapboxgl.MapTouchEvent & mapboxgl.EventData)
                 ) => {
-                  if (!map) return;
-                  isOverPoint = true;
-                  map.getCanvas().style.cursor = '';
-
-                  if (e.features && e.features.length > 0) {
-                    if (hoveredStateId !== null) {
-                      map.setFeatureState(
-                        { source: sourceId, id: hoveredStateId },
-                        { hover: false }
-                      );
-                    }
-
-                    hoveredStateId = e.features[0].id as number;
-                    map.setFeatureState({ source: sourceId, id: hoveredStateId }, { hover: true });
-
-                    const coordinates = (
-                      e.features[0].geometry as GeoJSON.Point
-                    ).coordinates.slice() as [number, number];
-                    const properties = e.features[0].properties as CustomProperties;
-
-                    // Show loading spinner in the popup
-                    const loadingContent = generatePopupContent(
-                      properties,
-                      coordinates,
-                      true,
-                      false
-                    );
-
-                    if (popup) {
-                      popup.remove();
-                    }
-
-                    popup = new mapboxgl.Popup({
-                      closeButton: isMobile,
-                    })
-                      .setLngLat(coordinates)
-                      .setHTML(loadingContent)
-                      .addTo(map);
-
-                    const [lng, lat] = coordinates;
-
-                    if (isIntelligentLayer(featureCollection)) {
-                      popup.setHTML(generatePopupContent(properties, coordinates, false, false));
-                    } else {
-                      debouncedStreetViewCheck(lat, lng, hasStreetView => {
-                        if (popup) {
-                          popup.setHTML(
-                            generatePopupContent(properties, coordinates, false, hasStreetView)
-                          );
-                        }
-                      });
-                    }
-
-                    if (popup) {
-                      const popupElement = popup.getElement();
-                      popupElement.addEventListener('click', e => e.stopPropagation());
-                    }
-                  }
+                  e.preventDefault();
+                  handleGridCellClick(e);
                 };
 
-                const handleMouseLeave = () => {
-                  if (!map) return;
-                  isOverPoint = false;
-                  map.getCanvas().style.cursor = '';
-
-                  if (hoveredStateId !== null) {
-                    map.setFeatureState({ source: sourceId, id: hoveredStateId }, { hover: false });
-                  }
-                  hoveredStateId = null;
-                };
-
+                // Add interaction handlers directly to grid cells
+                map.on('click', gridLayerId, handleGridInteraction);
                 if (isMobile) {
-                  map.on('touchstart', layerId, handleMouseOverOrTouchStart);
-                } else {
-                  map.on('click', layerId, handleMouseOverOrTouchStart);
-                  map.on('mouseleave', layerId, handleMouseLeave);
+                  map.on('touchstart', gridLayerId, handleGridInteraction);
                 }
-              } catch (error) {
-                console.error('Error adding layer:', error);
+
+                // Add hover effects for the grid cells
+                map.on('mouseenter', gridLayerId, () => {
+                  map.getCanvas().style.cursor = 'pointer';
+                });
+
+                map.on('mouseleave', gridLayerId, () => {
+                  map.getCanvas().style.cursor = '';
+                });
+              } else if (featureCollection.is_heatmap) {
+                const worker = new Worker(
+                  new URL('../../workers/heatmapGeneration.worker.ts', import.meta.url),
+                  {
+                    type: 'module',
+                  }
+                );
+
+                try {
+                  worker.postMessage({
+                    featureCollection,
+                    basedon: featureCollection.basedon,
+                  });
+
+                  const processedData = await new Promise<WorkerFeatureResponse>(
+                    (resolve, reject) => {
+                      worker.onmessage = event => {
+                        if (event.data.error) {
+                          reject(new Error(event.data.error));
+                        } else {
+                          resolve(event.data);
+                        }
+                      };
+                      worker.onerror = err => reject(err);
+                    }
+                  );
+
+                  worker.terminate();
+
+                  map.getSource(sourceId).setData({
+                    type: 'FeatureCollection',
+                    features: processedData.features,
+                  });
+
+                  map.addLayer({
+                    id: layerId,
+                    type: 'heatmap',
+                    source: sourceId,
+                    layout: {
+                      visibility: featureCollection.display ? 'visible' : 'none',
+                    },
+                    paint: getHeatmapPaint(
+                      featureCollection.basedon,
+                      featureCollection.points_color
+                    ),
+                  });
+                } catch (error) {
+                  console.error('Error processing heatmap:', error);
+                }
+              } else {
+                // Circle layer / points (default)
+                map.addLayer({
+                  id: layerId,
+                  type: 'circle',
+                  source: sourceId,
+                  layout: {
+                    visibility: featureCollection.display ? 'visible' : 'none',
+                  },
+                  paint: featureCollection.is_gradient
+                    ? getGradientCirclePaint(featureCollection.points_color)
+                    : getCirclePaint(featureCollection.points_color, index),
+                });
               }
+
+              // Add hover interaction variables
+              let hoveredStateId: number | null = null;
+              const isOverPopup = false;
+              let isOverPoint = false;
+
+              const handleMouseOverOrTouchStart = async (
+                e:
+                  | (mapboxgl.MapMouseEvent & mapboxgl.EventData)
+                  | (mapboxgl.MapTouchEvent & mapboxgl.EventData)
+              ) => {
+                if (!map) return;
+                isOverPoint = true;
+                map.getCanvas().style.cursor = '';
+
+                if (e.features && e.features.length > 0) {
+                  if (hoveredStateId !== null) {
+                    map.setFeatureState(
+                      { source: sourceId, id: hoveredStateId },
+                      { hover: false }
+                    );
+                  }
+
+                  hoveredStateId = e.features[0].id as number;
+                  map.setFeatureState({ source: sourceId, id: hoveredStateId }, { hover: true });
+
+                  const coordinates = (
+                    e.features[0].geometry as GeoJSON.Point
+                  ).coordinates.slice() as [number, number];
+                  const properties = e.features[0].properties as CustomProperties;
+
+                  // Show loading spinner in the popup
+                  const loadingContent = generatePopupContent(
+                    properties,
+                    coordinates,
+                    true,
+                    false
+                  );
+
+                  if (activePopupRef.current) {
+                    activePopupRef.current.remove();
+                  }
+
+                  const newPopup = new mapboxgl.Popup({
+                    closeButton: isMobile,
+                  })
+                    .setLngLat(coordinates)
+                    .setHTML(loadingContent)
+                    .addTo(map);
+
+                  activePopupRef.current = newPopup;
+
+                  const [lng, lat] = coordinates;
+
+                  if (isIntelligentLayer(featureCollection)) {
+                    newPopup.setHTML(generatePopupContent(properties, coordinates, false, false));
+                  } else {
+                    debouncedStreetViewCheck(lat, lng, hasStreetView => {
+                      if (activePopupRef.current === newPopup) {
+                        newPopup.setHTML(
+                          generatePopupContent(properties, coordinates, false, hasStreetView)
+                        );
+                      }
+                    });
+                  }
+
+                  const popupElement = newPopup.getElement();
+                  popupElement.addEventListener('click', e => e.stopPropagation());
+                }
+              };
+
+              const handleMouseLeave = () => {
+                if (!map) return;
+                isOverPoint = false;
+                map.getCanvas().style.cursor = '';
+
+                if (hoveredStateId !== null) {
+                  map.setFeatureState({ source: sourceId, id: hoveredStateId }, { hover: false });
+                }
+                hoveredStateId = null;
+              };
+
+              if (isMobile) {
+                map.on('touchstart', layerId, handleMouseOverOrTouchStart);
+              } else {
+                map.on('click', layerId, handleMouseOverOrTouchStart);
+                map.on('mouseleave', layerId, handleMouseLeave);
+              }
+            } catch (error) {
+              console.error('Error adding layer:', error);
+            }
           }
 
           console.log(`geoPoints ${geoPoints.length}`, geoPoints);
+        }
+
+        // After layers are fully added, process any pending target location
+        const pendingTarget = pendingTargetRef.current;
+        if (pendingTarget) {
+          pendingTargetRef.current = null;
+          showTargetPopup(map, pendingTarget.coordinates, pendingTarget.properties);
         }
       } catch (error) {
         console.error('Error managing layers:', error);
@@ -709,5 +806,5 @@ export function useMapLayers() {
     return () => {
       cleanupLayers();
     };
-  }, [mapRef, geoPoints, shouldInitializeFeatures, cityBounds]);
+  }, [mapRef, geoPoints, shouldInitializeFeatures, cityBounds, showTargetPopup]);
 }

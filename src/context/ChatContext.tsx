@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import apiRequest from '../services/apiRequest';
-import { topics, ChatMessage, llms, FetchDatasetBody, RecolorBody, GradientColorResponse, GradientColorBasedOnZone, Feature } from '../types';
+import { topics, ChatMessage, llms, FetchDatasetBody, RecolorBody, GradientColorResponse, GradientColorBasedOnZone, AppliedRecolor, Feature, ReqFilterProperty, ReqGradientColorBasedOnZone } from '../types';
 import urls from '../urls.json';
 import { useCatalogContext } from './CatalogContext';
 import { useLayerContext } from './LayerContext';
 import { useMapContext } from './MapContext';
 import { ChatContext } from './chatContextDef';
 import { t } from '../i18n';
+import { recomputeLayerState } from '../utils/recolorUtils';
+import { v4 as uuidv4 } from 'uuid';
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const { authResponse } = useAuth();
@@ -125,7 +127,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
       if (topic === topics.RECOLOR) {
         url = urls.recolor_based_llm;
-        reqBody = { user_id: authResponse?.localId, prompt: content.trim(), layers: geoPoints };
+        reqBody = {
+          user_id: authResponse?.localId,
+          prompt: content.trim(),
+          layers: geoPoints.map(gp => ({ id: gp.layer_id, name: gp.layer_name })),
+        };
       } else if (topic === topics.DATASET) {
         url = urls.process_llm_query;
         const bounds = mapRef.current?.getBounds();
@@ -139,7 +145,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         };
       } else {
         url = urls.recolor_based_llm;
-        reqBody = { user_id: authResponse?.localId, prompt: content.trim(), layers: geoPoints };
+        reqBody = {
+          user_id: authResponse?.localId,
+          prompt: content.trim(),
+          layers: geoPoints.map(gp => ({ id: gp.layer_id, name: gp.layer_name })),
+        };
       }
 
       const response = await apiRequest({
@@ -218,8 +228,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           endpoint = llms.FETCH;
         }
 
-        // Process and validate the LLM response body
-        processedBody = processLLMResponseBody(responseData.body);
+        // Check if body is ReqFilterProperty-shaped (from the property-based agent).
+        // The recolor_property endpoint expects it as-is without transformation.
+        if ('evaluation_property_name' in responseData.body) {
+          processedBody = {
+            ...responseData.body,
+            user_id: authResponse?.localId,
+          } as unknown as RecolorBody;
+        } else {
+          // Process and validate the LLM response body (RecolorBody path)
+          processedBody = processLLMResponseBody(responseData.body);
+        }
       }
 
       // Make the API request with validated parameters
@@ -232,7 +251,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
       // Process the response data if needed
       if (response?.data?.data) {
-        await handleRecolorResponse(response.data.data);
+        await handleRecolorResponse(response.data.data, processedBody);
       }
 
       const successMessage: ChatMessage = {
@@ -303,49 +322,79 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   };
 
   // Helper function to handle recolor response
-  const handleRecolorResponse = async (responseData: GradientColorBasedOnZone[]) => {
-    if (!responseData) return;
+  const handleRecolorResponse = async (
+    responseData: GradientColorBasedOnZone[],
+    requestBody?: RecolorBody,
+  ) => {
+    if (!responseData || !Array.isArray(responseData)) return;
 
-    // If response is an array of gradient color data, process it
-    if (Array.isArray(responseData)) {
-      // Process gradient data for UI update
-      const combinedFeatures = responseData.flatMap(group =>
-        (group.features || []).map((feature: Feature) => ({
-          ...feature,
-          properties: {
-            ...feature.properties,
-            gradient_color: group.points_color,
-            gradient_legend: group.layer_legend,
-          },
-        }))
-      );
-
-      // Update geoPoints with gradient information
-      setGeoPoints(prev => {
-        return prev.map(point => {
-          const matchingGroup = responseData.find(g => g.layer_id === point.layer_id);
-          if (matchingGroup) {
-            return {
-              ...point,
-              layer_name: matchingGroup.layer_name || point.layer_name,
-              layer_legend: matchingGroup.layer_legend || point.layer_legend,
-              features: combinedFeatures.filter((f) => f.layer_id === point.layerId),
-              gradient_groups: responseData.map(group => ({
-                color: group.points_color,
-                legend: group.layer_legend,
-                count: group.records_count || 0,
-              })),
-              is_gradient: true,
-              gradient_based_on: matchingGroup.based_on_layer_id || null,
-            };
-          }
-          return point;
-        });
-      });
-
-      // Store gradient color data for reference
-      setGradientColorBasedOnZone(responseData);
+    // Group response items by layer_id so we can match all sub-layers per geoPoint
+    const layersMap = new Map<string, GradientColorBasedOnZone[]>();
+    for (const item of responseData) {
+      const id = item.layer_id;
+      if (!layersMap.has(id)) layersMap.set(id, []);
+      layersMap.get(id)!.push(item);
     }
+
+    // Update geoPoints with recolor information using the applied_recolors pattern
+    setGeoPoints(prev => {
+      return prev.map(point => {
+        const matchingGroups = layersMap.get(point.layer_id);
+        if (!matchingGroups || matchingGroups.length === 0) return point;
+
+        // Save original features if not already saved
+        const original_features = (point.original_features ||
+          point.features) as Feature[];
+
+        // Build recolor groups from the response
+        const groups = matchingGroups.map(group => ({
+          color: group.points_color || '#000000',
+          legend: group.layer_legend || '',
+          features: group.features as Feature[],
+        }));
+
+        // Create a name describing what was done
+        const legendParts = matchingGroups
+          .map(g => g.layer_legend)
+          .filter(Boolean);
+        const recolorName = legendParts.join(' | ');
+
+        // Build the AppliedRecolor entry
+        const newRecolor: AppliedRecolor = {
+          id: uuidv4(),
+          name: recolorName || 'Recolor from chat',
+          baseColor: point.points_color || '#CCCCCC',
+          groups,
+          save_request: requestBody as
+            | ReqFilterProperty
+            | ReqGradientColorBasedOnZone
+            | undefined,
+        };
+
+        const applied_recolors = [
+          ...(point.applied_recolors || []),
+          newRecolor,
+        ];
+
+        // Recompute layer state from original features + filters + updated recolors
+        const recomputed = recomputeLayerState(
+          original_features,
+          point.applied_filters,
+          applied_recolors,
+          point.layer_legend,
+        );
+
+        return {
+          ...point,
+          original_features,
+          applied_recolors,
+          ...recomputed,
+        };
+      });
+    });
+
+    // Store gradient color data for reference
+    setGradientColorBasedOnZone(responseData);
   };
 
   const toggleChat = () => setIsOpen(prev => !prev);

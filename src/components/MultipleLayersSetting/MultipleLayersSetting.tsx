@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AppliedFilter, AppliedRecolor, Feature } from '../../types';
 import { ReqFilterProperty, ReqGradientColorBasedOnZone } from '../../types/allTypesAndInterfaces';
 import { translateError } from '../../utils/apiMessages';
+import { recomputeLayerState } from '../../utils/recolorUtils';
 
 
 const initialBasedon = 'radius';
@@ -59,30 +60,6 @@ const getFormattedThreshold = (value: string, basedOn: string | null) => {
   return value;
 };
 
-const recomputeFeatures = (originalFeatures: Feature[], filters: AppliedFilter[]) => {
-  if (!filters || filters.length === 0) return originalFeatures;
-  let currentFeatures = [...originalFeatures];
-
-  for (const filter of filters) {
-    const filterFeatures = Array.isArray(filter.features) ? filter.features : [];
-    if (filterFeatures.length === 0) {
-      continue;
-    }
-
-    const filterSet = new Set(
-      filterFeatures.map(f => {
-        const coords = f.geometry.coordinates;
-        return `${coords[0]},${coords[1]}`;
-      })
-    );
-    currentFeatures = currentFeatures.filter(f => {
-      const coords = f.geometry.coordinates;
-      return filterSet.has(`${coords[0]},${coords[1]}`);
-    });
-  }
-  return currentFeatures;
-};
-
 const getLayerMatchKey = (layer: { bknd_dataset_id?: string; layer_id?: string | number }) =>
   String(layer.bknd_dataset_id ?? layer.layer_id ?? '');
 
@@ -95,91 +72,6 @@ const extractMatchedFeatures = (matches: LayerMatch[], layerKey: string) => {
   const matchesToUse = exactMatches.length > 0 ? exactMatches : matches.length === 1 ? matches : [];
 
   return matchesToUse.flatMap(match => match.features || []);
-};
-
-const recomputeLayerState = (
-  originalFeatures: Feature[],
-  filters: AppliedFilter[] | undefined,
-  recolors: AppliedRecolor[] | undefined,
-  layerLegend?: string
-) => {
-  const filtered = recomputeFeatures(originalFeatures, filters || []);
-
-  if (!recolors || recolors.length === 0) {
-    return {
-      features: filtered.map(f => {
-        const newF = { ...f, properties: { ...f.properties } };
-        delete newF.properties.gradient_color;
-        delete newF.properties.gradient_legend;
-        return newF;
-      }),
-      gradient_groups: undefined,
-      layer_legend: layerLegend,
-      is_gradient: false
-    };
-  }
-
-  const getCoordKey = (f: Feature) => {
-    const coords = f.geometry.coordinates;
-    return `${coords[0]},${coords[1]}`;
-  };
-
-  const featureStyles = new Map<string, { color: string, legend: string }>();
-
-  for (const recolor of recolors) {
-    for (const group of recolor.groups) {
-      const isBaseColor = group.color.toLowerCase() === recolor.baseColor.toLowerCase();
-      const groupFeatures = Array.isArray(group.features) ? group.features : [];
-
-      if (groupFeatures.length === 0) {
-        continue;
-      }
-
-      for (const f of groupFeatures) {
-        const key = getCoordKey(f);
-        if (!isBaseColor || !featureStyles.has(key)) {
-          featureStyles.set(key, { color: group.color, legend: group.legend });
-        }
-      }
-    }
-  }
-
-  const coloredFeatures = filtered.map(f => {
-    const style = featureStyles.get(getCoordKey(f));
-    if (style) {
-      return {
-        ...f,
-        properties: {
-          ...f.properties,
-          gradient_color: style.color,
-          gradient_legend: style.legend
-        }
-      };
-    }
-    return f;
-  });
-
-  const groupMap = new Map<string, { color: string, legend: string, count: number }>();
-  for (const f of coloredFeatures) {
-    const color = f.properties.gradient_color as string;
-    const legend = f.properties.gradient_legend as string;
-    if (color && legend) {
-      const key = `${color}-${legend}`;
-      if (!groupMap.has(key)) {
-        groupMap.set(key, { color, legend, count: 0 });
-      }
-      groupMap.get(key)!.count++;
-    }
-  }
-  const gradient_groups = Array.from(groupMap.values());
-  const layer_legend = gradient_groups.map(g => g.legend).join(' | ');
-
-  return {
-    features: coloredFeatures,
-    gradient_groups,
-    layer_legend,
-    is_gradient: true
-  };
 };
 
 function MultipleLayersSetting(props: MultipleLayersSettingProps) {
@@ -239,7 +131,7 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
   const [isSavingLayer, setIsSavingLayer] = useState(false);
   // Add state for the recolor color selection
   const [recolorSelectedColor, setRecolorSelectedColor] = useState<string>('#ff0000');
-  const [isPropertyOnly, setIsPropertyOnly] = useState(false);
+  const [isPropertyOnly, setIsPropertyOnly] = useState(true);
   const hydratedLayerSignatureRef = useRef<string | null>(null);
 
   const dropdownIndex = layerIndex ?? -1;
@@ -1276,42 +1168,6 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
               onPropertyOnlyChange={setIsPropertyOnly}
             />
 
-            {layer.applied_filters && layer.applied_filters.length > 0 && selectedOption === 'filter' && (
-              <div className="mt-2 flex flex-col gap-2">
-                <span className="text-xs font-semibold text-gray-700">{t("active-filters")}</span>
-                {layer.applied_filters.map(filter => (
-                  <div key={filter.id} className="flex justify-between items-center bg-gray-100 p-2 rounded-md border border-gray-200 text-xs">
-                    <span className="text-gray-800 font-medium">{filter.name}</span>
-                    <button
-                      onClick={() => handleDeleteFilter(layerIndex, filter.id)}
-                      className="text-red-500 hover:text-red-700 p-1"
-                      title={t('remove-filter')}
-                    >
-                      <FaTrash size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {layer.applied_recolors && layer.applied_recolors.length > 0 && selectedOption === 'recolor' && (
-              <div className="mt-2 flex flex-col gap-2">
-                <span className="text-xs font-semibold text-gray-700">{t('active-recolors')}</span>
-                {layer.applied_recolors.map(recolor => (
-                  <div key={recolor.id} className="flex justify-between items-center bg-gray-100 p-2 rounded-md border border-gray-200 text-xs">
-                    <span className="text-gray-800 font-medium">{recolor.name}</span>
-                    <button
-                      onClick={() => handleDeleteRecolor(layerIndex, recolor.id)}
-                      className="text-red-500 hover:text-red-700 p-1"
-                      title={t('remove-recolor')}
-                    >
-                      <FaTrash size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
             <div>
               {selectedOption === "recolor" ? (
                 <button
@@ -1379,6 +1235,39 @@ function MultipleLayersSetting(props: MultipleLayersSettingProps) {
                 </>
               )}
             </div>
+
+            {(layer.applied_filters && layer.applied_filters.length > 0) ||
+              (layer.applied_recolors && layer.applied_recolors.length > 0) ? (
+              <div className="mt-2 flex flex-col gap-2 border-t border-gray-200 pt-3">
+                <span className="text-xs font-semibold text-gray-700">
+                  {t('active-customizations')}
+                </span>
+                {layer.applied_filters?.map(filter => (
+                  <div key={filter.id} className="flex justify-between items-center bg-blue-50 p-2 rounded-md border border-blue-200 text-xs">
+                    <span className="text-gray-800 font-medium">{filter.name}</span>
+                    <button
+                      onClick={() => handleDeleteFilter(layerIndex, filter.id)}
+                      className="text-red-500 hover:text-red-700 p-1"
+                      title={t('remove-filter')}
+                    >
+                      <FaTrash size={12} />
+                    </button>
+                  </div>
+                ))}
+                {layer.applied_recolors?.map(recolor => (
+                  <div key={recolor.id} className="flex justify-between items-center bg-green-50 p-2 rounded-md border border-green-200 text-xs">
+                    <span className="text-gray-800 font-medium">{recolor.name}</span>
+                    <button
+                      onClick={() => handleDeleteRecolor(layerIndex, recolor.id)}
+                      className="text-red-500 hover:text-red-700 p-1"
+                      title={t('remove-recolor')}
+                    >
+                      <FaTrash size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       )}

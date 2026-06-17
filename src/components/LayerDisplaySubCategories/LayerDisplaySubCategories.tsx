@@ -15,6 +15,7 @@ const LayerDisplaySubCategories = ({
   onDescriptionChange,
   onActionChange,
   onRefresh,
+  onSave,
   onDelete,
   isFetching,
   saveStatus,
@@ -95,6 +96,30 @@ const LayerDisplaySubCategories = ({
           )}
 
           <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onSave(layer.id)}
+              disabled={saveStatus === 'saving' || layer.includedTypes.length === 0}
+              className="flex items-center justify-center w-7 h-7 text-green-700 hover:text-white hover:bg-green-700 rounded border border-green-300 bg-white shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label={t('save-layer')}
+              title={t('save-layer')}
+            >
+              <svg
+                className="text-base"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                width="16"
+                height="16"
+              >
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+            </button>
             <button
               type="button"
               onClick={() => onRefresh(layer.id)}

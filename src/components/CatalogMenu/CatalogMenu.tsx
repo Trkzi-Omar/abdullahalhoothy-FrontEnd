@@ -32,6 +32,8 @@ function CatalogMenu() {
     setPolygons,
     setBenchmarks,
     setIsBenchmarkControlOpen,
+    name,
+    setName,
   } = useCatalogContext();
   const { setSelectedCity, setSelectedCountry } = useLayerContext();
 
@@ -183,7 +185,7 @@ function CatalogMenu() {
               beforeIcon={<FaWandMagicSparkles />}
               afterIcon={<></>}
             />
-            <Chat topic={topics.RECOLOR} position="fixed bottom-16 lg:bottom-auto start-[2.5vw] lg:start-[27.5rem] z-50" />
+            <Chat topic={topics.RECOLOR} position="fixed bottom-16 start-[2.5vw] lg:bottom-6 lg:start-[27.5rem] z-50" />
           </div>
         )}
 
@@ -232,10 +234,23 @@ function CatalogMenu() {
           </button>
         </div>
         <div className="w-full flex-col flex px-2 py-2 select-none border-t lg:mb-0 mb-14 gap-2">
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-[#115740]">
+              {t('catalog-name-placeholder') ?? 'Catalog name'} <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder={t('catalog-name-placeholder') ?? 'Catalog name'}
+              className="w-full h-10 px-3 border-2 border-[#115740] rounded-lg text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[#28a745] transition-colors"
+            />
+          </div>
           <button
             onClick={() => {
               void handleSaveCatalog();
             }}
+            disabled={!name.trim()}
             className="w-full h-10 bg-slate-100 border-2 border-[#115740] text-[#115740] flex justify-center items-center font-semibold rounded-lg
               hover:bg-white transition-all cursor-pointer disabled:text-opacity-55 disabled:hover:bg-slate-100 disabled:cursor-not-allowed"
           >

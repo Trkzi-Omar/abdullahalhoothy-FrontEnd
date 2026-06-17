@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useCatalogContext } from '../../context/CatalogContext';
 import CatalogMenu from '../CatalogMenu/CatalogMenu';
 import CatalogDetailsForm from '../CatalogDetailsForm/CatalogDetailsForm';
@@ -9,10 +9,15 @@ const CatalogFormLoader = () => {
 
   const { setSidebarMode } = useUIContext();
 
+  const initialized = useRef(false);
+
   useEffect(() => {
-    resetFormStage('catalog');
-    setSidebarMode('catalog');
-  }, [resetFormStage, setSidebarMode]);
+    if (!initialized.current) {
+      initialized.current = true;
+      resetFormStage('catalog');
+      setSidebarMode('catalog');
+    }
+  });
 
   return (
     <>

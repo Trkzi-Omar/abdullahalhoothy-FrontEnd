@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useCatalogContext } from '../../context/CatalogContext';
-import { BasedOnLayerDropdownProps } from '../../types/allTypesAndInterfaces';
+import { BasedOnLayerDropdownProps, MapFeatures } from '../../types/allTypesAndInterfaces';
 import { formatSubcategoryName } from '../../utils/helperFunctions';
 import { HexColorPicker } from 'react-colorful';
 import { t } from '../../i18n';
@@ -8,6 +8,43 @@ import { t } from '../../i18n';
 
 interface ExtendedBasedOnLayerDropdownProps extends BasedOnLayerDropdownProps {
   onRecolorColorChange?: (color: string) => void;
+}
+
+/**
+ * Derive a set of property names whose values are numeric by inspecting
+ * the actual feature data.
+ */
+function buildNumericProperties(geoPoints: MapFeatures[]): Set<string> {
+  const counts = new Map<string, { numeric: number; nonNumeric: number }>();
+
+  for (const layer of geoPoints) {
+    if (!layer.features) continue;
+    for (const feature of layer.features) {
+      if (!feature.properties) continue;
+      for (const [key, value] of Object.entries(feature.properties)) {
+        if (value === null || value === undefined) continue;
+
+        let entry = counts.get(key);
+        if (!entry) {
+          entry = { numeric: 0, nonNumeric: 0 };
+          counts.set(key, entry);
+        }
+
+        if (typeof value === 'number' && !Number.isNaN(value)) {
+          entry.numeric++;
+        } else {
+          entry.nonNumeric++;
+        }
+      }
+    }
+  }
+
+  // A property is numeric when the majority of its values are numbers
+  return new Set(
+    Array.from(counts.entries())
+      .filter(([, { numeric, nonNumeric }]) => numeric > nonNumeric)
+      .map(([k]) => k),
+  );
 }
 
 export default function BasedOnLayerDropdown({
@@ -108,6 +145,12 @@ export default function BasedOnLayerDropdown({
       )
     );
   }, [geoPoints, basedOnLayerId, selectedOption, layerIndex, isPropertyOnly]);
+
+  // Derive numeric property names from actual feature data
+  const numericProperties = useMemo(
+    () => buildNumericProperties(geoPoints),
+    [geoPoints],
+  );
 
   const [inputValue, setInputValue] = useState('');
   const [threshold, setThreshold] = useState('');
@@ -231,12 +274,12 @@ export default function BasedOnLayerDropdown({
   };
 
   const handlePropertyOnlyToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const enabled = event.target.checked;
+    const distanceMode = event.target.checked;
     if (onPropertyOnlyChange) {
-      onPropertyOnlyChange(enabled);
+      onPropertyOnlyChange(!distanceMode);
     }
 
-    if (enabled) {
+    if (!distanceMode) {
       setCoverageValue('');
       setBasedOnLayerId(null);
       setEnableSecondSentence(false);
@@ -297,7 +340,7 @@ export default function BasedOnLayerDropdown({
 
         {basedOnProperty && (
           <>
-            {basedOnProperty !== 'name' && (
+            {numericProperties.has(basedOnProperty) && (
               <>
                 <select
                   value={comparisonType}
@@ -530,7 +573,7 @@ export default function BasedOnLayerDropdown({
 
         {basedOnProperty && (
           <>
-            {basedOnProperty !== 'name' && (
+            {numericProperties.has(basedOnProperty) && (
               <>
                 <select
                   value={comparisonType}
@@ -770,14 +813,14 @@ export default function BasedOnLayerDropdown({
       <div className="ms-2.5 flex flex-col space-y-4">
         <div className="flex items-center gap-2 text-xs text-[#555]">
           <input
-            id={`property-only-filter-${layerIndex}`}
+            id={`distance-filter-${layerIndex}`}
             type="checkbox"
-            checked={isPropertyOnly}
+            checked={!isPropertyOnly}
             onChange={handlePropertyOnlyToggle}
             className="w-[11px] h-[11px] cursor-pointer accent-[#28a745]"
           />
-          <label htmlFor={`property-only-filter-${layerIndex}`}>
-            {t('property-only-no-distance')}
+          <label htmlFor={`distance-filter-${layerIndex}`}>
+            {t('use-distance-from-another-layer')}
           </label>
         </div>
         {isPropertyOnly ? renderPropertyOnlyFilter() : renderDistanceFilter()}
@@ -791,14 +834,14 @@ export default function BasedOnLayerDropdown({
       <div className="ms-2.5 flex flex-col space-y-4">
         <div className="flex items-center gap-2 text-xs text-[#555]">
           <input
-            id={`property-only-recolor-${layerIndex}`}
+            id={`distance-recolor-${layerIndex}`}
             type="checkbox"
-            checked={isPropertyOnly}
+            checked={!isPropertyOnly}
             onChange={handlePropertyOnlyToggle}
             className="w-[11px] h-[11px] cursor-pointer accent-[#28a745]"
           />
-          <label htmlFor={`property-only-recolor-${layerIndex}`}>
-            {t('property-only-no-distance')}
+          <label htmlFor={`distance-recolor-${layerIndex}`}>
+            {t('use-distance-from-another-layer')}
           </label>
         </div>
 

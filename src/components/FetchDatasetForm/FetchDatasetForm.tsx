@@ -665,6 +665,70 @@ const FetchDatasetForm = () => {
     draftUserId,
   ]);
 
+  const handleSaveSingleLayer = useCallback(
+    async (layerId: number) => {
+      const layer = layers.find(l => l.id === layerId);
+      if (!layer) return;
+      if (!selectedCountry || !selectedCity) {
+        toast.error(t('please-select-a-country-and-city-before-adding-datasets'));
+        return;
+      }
+      if (layer.includedTypes.length === 0) return;
+
+      const layerData = layerDataMap[layerId];
+      if (!layerData?.layer_id) {
+        toast.error(t('layer-data-not-ready-please-wait-a-moment-and-try-again'));
+        return;
+      }
+
+      const layerCustomization = {
+        layerId: layer.id,
+        name: layer.name || `Layer ${layer.id}`,
+        legend: layer.layer_legend || layer.name || `Layer ${layer.id}`,
+        description: layer.layer_description || '',
+        color: layer.points_color || getDefaultLayerColor(layer.id),
+      };
+
+      const saveSignature = getLayerSaveSignature(layer);
+      setSavingLayerIds(prev => new Set(prev).add(layerId));
+
+      try {
+        await handleSaveLayer({ layers: [layerCustomization] });
+        setSavedLayerSignatures(prev => ({
+          ...prev,
+          [layerId]: saveSignature,
+        }));
+        setFailedLayerSignatures(prev => {
+          if (!prev[layerId]) return prev;
+          const next = { ...prev };
+          delete next[layerId];
+          return next;
+        });
+      } catch (err) {
+        setFailedLayerSignatures(prev => ({
+          ...prev,
+          [layerId]: saveSignature,
+        }));
+        console.error('Save layer failed:', err);
+        toast.error(t('failed-to-save-layer-please-try-again'));
+      } finally {
+        setSavingLayerIds(prev => {
+          const next = new Set(prev);
+          next.delete(layerId);
+          return next;
+        });
+      }
+    },
+    [
+      layers,
+      selectedCountry,
+      selectedCity,
+      layerDataMap,
+      handleSaveLayer,
+      getLayerSaveSignature,
+    ]
+  );
+
   const handleClear = useCallback(() => {
     setLayers([]);
     setReqFetchDataset(prevData => ({
@@ -1058,6 +1122,7 @@ const FetchDatasetForm = () => {
                     onDescriptionChange={handleLayerDescriptionChange}
                     onActionChange={handleLayerActionChange}
                     onRefresh={refreshLayer}
+                    onSave={handleSaveSingleLayer}
                     onDelete={deleteLayer}
                     isFetching={fetchingLayers.has(layer.id)}
                     saveStatus={getLayerSaveStatus(layer)}

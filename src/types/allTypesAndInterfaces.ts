@@ -935,6 +935,7 @@ export interface LayerDisplaySubCategoriesProps {
   onDescriptionChange: (layerIndex: number, description: string) => void;
   onActionChange: (layerIndex: number, action: LayerAction) => void;
   onRefresh: (layerId: number) => void;
+  onSave: (layerId: number) => void;
   onDelete: (layerId: number) => void;
   isFetching: boolean;
   saveStatus?: 'saved' | 'unsaved' | 'saving' | 'error';

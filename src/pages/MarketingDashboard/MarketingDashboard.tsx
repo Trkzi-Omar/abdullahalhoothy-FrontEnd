@@ -10,7 +10,7 @@ export default function MarketingDashboard() {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const response = await fetch('http://localhost:8000/fastapi/marketing-dashboard');
+        const response = await fetch('/fastapi/marketing-dashboard');
         if (!response.ok) {
           throw new Error(t("failed-to-fetch-dashboard"));
         }
